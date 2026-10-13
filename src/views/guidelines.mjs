@@ -3,37 +3,50 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
-import Header from "./components/header.mjs";
-import Sidebar from "./components/sidebar.mjs";
-import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
+import { Page, BackBar } from "./components/n2.mjs";
 
 const html = htm.bind(vhtml);
 
 export default async function (theme) {
-  return "<!DOCTYPE html>" + html`
-    <html lang="en" op="news">
-      <head>
-        ${custom(
-          undefined,
-          "Guidelines | Kiwi News",
-          "What to submit and how to comment on Kiwi News, the community-curated crypto news site.",
-          undefined,
-          [],
-          "https://news.kiwistand.com/guidelines",
-        )}
-      </head>
-      <body>
-        <div class="container">
-          ${Sidebar()}
-          <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
-              <tr>
-                ${await Header(theme)}
-              </tr>
-              <tr>
-                <td style="padding: 1rem;">
-                  <h1>Why guidelines are important</h1>
+  return Page({
+    theme,
+    path: "/guidelines",
+    backbar: BackBar("", "/"),
+    head: custom(
+      undefined,
+      "Guidelines | Kiwi News",
+      "What to submit and how to comment on Kiwi News, the community-curated crypto news site.",
+      undefined,
+      [],
+      "https://news.kiwistand.com/guidelines",
+    ),
+    body: html`<article class="n2-doc">
+      <h1 class="n2-doc-title">Guidelines</h1>
+      <h2 id="community-rules" class="n2-doc-part">Community rules</h2>
+      <p>These are the terms you agree to when using Kiwi News:</p>
+      <ul>
+        <li>
+          No objectionable, abusive, hateful, sexual, violent or illegal
+          content.
+        </li>
+        <li>No harassment, ad hominem attacks, spam or shilling.</li>
+        <li>
+          Everything you post is public, signed with your key and shared across
+          Kiwi nodes; it can't be edited.
+        </li>
+        <li>
+          Report posts, comments and people by email. We review reports within
+          24 hours and remove violating content and accounts.
+        </li>
+      </ul>
+      <p class="n2-doc-note">
+        Contact:${" "}<a href="mailto:tim@daubenschuetz.de"
+          >tim@daubenschuetz.de</a
+        >
+      </p>
+
+                  <h2 class="n2-doc-part">Why guidelines are important</h2>
                   <p>
                     We have an opportunity to build our own corner of the
                     onchain internet. With awesome people, links, resources, and
@@ -177,7 +190,7 @@ export default async function (theme) {
                     >
                     <span> who helped us prepare submission guidelines.</span>
                   </p>
-                  <h1>Commenting guidelines</h1>
+                  <h2 class="n2-doc-part">Commenting guidelines</h2>
                   <p>
                     Kiwi wants to provide clarity in the confusing crypto world.
                     Comments play a huge role here, as they can expand the idea,
@@ -295,20 +308,11 @@ export default async function (theme) {
                     ><span> </span>
                     for helping us to set up commenting guidelines.
                   </p>
-                  <a href="/submit">
-                    <button
-                      style="font-size: 1.01rem; border-radius: 2px; cursor: pointer; padding: 5px 15px 5px 15px; background-color: transparent; border: 1px solid"
-                    >
-                      Go to Submit page
-                    </button>
-                  </a>
-                </td>
-              </tr>
-            </table>
-            ${Footer(theme)}
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+      <p>
+        <a class="n2-btn-outline n2-doc-cta" href="/submit"
+          >Go to Submit page</a
+        >
+      </p>
+    </article>`,
+  });
 }

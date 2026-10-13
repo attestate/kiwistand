@@ -1,33 +1,26 @@
 //@format
-import url from "url";
-
 import htm from "htm";
 import vhtml from "vhtml";
 import { formatDistanceToNow } from "date-fns";
 import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
 
-import Header from "./components/header.mjs";
-import Footer from "./components/footer.mjs";
-import Sidebar from "./components/sidebar.mjs";
 import { custom } from "./components/head.mjs";
+import {
+  Page,
+  BackBar,
+  EmptyState,
+  Icon,
+} from "./components/n2.mjs";
 import { getSlug } from "../utils.mjs";
 import * as ens from "../ens.mjs";
 import * as karma from "../karma.mjs";
-import RightColumn from "./components/right-column.mjs";
 import { getSubmissions, getSubmissionCount } from "../cache.mjs";
-import {
-  SocialButton,
-  twitterSvg,
-  githubSvg,
-  warpcastSvg,
-  heySvg,
-  telegramSvg,
-  discordSvg,
-  websiteSvg,
-} from "./components/socialNetworkIcons.mjs";
 
 const html = htm.bind(vhtml);
+
+// NOTE: The submissions list is user content and keeps main's markup and
+// box sizes (public/pages.css only changes its colours and fonts).
 
 // NOTE: The data the profile page is rendered from. Also served as JSON via
 // /upvotes?address=…&format=json, e.g. for the iOS app.
@@ -74,211 +67,139 @@ export default async function (trie, theme, identity, tab = "submissions") {
     : "";
   const twitterCard = "summary";
   const path = "/upvotes";
-  return "<!DOCTYPE html>" + html`
-    <html lang="en" op="news">
-      <head>
-        ${custom(
-          ogImage,
-          `${ensData.displayName} (${points.toString()} 🥝) on Kiwi News`,
-          description,
-          twitterCard,
-          [], // prefetch
-          `https://news.kiwistand.com/upvotes?address=${identity}`, // canonical URL
-        )}
-        <style>
-          .profile-stats {
-            display: flex;
-            gap: 20px;
-            margin: 10px 0;
-            font-size: 14px;
-          }
-          .stat {
-            color: var(--text-secondary);
-          }
-          .stat strong {
-            color: var(--text-primary);
-          }
-          .tabs {
-            margin: 15px 0;
-            border-bottom: 1px solid var(--border-subtle);
-          }
-          .tab {
-            display: inline-block;
-            padding: 8px 16px;
-            margin-right: 5px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-bottom: 2px solid transparent;
-          }
-          .tab:hover {
-            color: var(--text-primary);
-          }
-          .tab.active {
-            color: var(--text-primary);
-            border-bottom-color: var(--text-primary);
-          }
-          .submission-row {
-            margin: 10px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border-subtle);
-          }
-          .submission-title {
-            font-size: 14px;
-            margin-bottom: 4px;
-          }
-          .submission-meta {
-            font-size: 12px;
-            color: var(--text-secondary);
-          }
-          .domain {
-            color: var(--text-secondary);
-            font-size: 12px;
-          }
-          .submission-title a {
-            color: var(--text-primary);
-          }
-          .submission-meta a {
-            color: var(--text-secondary);
-          }
-        </style>
-      </head>
-      <body ontouchstart="">
-        <div class="container">
-          ${Sidebar(path)}
-          ${RightColumn()}
-          <div id="hnmain" class="scaled-hnmain">
-            <h1 class="visually-hidden">${ensData.displayName} on Kiwi News</h1>
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
-              <tr>
-                ${Header(theme)}
-              </tr>
-              <tr>
-                <td>
-                  <div
-                    style="max-width: 900px; margin: 20px auto; padding: 0 20px; overflow-wrap: break-word; color: var(--text-primary); font-size: 16px; line-height: 1.5;"
-                  >
-                    <span
-                      style="margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 10px; color: var(--text-primary);"
-                    >
-                      ${ensData.safeAvatar &&
-                      html` <a href="${ensData.safeAvatar}" target="_blank">
-                        <img
-                          src="${ensData.safeAvatar}"
-                          alt=""
-                          loading="lazy"
-                          style="border: 1px solid var(--text-secondary); width: 30px; height: 30px; border-radius: 2px;"
-                      /></a>`}
-                      <a
-                        target="_blank"
-                        href="https://etherscan.io/address/${ensData.address}"
-                      >
-                        ${ensData.displayName}
-                        <span>
-                          (<nav-karma
-                            data-address="${identity}"
-                            data-initial="${points.toString()}"
-                            >${points.toString()}</nav-karma
-                          >
-                          🥝)</span
-                        >
-                      </a>
-                      <kiwi-edit-profile
-                        data-address="${identity}"
-                        style="margin-left: auto; height: 24px; display: inline-flex; align-items: center;"
-                      ></kiwi-edit-profile>
-                    </span>
-                    
-                    <!-- Stats bar like Reddit/HN -->
-                    <div class="profile-stats">
-                      <span class="stat">Rank: <strong>#${rank}</strong></span>
-                      <span class="stat">Karma: <strong>${points}</strong></span>
-                      <span class="stat">Submissions: <strong>${totalSubmissions}</strong></span>
-                    </div>
-                    
-                    <span style="font-size: 0.8rem; color: var(--text-secondary);">
-                      ${description
-                        ? html`${DOMPurify.sanitize(description)}<br />`
-                        : html`<span><br /></span>`}
-                    </span>
-                    <div
-                      style="flex-wrap: wrap; display: flex; gap: 7px; margin-top: 10px;"
-                    >
-                      ${ensData.url && ensData.url.startsWith("https://")
-                        ? SocialButton(ensData.url, websiteSvg(), "Website")
-                        : ""}
-                      ${ensData.twitter
-                        ? SocialButton(
-                            `https://twitter.com/${ensData.twitter}`,
-                            twitterSvg(),
-                            "X",
-                          )
-                        : ""}
-                      ${ensData.github
-                        ? SocialButton(
-                            `https://github.com/${ensData.github}`,
-                            githubSvg(),
-                            "GitHub",
-                          )
-                        : ""}
-                      ${ensData.telegram
-                        ? SocialButton(
-                            `https://t.me/${ensData.telegram}`,
-                            telegramSvg(),
-                            "Telegram",
-                          )
-                        : ""}
-                      ${ensData.discord
-                        ? SocialButton(
-                            `https://discordapp.com/users/${ensData.discord}`,
-                            discordSvg(),
-                            "Discord",
-                          )
-                        : ""}
-                      ${ensData.farcaster && ensData.farcaster.username
-                        ? SocialButton(
-                            `https://farcaster.xyz/${ensData.farcaster.username}`,
-                            warpcastSvg(),
-                            "Farcaster",
-                          )
-                        : ""}
-                      ${ensData.lens && ensData.lens.id
-                        ? SocialButton(
-                            `https://hey.xyz/profile/${ensData.lens.id}`,
-                            heySvg(),
-                            "Lens",
-                          )
-                        : ""}
-                    </div>
-                    
-                    <!-- Tabs like Reddit/HN -->
-                    <div class="tabs">
-                      <a href="?address=${identity}&tab=submissions" class="tab ${tab === 'submissions' ? 'active' : ''}">Submissions</a>
-                      <a href="?address=${identity}&tab=top" class="tab ${tab === 'top' ? 'active' : ''}">Top</a>
-                    </div>
-                    
-                    <!-- Content based on tab -->
-                    <div class="profile-content">
-                      <div class="submissions-list">
-                        ${submissions.map((story, i) => html`
-                          <div class="submission-row">
-                            <div class="submission-title">
-                              ${i + 1}. <a href="${story.href}" target="_blank">${story.title}</a> <span class="domain">(${new URL(story.href).hostname})</span>
-                            </div>
-                            <div class="submission-meta">
-                              ${story.upvotes} points | <a href="/stories/${getSlug(story.title)}?index=0x${story.index}">comments</a> | ${formatDistanceToNow(new Date(story.timestamp * 1000))} ago
-                            </div>
-                          </div>
-                        `)}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </table>
-            ${Footer(theme)}
-          </div>
+  const name = ensData.displayName;
+
+  // NOTE: Like the apps: Website, X, GitHub, Telegram, Farcaster (and Lens,
+  // Discord, which only the website shows); missing ones are skipped.
+  const social = [
+    ensData.url && ensData.url.startsWith("https://")
+      ? ["Website", ensData.url]
+      : null,
+    ensData.twitter ? ["X", `https://x.com/${ensData.twitter}`] : null,
+    ensData.github ? ["GitHub", `https://github.com/${ensData.github}`] : null,
+    ensData.telegram ? ["Telegram", `https://t.me/${ensData.telegram}`] : null,
+    ensData.discord
+      ? ["Discord", `https://discordapp.com/users/${ensData.discord}`]
+      : null,
+    ensData.farcaster && ensData.farcaster.username
+      ? ["Farcaster", `https://farcaster.xyz/${ensData.farcaster.username}`]
+      : null,
+    ensData.lens && ensData.lens.id
+      ? ["Lens", `https://hey.xyz/profile/${ensData.lens.id}`]
+      : null,
+  ].filter(Boolean);
+
+  const tabLink = (id, label) =>
+    html`<a
+      href="?address=${identity}&tab=${id}"
+      class="n2-seg-item${tab === id ? " is-active" : ""}"
+      aria-current="${tab === id ? "page" : "false"}"
+      >${label}</a
+    >`;
+  const stat = (label, value) =>
+    html`<div class="n2-stat">
+      <span class="n2-stat-label">${label}</span>
+      <span class="n2-stat-value">${value}</span>
+    </div>`;
+  const number = (n) => Number(n).toLocaleString("en-US");
+
+  // NOTE: The settings gear, "Edit profile" and "Saved stories" are only for
+  // your own profile. The page is the same for everyone (it's cached), so
+  // EditProfile.jsx decides: it renders into <kiwi-edit-profile> only on
+  // your profile, and public/pages.css shows the other two when it did.
+  const gear = html`<a
+    class="n2-glass n2-own-only"
+    href="/settings"
+    aria-label="Settings"
+    >${Icon("settings")}</a
+  >`;
+
+  return Page({
+    theme,
+    path,
+    backbar: BackBar(name, "/", gear),
+    bodyClass: "n2-profile-page",
+    head: custom(
+      ogImage,
+      `${name} (${points.toString()} 🥝) on Kiwi News`,
+      description,
+      twitterCard,
+      [], // prefetch
+      `https://news.kiwistand.com/upvotes?address=${identity}`, // canonical URL
+    ),
+    body: html`<div class="n2-profile">
+      <h1 class="visually-hidden">${name} on Kiwi News</h1>
+      <div class="n2-profile-head">
+        <div class="n2-profile-name">
+          ${ensData.safeAvatar
+            ? html`<a
+                href="${ensData.safeAvatar}"
+                target="_blank"
+                rel="noopener"
+                class="n2-profile-avatar"
+                ><img src="${ensData.safeAvatar}" alt="" loading="lazy"
+              /></a>`
+            : html`<span class="n2-profile-avatar">${Icon("person")}</span>`}
+          <a
+            class="n2-profile-title"
+            target="_blank"
+            rel="noopener"
+            href="https://etherscan.io/address/${ensData.address}"
+          >
+            ${name}${" "}(<nav-karma
+              data-address="${identity}"
+              data-initial="${points.toString()}"
+              >${points.toString()}</nav-karma
+            >${" "}🥝)
+          </a>
         </div>
-      </body>
-    </html>
-  `;
+        <div class="n2-stats">
+          ${rank > 0 ? stat("Rank", `#${rank}`) : null}
+          ${stat("Karma", number(points))}
+          ${stat("Submissions", number(totalSubmissions))}
+        </div>
+        ${description
+          ? html`<p class="n2-profile-bio">${DOMPurify.sanitize(description)}</p>`
+          : null}
+        ${social.length > 0
+          ? html`<div class="n2-chips">
+              ${social.map(
+                ([label, href]) =>
+                  html`<a class="n2-chip" href="${href}" target="_blank" rel="noopener"
+                    >${label}</a
+                  >`,
+              )}
+            </div>`
+          : null}
+      </div>
+      <div class="n2-own">
+        <kiwi-edit-profile
+          data-address="${identity}"
+          data-variant="row"
+        ></kiwi-edit-profile>
+        <a class="n2-own-row n2-own-only" href="/saved"
+          >${Icon("bookmark")}<span>Saved stories</span></a
+        >
+      </div>
+      <nav class="n2-seg" aria-label="Sort">
+        ${tabLink("submissions", "Submissions")} ${tabLink("top", "Top")}
+      </nav>
+      ${submissions.length === 0
+        ? EmptyState({ text: "No submissions yet." })
+        : html`<div class="profile-content">
+            <div class="submissions-list">
+              ${submissions.map((story, i) => html`
+                <div class="submission-row">
+                  <div class="submission-title">
+                    ${i + 1}. <a href="${story.href}" target="_blank">${story.title}</a> <span class="domain">(${new URL(story.href).hostname})</span>
+                  </div>
+                  <div class="submission-meta">
+                    ${story.upvotes} points | <a href="/stories/${getSlug(story.title)}?index=0x${story.index}">comments</a> | ${formatDistanceToNow(new Date(story.timestamp * 1000))} ago
+                  </div>
+                </div>
+              `)}
+            </div>
+          </div>`}
+    </div>`,
+  });
 }

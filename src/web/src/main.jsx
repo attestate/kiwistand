@@ -940,6 +940,43 @@ async function addAvatar() {
 }
 
 // "Edit profile" on your own profile page (views/upvotes.mjs).
+// NOTE: /settings (views/settings.mjs): account, analytics and Private RPC.
+async function addSettings(delegations, toast) {
+  const elem = document.getElementById("n2-settings");
+  if (!elem) return;
+  const Settings = (await import("./Settings.jsx")).default;
+  createRoot(elem).render(
+    <StrictMode>
+      <Providers>
+        <Settings delegations={delegations} toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
+// NOTE: <kiwi-login-button> on server-rendered pages (e.g. the logged-out
+// notifications page): a button that opens the login.
+async function addLoginButtons(delegations, toast) {
+  const elems = document.querySelectorAll("kiwi-login-button");
+  if (elems.length === 0) return;
+  const LoginButton = (await import("./LoginButton.jsx")).default;
+  elems.forEach((elem) => {
+    createRoot(elem).render(
+      <StrictMode>
+        <Providers>
+          <LoginButton
+            className={elem.dataset.class}
+            delegations={delegations}
+            toast={toast}
+          >
+            {elem.textContent.trim() || "Log in"}
+          </LoginButton>
+        </Providers>
+      </StrictMode>,
+    );
+  });
+}
+
 async function addEditProfile(toast) {
   const elem = document.querySelector("kiwi-edit-profile");
   if (!elem) return;
@@ -947,7 +984,11 @@ async function addEditProfile(toast) {
   createRoot(elem).render(
     <StrictMode>
       <Providers>
-        <EditProfileButton address={elem.dataset.address} toast={toast} />
+        <EditProfileButton
+          address={elem.dataset.address}
+          variant={elem.dataset.variant}
+          toast={toast}
+        />
       </Providers>
     </StrictMode>,
   );
@@ -1960,6 +2001,8 @@ async function start() {
     addNewsletterScrollModal(toast),
     addAvatar(),
     addEditProfile(toast),
+    addSettings(await delegationsPromise, toast),
+    addLoginButtons(await delegationsPromise, toast),
     addNicknamePrompt(toast),
     addBackButton(),
     addDelegateButton(await delegationsPromise, toast),

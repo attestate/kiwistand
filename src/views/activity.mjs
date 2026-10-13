@@ -7,14 +7,9 @@ import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
-import Header from "./components/header.mjs";
-import Sidebar from "./components/sidebar.mjs";
-import Footer from "./components/footer.mjs";
-import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
+import { Page, EmptyState, Icon, timeAgo } from "./components/n2.mjs";
 import { getSlug } from "../utils.mjs";
-// Define the brand green color directly
-const theme = { color: "#00b67a" };
 import {
   getUpvotes,
   getComments,
@@ -24,13 +19,6 @@ import {
 } from "../cache.mjs";
 
 const html = htm.bind(vhtml);
-
-const heartSVG = html`
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none"/>
-    <path d="M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z" fill="currentColor"/>
-  </svg>
-`;
 
 const generateFeed = (messages) => {
   const groupedMessages = {};
@@ -85,259 +73,136 @@ function linkFromComment(activity) {
   return link;
 }
 
-function generateCommentRow(activity, identity, bgColor, theme, i) {
-  const comment = DOMPurify.sanitize(truncateComment(activity.message.title));
-  const avatar = identity.safeAvatar
+const spinnerOnClick =
+  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
+
+// NOTE: Mobile shows the apps' marks (heart with "+1 🥝", the commenter's
+// avatar, a spark for reactions); desktop shows a small icon box, like the
+// designs.
+function Avatar(identity) {
+  return identity && identity.safeAvatar
     ? html`<img
+        class="n2-notif-avatar"
         src="${DOMPurify.sanitize(identity.safeAvatar)}"
         loading="lazy"
-        alt="avatar"
-        style="border: 1px solid var(--text-secondary); width: 28px; height: 28px; border-radius: 2px; margin-top: 1.5rem;"
+        alt=""
       />`
-    : "";
-
-  const link = linkFromComment(activity);
-
-  return html`
-    <tr style="background-color: ${bgColor}">
-      <td>
-        <a
-          data-no-instant="${i < 3}"
-          class="notification"
-          href="${link}"
-          onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-        >
-          <div style="display: flex; border-bottom: var(--border-subtle);">
-            <div
-              style="flex: 0.15; display: flex; align-items: start; justify-content: center;"
-            >
-              ${avatar}
-            </div>
-            <div
-              style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
-            >
-              <div style="font-size: 0.9rem; margin-right: 1rem; color: var(--text-primary);">
-                <p
-                  class="notification-title"
-                  style="margin-top: 8px; margin-bottom: 2px;"
-                >
-                  <strong>
-                    <span>${identity.displayName}</span>
-                    <span style="font-weight: normal;"> commented on </span>
-                    <span
-                      >${DOMPurify.sanitize(
-                        activity.message.submission_title,
-                      )}</span
-                    >
-                  </strong>
-                </p>
-                <p
-                  style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
-                >
-                  <span style="text-align: justify;">${comment}</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </a>
-      </td>
-    </tr>
-  `;
+    : html`<span class="n2-notif-avatar">${Icon("person")}</span>`;
 }
 
-function generateRow(lastUpdate, theme) {
+function Mark(kind, identity) {
+  const mobile =
+    kind === "like"
+      ? html`<span class="n2-notif-like"
+          >${Icon("heart")}<span class="n2-notif-karma">+1 🥝</span></span
+        >`
+      : kind === "react"
+      ? html`<span class="n2-notif-spark">${Icon("sparkle")}</span>`
+      : Avatar(identity);
+  const desktopIcon = { like: "heart", comment: "comment", react: "sparkle" }[
+    kind
+  ];
+  return html`<span class="n2-notif-mark">
+    <span class="n2-m">${mobile}</span>
+    <span class="n2-notif-box n2-d">${Icon(desktopIcon)}</span>
+  </span>`;
+}
+
+function Row({ isNew, href, i, mark, headline, comment, timestamp }) {
+  return html`<li class="n2-notif${isNew ? " is-new" : ""}">
+    <a
+      class="n2-notif-link notification"
+      href="${href}"
+      data-no-instant="${i < 3}"
+      onclick="${spinnerOnClick}"
+    >
+      ${mark}
+      <span class="n2-notif-body">
+        <span class="n2-notif-headline">${headline}</span>
+        ${comment
+          ? html`<span class="n2-notif-comment">${comment}</span>`
+          : null}
+        <span class="n2-notif-when">${timeAgo(timestamp)}</span>
+      </span>
+      ${isNew ? html`<span class="n2-notif-dot" aria-label="New"></span>` : null}
+    </a>
+  </li>`;
+}
+
+const Quote = (text) => html`<span class="n2-q">${text}</span>`;
+
+function generateRow(lastUpdate) {
   return (activity, i) => {
-    const bgColor =
-      lastUpdate < activity.timestamp ? "rgba(255,255,255,0.3)" : "none";
+    const isNew = lastUpdate < activity.timestamp;
 
     if (activity.verb === "commented" || activity.verb === "involved") {
       const identity = activity.identities[0];
-      return generateCommentRow(activity, identity, bgColor, theme, i);
-    } else if (activity.verb === "reacted") {
+      return Row({
+        isNew,
+        i,
+        href: linkFromComment(activity),
+        mark: Mark("comment", identity),
+        headline: html`${identity.displayName} commented on${" "}${Quote(
+            DOMPurify.sanitize(activity.message.submission_title),
+          )}`,
+        comment: DOMPurify.sanitize(truncateComment(activity.message.title)),
+        timestamp: activity.timestamp,
+      });
+    }
+
+    if (activity.verb === "reacted") {
       const identity = activity.identities[0];
-      const emoji = activity.emoji;
-      const commentTitle = activity.message.comment_title;
-      const submissionTitle = activity.message.submission_title;
-      const commentId = activity.message.commentId;
-      const submissionId = activity.message.submissionId;
-
-      // Extract the index from the submission ID (format: kiwi:0x...)
-      const submissionIndex = submissionId.split(":")[1];
-
-      return html`
-        <tr style="background-color: ${bgColor};">
-          <td>
-            <a
-              data-no-instant="${i < 3}"
-              class="notification"
-              href="/stories/${getSlug(
-                submissionTitle,
-              )}?index=${submissionIndex}#${commentId.split(":")[1]}"
-              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-            >
-              <div
-                style="display: flex; border-bottom: var(--border-subtle);"
-              >
-                <div
-                  style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;"
-                >
-                  <div style="position: relative; width: 48px; height: 48px;">
-                    ${identity.safeAvatar
-                      ? html`
-                          <div
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"
-                          >
-                            <img
-                              src="${DOMPurify.sanitize(identity.safeAvatar)}"
-                              loading="lazy"
-                              alt="reactor avatar"
-                              style="width: 36px; height: 36px; border: 1px solid var(--text-secondary); border-radius: 2px; background-color: var(--bg-white); box-shadow: var(--shadow-default);"
-                            />
-                          </div>
-                          <div
-                            style="position: absolute; bottom: -5px; right: -5px;"
-                          >
-                            <span style="font-size: 1.2rem;">${emoji}</span>
-                          </div>
-                        `
-                      : html`
-                          <div
-                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"
-                          >
-                            <span style="font-size: 2rem;">${emoji}</span>
-                          </div>
-                        `}
-                  </div>
-                </div>
-                <div
-                  style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
-                >
-                  <div style="font-size: 0.9rem; margin-right: 1rem; color: var(--text-primary);">
-                    <p
-                      class="notification-title"
-                      style="margin-top: 8px; margin-bottom: 2px;"
-                    >
-                      <strong>
-                        <span>${identity.displayName}</span>
-                        <span style="font-weight: normal;"> reacted with</span>
-                        <span style="font-size: 1.2em;"> ${emoji} </span>
-                        <span style="font-weight: normal;">
-                          to your comment on
-                        </span>
-                        <span> </span>
-                        <span>${DOMPurify.sanitize(submissionTitle)}</span>
-                      </strong>
-                    </p>
-                    <p
-                      style="line-height: 1.2; white-space: pre-wrap; margin: 5px 0 1rem 0; word-break: break-word;"
-                    >
-                      <span style="text-align: justify; color: var(--text-tertiary);"
-                        >${DOMPurify.sanitize(
-                          truncateComment(commentTitle),
-                        )}</span
-                      >
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </a>
-          </td>
-        </tr>
-      `;
+      const submissionIndex = activity.message.submissionId.split(":")[1];
+      const commentId = activity.message.commentId.split(":")[1];
+      return Row({
+        isNew,
+        i,
+        href: `/stories/${getSlug(
+          activity.message.submission_title,
+        )}?index=${submissionIndex}#${commentId}`,
+        mark: Mark("react", identity),
+        headline: html`${identity.displayName} reacted ${activity.emoji} to
+          your comment on${" "}${Quote(
+            DOMPurify.sanitize(activity.message.submission_title),
+          )}`,
+        comment: DOMPurify.sanitize(
+          truncateComment(activity.message.comment_title),
+        ),
+        timestamp: activity.timestamp,
+      });
     }
 
     const title = DOMPurify.sanitize(activity.message.title);
     const identity = activity.identities[activity.identities.length - 1];
-    const size = 28;
-    const identities = activity.identities
+    const upvoter = [...activity.identities]
       .reverse()
       .filter((identity) => identity.safeAvatar)
-      .slice(0, 5);
-
-    return html`
-      <tr style="background-color: ${bgColor};">
-        <td>
-          <a
-            href="/stories/${getSlug(title)}?index=0x${activity.message
-              .index}${identities.length > 0
-              ? `&upvoter=${identities[identities.length - 1].address}`
-              : ""}"
-            class="like-notification notification"
-            onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-          >
-            <div
-              style="display: flex; border-bottom: var(--border-subtle);"
-            >
-              <div
-                style="flex: 0.15; display: flex; flex-direction: column; align-items: center; justify-content: center;"
-              >
-                <div
-                  class="heart-icon"
-                  style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: ${theme.color};"
-                  title="like"
-                >
-                  ${heartSVG}
-                </div>
-                <div
-                  style="font-size: 0.7rem; font-weight: bold; color: ${theme.color}; margin-top: -5px;"
-                >
-                  +1 🥝
-                </div>
-              </div>
-              <div
-                style="padding-top: 10px; flex: 0.85; display: flex; flex-direction: column;"
-              >
-                ${identities.length > 0 &&
-                identities[0].address === identity.address
-                  ? html`<div
-                      style="margin-left: -15px; display: flex; align-items: center;"
-                    >
-                      ${identities.map(
-                        (identity, index) => html`
-                          <img
-                            src="${DOMPurify.sanitize(identity.safeAvatar)}"
-                            loading="lazy"
-                            alt="avatar"
-                            style="width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: 15px;"
-                          />
-                        `,
-                      )}
-                    </div>`
-                  : ""}
-                <div style="font-size: 0.9rem; margin-right: 1rem; color: var(--text-primary);">
-                  <p style="margin-top: 8px; margin-bottom: 2px;">
-                    <strong>
-                      ${identity.displayName}
-                      <span> </span>
-                    </strong>
-                    ${activity.identities.length > 1
-                      ? html`
-                          <span>and </span>
-                          ${activity.identities.length - 1}
-                          <span> others </span>
-                        `
-                      : ""}
-                    liked your submission
-                  </p>
-                  <p style="font-weight: bold; margin: 7px 0 15px 0;">
-                    ${title.substring(0, 80)}
-                  </p>
-                  ${activity.metadata?.index && activity.metadata?.title
-                    ? html`
-                        <p style="font-weight: bold;">
-                          ${DOMPurify.sanitize(activity.metadata.title)}
-                        </p>
-                      `
-                    : ""}
-                </div>
-              </div>
-            </div>
-          </a>
-        </td>
-      </tr>
-    `;
+      .slice(0, 5)
+      .pop();
+    const others = activity.identities.length - 1;
+    return Row({
+      isNew,
+      i,
+      href: `/stories/${getSlug(title)}?index=0x${activity.message.index}${
+        upvoter ? `&upvoter=${upvoter.address}` : ""
+      }`,
+      mark: Mark("like"),
+      headline: html`${identity.displayName}${others > 0
+          ? ` and ${others} ${others === 1 ? "other" : "others"}`
+          : ""}${" "}liked your submission${" "}${Quote(title.substring(0, 80))}`,
+      comment: null,
+      timestamp: activity.timestamp,
+    });
   };
 }
+
+const Heading = html`<header class="n2-page-head">
+  <h1 class="n2-title">
+    <span class="n2-d">Notifications</span
+    ><span class="n2-m">Your notifications</span>
+  </h1>
+  <p class="n2-sub n2-m">The conversation continues.</p>
+</header>`;
 
 export async function page(
   theme,
@@ -347,112 +212,68 @@ export async function page(
   isQueryParamVersion,
 ) {
   identity = DOMPurify.sanitize(identity);
-  let feed;
-  if (notifications.length === 0) {
-    feed = html`
-      <tr>
-        <td
-          class="feed-container"
-          style="text-align: center; vertical-align: middle; min-height: 100vh; padding: 20px; color: var(--text-secondary);"
-        >
-          <p>No notifications yet</p>
-        </td>
-      </tr>
-    `;
-  } else {
-    feed = notifications.map(generateRow(lastUpdate, theme));
-  }
+  const newCount = notifications.filter(
+    (n) => lastUpdate < n.timestamp,
+  ).length;
+  const feed =
+    notifications.length === 0
+      ? EmptyState({ icon: "bell", text: "No notifications yet" })
+      : html`<ol class="n2-notif-list">
+          ${notifications.map(generateRow(lastUpdate))}
+        </ol>`;
   const preloadNotifs = notifications.slice(0, 3).map(linkFromComment);
-  const content = html`
-    <html lang="en" op="news">
-      <head>
-        ${custom(undefined, "Activity | Kiwi News", "Your latest notifications and activity on Kiwi News.", undefined, ["/", ...preloadNotifs])}
-      </head>
-      <body
-        data-instant-allow-query-string
-        data-instant-allow-external-links
-        ontouchstart=""
-      >
-        <div class="container">
-          ${Sidebar()}
-          ${RightColumn()}
-          <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
-              <tr>
-                ${await Header(theme)}
-              </tr>
-              <tr>
-                <td
-                  style="text-align: center; padding: 1rem; background-color: var(--background-color0); font-size: 0.8rem; color: var(--text-primary);"
-                >
-                  <span
-                    style="vertical-align: middle; display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 256 256"
-                      style="height: 12px; width: 12px; margin-right: 0.5rem;"
-                    >
-                      <rect width="256" height="256" fill="none" />
-                      <path
-                        d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="16"
-                      />
-                      <line
-                        x1="136"
-                        y1="64"
-                        x2="192"
-                        y2="120"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="16"
-                      />
-                      <line
-                        x1="164"
-                        y1="92"
-                        x2="68"
-                        y2="188"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="16"
-                      />
-                      <line
-                        x1="95.49"
-                        y1="215.49"
-                        x2="40.51"
-                        y2="160.51"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="16"
-                      />
-                    </svg>
-                    <strong>Notifications:</strong>
-                    <span style="margin-left: 0.5rem;"
-                      >Receive alerts when you submit a story or when someone
-                      replies to your comment.</span
-                    >
-                  </span>
-                </td>
-              </tr>
-              ${feed}
-            </table>
-            ${Footer(theme, "/activity")}
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
-  return "<!DOCTYPE html>" + content;
+  return Page({
+    theme,
+    path: "/activity",
+    head: custom(
+      undefined,
+      "Activity | Kiwi News",
+      "Your latest notifications and activity on Kiwi News.",
+      undefined,
+      ["/", ...preloadNotifs],
+    ),
+    body: html`<div class="n2-notifs">
+      ${Heading}
+      ${newCount > 0
+        ? html`<div class="n2-notifs-toolbar n2-d">
+            <span class="n2-eyebrow">${newCount} new</span>
+            ${
+              // NOTE: Opening this page marks everything as read (the
+              // lastUpdate cookie), so loading it again shows them as read.
+              isQueryParamVersion
+                ? null
+                : html`<a class="n2-mark-read" href="/activity"
+                    >Mark all as read</a
+                  >`
+            }
+          </div>`
+        : null}
+      ${feed}
+    </div>`,
+  });
+}
+
+// NOTE: /activity without an identity cookie, like the apps' logged-out
+// notifications tab. main.jsx turns <kiwi-login-button> into a button that
+// opens the login (LoginButton.jsx); the link is there until it loads.
+export async function loggedOutPage(theme) {
+  return Page({
+    theme,
+    path: "/activity",
+    head: custom(
+      undefined,
+      "Notifications | Kiwi News",
+      "Your latest notifications and activity on Kiwi News.",
+    ),
+    body: EmptyState({
+      cls: "n2-empty-full",
+      image: "/kiwi-glasses.webp",
+      text: "Log in to see notifications when people like your content or reply to you.",
+      action: html`<kiwi-login-button data-class="n2-btn n2-btn-wide"
+        ><a class="n2-btn n2-btn-wide" href="/">Log in</a></kiwi-login-button
+      >`,
+    }),
+  });
 }
 
 export async function data(
