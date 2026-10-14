@@ -735,9 +735,6 @@ const row = (
                           : null}
                       </div>
                     </div>
-                    <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                      <span style="font-size: 11px; opacity: 0.55; color: var(--embed-twitter-text);">x.com</span>
-                    </div>
                   </div>
                 </a>`
               : canRenderFarcasterPreview
@@ -891,9 +888,6 @@ const row = (
                             `
                           : null}
                       </div>
-                      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                        <span style="font-size: 11px; opacity: 0.75; color: var(--color-farcaster-light);">farcaster.xyz</span>
-                      </div>
                     </div>
                   </div>
                 </a>`
@@ -994,9 +988,6 @@ const row = (
                               </div>
                             `
                           : null}
-                      </div>
-                      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                        <span style="font-size: 11px; opacity: 0.75; color: var(--color-bluesky);">bsky.app</span>
                       </div>
                     </div>
                   </div>
