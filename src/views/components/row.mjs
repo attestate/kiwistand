@@ -324,9 +324,8 @@ const row = (
   hideCast,
   period,
   invert = false,
-  // NOTE: query is currently only used when we want to mark a comment preview
-  // as visited, and so since comment previews are only active on / and /new, we
-  // don't have to properly set query anywhere else.
+  // NOTE: Unused since the comment preview links to the comment on the story
+  // page (like notifications do); kept so callers' positional arguments stay.
   query = "",
   debugMode = false,
   isAboveFold = false,
@@ -1246,19 +1245,12 @@ const row = (
                     class="interaction-element"
                     data-story-idx="${story.index}"
                     data-last-comment-idx="${story.lastComment.index}"
-                    data-alt-hash-a="${path === "/"
-                      ? `/new?cached=true#0x${story.lastComment.index}`
-                      : `/#0x${story.lastComment.index}`}"
-                    data-alt-hash-b="${path === "/"
-                      ? `/#0x${story.lastComment.index}`
-                      : `/new?cached=true#0x${story.lastComment.index}`}"
-                    onclick="var si=this.dataset.storyIdx; (function(a,b){history.replaceState(null,'',a);history.replaceState(null,'',b);})(this.dataset.altHashA,this.dataset.altHashB),document.querySelector('.comment-preview-0x'+si).style.opacity = 0.5,window.addToQueue(new CustomEvent('open-comments-0x'+si,{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));var cb=document.getElementById('chat-bubble-'+si);if(cb)cb.classList.toggle('comment-button-active');"
                     style="margin: 0; display: flex; width: 100%;"
                   >
                     <a
                       class="comment-preview-anchor kn-cp"
-                      href="${path === "/" ? "" : path}${query}#0x${story
-                        .lastComment.index}"
+                      href="${storyPath}#0x${story.lastComment.index}"
+                      onclick="${spinnerOnclick}"
                     >
                       <span class="kn-cp-avatar">
                         ${story.lastComment.identity.safeAvatar

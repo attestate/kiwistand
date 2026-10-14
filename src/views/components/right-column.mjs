@@ -41,39 +41,62 @@ export const AppBox = () => html`
 const BRAND_ASSETS =
   "https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=sharing";
 
+const TELEGRAM = "https://t.me/+QGAviVT67m00Njc8";
+
 // NOTE: The design's "Side footer" (About · Guidelines · Privacy · API, "Made
-// for the open web.") plus the links of the old site footer, which the
-// desktop pages with this column no longer show (news.css hides it from
-// 1101px). "Docs" was the same page as "About".
+// for the open web.") carries the links of the old site footer too, which
+// the desktop pages with this column no longer show (news.css hides it from
+// 1101px). With that many links they're grouped under small headings in the
+// boxes' eyebrow style ("KIWI WEEKLY", "IPHONE BETA"); the grouping is ours,
+// the .pen only shows four links. "Docs" was the same page as "About".
+const FooterGroup = (title, links) => html`
+  <nav class="kn-side-group" aria-label="${title}">
+    <span class="kn-eyebrow kn-side-eyebrow">${title}</span>
+    <div class="kn-side-links">${links}</div>
+  </nav>
+`;
+
 export const SideFooter = () => html`
   <div class="kn-side-footer">
-    <nav class="kn-side-links" aria-label="More from Kiwi News">
-      <a href="https://kiwistand.github.io/kiwi-docs/" target="_blank">About</a>
-      <a href="/guidelines">Guidelines</a>
-      <a href="/privacy-policy">Privacy</a>
-      <a href="https://attestate.com/kiwistand/main/" target="_blank">API</a>
-      <a href="/newsletter">Newsletter</a>
-      <a href="/weekly">Weekly archive</a>
-      <span class="kn-side-group"
-        >RSS <a href="/feed.xml">Hot</a> · <a href="/new.xml">New</a></span
+    ${FooterGroup(
+      "Kiwi News",
+      html`<a href="https://kiwistand.github.io/kiwi-docs/" target="_blank"
+          >About</a
+        >
+        <a href="/guidelines">Guidelines</a>
+        <a href="/privacy-policy">Privacy</a>
+        <a href="/newsletter">Newsletter</a>
+        <a href="/weekly">Weekly archive</a>
+        <a href="${TELEGRAM}" target="_blank" rel="noopener noreferrer"
+          >Telegram</a
+        >
+        <a href="${BRAND_ASSETS}" target="_blank">Brand assets</a>`,
+    )}
+    ${FooterGroup(
+      "Developers",
+      html`<a href="https://attestate.com/kiwistand/main/" target="_blank"
+          >API</a
+        >
+        <a href="/llms.txt">LLMs</a>
+        <a href="https://github.com/attestate/kiwistand" target="_blank"
+          >Source code</a
+        >
+        <a
+          href="https://github.com/attestate/kiwistand/tree/main/kiwimcp-client"
+          target="_blank"
+          >MCP client</a
+        >
+        <a href="/feed.xml">RSS Hot</a>
+        <a href="/new.xml">RSS New</a>`,
+    )}
+    <div class="kn-side-colophon">
+      <span class="kn-side-made"
+        >Hosted by${" "}<a href="https://attestate.com" target="_blank"
+          >attestate.com</a
+        >${" "}(Kontakt).</span
       >
-      <a href="/llms.txt">LLMs</a>
-      <a href="https://github.com/attestate/kiwistand" target="_blank"
-        >Source code</a
-      >
-      <a
-        href="https://github.com/attestate/kiwistand/tree/main/kiwimcp-client"
-        target="_blank"
-        >MCP client</a
-      >
-      <a href="${BRAND_ASSETS}" target="_blank">Brand assets</a>
-    </nav>
-    <span class="kn-side-made">Made for the open web.</span>
-    <span class="kn-side-made"
-      >Hosted by${" "}<a href="https://attestate.com" target="_blank"
-        >attestate.com</a
-      >${" "}(Kontakt).</span
-    >
+      <span class="kn-side-made">Made for the open web.</span>
+    </div>
   </div>
 `;
 
