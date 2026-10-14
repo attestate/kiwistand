@@ -3171,6 +3171,14 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 .kn-dot {
   color: var(--kn-text-secondary);
 }
+/* The views/clicks pair sits in its own inline span, outside the byline's
+   flex gap, so its dots get the same 7px on both sides here. */
+.story-analytics .kn-dot {
+  margin: 0 7px;
+}
+.story-analytics .kn-dot:first-child {
+  margin-left: 0;
+}
 .kn-age,
 .kn-age:link,
 .kn-age:visited {
