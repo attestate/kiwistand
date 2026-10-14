@@ -544,6 +544,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
   return "<!DOCTYPE html>" + html`
     <html lang="en" op="news">
       <head>
+        ${head.expectTopbar}
         <base href="/" />
         ${head.custom(
           ogImage,

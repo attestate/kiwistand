@@ -8,7 +8,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { NewsletterCardElement } from "./components/newsletter-card.mjs";
-import { custom } from "./components/head.mjs";
+import { custom, expectTopbar } from "./components/head.mjs";
 import * as isoweek from "../isoweek.mjs";
 import { autoIntro, hostname } from "../weekly.mjs";
 import { getSlug } from "../utils.mjs";
@@ -115,6 +115,7 @@ async function Page(
     html`
       <html lang="en" op="news">
         <head>
+          ${expectTopbar}
           <base href="/" />
           ${custom(
             OG_IMAGE,
