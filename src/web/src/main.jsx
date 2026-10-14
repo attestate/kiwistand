@@ -1763,18 +1763,18 @@ async function shouldReconnectWallet() {
 // The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
 // taps and dismissals (theme-init.js reads them) and measure it in PostHog.
 function initTestFlightCard() {
-  const card = document.querySelector(".tf-card");
+  const card = document.querySelector(".kn-tf-card");
   const root = document.documentElement;
   if (!card || !root.hasAttribute("data-tf-card") || isIOSApp()) return;
   const props = { path: window.location.pathname };
   capture("testflight_card_shown", props);
-  card.querySelector(".tf-card-get")?.addEventListener("click", () => {
+  card.querySelector(".kn-tf-get")?.addEventListener("click", () => {
     try {
       localStorage.setItem("kiwi-tf-card-tapped", String(Date.now()));
     } catch {}
     capture("testflight_card_clicked", props);
   });
-  card.querySelector(".tf-card-close")?.addEventListener("click", () => {
+  card.querySelector(".kn-tf-close")?.addEventListener("click", () => {
     try {
       localStorage.setItem("kiwi-tf-card-dismissed", "1");
     } catch {}

@@ -2375,9 +2375,8 @@ newsletter-card {
   }
 }
 
-/* "Kiwi News for iPhone" TestFlight card (components/testflight-card.mjs)
-   at the top of the feeds on phones. theme-init.js decides before first
-   paint, so it's either there from the start or not at all. */
+/* "Kiwi News for iPhone" card (testflight-card.mjs) on phones, shown before
+   paint by theme-init.js. The .pen's desktop "iOS app box" minus the QR. */
 .tf-card-row {
   display: none;
 }
@@ -2386,6 +2385,43 @@ newsletter-card {
     display: table-row;
   }
 }
+.kn-tf-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 12px 20px 0;
+  padding: 20px;
+  border: 1px solid var(--kn-card-border);
+  border-radius: var(--kn-radius-lg);
+  font-family: var(--kn-font);
+}
+.kn-tf-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.kn-tf-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--kn-radius);
+  background: none;
+  color: var(--kn-text-secondary);
+  cursor: pointer;
+}
+/* NOTE: .tf-card is the card look of the nickname prompt
+   (NicknamePrompt.jsx). */
 .tf-card {
   position: relative;
   display: flex;
@@ -2399,15 +2435,6 @@ newsletter-card {
   border-radius: var(--kn-radius-lg);
   background: var(--kn-comment-strip);
   font-family: var(--kn-font);
-}
-.tf-card-icon {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: #f6f6ef;
-  padding: 4px;
-  box-sizing: border-box;
 }
 .tf-card-body {
   flex: 1;
