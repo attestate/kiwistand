@@ -11,7 +11,6 @@ import slugify from "slugify";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
-import TestFlightCard from "./components/testflight-card.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
@@ -225,7 +224,6 @@ export default async function index(theme, page, period, domain) {
               <tr>
                 ${SecondHeader(theme, "best", period, domain)}
               </tr>
-              ${TestFlightCard()}
               ${page !== 0
                 ? html`<tr>
                     <td>

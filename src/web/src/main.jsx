@@ -607,20 +607,6 @@ async function addAnalyticsConsent() {
   );
 }
 
-async function addTestFlightQR() {
-  const container = document.getElementById("testflight-qr-container");
-  if (!container || container.children.length > 0) return;
-
-  const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
-  createRoot(container).render(
-    <StrictMode>
-      <Providers>
-        <TestFlightQR />
-      </Providers>
-    </StrictMode>,
-  );
-}
-
 // The bookmark button under each story (views/components/row.mjs) saves it
 // to the account's saved stories (/saved), with the existing signed
 // bookmarks API. Logged out, it opens the login modal.
@@ -1774,29 +1760,6 @@ async function shouldReconnectWallet() {
   }
 }
 
-// The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
-// taps and dismissals (theme-init.js reads them) and measure it in PostHog.
-function initTestFlightCard() {
-  const card = document.querySelector(".tf-card");
-  const root = document.documentElement;
-  if (!card || !root.hasAttribute("data-tf-card") || isIOSApp()) return;
-  const props = { path: window.location.pathname };
-  capture("testflight_card_shown", props);
-  card.querySelector(".tf-card-get")?.addEventListener("click", () => {
-    try {
-      localStorage.setItem("kiwi-tf-card-tapped", String(Date.now()));
-    } catch {}
-    capture("testflight_card_clicked", props);
-  });
-  card.querySelector(".tf-card-close")?.addEventListener("click", () => {
-    try {
-      localStorage.setItem("kiwi-tf-card-dismissed", "1");
-    } catch {}
-    root.removeAttribute("data-tf-card");
-    capture("testflight_card_dismissed", props);
-  });
-}
-
 // NOTE: Tor takes several seconds to connect. With Private RPC on, start that
 // as soon as the page is idle, so the first chain read (e.g. a delegation
 // check) doesn't wait for it. Visitors with it off load nothing.
@@ -1831,7 +1794,6 @@ async function start() {
     .catch((err) => console.log(err));
 
   initSpinnerOverlay();
-  initTestFlightCard();
 
   // Apply safe area insets for mini app context
   console.log("Starting applySafeAreaInsets...");
@@ -1929,8 +1891,6 @@ async function start() {
   // Add the analytics consent banner
   await addAnalyticsConsent();
 
-  // Add TestFlight QR code
-  await addTestFlightQR();
 
   const { fetchDelegations } = await import("./API.mjs");
 

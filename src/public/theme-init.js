@@ -44,18 +44,4 @@
       if (own) document.documentElement.setAttribute('data-own-profile', '');
     }
   } catch (err) {}
-
-  // NOTE: The "Kiwi News for iPhone" TestFlight card (testflight-card.mjs) is for iPhone
-  // Safari visitors, not inside a Farcaster mini app (an iframe) or a home
-  // screen web app. Hidden for good after "x", and for 30 days after a tap.
-  try {
-    const iPhone = /iPhone|iPod/.test(navigator.userAgent);
-    const embedded = window.self !== window.top || window.navigator.standalone;
-    const dismissed = localStorage.getItem('kiwi-tf-card-dismissed');
-    const tapped = Number(localStorage.getItem('kiwi-tf-card-tapped')) || 0;
-    const recentlyTapped = Date.now() - tapped < 30 * 24 * 60 * 60 * 1000;
-    if (iPhone && !embedded && !dismissed && !recentlyTapped) {
-      document.documentElement.setAttribute('data-tf-card', '');
-    }
-  } catch (err) {}
 })();
