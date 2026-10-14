@@ -230,15 +230,20 @@ function Guidelines({ onDone }) {
   );
 }
 
-export default function Onboarding({ onClose }) {
+// NOTE: start="delegate" opens it right at "Enable one-tap actions", for a
+// wallet that is connected but has no key in this browser yet (it replaces
+// the old delegation dialog, see DelegationModal.jsx).
+export default function Onboarding({ onClose, start }) {
   const desk = useDesktop();
   const account = useAccount();
   const passkeys = canUsePasskey();
   const [step, setStep] = useState(() =>
-    agreedBefore() ? "join" : "welcome",
+    start === "delegate" ? "delegate" : agreedBefore() ? "join" : "welcome",
   );
   // "create", "signin" or "wallet"; without passkeys only the wallet works.
-  const [path, setPath] = useState(passkeys ? "create" : "wallet");
+  const [path, setPath] = useState(
+    passkeys && start !== "delegate" ? "create" : "wallet",
+  );
   const [emailDone] = useState(emailDoneBefore);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");

@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import DOMPurify from "isomorphic-dompurify";
 import { Providers } from "./providers.jsx";
+import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 import { bindHapticsToElements } from "./haptics.js";
 import { initSpinnerOverlay } from "./spinnerOverlay.js";
 import {
@@ -1009,7 +1010,6 @@ async function addStoryEmojiReactions(delegations, toast) {
       ]);
 
     const { EmojiReaction } = commentSection;
-    const { WagmiProvider } = wagmi;
     const { QueryClient, QueryClientProvider } = tanstackQuery;
     const { RainbowKitProvider } = rainbowKit;
     const { client, chains } = clientConfig;
@@ -1029,7 +1029,7 @@ async function addStoryEmojiReactions(delegations, toast) {
           <StrictMode>
             <Providers>
               <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={client} reconnectOnMount={false}>
+                <KiwiWagmiProvider>
                   <RainbowKitProvider chains={chains}>
                     <EmojiReaction
                       comment={comment}
@@ -1037,7 +1037,7 @@ async function addStoryEmojiReactions(delegations, toast) {
                       toast={toast}
                     />
                   </RainbowKitProvider>
-                </WagmiProvider>
+                </KiwiWagmiProvider>
               </QueryClientProvider>
             </Providers>
           </StrictMode>

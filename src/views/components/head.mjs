@@ -11,6 +11,21 @@ import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
 
+// NOTE: Don't paint until the top bar (header.mjs) is parsed. The desktop
+// layout (.container:has(.kn-topbar) in news.css: the 112px top padding and
+// the centered columns) only applies once it's in the DOM, and it comes after
+// the right column in the HTML. A paint in between (on a slow CPU the parser
+// yields wherever it likes) showed the right column at the top left and then
+// moved it into place: a layout shift (CI's layout-shift check on /weekly).
+// Pages without a top bar render once the document is parsed. A page with
+// <base href="/"> (story.mjs, weekly.mjs) must put this before <base>: the
+// href has to resolve to the page's own URL.
+export const expectTopbar = html`<link
+  rel="expect"
+  href="#kn-topbar"
+  blocking="render"
+/>`;
+
 function decodeHtmlEntities(value) {
   if (!value || typeof value !== "string" || !value.includes("&")) {
     return value;
@@ -138,6 +153,7 @@ export function custom(
       rel="stylesheet"
       href="/fonts/inter.css"
     />
+    ${expectTopbar}
     <style>
       /* Critical CSS to prevent layout shift */
       :root {

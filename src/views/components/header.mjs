@@ -73,7 +73,7 @@ const header = (theme, path) => {
   `;
   return html`<td class="kn-header-cell">
     <nav-delegation-modal />
-    <header class="kn-topbar">
+    <header id="kn-topbar" class="kn-topbar">
       <div class="kn-topbar-left">
         ${hasBack
           ? html`<div class="story-back-button kn-only-mobile">
