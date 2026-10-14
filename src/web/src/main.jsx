@@ -1760,6 +1760,29 @@ async function shouldReconnectWallet() {
   }
 }
 
+// The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
+// taps and dismissals (theme-init.js reads them) and measure it in PostHog.
+function initTestFlightCard() {
+  const card = document.querySelector(".kn-tf-card");
+  const root = document.documentElement;
+  if (!card || !root.hasAttribute("data-tf-card") || isIOSApp()) return;
+  const props = { path: window.location.pathname };
+  capture("testflight_card_shown", props);
+  card.querySelector(".kn-tf-get")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-card-tapped", String(Date.now()));
+    } catch {}
+    capture("testflight_card_clicked", props);
+  });
+  card.querySelector(".kn-tf-close")?.addEventListener("click", () => {
+    try {
+      localStorage.setItem("kiwi-tf-card-dismissed", "1");
+    } catch {}
+    root.removeAttribute("data-tf-card");
+    capture("testflight_card_dismissed", props);
+  });
+}
+
 // NOTE: Tor takes several seconds to connect. With Private RPC on, start that
 // as soon as the page is idle, so the first chain read (e.g. a delegation
 // check) doesn't wait for it. Visitors with it off load nothing.
@@ -1794,6 +1817,7 @@ async function start() {
     .catch((err) => console.log(err));
 
   initSpinnerOverlay();
+  initTestFlightCard();
 
   // Apply safe area insets for mini app context
   console.log("Starting applySafeAreaInsets...");

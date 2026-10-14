@@ -6,6 +6,7 @@ import normalizeUrl from "normalize-url";
 import * as ens from "../ens.mjs";
 import Header from "./components/header.mjs";
 import SecondHeader from "./components/secondheader.mjs";
+import TestFlightCard from "./components/testflight-card.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
@@ -223,6 +224,7 @@ async function renderPage(theme) {
               <tr>
                 ${SecondHeader(theme, "new")}
               </tr>
+              ${TestFlightCard()}
               ${items.map(
                 (item, i) =>
                   Row(
