@@ -3378,30 +3378,62 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   color: var(--kn-text-primary);
   text-decoration: none;
 }
+/* "Side footer" (Web 2 · Desktop · Home · Hot): JetBrains Mono 12px, the
+   links in text-tertiary with 14px between them, then "Made for the open
+   web." in text-muted, 8px apart. Every line starts on the boxes' left edge;
+   the links wrap onto as many lines as they need, 6px apart. */
 .kn-side-footer {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
+  margin: 0;
+  padding: 0;
   font-family: var(--kn-font-mono);
   font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0;
+  text-align: left;
 }
 .kn-side-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
 }
-.kn-side-links a,
-.kn-side-links a:link,
-.kn-side-links a:visited {
+.kn-side-links > *,
+.kn-side-footer a {
+  margin: 0;
+  padding: 0;
+  line-height: inherit;
+  white-space: nowrap;
+}
+.kn-side-group {
+  color: var(--kn-text-muted);
+}
+.kn-side-footer a,
+.kn-side-footer a:link,
+.kn-side-footer a:visited {
   color: var(--kn-text-tertiary);
   text-decoration: none;
 }
-.kn-side-links a:hover {
+.kn-side-footer a:hover {
   color: var(--kn-text-primary);
   text-decoration: underline;
 }
 .kn-side-made {
   color: var(--kn-text-muted);
+}
+/* NOTE: Where the right column shows (1101px and up), its footer has the old
+   site footer's links (components/footer.mjs), so that one goes. Phones,
+   narrower windows and pages without the column keep it. */
+@media (min-width: 1101px) {
+  body:has(.right-column.kn-right) .kn-site-footer {
+    display: none !important;
+  }
 }
 
 /* -- Phones -------------------------------------------------------------- */
