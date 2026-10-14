@@ -66,7 +66,6 @@ import * as activity from "./views/activity.mjs";
 import submit from "./views/submit.mjs";
 
 import appTestflight from "./views/app-testflight.mjs";
-import notifications from "./views/notifications.mjs";
 import debug from "./views/debug.mjs";
 import commentDebug from "./views/comment-debug.mjs";
 import { parse, metadata, cachedMetadata, warmMetadata } from "./parser.mjs";
@@ -2390,11 +2389,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
+  // NOTE: /notifications was the old onboarding's "Turn on push
+  // notifications" step. It's the notifications page now (/activity), like
+  // in the iOS app's router.
   app.get("/notifications", async (request, reply) => {
-    const content = await notifications(reply.locals.theme);
-
+    const query = request.originalUrl.split("?")[1];
     reply.header("Cache-Control", "public, max-age=0");
-    return reply.status(200).type("text/html").send(content.valueOf());
+    return reply.redirect(302, `/activity${query ? `?${query}` : ""}`);
   });
   // GET resolves ENS. skipDetails drops reactions and replaces identities
   // with []. For a like, message.identity is the author, so the liker is gone.

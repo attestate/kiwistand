@@ -99,7 +99,7 @@ function Mark(kind, identity) {
       : kind === "react"
       ? html`<span class="n2-notif-spark">${Icon("sparkle")}</span>`
       : Avatar(identity);
-  const desktopIcon = { like: "heart", comment: "comment", react: "sparkle" }[
+  const desktopIcon = { like: "heart", comment: "chat", react: "sparkle" }[
     kind
   ];
   return html`<span class="n2-notif-mark">
@@ -239,12 +239,15 @@ export async function page(
             <span class="n2-eyebrow">${newCount} new</span>
             ${
               // NOTE: Opening this page marks everything as read (the
-              // lastUpdate cookie), so loading it again shows them as read.
-              isQueryParamVersion
-                ? null
-                : html`<a class="n2-mark-read" href="/activity"
-                    >Mark all as read</a
-                  >`
+              // lastUpdate cookie), so loading it again without the
+              // lastUpdate parameter shows them as read.
+              html`<a
+                class="n2-mark-read"
+                href="${isQueryParamVersion
+                  ? `/activity?address=${identity}`
+                  : "/activity"}"
+                >Mark all as read</a
+              >`
             }
           </div>`
         : null}
