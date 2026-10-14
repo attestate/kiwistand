@@ -3383,7 +3383,7 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   font-family: var(--kn-font-mono);
   font-size: 12px;
   font-weight: 400;
-  line-height: 18px;
+  line-height: 15px;
   letter-spacing: 0;
   text-align: left;
 }
