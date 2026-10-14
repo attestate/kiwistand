@@ -949,17 +949,15 @@ body.n2 #hnmain > table.n2-table {
   .n2-q::after {
     content: "\201D";
   }
-  /* NOTE: Each row has its own separator stroke, drawn over the row's
-     unread tint like in the design (the rows overlap by the 1px). */
+  /* NOTE: "Notification · …" rows: no box and no radius, only a 0.5px
+     separator hairline at the bottom, drawn over the unread tint. */
   .n2-notif-list {
     gap: 0;
   }
   .n2-notif {
+    border: 0;
+    border-bottom: 0.5px solid var(--n2-separator);
     border-radius: 0;
-    border: 1px solid var(--n2-separator);
-  }
-  .n2-notif + .n2-notif {
-    margin-top: -1px;
   }
   .n2 a.n2-notif-link {
     gap: 14px;
@@ -978,6 +976,7 @@ body.n2 #hnmain > table.n2-table {
     line-height: 1.45;
   }
   .n2-notif-comment {
+    line-height: 1.5;
     color: var(--n2-text-3);
   }
   .n2-notif-when {

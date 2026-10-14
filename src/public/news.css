@@ -3391,7 +3391,7 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px 14px;
+  gap: 0 14px;
   margin: 0;
   padding: 0;
 }
@@ -3402,8 +3402,23 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   line-height: inherit;
   white-space: nowrap;
 }
+/* NOTE: Each link is a 24px tall target (Lighthouse "target-size"); the
+   rows sit 24px apart instead of 15px + 6px. */
+.kn-side-footer .kn-side-links > * {
+  display: inline-block;
+  min-height: 24px;
+  line-height: 24px;
+}
 .kn-side-group {
-  color: var(--kn-text-muted);
+  color: var(--kn-text-tertiary);
+}
+/* NOTE: A link inside a sentence needs more than colour to stand out
+   (Lighthouse "link-in-text-block"). */
+.kn-side-footer .kn-side-made a,
+.kn-side-footer .kn-side-made a:link,
+.kn-side-footer .kn-side-made a:visited {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 .kn-side-footer a,
 .kn-side-footer a:link,
@@ -3848,17 +3863,50 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   background: linear-gradient(var(--kn-kiwi-green-light), var(--kn-kiwi-green-light)),
     var(--kn-card);
 }
-/* NOTE: Desktop ("Web 2 · Desktop · Story"): the comments sit on the page
-   background with only a separator stroke, no card fill. Phones keep the
-   iOS app's white cards. Same for the feed's inline comments. */
+/* NOTE: Desktop ("Web 2 · Desktop · Story", "Comment · …" rows): flat rows
+   on the page background, no fill, no box and no radius, 16px above and
+   below, no side padding, a 0.5px separator hairline at the bottom. Phones
+   keep the iOS app's white cards. Same for the feed's inline comments. The
+   composer stays 20px below the last row. */
 @media (min-width: 641px) {
-  .kn-comment {
+  .kn-comment,
+  .kn-feed-comments .kn-comment {
+    margin: 0;
+    padding: 16px 0;
+    border: 0;
+    border-bottom: 0.5px solid var(--kn-separator);
+    border-radius: 0;
     background: transparent;
-    border-color: var(--kn-separator);
   }
   .kn-comment-targeted {
-    border-color: var(--kn-voted);
+    box-shadow: none;
     background: var(--kn-kiwi-green-light);
+  }
+  /* The rows' 28px round avatar, 12px from the text. */
+  .kn-comment-avatar {
+    width: 28px;
+  }
+  .kn-comment-avatar img {
+    width: 28px;
+    height: 28px;
+  }
+  /* "Comments" frame: 16px above the label, gap 4; the label row has a 10px
+     gap, 8px below it and a 0.5px separator rule. The composer follows
+     after the gap and its own 16px. */
+  .kn-comments {
+    padding-top: 16px;
+    padding-bottom: 20px;
+  }
+  .kn-section-label {
+    gap: 10px;
+    margin: 0 0 12px;
+  }
+  .kn-section-label::after {
+    height: 0.5px;
+    background: var(--kn-separator);
+  }
+  .kn-feed-comments .kn-comment:last-of-type {
+    margin-bottom: 12px;
   }
 }
 /* "No comments yet" (Web 2 · Desktop · Story · Article without image · no
