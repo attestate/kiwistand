@@ -37,6 +37,16 @@ try {
   cssHash = Date.now().toString();
 }
 
+// NOTE: fonts/inter.css is versioned too, so a change to it (e.g. the Latin
+// subsets) reaches browsers right away instead of after a day.
+let interHash = "";
+try {
+  const interContent = readFileSync(join(__dirname, "../../public/fonts/inter.css"), "utf8");
+  interHash = createHash("md5").update(interContent).digest("hex").substring(0, 8);
+} catch (err) {
+  interHash = cssHash;
+}
+
 // Read Vite manifest to get JS bundle URL for early modulepreload
 let mainJsUrl = null;
 if (env.NODE_ENV === "production") {
@@ -106,6 +116,11 @@ export function custom(
   documentTitle = documentTitle
     ? decodeHtmlEntities(DOMPurify.sanitize(decodeHtmlEntities(documentTitle)))
     : ogTitle;
+  // NOTE: The font preloads are the faces the first screen uses: Inter 400
+  // and 600 (phone titles), Inter 700 on desktop (its titles) and JetBrains
+  // Mono 400 (rank numbers, counts, times), Inter as the Latin subsets (see
+  // fonts/inter.css). Inter is font-display: optional, so a face that isn't
+  // in within ~100ms of the first paint is skipped for that page view.
   ogType =
     ogType ||
     (canonicalUrl && canonicalUrl.includes("/stories/") ? "article" : "website");
@@ -119,24 +134,34 @@ export function custom(
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/Inter-Regular.woff2"
+      href="/fonts/Inter-Regular-latin.woff2"
       crossorigin
     />
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/Inter-SemiBold.woff2"
+      href="/fonts/Inter-SemiBold-latin.woff2"
       crossorigin
     />
     <link
       rel="preload"
-      as="style"
-      href="/fonts/inter.css"
+      as="font"
+      type="font/woff2"
+      href="/fonts/Inter-Bold-latin.woff2"
+      media="(min-width: 641px)"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/jetbrains-mono-latin-400.woff2"
+      crossorigin
     />
     <link
       rel="stylesheet"
-      href="/fonts/inter.css"
+      href="/fonts/inter.css?v=${interHash}"
     />
     <style>
       /* Critical CSS to prevent layout shift */

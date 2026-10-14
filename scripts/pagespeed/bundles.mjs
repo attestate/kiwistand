@@ -100,8 +100,12 @@ for (const [key, chunk] of Object.entries(manifest)) {
   }
   for (const css of chunk.css || []) add("css", `${stableName(key)} (css)`, css);
 }
-for (const file of ["news.css", "fonts/inter.css"]) {
-  if (fs.existsSync(path.join(publicDir, file))) add("css", file, file);
+// NOTE: The server sends news.min.css (npm run build) for news.css.
+for (const [name, file] of [
+  ["news.css", fs.existsSync(path.join(publicDir, "news.min.css")) ? "news.min.css" : "news.css"],
+  ["fonts/inter.css", "fonts/inter.css"],
+]) {
+  if (fs.existsSync(path.join(publicDir, file))) add("css", name, file);
 }
 
 const rows = [];
