@@ -13,17 +13,19 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
   const options = useMemo(() => ({ onIndexed }), [onIndexed]);
   const {
     chainId,
-    switchChain,
     key,
     wallet,
     isPersistent,
     isLoading,
     isError,
     isSuccess,
-    config,
-    writeContract,
+    payload,
+    delegate,
+    delegateError,
   } = useDelegation(options);
 
+  // NOTE: One button for both cases: delegate() switches the wallet to
+  // Optimism first if it's on another chain, then sends the transaction.
   let action;
   if (!isPersistent) {
     action = (
@@ -50,18 +52,6 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
         hint="Approve the transaction in your wallet app, then come back."
       />
     );
-  } else if (chainId !== 10) {
-    action = (
-      <div className="kob-actions">
-        <button
-          type="button"
-          className="kob-btn"
-          onClick={() => switchChain?.({ chainId: 10 })}
-        >
-          Switch to Optimism
-        </button>
-      </div>
-    );
   } else {
     action = (
       <>
@@ -69,17 +59,25 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
           <button
             type="button"
             className="kob-btn"
-            disabled={!config || !writeContract}
-            onClick={() => config && writeContract(config.request)}
+            disabled={!payload}
+            onClick={delegate}
           >
             Approve in wallet
           </button>
         </div>
-        {isError && (
-          <ErrorText>
-            Couldn't prepare the transaction. You need a little ETH on
-            Optimism for the network fee.
-          </ErrorText>
+        {chainId !== 10 && !delegateError && (
+          <p className="kob-helper">Your wallet switches to Optimism first.</p>
+        )}
+        {delegateError ? (
+          <ErrorText>{delegateError}</ErrorText>
+        ) : (
+          isError &&
+          chainId === 10 && (
+            <ErrorText>
+              Couldn't prepare the transaction. You need a little ETH on
+              Optimism for the network fee.
+            </ErrorText>
+          )
         )}
       </>
     );

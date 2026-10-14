@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
-import { useAccount, WagmiProvider } from "wagmi";
+import { useAccount } from "wagmi";
+import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { resolveIdentity } from "@attestate/delegator2";
@@ -741,12 +742,12 @@ const Form = (props) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client} reconnectOnMount={false}>
+      <KiwiWagmiProvider>
         <RainbowKitProvider chains={chains}>
           <UrlInput url={url} setURL={setURL} toast={toast} />
           <SubmitButton {...props} url={url} />
         </RainbowKitProvider>
-      </WagmiProvider>
+      </KiwiWagmiProvider>
     </QueryClientProvider>
   );
 };
