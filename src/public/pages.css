@@ -713,6 +713,15 @@ body.n2 #hnmain > table.n2-table {
   .n2-field-title {
     order: 3;
   }
+  /* NOTE: A text post has no link to derive the title from, so the title
+     comes first and the text follows (SubmitButton.jsx sets .is-text). The
+     design only has the Link tab on desktop. */
+  .n2-submit-form.is-text .n2-field-title {
+    order: 2;
+  }
+  .n2-submit-form.is-text .n2-field-text {
+    order: 3;
+  }
   .n2-upload-row {
     order: 4;
     margin-top: 0;
