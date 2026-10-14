@@ -3825,6 +3825,56 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   background: linear-gradient(var(--kn-kiwi-green-light), var(--kn-kiwi-green-light)),
     var(--kn-card);
 }
+/* NOTE: Desktop ("Web 2 · Desktop · Story"): the comments sit on the page
+   background with only a separator stroke, no card fill. Phones keep the
+   iOS app's white cards. Same for the feed's inline comments. */
+@media (min-width: 641px) {
+  .kn-comment {
+    background: transparent;
+    border-color: var(--kn-separator);
+  }
+  .kn-comment-targeted {
+    border-color: var(--kn-voted);
+    background: var(--kn-kiwi-green-light);
+  }
+}
+/* "No comments yet" (Web 2 · Desktop · Story · Article without image · no
+   comments yet): the COMMENTS label, then the kiwi, title and line centred
+   with 28px above and below. Desktop only, the iOS story has no such state.
+   It goes away once the first comment shows up below it. */
+.kn-comments-empty-row {
+  display: none;
+}
+@media (min-width: 641px) {
+  .kn-comments-empty-row {
+    display: table-row;
+  }
+  .kn-comments-empty-row:has(+ tr .story-page-comments .kn-comment) {
+    display: none;
+  }
+}
+.kn-comments-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 0;
+  font-family: var(--kn-font);
+  text-align: center;
+}
+.kn-comments-empty-kiwi {
+  font-size: 22px;
+  line-height: 1.2;
+}
+.kn-comments-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--kn-text-primary);
+}
+.kn-comments-empty-text {
+  font-size: 14px;
+  color: var(--kn-text-secondary);
+}
 .kn-feed-comments {
   margin: 4px 0 10px;
   padding: 0;

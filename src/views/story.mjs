@@ -843,7 +843,26 @@ export default async function (trie, theme, index, value, referral, commentIndex
                       </div>
                     </td>
                   </tr>`
-                : null}
+                : html`<tr class="kn-comments-row kn-comments-empty-row">
+                    <td>
+                      <div class="kn-comments">
+                        <div class="kn-section-label">
+                          <span>Comments</span>
+                        </div>
+                        <div class="kn-comments-empty">
+                          <span class="kn-comments-empty-kiwi" aria-hidden="true"
+                            >🥝</span
+                          >
+                          <span class="kn-comments-empty-title"
+                            >No comments yet</span
+                          >
+                          <span class="kn-comments-empty-text"
+                            >What caught your eye? Start the discussion.</span
+                          >
+                        </div>
+                      </div>
+                    </td>
+                  </tr>`}
               <tr>
                 <td>
                   <div
