@@ -38,15 +38,42 @@ export const AppBox = () => html`
   </div>
 `;
 
+const BRAND_ASSETS =
+  "https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=sharing";
+
+// NOTE: The design's "Side footer" (About · Guidelines · Privacy · API, "Made
+// for the open web.") plus the links of the old site footer, which the
+// desktop pages with this column no longer show (news.css hides it from
+// 1101px). "Docs" was the same page as "About".
 export const SideFooter = () => html`
   <div class="kn-side-footer">
-    <div class="kn-side-links">
+    <nav class="kn-side-links" aria-label="More from Kiwi News">
       <a href="https://kiwistand.github.io/kiwi-docs/" target="_blank">About</a>
       <a href="/guidelines">Guidelines</a>
       <a href="/privacy-policy">Privacy</a>
       <a href="https://attestate.com/kiwistand/main/" target="_blank">API</a>
-    </div>
+      <a href="/newsletter">Newsletter</a>
+      <a href="/weekly">Weekly archive</a>
+      <span class="kn-side-group"
+        >RSS <a href="/feed.xml">Hot</a> · <a href="/new.xml">New</a></span
+      >
+      <a href="/llms.txt">LLMs</a>
+      <a href="https://github.com/attestate/kiwistand" target="_blank"
+        >Source code</a
+      >
+      <a
+        href="https://github.com/attestate/kiwistand/tree/main/kiwimcp-client"
+        target="_blank"
+        >MCP client</a
+      >
+      <a href="${BRAND_ASSETS}" target="_blank">Brand assets</a>
+    </nav>
     <span class="kn-side-made">Made for the open web.</span>
+    <span class="kn-side-made"
+      >Hosted by${" "}<a href="https://attestate.com" target="_blank"
+        >attestate.com</a
+      >${" "}(Kontakt).</span
+    >
   </div>
 `;
 

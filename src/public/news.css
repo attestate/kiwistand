@@ -2375,17 +2375,8 @@ newsletter-card {
   }
 }
 
-/* "Kiwi News for iPhone" TestFlight card (components/testflight-card.mjs)
-   at the top of the feeds on phones. theme-init.js decides before first
-   paint, so it's either there from the start or not at all. */
-.tf-card-row {
-  display: none;
-}
-@media (max-width: 640px) {
-  html[data-tf-card]:not(.kiwi-ios-app) .tf-card-row {
-    display: table-row;
-  }
-}
+/* NOTE: .tf-card is the card look of the nickname prompt
+   (NicknamePrompt.jsx). */
 .tf-card {
   position: relative;
   display: flex;
@@ -3378,30 +3369,77 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   color: var(--kn-text-primary);
   text-decoration: none;
 }
+/* "Side footer" (Web 2 · Desktop · Home · Hot): JetBrains Mono 12px, the
+   links in text-tertiary with 14px between them, then "Made for the open
+   web." in text-muted, 8px apart. Every line starts on the boxes' left edge;
+   the links wrap onto as many lines as they need, 6px apart. */
 .kn-side-footer {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
+  margin: 0;
+  padding: 0;
   font-family: var(--kn-font-mono);
   font-size: 12px;
+  font-weight: 400;
+  line-height: 15px;
+  letter-spacing: 0;
+  text-align: left;
 }
 .kn-side-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  align-items: baseline;
+  gap: 0 14px;
+  margin: 0;
+  padding: 0;
 }
-.kn-side-links a,
-.kn-side-links a:link,
-.kn-side-links a:visited {
+.kn-side-links > *,
+.kn-side-footer a {
+  margin: 0;
+  padding: 0;
+  line-height: inherit;
+  white-space: nowrap;
+}
+/* NOTE: Each link is a 24px tall target (Lighthouse "target-size"); the
+   rows sit 24px apart instead of 15px + 6px. */
+.kn-side-footer .kn-side-links > * {
+  display: inline-block;
+  min-height: 24px;
+  line-height: 24px;
+}
+.kn-side-group {
+  color: var(--kn-text-tertiary);
+}
+/* NOTE: A link inside a sentence needs more than colour to stand out
+   (Lighthouse "link-in-text-block"). */
+.kn-side-footer .kn-side-made a,
+.kn-side-footer .kn-side-made a:link,
+.kn-side-footer .kn-side-made a:visited {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.kn-side-footer a,
+.kn-side-footer a:link,
+.kn-side-footer a:visited {
   color: var(--kn-text-tertiary);
   text-decoration: none;
 }
-.kn-side-links a:hover {
+.kn-side-footer a:hover {
   color: var(--kn-text-primary);
   text-decoration: underline;
 }
 .kn-side-made {
   color: var(--kn-text-muted);
+}
+/* NOTE: Where the right column shows (1101px and up), its footer has the old
+   site footer's links (components/footer.mjs), so that one goes. Phones,
+   narrower windows and pages without the column keep it. */
+@media (min-width: 1101px) {
+  body:has(.right-column.kn-right) .kn-site-footer {
+    display: none !important;
+  }
 }
 
 /* -- Phones -------------------------------------------------------------- */
@@ -3824,6 +3862,89 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   box-shadow: 0 0 0 1px var(--kn-voted);
   background: linear-gradient(var(--kn-kiwi-green-light), var(--kn-kiwi-green-light)),
     var(--kn-card);
+}
+/* NOTE: Desktop ("Web 2 · Desktop · Story", "Comment · …" rows): flat rows
+   on the page background, no fill, no box and no radius, 16px above and
+   below, no side padding, a 0.5px separator hairline at the bottom. Phones
+   keep the iOS app's white cards. Same for the feed's inline comments. The
+   composer stays 20px below the last row. */
+@media (min-width: 641px) {
+  .kn-comment,
+  .kn-feed-comments .kn-comment {
+    margin: 0;
+    padding: 16px 0;
+    border: 0;
+    border-bottom: 0.5px solid var(--kn-separator);
+    border-radius: 0;
+    background: transparent;
+  }
+  .kn-comment-targeted {
+    box-shadow: none;
+    background: var(--kn-kiwi-green-light);
+  }
+  /* The rows' 28px round avatar, 12px from the text. */
+  .kn-comment-avatar {
+    width: 28px;
+  }
+  .kn-comment-avatar img {
+    width: 28px;
+    height: 28px;
+  }
+  /* "Comments" frame: 16px above the label, gap 4; the label row has a 10px
+     gap, 8px below it and a 0.5px separator rule. The composer follows
+     after the gap and its own 16px. */
+  .kn-comments {
+    padding-top: 16px;
+    padding-bottom: 20px;
+  }
+  .kn-section-label {
+    gap: 10px;
+    margin: 0 0 12px;
+  }
+  .kn-section-label::after {
+    height: 0.5px;
+    background: var(--kn-separator);
+  }
+  .kn-feed-comments .kn-comment:last-of-type {
+    margin-bottom: 12px;
+  }
+}
+/* "No comments yet" (Web 2 · Desktop · Story · Article without image · no
+   comments yet): the COMMENTS label, then the kiwi, title and line centred
+   with 28px above and below. Desktop only, the iOS story has no such state.
+   It goes away once the first comment shows up below it. */
+.kn-comments-empty-row {
+  display: none;
+}
+@media (min-width: 641px) {
+  .kn-comments-empty-row {
+    display: table-row;
+  }
+  .kn-comments-empty-row:has(+ tr .story-page-comments .kn-comment) {
+    display: none;
+  }
+}
+.kn-comments-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 0;
+  font-family: var(--kn-font);
+  text-align: center;
+}
+.kn-comments-empty-kiwi {
+  font-size: 22px;
+  line-height: 1.2;
+}
+.kn-comments-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--kn-text-primary);
+}
+.kn-comments-empty-text {
+  font-size: 14px;
+  color: var(--kn-text-secondary);
 }
 .kn-feed-comments {
   margin: 4px 0 10px;

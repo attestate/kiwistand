@@ -251,7 +251,13 @@ const Bell = (props) => {
   const [readNotifications, setReadNotifications] = useState(0);
   const [isFull, setIsFull] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const link = isEligible ? `/activity?address=${address}` : "/";
+  // NOTE: The cookie's lastUpdate (the newest notification already seen) goes
+  // into the link, so the page (cached per URL) shows the unread rows, "N
+  // new" and "Mark all as read" like the design.
+  const seen = parseInt(getCookie("lastUpdate"), 10);
+  const link = isEligible
+    ? `/activity?address=${address}${seen ? `&lastUpdate=${seen}` : ""}`
+    : "/";
 
   const handleClick = (event) => {
     // Added event parameter
@@ -443,7 +449,9 @@ const Bell = (props) => {
         className="kn-iconbtn bell-button"
         onClick={handleClick}
       >
-        <MS name={active ? "notifications-fill" : "notifications"} size={18} />
+        {/* NOTE: The desktop frames keep the outlined bell, also on the
+            notifications page. */}
+        <MS name="notifications" size={18} />
         {notificationCount > 0 && <span className="kn-iconbtn-dot" />}
       </a>
       <a
