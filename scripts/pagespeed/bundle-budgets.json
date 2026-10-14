@@ -47,8 +47,8 @@
     "src/onboarding/Delegate.jsx": 1300
   },
   "css": {
-    "fonts/inter.css": 200,
-    "news.css": 25000,
+    "fonts/inter.css": 1200,
+    "news.css": 17000,
     "node_modules/@rainbow-me/rainbowkit/dist/index.css": 4900,
     "src/onboarding/onboarding.css": 3500
   },

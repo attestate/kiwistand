@@ -292,6 +292,24 @@ app.get(/^\/sitemap(-static|-weekly|-\d{4}-\d{2})?\.xml$/, async (req, res, next
   res.type("application/xml").send(xml);
 });
 
+// NOTE: `npm run build` writes minified copies of news.css and pages.css
+// (src/web/minify-css.mjs), ~40% smaller gzipped; send those for the
+// stylesheets' URLs. A copy whose source changed since the build (its first
+// comment is the source's hash) is skipped.
+for (const name of ["news", "pages"]) {
+  try {
+    const source = readFileSync(`src/public/${name}.css`, "utf8");
+    const min = readFileSync(`src/public/${name}.min.css`, "utf8");
+    const { createHash } = await import("crypto");
+    const hash = createHash("md5").update(source).digest("hex").substring(0, 8);
+    if (!min.startsWith(`/*${hash}*/`)) continue;
+    app.get(`/${name}.css`, (req, res, next) => {
+      req.url = `/${name}.min.css` + req.url.slice(`/${name}.css`.length);
+      next();
+    });
+  } catch (err) {}
+}
+
 app.use(
   sirv("src/public", {
     setHeaders: (res, pathName) => {

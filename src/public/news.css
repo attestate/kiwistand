@@ -71,6 +71,30 @@
      src: url('/fonts/jetbrains-mono-latin-700.woff2') format('woff2');
 }
 
+/* NOTE: The system monospace resized to JetBrains Mono's metrics, for the
+   moment before it arrives (font-display: swap). Every face here is 0.6em
+   wide like JetBrains Mono (Menlo and DejaVu Sans Mono 0.602em); the
+   ascent and descent are JetBrains Mono's (1.02em, 0.3em, no line gap), so
+   lines with line-height: normal keep their height when it swaps in
+   (Liberation Mono's are 0.83/0.3em: the iPhone box moved 3px). Bold
+   weights in their own face, as body has font-synthesis: none. */
+@font-face {
+     font-family: 'JetBrains Mono Fallback';
+     font-weight: 100 500;
+     src: local('Menlo-Regular'), local('Menlo'), local('DejaVuSansMono'), local('DejaVu Sans Mono'), local('LiberationMono'), local('Liberation Mono'), local('CourierNewPSMT'), local('Courier New'), local('DroidSansMono'), local('Droid Sans Mono');
+     ascent-override: 102%;
+     descent-override: 30%;
+     line-gap-override: 0%;
+}
+@font-face {
+     font-family: 'JetBrains Mono Fallback';
+     font-weight: 600 900;
+     src: local('Menlo-Bold'), local('DejaVuSansMono-Bold'), local('DejaVu Sans Mono Bold'), local('LiberationMono-Bold'), local('Liberation Mono Bold'), local('CourierNewPS-BoldMT'), local('Courier New Bold');
+     ascent-override: 102%;
+     descent-override: 30%;
+     line-gap-override: 0%;
+}
+
 /* NEU 2 design tokens (Kiwi News redesign, Oct 2026). Values come from
    the design file's variables (light, then dark). New styles use these
    --kn-* tokens; the older variables in the :root block below point at the
@@ -120,7 +144,7 @@
      --kn-font: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
      /* NOTE: The design's labels, counts and names use JetBrains Mono
         (@font-face at the top of this file). */
-     --kn-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+     --kn-font-mono: 'JetBrains Mono', 'JetBrains Mono Fallback', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
      --kn-shadow-glass: 0 1px 2px rgba(0, 0, 0, 0.04);
      --kn-shadow-tabbar: 0 4px 20px rgba(54, 67, 32, 0.05);
      --kn-shadow-menu: 0 8px 24px rgba(16, 19, 29, 0.12);
@@ -3497,8 +3521,14 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   .kn-only-desktop {
     display: flex !important;
   }
-  /* The top bar spans the window above the columns. */
-  .container:has(.kn-topbar) {
+  /* The top bar spans the window above the columns.
+     NOTE: No :has(.kn-topbar) here (every page with a .container has the
+     top bar): Chrome only re-checks :has() on an element once the parser
+     has closed it, i.e. at the end of the page for .container. Every paint
+     before that laid the columns out without this padding, and they jumped
+     112px down when the page finished (desktop CLS 0.07-0.12 on the feeds
+     and story pages). .container.container keeps the old specificity. */
+  .container.container {
     padding: 112px 24px 64px;
     gap: 64px;
     box-sizing: border-box;
@@ -3752,7 +3782,7 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 }
 
 @media (min-width: 1101px) {
-  .container:has(.kn-topbar) {
+  .container.container {
     padding: 112px 64px 64px;
   }
   .kn-topbar {
