@@ -2375,8 +2375,17 @@ newsletter-card {
   }
 }
 
-/* NOTE: .tf-card is the card look of the nickname prompt
-   (NicknamePrompt.jsx). */
+/* "Kiwi News for iPhone" TestFlight card (components/testflight-card.mjs)
+   at the top of the feeds on phones. theme-init.js decides before first
+   paint, so it's either there from the start or not at all. */
+.tf-card-row {
+  display: none;
+}
+@media (max-width: 640px) {
+  html[data-tf-card]:not(.kiwi-ios-app) .tf-card-row {
+    display: table-row;
+  }
+}
 .tf-card {
   position: relative;
   display: flex;
