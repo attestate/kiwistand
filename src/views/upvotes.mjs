@@ -147,11 +147,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
             rel="noopener"
             href="https://etherscan.io/address/${ensData.address}"
           >
-            ${name}${" "}(<nav-karma
-              data-address="${identity}"
-              data-initial="${points.toString()}"
-              >${points.toString()}</nav-karma
-            >${" "}🥝)
+            ${name}
           </a>
         </div>
         <div class="n2-stats">

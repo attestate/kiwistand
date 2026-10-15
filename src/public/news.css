@@ -2336,6 +2336,13 @@ newsletter-card {
 [data-theme="anon"] .newsletter-card-error {
   color: #ff8a80;
 }
+/* Hidden before the first paint for readers who subscribed or dismissed it
+   (data-nl-hidden, theme-init.js); the bundle then removes it for good. */
+html[data-nl-hidden] newsletter-card,
+html[data-nl-hidden] .newsletter-card-row,
+html[data-nl-hidden] .newsletter-story-row {
+  display: none !important;
+}
 /* Desktop: the card sits below the QR code in the right column instead of
    in the feed. Same breakpoint as .right-column. */
 @media (min-width: 1101px) {
@@ -3438,14 +3445,18 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   text-decoration: none;
 }
 /* "Side footer" (Web 2 · Desktop · Home · Hot): JetBrains Mono 12px, the
-   links in text-tertiary with 14px between them, then "Made for the open
-   web." in text-muted, 8px apart. Every line starts on the boxes' left edge;
-   the links wrap onto as many lines as they need, 6px apart. */
+   links in text-tertiary with 14px between them, "Made for the open web." in
+   text-muted. The links are grouped ("Kiwi News", "Developers") under the
+   boxes' eyebrow (mono 11px/500, 1px tracking, uppercase; see below for the
+   colour),
+   6px above its links like in the iPhone box's text; the groups and the
+   closing lines sit 16px apart (the iPhone box's gap), the closing lines 8px
+   apart (the side footer's gap). Every line starts on the boxes' left edge. */
 .kn-side-footer {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: stretch;
+  gap: 16px;
   margin: 0;
   padding: 0;
   font-family: var(--kn-font-mono);
@@ -3454,6 +3465,21 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   line-height: 15px;
   letter-spacing: 0;
   text-align: left;
+}
+.kn-side-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+/* NOTE: text-secondary (#78818A) on the page is below 4.5:1 (Lighthouse
+   "color-contrast", the boxes' eyebrows already fail it), so the footer's
+   headings take the links' text-tertiary; uppercase, tracking and weight
+   still set them apart. */
+.kn-side-footer .kn-side-eyebrow {
+  line-height: 15px;
+  color: var(--kn-text-tertiary);
 }
 .kn-side-links {
   display: flex;
@@ -3477,8 +3503,10 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   min-height: 24px;
   line-height: 24px;
 }
-.kn-side-group {
-  color: var(--kn-text-tertiary);
+.kn-side-colophon {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 /* NOTE: A link inside a sentence needs more than colour to stand out
    (Lighthouse "link-in-text-block"). */

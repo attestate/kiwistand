@@ -570,9 +570,11 @@ const Comment = React.forwardRef(
     );
 
     // Generate proper slug URL if we have the story title, otherwise fallback
-    const url = storyTitle 
-      ? `${window.location.origin}/stories/${getSlug(storyTitle)}?index=${storyIndex}&commentIndex=${comment.index}`
-      : `${window.location.origin}/stories?index=${storyIndex}&commentIndex=${comment.index}`;
+    // NOTE: The #0x… anchor lands on this comment on the story page (scrolled
+    // to and highlighted), the same as a notification's link.
+    const url = storyTitle
+      ? `${window.location.origin}/stories/${getSlug(storyTitle)}?index=${storyIndex}&commentIndex=${comment.index}#0x${comment.index}`
+      : `${window.location.origin}/stories?index=${storyIndex}&commentIndex=${comment.index}#0x${comment.index}`;
     const handleShare = async (e) => {
       e.preventDefault();
       try {
