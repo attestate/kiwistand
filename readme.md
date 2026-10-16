@@ -18,7 +18,7 @@ Every submission, upvote and comment on Kiwi News is a message signed with an Et
 - Telegram: [community chat](https://t.me/+QGAviVT67m00Njc8), [developer chat](https://t.me/kiwinewsdevs)
 - X: [@KiwiNewsHQ](https://x.com/KiwiNewsHQ)
 
-To post, upvote or comment you connect an Ethereum wallet. You can add an application key so the site signs on your behalf without a wallet prompt for every action (see [Protocol](#protocol)).
+To post, upvote or comment you connect an Ethereum wallet or create an account with a passkey (no wallet needed). You can add an application key so the site signs on your behalf without a wallet prompt for every action (see [Protocol](#protocol)).
 
 ## Using the data
 
@@ -121,7 +121,7 @@ npm test               # all tests, including the MCP client and compression tes
 
 More detail:
 
-- [Protocol guide](docs/source/protocol-guide.rst): how set reconciliation with a Merkle Patricia trie works, step by step (its NFT section predates 0.12.0)
+- [Protocol guide](docs/source/protocol-guide.rst): how set reconciliation with a Merkle Patricia trie works, step by step
 - [Delegation](docs/source/delegation.rst): how application keys are authorized
 - Talk: [Building decentralized social networks](https://www.youtube.com/watch?v=Rys5UEi2SWg) (Tim Daubenschütz at zusocial, Istanbul)
 - Demos: [set reconciliation (40 s)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc), [algorithm explained (9 min)](https://www.loom.com/share/2a68f5e22d9843ab99edad2deaed9281)

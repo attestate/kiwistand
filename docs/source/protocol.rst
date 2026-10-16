@@ -14,7 +14,7 @@ What is a Message
 .................
 
 - A message is every JSON object that complies with the :ref:`Message JSON schema <message-schema>`.
-- Every message must be signed by an address that has minted the NFT or has been delegated posting power by an NFT minter address.
+- Every message must carry a valid EIP-712 signature. Any address can sign for itself; a message signed by a delegated key is attributed to the address that delegated to it. (Before 0.12.0, the signer also had to hold the Kiwi Pass NFT.)
 - A message must have a UNIX ``timestamp`` greater or equal than 1672527600 (2022-12-31T23:00:00+00:00).
 - A message must have a UNIX ``timestamp`` lesser than 60 seconds into the future.
 

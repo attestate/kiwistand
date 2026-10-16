@@ -91,14 +91,14 @@ Endpoints
 **GET /api/v1/delegations**
 
 Retrieves an object of valid delegations in the form of ``to:from``, where
-``from`` must be the user's "identity," meaning the wallet they minted the NFT
-with, whereas ``to`` can be any delegated Ethereum address.
+``from`` is the user's "identity" (the address messages are attributed to),
+whereas ``to`` can be any delegated Ethereum address.
 
 The rules of what we consider a valid delegation are documented in the
 `delegator2 repository <https://github.com/attestate/delegator2>`_.
 
-Please note that it may take some time for the indexer to pick up a new mint
-(usually around 1-2 minutes).
+Please note that it may take some time for the indexer to pick up a new
+delegation (usually around 1-2 minutes).
 
 **POST /api/v1/list**
 
@@ -131,8 +131,8 @@ Response body
   * ``type`` (string): The type of the post.
   * ``signer`` (string): The Ethereum address that signed the message. Can be a
     delegated address or the address that represents the user's identity.
-  * ``identity`` (string): The Ethereum address of the identity (the wallet
-    with which the user minted the NFT).
+  * ``identity`` (string): The Ethereum address the message is attributed to:
+    the signer itself, or the address that delegated to the signer.
 
 .. note::
 
