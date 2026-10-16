@@ -3142,6 +3142,14 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   font-size: 12px;
   color: var(--kn-text-secondary);
   white-space: nowrap;
+  /* 4px to the name, like a word space (the design's row gap), against the
+     person link's avatar gap (7px, 8px on desktop). */
+  margin-right: -3px;
+}
+@media (min-width: 641px) {
+  .kn-byline .kn-by {
+    margin-right: -4px;
+  }
 }
 .kn-avatar {
   box-sizing: border-box;
