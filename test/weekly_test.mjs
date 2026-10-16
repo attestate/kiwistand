@@ -20,6 +20,7 @@ import {
   parseIntro,
   readIntro,
   topSources,
+  weekMarkdown,
 } from "../src/weekly.mjs";
 import {
   buildWeeklySitemap,
@@ -399,6 +400,7 @@ test("weekPage renders the week", async (t) => {
   t.is(page.match(/<h1[ >]/g).length, 1);
   t.true(page.includes("<title>Top crypto stories, week 40 2026 (Sep 28–Oct 4) | Kiwi News</title>"));
   t.true(page.includes('<link rel="canonical" href="https://news.kiwistand.com/weekly/2026-W40"'));
+  t.true(page.includes('href="https://news.kiwistand.com/weekly/2026-W40/context"'));
   // Relative stylesheet/script paths must not resolve under /weekly/.
   t.true(page.includes('<base href="/"'));
   t.true(page.includes('<script type="application/ld+json">'));
@@ -472,4 +474,35 @@ test("weekDescription stays within 155 characters with a long first title", (t) 
   t.true(desc.endsWith("…"));
   const short = weekDescription(W(2026, 41), [{ title: "Short" }]);
   t.true(short.endsWith("Short"));
+});
+
+test("weekMarkdown lists the week's stories as plain text", (t) => {
+  const md = weekMarkdown({
+    week: W(2026, 40),
+    isCurrent: false,
+    stories: renderStories,
+    intro: null,
+  });
+  t.true(md.startsWith("# Top stories on Kiwi News, week 40 2026\n"));
+  t.true(md.includes("Page: https://news.kiwistand.com/weekly/2026-W40"));
+  t.true(md.includes("The 3 top stories on Kiwi News from Mon 28 September"));
+  t.true(md.includes("Summaries are AI summaries of the linked article."));
+  // Titles stay as they are: this is text, not HTML.
+  t.true(md.includes('## 1. Fusaka & "blobs" <explained>'));
+  t.true(md.includes("- Source: https://github.com/a/b"));
+  t.true(md.includes(`- Kiwi News: https://news.kiwistand.com/stories/Story-3?index=0x${renderStories[2].index}`));
+  t.true(md.includes("A short summary of the article."));
+  t.is(md.match(/^## /gm).length, 3);
+});
+
+test("weekMarkdown uses the editorial intro and marks the current week", (t) => {
+  const md = weekMarkdown({
+    week: W(2026, 41),
+    isCurrent: true,
+    stories: [renderStories[1]],
+    intro: ["First paragraph.", "Second paragraph."],
+  });
+  t.true(md.includes("(this week so far, updated as votes come in)"));
+  t.true(md.includes("First paragraph.\n\nSecond paragraph."));
+  t.false(md.includes("Summaries are AI summaries"));
 });

@@ -139,7 +139,7 @@ export function indexJsonLd(weeks, description) {
 // <base href="/"> keeps them from resolving under /weekly/ (404, unstyled
 // page), like on story pages.
 async function Page(
-  { title, documentTitle, description, canonical, jsonLd, body },
+  { title, documentTitle, description, canonical, jsonLd, alternate, body },
   theme,
 ) {
   return (
@@ -165,6 +165,14 @@ async function Page(
                 type="application/ld+json"
                 dangerouslySetInnerHTML=${{ __html: jsonLd }}
               ></script>`
+            : null}
+          ${alternate
+            ? html`<link
+                rel="alternate"
+                type="text/plain"
+                title="LLM-friendly week summary"
+                href="${alternate}"
+              />`
             : null}
           <style dangerouslySetInnerHTML=${{ __html: styles }}></style>
         </head>
@@ -267,6 +275,7 @@ export async function weekPage(theme, data) {
       description,
       canonical: `${BASE_URL}${isoweek.path(week)}`,
       jsonLd: weekJsonLd(week, stories, description),
+      alternate: `${BASE_URL}${isoweek.path(week)}/context`,
       body,
     },
     theme,

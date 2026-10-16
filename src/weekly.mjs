@@ -10,7 +10,7 @@ import * as ens from "./ens.mjs";
 import * as moderation from "./views/moderation.mjs";
 import { getWeekStories, getNeighbourTimestamps, listWeeks } from "./cache.mjs";
 import { getSummary } from "./summaries.mjs";
-import { isCloudflareImage } from "./utils.mjs";
+import { isCloudflareImage, getSlug } from "./utils.mjs";
 import log from "./logger.mjs";
 
 export const STORIES_PER_WEEK = 20;
@@ -132,6 +132,36 @@ export async function getWeek(week, isCurrent = false) {
     neighbours.next && !isCurrent ? isoweek.weekOf(neighbours.next) : null;
   const intro = await readIntro(week);
   return { week, isCurrent, stories, previous, next, intro };
+}
+
+// The week as plain-text Markdown (/weekly/<YYYY>-W<ww>/context), so AI
+// assistants and agents can read a week's top stories without the HTML page.
+// `data` comes from getWeek().
+export function weekMarkdown(data, base = "https://news.kiwistand.com") {
+  const { week, stories, intro, isCurrent } = data;
+  const lines = [
+    `# Top stories on Kiwi News, week ${week.week} ${week.year}`,
+    "",
+    `${isoweek.longRange(week)}${isCurrent ? " (this week so far, updated as votes come in)" : ""}`,
+    `Page: ${base}${isoweek.path(week)}`,
+    "",
+    ...(intro || [autoIntro(week, stories, isCurrent)]).flatMap((p) => [p, ""]),
+  ];
+  if (stories.some((story) => story.summary)) {
+    lines.push("Summaries are AI summaries of the linked article.", "");
+  }
+  for (const [i, story] of stories.entries()) {
+    lines.push(
+      `## ${i + 1}. ${story.title}`,
+      "",
+      `- Kiwi News: ${base}/stories/${getSlug(story.title)}?index=0x${story.index}`,
+      `- Source: ${story.href}`,
+      `- Submitted by ${story.displayName}, ${plural(story.upvotes, "upvote")}, ${plural(story.comments, "comment")}`,
+      "",
+    );
+    if (story.summary) lines.push(story.summary, "");
+  }
+  return lines.join("\n");
 }
 
 // All weeks with stories, newest first (only past and current weeks exist).
