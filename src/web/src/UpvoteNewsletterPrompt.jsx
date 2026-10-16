@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { EMAIL_RE, SUBSCRIBED_KEY, subscribe } from "./newsletter.mjs";
+import { capture } from "./analytics.mjs";
 
 const SOURCE = "upvote";
 const SHOWN_KEY = "newsletter-upvote-prompt-shown";
@@ -22,7 +23,7 @@ const Prompt = ({ toast, t }) => {
   const close = () => toast.dismiss(t.id);
 
   const handleDismiss = () => {
-    window.posthog?.capture?.("newsletter_prompt_dismissed", {
+    capture("newsletter_prompt_dismissed", {
       source: SOURCE,
     });
     close();
@@ -138,6 +139,6 @@ export function maybeShowUpvoteNewsletterPrompt(toast) {
       id: TOAST_ID,
       duration: 45000,
     });
-    window.posthog?.capture?.("newsletter_prompt_shown", { source: SOURCE });
+    capture("newsletter_prompt_shown", { source: SOURCE });
   }, 1500);
 }

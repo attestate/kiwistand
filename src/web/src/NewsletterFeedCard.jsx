@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { EMAIL_RE, SUBSCRIBED_KEY, subscribe } from "./newsletter.mjs";
+import { capture } from "./analytics.mjs";
 
 const HEADLINE = "Get the best of Kiwi News weekly";
 const COPY =
@@ -49,7 +50,7 @@ const NewsletterFeedCard = ({ source = "feed_card", headline, copy }) => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
-          window.posthog?.capture?.("newsletter_card_shown", { source });
+          capture("newsletter_card_shown", { source });
           observer.disconnect();
         }
       },
@@ -63,7 +64,7 @@ const NewsletterFeedCard = ({ source = "feed_card", headline, copy }) => {
 
   const handleDismiss = () => {
     writeFlag(DISMISSED_KEY);
-    window.posthog?.capture?.("newsletter_card_dismissed", { source });
+    capture("newsletter_card_dismissed", { source });
     setHidden(true);
   };
 
