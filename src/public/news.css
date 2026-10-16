@@ -4017,6 +4017,50 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 .kn-comment-targeted {
   background: var(--kn-kiwi-green-light);
 }
+/* A reaction notification (reactionBurst.mjs, like the iOS app): the chip
+   bounces to 1.18x and back, the emoji flies up 34px growing to 2.6x and
+   five 12px copies spray out, all fading over 0.85s. Fixed and without
+   hit testing, so nothing moves or scrolls (CLS). */
+.kn-reaction-pop {
+  animation: kn-reaction-pop 0.9s ease-out;
+}
+@keyframes kn-reaction-pop {
+  12% { transform: scale(1.25); }
+  24% { transform: scale(1.14); }
+  34%, 72% { transform: scale(1.18); }
+  86% { transform: scale(0.97); }
+}
+.kn-reaction-burst {
+  position: fixed;
+  z-index: 20;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.kn-reaction-burst span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 1;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: 0.85s ease-out kn-reaction-spark;
+}
+.kn-reaction-burst .kn-reaction-fly {
+  font-size: 16px;
+  animation-name: kn-reaction-fly;
+}
+.kn-reaction-spark {
+  font-size: 12px;
+}
+@keyframes kn-reaction-fly {
+  from { opacity: 1; transform: translate(-50%, -50%); }
+  to { transform: translate(-50%, calc(-50% - 34px)) scale(2.6); }
+}
+@keyframes kn-reaction-spark {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(0.4); }
+  to { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))); }
+}
 /* NOTE: Desktop ("Web 2 · Desktop · Story", "Comment · …" rows): the
    avatar in its own column next to the name, text and reactions. The
    composer stays 20px below the last row. */

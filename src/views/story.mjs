@@ -786,6 +786,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                                     .map(
                                                       (reaction) => html`
                                                         <button
+                                                          data-emoji="${reaction.emoji}"
                                                           style="display: inline-flex; align-items: center; gap: 4px; box-sizing: border-box; background-color: transparent; border: 1px solid var(--kn-border); border-radius: var(--kn-radius-sm); padding: 2px 8px; min-height: 28px; cursor: pointer; font-family: var(--font-family);"
                                                           disabled
                                                         >

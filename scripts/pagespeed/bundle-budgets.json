@@ -44,7 +44,8 @@
     "src/Vote.jsx": 4200,
     "src/anon-transport.mjs": 19200,
     "src/bookmarks.mjs": 1100,
-    "src/onboarding/Delegate.jsx": 1300
+    "src/onboarding/Delegate.jsx": 1300,
+    "src/reactionBurst.mjs": 1100
   },
   "css": {
     "fonts/inter.css": 1200,

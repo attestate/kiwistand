@@ -59,11 +59,17 @@ export function truncateComment(comment, maxLength = 260) {
 
 function linkFromComment(activity) {
   // For reaction notifications
+  // NOTE: The same #0x… anchor as a comment notification (the story page
+  // scrolls to and highlights the comment), plus the emoji: the story page
+  // then pops it on the comment's reaction chip (reactionBurst.mjs).
   if (activity.verb === "reacted") {
     const submissionIndex = activity.message.submissionId.split(":")[1];
     const commentId = activity.message.commentId.split(":")[1];
     const slug = getSlug(activity.message.submission_title);
-    return `/stories/${slug}?index=${submissionIndex}#${commentId}`;
+    const reaction = activity.emoji
+      ? `&reaction=${encodeURIComponent(activity.emoji)}`
+      : "";
+    return `/stories/${slug}?index=${submissionIndex}${reaction}#${commentId}`;
   }
 
   // For regular comments
@@ -152,14 +158,10 @@ function generateRow(lastUpdate) {
 
     if (activity.verb === "reacted") {
       const identity = activity.identities[0];
-      const submissionIndex = activity.message.submissionId.split(":")[1];
-      const commentId = activity.message.commentId.split(":")[1];
       return Row({
         isNew,
         i,
-        href: `/stories/${getSlug(
-          activity.message.submission_title,
-        )}?index=${submissionIndex}#${commentId}`,
+        href: linkFromComment(activity),
         mark: Mark("react", identity),
         headline: html`${identity.displayName} reacted ${activity.emoji} to
           your comment on${" "}${Quote(

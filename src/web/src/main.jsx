@@ -1851,6 +1851,10 @@ async function start() {
   bindHapticsToElements(".second-header button", "selection");
 
   const urlParams = new URL(window.location.href).searchParams;
+  // A reaction notification: pop the emoji on the comment it opened.
+  if (urlParams.has("reaction")) {
+    import("./reactionBurst.mjs").then((module) => module.default());
+  }
   if (urlParams.get("miniapp") === "true") {
     sdk.actions.addFrame();
   }

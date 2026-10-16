@@ -323,6 +323,7 @@ export const EmojiReaction = ({ comment, delegations, toast }) => {
             return (
               <button
                 key={reaction.emoji}
+                data-emoji={reaction.emoji}
                 onClick={() => !isOwnComment && !alreadyReacted && !hasReacted && handleReaction(reaction.emoji, true)}
                 disabled={isReacting || isOwnComment || alreadyReacted || hasReacted}
                 style={{
