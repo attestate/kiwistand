@@ -7,7 +7,17 @@
 
   // Our own page speed checks (scripts/pagespeed) and Lighthouse aren't
   // visitors.
-  if (/KiwiPagespeed|Chrome-Lighthouse/.test(navigator.userAgent)) {
+  // NOTE: Lighthouse's emulated user agent is a plain Chrome one (no
+  // "Chrome-Lighthouse" since Lighthouse 10), so its runs only show up as
+  // automated through navigator.webdriver, which headless and
+  // automation-controlled Chrome (Lighthouse, Playwright, Puppeteer,
+  // Selenium) set. Each run is a fresh browser, so every one counted as a new
+  // user in Google Analytics: 30 per page speed check after a deploy.
+  // posthog-js drops these on its own for the same reason.
+  if (
+    navigator.webdriver ||
+    /KiwiPagespeed|Chrome-Lighthouse|HeadlessChrome/.test(navigator.userAgent)
+  ) {
     return;
   }
 
