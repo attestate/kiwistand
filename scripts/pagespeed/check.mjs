@@ -34,6 +34,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { execFileSync } from "child_process";
 import { chromium } from "playwright";
+import { userAgents as lighthouseUA } from "lighthouse/core/config/constants.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const allBudgets = JSON.parse(
@@ -310,6 +311,11 @@ if (!process.env.ONLY_CLS) {
             [
               BASE + url,
               ...(device === "desktop" ? ["--preset=desktop"] : []),
+              // NOTE: Lighthouse's own user agent looks like plain Chrome;
+              // the suffix keeps these runs out of analytics and marks them
+              // in the server's logs (the site also skips analytics when
+              // navigator.webdriver is set, as it is here).
+              `--emulated-user-agent=${lighthouseUA[device]} KiwiPagespeed`,
               "--output=json",
               `--output-path=${out}`,
               "--quiet",

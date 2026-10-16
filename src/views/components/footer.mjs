@@ -1,6 +1,7 @@
 //@format
 import { env } from "process";
 import { readFileSync } from "fs";
+import { createHash } from "crypto";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -24,6 +25,20 @@ function loadManifest() {
     console.error(err);
     throw err;
   }
+}
+
+// NOTE: Versioned like news.css, so a change to it (e.g. who isn't counted as
+// a visitor) reaches the edge cache and browsers right away instead of after
+// up to a week (static files are cached with s-maxage=604800).
+let trackingHash = "";
+try {
+  const tracking = readFileSync(
+    path.resolve(__dirname, "../../public/conditional-tracking.js"),
+    "utf8",
+  );
+  trackingHash = createHash("md5").update(tracking).digest("hex").slice(0, 8);
+} catch (err) {
+  trackingHash = Date.now().toString();
 }
 
 let scripts;
@@ -123,7 +138,7 @@ const footer = (theme, path) => html`
     </div>
 
     ${scripts}
-    <script src="conditional-tracking.js"></script>
+    <script src="conditional-tracking.js?v=${trackingHash}"></script>
     <nav-signup-dialogue />
   </footer>
 `;
