@@ -962,7 +962,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                   false,
                   undefined,
                   false, // debugMode
-                  false, // isAboveFold = false for lazy loading
+                  true, // isAboveFold: its picture can be the phone's LCP
                 )(pinnedStory, 0)
               }
               ${stories // Render first 3 stories
@@ -979,7 +979,10 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                       false,
                       currentQuery,
                       false, // debugMode
-                      false, // isAboveFold = false for lazy loading
+                      // NOTE: The first rows' pictures are the largest paint
+                      // on phones (row 1 often has none, then it's row 2's);
+                      // lazy loading held them back behind the JS.
+                      i < 2, // isAboveFold
                     )(story, i),
                 )}
               <!-- Contest preview and ad disabled on request -->

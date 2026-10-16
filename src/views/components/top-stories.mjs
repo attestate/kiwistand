@@ -4,12 +4,16 @@ import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "../../utils.mjs";
 import { extractDomain } from "./row.mjs";
-import { transformImageUrl } from "../utils/imageLoading.mjs";
+import { getImageLoading, sizedImageUrl } from "../utils/imageLoading.mjs";
 import { ms } from "./icons.mjs";
 
 const html = htm.bind(vhtml);
 
-function TopStoryCard(story) {
+// NOTE: The first two cards are on screen on a phone (200px wide cards), so
+// their pictures load eagerly; the rest wait until they are scrolled to.
+const EAGER_CARDS = 2;
+
+function TopStoryCard(story, i) {
   const title = DOMPurify.sanitize(story.title || "");
   const slug = getSlug(title);
   const storyLink = `/stories/${slug}?index=0x${story.index}`;
@@ -17,7 +21,7 @@ function TopStoryCard(story) {
     ? extractDomain(story.href)
     : "";
   const image = story.metadata?.image
-    ? transformImageUrl(DOMPurify.sanitize(story.metadata.image))
+    ? sizedImageUrl(DOMPurify.sanitize(story.metadata.image), 480)
     : null;
   const likeCount = story.upvotes || 0;
   const commentCount = story.commentCount || 0;
@@ -25,13 +29,14 @@ function TopStoryCard(story) {
   // Collect avatars from submitter + upvoter ENS data
   const avatars = [];
   if (story.submitter?.safeAvatar) {
-    avatars.push(DOMPurify.sanitize(story.submitter.safeAvatar));
+    avatars.push(sizedImageUrl(DOMPurify.sanitize(story.submitter.safeAvatar), 60));
   }
   if (story.upvoterAvatars) {
     for (const avatar of story.upvoterAvatars) {
       if (avatars.length >= 3) break;
-      if (avatar && !avatars.includes(avatar)) {
-        avatars.push(DOMPurify.sanitize(avatar));
+      const sized = avatar && sizedImageUrl(DOMPurify.sanitize(avatar), 60);
+      if (sized && !avatars.includes(sized)) {
+        avatars.push(sized);
       }
     }
   }
@@ -47,7 +52,7 @@ function TopStoryCard(story) {
             <img
               src="${image}"
               alt=""
-              loading="lazy"
+              loading="${getImageLoading(i < EAGER_CARDS, image)}"
               onerror="this.style.display='none';this.nextElementSibling.style.display='';this.parentElement.classList.add('top-story-no-image')"
             />
             <span class="top-story-domain-large" style="display:none"
@@ -119,7 +124,7 @@ export default function TopStoriesCarousel(stories) {
             </div>
           </div>
           <div class="top-stories-scroll">
-            ${stories.map((story) => TopStoryCard(story))}
+            ${stories.map((story, i) => TopStoryCard(story, i))}
           </div>
         </div>
       </td>

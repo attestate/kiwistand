@@ -617,7 +617,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   false, // invert
                   "", // query
                   false, // debugMode
-                  false, // isAboveFold = false for lazy loading
+                  true, // isAboveFold: the story's own picture is at the top
                 )({ ...story, index }, 0)}
               </tbody>
               ${Summary(summary)} ${StoryNewsletterCard()}

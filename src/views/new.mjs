@@ -237,7 +237,9 @@ async function renderPage(theme) {
                     false,
                     query,
                     false, // debugMode
-                    false, // isAboveFold = false for lazy loading
+                    // NOTE: On a phone the first picture is the largest paint; rows
+                    // without one are short, so it can be the third row's.
+                    i < 3, // isAboveFold
                   )(item, i),
               )}
               <tr>

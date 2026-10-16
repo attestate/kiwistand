@@ -43,6 +43,34 @@ export function transformImageUrl(src) {
   return src;
 }
 
+// Cloudflare Images (imagedelivery.net) URLs end in a named variant, e.g.
+// /<account>/<id>/public or Farcaster's /<account>/<id>/original. Those serve
+// the stored file at full size: on the front page a 20px avatar was 1.16 MB
+// and a 240px top story card 147 KB. Both accounts (ours and Farcaster's)
+// accept flexible variants, so ask for the width the page shows instead:
+// e.g. /public 147 KB -> /w=480,fit=scale-down,f=auto 9 KB (AVIF/WebP by
+// Accept). Other URLs go through transformImageUrl unchanged.
+const NAMED_VARIANTS = new Set(["public", "original"]);
+export function sizedImageUrl(src, width) {
+  if (!src) return src;
+  try {
+    const url = new URL(src);
+    if (url.hostname === "imagedelivery.net") {
+      const parts = url.pathname.split("/");
+      // ["", account, id, variant]
+      if (parts.length === 4 && NAMED_VARIANTS.has(parts[3])) {
+        parts[3] = `w=${width},fit=scale-down,f=auto`;
+        url.pathname = parts.join("/");
+        return url.toString();
+      }
+      return src;
+    }
+  } catch {
+    return src;
+  }
+  return transformImageUrl(src);
+}
+
 // Helper to determine image loading strategy.
 // We only eagerly load images from domains we fully control (our own CDN).
 // Third-party images (pbs.twimg.com, api.ensdata.net, etc.) are ALWAYS lazy,
