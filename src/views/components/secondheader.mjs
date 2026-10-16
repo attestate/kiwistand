@@ -309,7 +309,7 @@ const secondheader = (theme, site, period, domain, query) => {
         ? html`<details class="kn-dropdown kn-only-mobile">
             <summary class="kn-dropdown-summary">
               <span>${current[2]}</span>
-              ${ms("keyboard_arrow_down", 18)}
+              ${ms("caret-down", 18)}
             </summary>
             <div class="kn-dropdown-menu">
               ${periods.map(

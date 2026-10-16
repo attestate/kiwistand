@@ -638,7 +638,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                                       height="16"
                                     />`
                                   : html`<span class="kn-avatar kn-avatar-empty"
-                                      >${ms("person", 11)}</span
+                                      >${ms("user", 11)}</span
                                     >`}
                                 <span class="kn-curator-name"
                                   >${upvoter.displayName}</span

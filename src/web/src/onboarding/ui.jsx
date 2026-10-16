@@ -21,7 +21,7 @@ export function Icon({ name, size = 24 }) {
   return (
     <svg
       className="kob-icon"
-      viewBox="0 -960 960 960"
+      viewBox="0 0 256 256"
       width={size}
       height={size}
       aria-hidden="true"
@@ -31,22 +31,20 @@ export function Icon({ name, size = 24 }) {
   );
 }
 
+// The wordmark alone (logo rules: never the mascot next to it).
 export function Logo() {
   return (
     <div className="kob-logo">
-      <img src="/kiwi-icon.webp" alt="" width="40" height="40" />
       <svg
         className="kob-wordmark"
-        viewBox="9 15 192 28"
+        viewBox="2.65 -70.25 428.2 73.3"
+        strokeWidth="3.498"
+        strokeLinejoin="round"
         role="img"
         aria-label="Kiwi News"
       >
-        {wordmark.kiwi.map((d) => (
-          <path key={d} className="kob-wm-kiwi" d={d} />
-        ))}
-        {wordmark.news.map((d) => (
-          <path key={d} className="kob-wm-news" d={d} />
-        ))}
+        <path className="kob-wm-text" d={wordmark.text} />
+        <path className="kob-wm-bar" d={wordmark.bar} />
       </svg>
     </div>
   );

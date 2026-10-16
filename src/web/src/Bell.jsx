@@ -356,7 +356,7 @@ const Bell = (props) => {
           className="kn-tab-inner mobile-bell"
           onClick={handleDelegationClick}
         >
-          <MS name="person" size={22} />
+          <MS name="user-bold" size={24} />
           <span>Sign in</span>
         </button>
       ) : (
@@ -384,7 +384,7 @@ const Bell = (props) => {
             className="kn-tab-inner mobile-bell"
             onClick={handleLoginClick}
           >
-            <MS name="person" size={22} />
+            <MS name="user-bold" size={24} />
             <span>Log in</span>
           </button>
         ) : (
@@ -425,7 +425,7 @@ const Bell = (props) => {
         className={`kn-tab-inner mobile-bell${active ? " kn-tab-active" : ""}`}
         onClick={handleClick}
       >
-        <MS name={active ? "notifications-fill" : "notifications"} size={22} />
+        <MS name={active ? "bell-fill" : "bell-bold"} size={24} />
         <span>Notifications</span>
         {notificationCount > 0 && (
           <span className="kn-tab-badge">{notificationCount}</span>
@@ -451,7 +451,7 @@ const Bell = (props) => {
       >
         {/* NOTE: The desktop frames keep the outlined bell, also on the
             notifications page. */}
-        <MS name="notifications" size={18} />
+        <MS name="bell-bold" size={18} />
         {notificationCount > 0 && <span className="kn-iconbtn-dot" />}
       </a>
       <a
@@ -460,7 +460,7 @@ const Bell = (props) => {
         title="Your profile"
         aria-label="Your profile"
       >
-        {avatar ? <img src={avatar} alt="" /> : <MS name="person" size={18} />}
+        {avatar ? <img src={avatar} alt="" /> : <MS name="user" size={18} />}
       </a>
     </>
   );

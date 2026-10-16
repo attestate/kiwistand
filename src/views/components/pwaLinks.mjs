@@ -3,7 +3,8 @@ import vhtml from "vhtml";
 
 const html = htm.bind(vhtml);
 
-// iOS images generated with https://progressier.com/
+// iOS startup images: the Kiwi News wordmark on the page colour (the iOS
+// app's splash, end state). The touch icon is the light app icon.
 const pwaLinks = () => {
   return html`
     <link rel="manifest" href="/pwa.json" />

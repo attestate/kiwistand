@@ -135,7 +135,7 @@ const SearchInterface = () => {
         }}
         aria-label="Open search"
       >
-        <MS name="search" size={20} />
+        <MS name="magnifying-glass-bold" size={20} />
       </button>
 
       <SwipeableDrawer

@@ -5,40 +5,9 @@ import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "../../utils.mjs";
 import { extractDomain } from "./row.mjs";
 import { transformImageUrl } from "../utils/imageLoading.mjs";
+import { ms } from "./icons.mjs";
 
 const html = htm.bind(vhtml);
-
-const chevronLeftSVG = html`<svg
-  style="width: 20px; height: 20px;"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
-  fill="none"
->
-  <polyline
-    points="160 208 80 128 160 48"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="24"
-  />
-</svg>`;
-
-const chevronRightSVG = html`<svg
-  style="width: 20px; height: 20px;"
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 256 256"
-  fill="none"
->
-  <polyline
-    points="96 48 176 128 96 208"
-    fill="none"
-    stroke="currentColor"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    stroke-width="24"
-  />
-</svg>`;
 
 function TopStoryCard(story) {
   const title = DOMPurify.sanitize(story.title || "");
@@ -91,19 +60,29 @@ function TopStoryCard(story) {
       <div class="top-story-content">
         <div class="top-story-title">${title}</div>
         <div class="top-story-meta">
-          <div class="top-story-avatars">
-            ${avatars.map(
-              (avatar) => html`
-                <img
-                  class="top-story-avatar"
-                  src="${avatar}"
-                  alt=""
-                  loading="lazy"
-                  onerror="this.style.display='none'"
-                />
-              `,
-            )}
-          </div>
+          ${avatars.length > 0 || likeCount > 0
+            ? html`<div class="top-story-avatars">
+                ${avatars.length > 0
+                  ? avatars.map(
+                      (avatar) => html`
+                        <img
+                          class="top-story-avatar"
+                          src="${avatar}"
+                          alt=""
+                          loading="lazy"
+                          onerror="this.style.display='none'"
+                        />
+                      `,
+                    )
+                  : // NOTE: No upvoter has an avatar: the design's empty
+                    // avatar circles, one per like (up to two).
+                    Array.from({ length: Math.min(likeCount, 2) }, () =>
+                      html`<span class="top-story-avatar top-story-avatar-empty"
+                        >${ms("user", 11)}</span
+                      >`,
+                    )}
+              </div>`
+            : null}
           <span class="top-story-stats">
             ${likeCount} likes${commentCount > 0 ? html` · ${commentCount} comments` : ""}${domain ? html` · ${domain}` : ""}
           </span>
@@ -121,21 +100,21 @@ export default function TopStoriesCarousel(stories) {
       <td>
         <div class="top-stories-section">
           <div class="top-stories-header">
-            <h2 class="top-stories-title">Top Stories</h2>
+            <h2 class="top-stories-title">Top stories</h2>
             <div class="top-stories-nav">
               <button
                 class="top-stories-arrow top-stories-arrow-left"
-                onclick="var c=this.closest('.top-stories-section').querySelector('.top-stories-scroll');c.scrollBy({left:-280,behavior:'smooth'})"
+                onclick="var c=this.closest('.top-stories-section').querySelector('.top-stories-scroll');c.scrollBy({left:-266,behavior:'smooth'})"
                 aria-label="Scroll left"
               >
-                ${chevronLeftSVG}
+                ${ms("caret-left-bold", 16)}
               </button>
               <button
                 class="top-stories-arrow top-stories-arrow-right"
-                onclick="var c=this.closest('.top-stories-section').querySelector('.top-stories-scroll');c.scrollBy({left:280,behavior:'smooth'})"
+                onclick="var c=this.closest('.top-stories-section').querySelector('.top-stories-scroll');c.scrollBy({left:266,behavior:'smooth'})"
                 aria-label="Scroll right"
               >
-                ${chevronRightSVG}
+                ${ms("caret-right-bold", 16)}
               </button>
             </div>
           </div>

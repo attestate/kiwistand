@@ -29,7 +29,7 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
   let action;
   if (!isPersistent) {
     action = (
-      <ErrorText>Your browser isn't supporting key storage.</ErrorText>
+      <ErrorText>Your browser isn’t supporting key storage.</ErrorText>
     );
   } else if (key && wallet) {
     action = (
@@ -74,7 +74,7 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
           isError &&
           chainId === 10 && (
             <ErrorText>
-              Couldn't prepare the transaction. You need a little ETH on
+              Couldn’t prepare the transaction. You need a little ETH on
               Optimism for the network fee.
             </ErrorText>
           )
@@ -85,7 +85,7 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
 
   return (
     <>
-      <Tile icon="touch_app" desk={desk} />
+      <Tile icon="hand-pointing" desk={desk} />
       {desk ? (
         <Heading title="Enable one-tap actions">
           <p>
@@ -105,7 +105,7 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
           }
         >
           <p>
-            So you don't have to confirm every like and comment in your
+            So you don’t have to confirm every like and comment in your
             wallet, Kiwi News creates a key in this browser.
           </p>
           <p>
@@ -123,7 +123,7 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
           rel="noopener noreferrer"
         >
           How it works
-          <Icon name="arrow_outward" size={13} />
+          <Icon name="arrow-up-right" size={13} />
         </a>
       )}
       {action}

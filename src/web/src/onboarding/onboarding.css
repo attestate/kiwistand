@@ -27,7 +27,7 @@
   --kob-separator: var(--kn-separator);
   --kob-alert: var(--kn-alert);
   --kob-green-light: var(--kn-kiwi-green-light);
-  --kob-brown: var(--kn-wordmark-brown);
+  --kob-wordmark-green: var(--kn-wordmark-green);
   --kob-glass: var(--kn-glass);
   --kob-glass-border: var(--kn-glass-border);
   --kob-handle: rgba(0, 0, 0, 0.25);
@@ -200,25 +200,22 @@
   padding-bottom: 8px;
 }
 
-.kob-logo img {
-  display: block;
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-
+/* Design: 93.47 x 16 on phones, 105.15 x 18 in the desktop side panel. */
 .kob-wordmark {
   display: block;
-  width: 144px;
-  height: 21px;
+  width: 93.47px;
+  height: 16px;
+  overflow: visible;
 }
 
-.kob-wm-kiwi {
-  fill: var(--kob-brown);
+.kob-wm-text {
+  fill: var(--kob-text);
+  stroke: var(--kob-text);
 }
 
-.kob-wm-news {
-  fill: var(--kob-accent-strong);
+.kob-wm-bar {
+  fill: var(--kob-wordmark-green);
+  stroke: var(--kob-wordmark-green);
 }
 
 .kob-rules {
@@ -681,14 +678,9 @@
     padding: 0;
   }
 
-  .kob-side .kob-logo img {
-    width: 29px;
-    height: 29px;
-  }
-
   .kob-side .kob-wordmark {
-    width: 112px;
-    height: 16.33px;
+    width: 105.15px;
+    height: 18px;
   }
 
   .kob-side-title {

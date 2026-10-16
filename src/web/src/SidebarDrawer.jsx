@@ -79,7 +79,7 @@ const SidebarDrawer = ({ delegations, toast }) => {
           <div className="kn-menu-group">
             <Item
               href="/"
-              icon={isHome ? "home-fill" : "home"}
+              icon="house"
               label="Home"
               active={isHome}
               onClick={close}
@@ -88,7 +88,7 @@ const SidebarDrawer = ({ delegations, toast }) => {
             {loggedIn && !isAnonMode && (
               <Item
                 href="/saved"
-                icon="bookmark"
+                icon="bookmark-simple"
                 label="Saved stories"
                 active={path === "/saved"}
                 onClick={close}
@@ -96,7 +96,7 @@ const SidebarDrawer = ({ delegations, toast }) => {
             )}
             <Item
               href="/settings"
-              icon="settings"
+              icon="gear-six"
               label="Settings"
               active={path === "/settings"}
               onClick={close}
@@ -105,14 +105,14 @@ const SidebarDrawer = ({ delegations, toast }) => {
           <div className="kn-menu-group">
             <Item
               href="/guidelines"
-              icon="menu_book"
+              icon="book-open"
               label="Guidelines"
               active={path === "/guidelines"}
               onClick={close}
             />
             <Item
               href="/privacy-policy"
-              icon="lock"
+              icon="lock-simple"
               label="Privacy Policy"
               active={path === "/privacy-policy"}
               onClick={close}
@@ -137,7 +137,7 @@ const SidebarDrawer = ({ delegations, toast }) => {
                   setLogin(true);
                 }}
               >
-                <MS name="account_circle" size={22} />
+                <MS name="user-circle" size={22} />
                 <span>Log in</span>
               </button>
             )}

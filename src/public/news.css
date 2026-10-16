@@ -111,7 +111,6 @@
      --kn-accent-text: #000000;
      --kn-accent-strong: #ADC724;
      --kn-wordmark-green: #ADC724;
-     --kn-wordmark-brown: #55391B;
      --kn-surface: #FFFFFF;
      --kn-card: #FFFFFF;
      --kn-card-border: #ECEEE7;
@@ -137,6 +136,7 @@
      --kn-contrast: rgba(166, 110, 78, 0.75);
      --kn-toast-bg: #10131D;
      --kn-toast-text: #F8F9F4;
+     --kn-toast-action: #D4EC37;
      --kn-radius-sm: 4px;
      --kn-radius: 6px;
      --kn-radius-lg: 8px;
@@ -158,7 +158,6 @@
      --kn-text-muted: #ABB5A5;
      --kn-accent-strong: #D4EC37;
      --kn-wordmark-green: #D4EC37;
-     --kn-wordmark-brown: #D9965A;
      --kn-surface: #2C3328;
      --kn-card: #252B22;
      --kn-card-border: #3A4433;
@@ -183,6 +182,7 @@
      --kn-contrast: rgba(200, 160, 120, 0.6);
      --kn-toast-bg: #F4F6EF;
      --kn-toast-text: #191D17;
+     --kn-toast-action: #4E5E0F;
      --kn-shadow-menu: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
 }
@@ -192,7 +192,6 @@
      --font-family: 'Inter', 'Inter Fallback', Verdana, Geneva, sans-serif;
 
      /* Logo image - can be changed per theme */
-     --logo-image: url('/kiwi-icon.webp');
 
      /* Background colors */
      --background-color0: var(--kn-page);
@@ -388,7 +387,6 @@
      --font-family: 'Inter', 'Inter Fallback', Verdana, Geneva, sans-serif;
 
      /* Logo image - can be changed per theme */
-     --logo-image: url('/kiwi-icon-anon.png');
 
      /* Background colors - Layered blacks/greys for depth */
      --background-color0: #0d0d0d;        /* Base background - darkest */
@@ -707,14 +705,14 @@ body {
      font-size: 10pt;
 }
  input {
-     font-family:monospace;
+     font-family: var(--font-family);
      font-size:10pt;
 }
  input[type=\"submit\"] {
      font-family: var(--font-family);
 }
  textarea {
-     font-family:monospace;
+     font-family: var(--font-family);
      font-size:10pt;
      resize:both;
 }
@@ -1332,39 +1330,6 @@ body.react-loaded .comment-input-ssr-placeholder {
      flex: 1;
      padding: 20px;
 }
-.kiwi-wordmark {
-  color: var(--text-primary);
-}
-
-.pagetop.mobile-logo-lockup {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: nowrap;
-  gap: 4px;
-  padding: 0;
-  margin: 0;
-  line-height: 0;
-  white-space: nowrap;
-}
-
-.mobile-logo-icon {
-  flex: 0 0 auto;
-}
-
-.mobile-logo-lockup .kiwi-wordmark {
-  display: block;
-  flex: 0 0 auto;
-}
-
- /* Kiwi logo using CSS variable for background image */
- .kiwi-logo-img {
-     background-image: var(--logo-image);
-     background-size: contain;
-     background-repeat: no-repeat;
-     background-position: center;
-     display: inline-block;
- }
  /* Anon mode label - creepy handwritten style */
  .anon-mode-label {
      display: none; /* Hidden by default */
@@ -2540,23 +2505,23 @@ body {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.kn-logo-icon {
-  display: block;
-  width: 29px;
-  height: 29px;
-  flex: 0 0 29px;
-}
+/* NOTE: The wordmark alone (logo rules: no mascot next to it in any nav),
+   105.15 x 18 as in the design's nav-bar and desktop top nav. Its colours
+   are tokens, so it follows the colour scheme from the first paint. */
 .kn-logo .kiwi-wordmark {
   display: block;
-  width: 112px;
-  height: 16.33px;
+  width: 105.15px;
+  height: 18px;
   flex: 0 0 auto;
+  overflow: visible;
 }
-.kiwi-wordmark-kiwi {
-  fill: var(--kn-wordmark-brown);
+.kiwi-wordmark-text {
+  fill: var(--kn-text-primary);
+  stroke: var(--kn-text-primary);
 }
-.kiwi-wordmark-news {
+.kiwi-wordmark-bar {
   fill: var(--kn-wordmark-green);
+  stroke: var(--kn-wordmark-green);
 }
 .kn-logo .anon-mode-label {
   display: none;
@@ -2848,6 +2813,10 @@ body {
 .kn-tab-inner.kn-tab-active {
   background: var(--kn-kiwi-green-light);
 }
+.kn-tab-active span,
+.kn-tab-inner.kn-tab-active span {
+  font-weight: 600;
+}
 .mobile-bell-container.kn-tab {
   padding: 0;
 }
@@ -2884,7 +2853,7 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 
 /* -- Feed head: page header, Hot/New/Best, time frames -------------------- */
 .kn-feedhead {
-  padding: 12px 20px 0;
+  padding: 20px 20px 0;
   font-family: var(--kn-font);
 }
 .kn-toolbar {
@@ -2942,17 +2911,30 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   height: 20px;
   background: var(--kn-border);
 }
+/* Best's time frames ("Web 2 · Desktop · Best (week)" → Tabs and period):
+   16px from the tabs, a 16px divider, then ALL YEAR MONTH WEEK DAY in
+   11px JetBrains Mono caps, 2px apart; the current one on the button
+   background in 600. */
+.kn-toolbar-left:has(> .kn-periods) {
+  gap: 16px;
+}
+.kn-toolbar-left > .kn-divider {
+  height: 16px;
+}
 .kn-periods {
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 .kn-period,
 .kn-period:link,
 .kn-period:visited {
-  padding: 6px 10px;
+  padding: 5px 8px;
   border-radius: var(--kn-radius-sm);
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
   color: var(--kn-text-secondary);
   text-decoration: none;
 }
@@ -3152,6 +3134,14 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 .kn-byline .submitter-name {
   color: inherit !important;
   font-weight: 400;
+}
+/* "submitted by" between the avatar and the name (the design's story-card
+   and desktop Byline): Inter 12, secondary. */
+.kn-byline .kn-by {
+  font-family: var(--kn-font);
+  font-size: 12px;
+  color: var(--kn-text-secondary);
+  white-space: nowrap;
 }
 .kn-avatar {
   box-sizing: border-box;
@@ -3444,69 +3434,60 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   color: var(--kn-text-primary);
   text-decoration: none;
 }
-/* "Side footer" (Web 2 · Desktop · Home · Hot): JetBrains Mono 12px, the
-   links in text-tertiary with 14px between them, "Made for the open web." in
-   text-muted. The links are grouped ("Kiwi News", "Developers") under the
-   boxes' eyebrow (mono 11px/500, 1px tracking, uppercase; see below for the
-   colour),
-   6px above its links like in the iPhone box's text; the groups and the
-   closing lines sit 16px apart (the iPhone box's gap), the closing lines 8px
-   apart (the side footer's gap). Every line starts on the boxes' left edge. */
+/* "Side footer" (Web 2 · Desktop · Home · Hot): Inter, 10px between the
+   link rows and the closing lines, 4px from the box above. */
 .kn-side-footer {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 16px;
+  gap: 10px;
   margin: 0;
-  padding: 0;
-  font-family: var(--kn-font-mono);
-  font-size: 12px;
+  padding: 4px 0 0;
+  font-family: var(--kn-font);
+  font-size: 13px;
   font-weight: 400;
-  line-height: 15px;
+  line-height: 16px;
   letter-spacing: 0;
   text-align: left;
 }
-.kn-side-group {
+/* The design's "Links": rows of 13px links, 16px apart. NOTE: Each link
+   is a 24px tall target (Lighthouse "target-size"), so the rows touch
+   instead of 16px lines 8px apart (same pitch). */
+.kn-side-links {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   margin: 0;
   padding: 0;
 }
-/* NOTE: text-secondary (#78818A) on the page is below 4.5:1 (Lighthouse
-   "color-contrast", the boxes' eyebrows already fail it), so the footer's
-   headings take the links' text-tertiary; uppercase, tracking and weight
-   still set them apart. */
-.kn-side-footer .kn-side-eyebrow {
-  line-height: 15px;
-  color: var(--kn-text-tertiary);
-}
-.kn-side-links {
+.kn-side-row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 14px;
-  margin: 0;
-  padding: 0;
+  gap: 0 16px;
 }
-.kn-side-links > *,
+.kn-side-row > *,
 .kn-side-footer a {
   margin: 0;
   padding: 0;
-  line-height: inherit;
   white-space: nowrap;
 }
-/* NOTE: Each link is a 24px tall target (Lighthouse "target-size"); the
-   rows sit 24px apart instead of 15px + 6px. */
-.kn-side-footer .kn-side-links > * {
+.kn-side-row > a,
+.kn-side-row > .kn-side-pair > a {
   display: inline-block;
   min-height: 24px;
   line-height: 24px;
 }
+.kn-side-pair {
+  color: var(--kn-text-tertiary);
+}
+/* "Meta": 6px further down, 12px muted lines 4px apart. */
 .kn-side-colophon {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  padding-top: 6px;
+  font-size: 12px;
+  line-height: 15px;
 }
 /* NOTE: A link inside a sentence needs more than colour to stand out
    (Lighthouse "link-in-text-block"). */
@@ -3861,13 +3842,17 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   padding: 12px 0 4px;
   font-size: 1rem;
 }
+/* NOTE: The design's "comment" component (phones and desktop): a flat row
+   on the page background, no card, fill or radius, 16px above and below,
+   no side padding and a 0.5px separator hairline at the bottom. */
 .kn-comment {
   display: block;
-  margin-bottom: 16px;
-  padding: 0.75rem;
-  border: 1px solid var(--kn-card-border);
-  border-radius: 2px;
-  background: var(--kn-card);
+  margin: 0;
+  padding: 16px 0;
+  border: 0;
+  border-bottom: 0.5px solid var(--kn-separator);
+  border-radius: 0;
+  background: transparent;
   color: var(--kn-text-primary);
   white-space: pre-wrap;
   line-height: 1.3;
@@ -3945,10 +3930,41 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 .kn-comment .comment-text {
   font-family: var(--kn-font);
 }
-/* NOTE: The feed's expanded comments (CommentSection.jsx) use these same
-   cards; they sit in the row's content column, no extra side margins. */
-.kn-comment {
-  border-radius: var(--kn-radius);
+/* Phones ("comment" component): the avatar and the name/time on one row,
+   the text and reactions below it at full width (10px apart). */
+@media (max-width: 640px) {
+  .kn-comment-inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 10px;
+    align-items: center;
+  }
+  .kn-comment-main {
+    display: contents;
+  }
+  .kn-comment-avatar {
+    grid-column: 1;
+    margin-right: 0;
+  }
+  .kn-comment-main > * {
+    grid-column: 1 / -1;
+  }
+  .kn-comment-main > .kn-comment-head {
+    grid-column: 2;
+    margin-bottom: 0;
+  }
+  .kn-comment-inner:not(:has(> .kn-comment-avatar))
+    .kn-comment-main
+    > .kn-comment-head {
+    grid-column: 1 / -1;
+  }
+  .kn-comment .comment-text {
+    line-height: 1.4;
+  }
+  .kn-comment-main > .kn-reactions {
+    margin-top: 0;
+  }
 }
 .kn-comment-time a,
 .kn-comment-time a:link,
@@ -3960,30 +3976,12 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   display: none;
 }
 .kn-comment-targeted {
-  border-color: var(--kn-voted);
-  box-shadow: 0 0 0 1px var(--kn-voted);
-  background: linear-gradient(var(--kn-kiwi-green-light), var(--kn-kiwi-green-light)),
-    var(--kn-card);
+  background: var(--kn-kiwi-green-light);
 }
-/* NOTE: Desktop ("Web 2 · Desktop · Story", "Comment · …" rows): flat rows
-   on the page background, no fill, no box and no radius, 16px above and
-   below, no side padding, a 0.5px separator hairline at the bottom. Phones
-   keep the iOS app's white cards. Same for the feed's inline comments. The
+/* NOTE: Desktop ("Web 2 · Desktop · Story", "Comment · …" rows): the
+   avatar in its own column next to the name, text and reactions. The
    composer stays 20px below the last row. */
 @media (min-width: 641px) {
-  .kn-comment,
-  .kn-feed-comments .kn-comment {
-    margin: 0;
-    padding: 16px 0;
-    border: 0;
-    border-bottom: 0.5px solid var(--kn-separator);
-    border-radius: 0;
-    background: transparent;
-  }
-  .kn-comment-targeted {
-    box-shadow: none;
-    background: var(--kn-kiwi-green-light);
-  }
   /* The rows' 28px round avatar, 12px from the text. */
   .kn-comment-avatar {
     width: 28px;
@@ -4054,7 +4052,7 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   font-size: 1rem;
 }
 .kn-feed-comments .kn-comment {
-  margin-bottom: 12px;
+  margin: 0;
 }
 .kn-comment-loading {
   color: var(--kn-text-tertiary);
@@ -4597,8 +4595,29 @@ html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
   background: transparent;
   font: inherit;
   font-weight: 600;
-  color: var(--kn-accent);
+  color: var(--kn-toast-action);
   cursor: pointer;
+}
+.kn-toast-undo-host > div {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .kn-toast-undo-host {
+    margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+/* The row being removed: dimmed text and share, the bookmark outlined on a
+   light green circle. */
+.kn-saved-removing .kn-saved-text,
+.kn-saved-removing .kn-saved-btn:not(.kn-saved-remove) {
+  opacity: 0.4;
+}
+.kn-saved-removing .kn-saved-remove,
+.kn-saved-removing .kn-saved-remove:hover {
+  border-radius: 999px;
+  background: var(--kn-kiwi-green-light);
+  color: var(--kn-text-secondary);
+  cursor: default;
 }
 .kn-reading-tips {
   display: flex;
@@ -4840,45 +4859,68 @@ appkit-modal {
 }
 
 /* -- Top stories carousel (components/top-stories.mjs) --------------------
-   No frame in the design: the NEU 2 tokens on main's layout. The heading
-   is an eyebrow like the feed's, the cards use the right column's card
-   border and radius, titles in Inter and the counts in JetBrains Mono.
-   Pictures keep their box (user content). */
+   "Web 2 · Desktop · Home · Hot" → Top stories: 20px above, 8px below; a
+   header row (TOP STORIES in 11px mono, two 32px outlined arrow buttons
+   6px apart) 14px above the cards. Cards are 250px wide and 16px apart, no
+   box: a 140px picture (radius-lg, 1px border), the title 10px below it
+   (Inter 16/600, 1.3) and the upvoters' 20px avatars with the counts. */
 .top-stories-section {
-  padding: 12px 20px 8px;
+  padding: 20px 0 8px;
   font-family: var(--kn-font);
+}
+.top-stories-header {
+  margin-bottom: 14px;
 }
 .top-stories-title {
   font-family: var(--kn-font-mono);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   font-variant: normal;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--kn-text-secondary);
 }
+.top-stories-nav {
+  gap: 6px;
+}
 .top-stories-arrow {
   box-sizing: border-box;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--kn-border);
-  border-radius: var(--kn-radius-sm);
+  border-radius: var(--kn-radius);
   background: transparent;
   color: var(--kn-text-primary);
 }
 .top-stories-arrow:hover {
   background: var(--kn-hover-minimal);
 }
-.top-story-card {
-  border: 1px solid var(--kn-card-border);
-  border-radius: var(--kn-radius-lg);
-  background: var(--kn-card);
-  color: var(--kn-text-primary);
+.top-stories-scroll {
+  gap: 16px;
+  padding-bottom: 0;
 }
+.top-story-card,
 .top-story-card:hover {
+  flex: 0 0 250px;
+  width: 250px;
+  min-width: 0;
+  gap: 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
-  border-color: var(--kn-border);
+  overflow: visible;
+  color: var(--kn-text-primary);
 }
 .top-story-card:visited {
   color: var(--kn-text-tertiary);
+}
+.top-story-image {
+  box-sizing: border-box;
+  height: 140px;
+  border: 1px solid var(--kn-border);
+  border-radius: var(--kn-radius-lg);
+  background: var(--kn-comment-strip);
 }
 .top-story-no-image {
   background: var(--kn-comment-strip);
@@ -4889,13 +4931,34 @@ appkit-modal {
   font-weight: 400;
   color: var(--kn-text-secondary);
 }
+.top-story-content {
+  padding: 0;
+  gap: 10px;
+}
 .top-story-title {
+  margin: 0;
   font-family: var(--kn-font);
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 600;
   line-height: 1.3;
+  -webkit-line-clamp: 3;
+}
+.top-story-meta {
+  gap: 8px;
+  margin-top: 0;
 }
 .top-story-avatar {
-  border-color: var(--kn-card);
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--kn-page);
+}
+.top-story-avatar-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--kn-button-bg);
+  color: var(--kn-text-muted);
 }
 .top-story-stats {
   font-family: var(--kn-font-mono);
@@ -4904,12 +4967,7 @@ appkit-modal {
 }
 @media (max-width: 640px) {
   .top-stories-section {
-    padding: 12px 20px 8px;
-  }
-}
-@media (min-width: 641px) {
-  .top-stories-section {
-    padding: 12px 0 8px;
+    padding: 20px 20px 8px;
   }
 }
 
