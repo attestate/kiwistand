@@ -584,7 +584,7 @@ const row = (
                         window.openEmbedDrawer(targetUrl);
                       }
                     })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target')); }`;
+                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`;
     const embedBlock = canRenderTweetPreview
               ? html`<a
                   class="tweet-preview-container"
@@ -644,7 +644,7 @@ const row = (
                         }
                       }
                     })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target')); }"
+                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
                   style="text-decoration:none; color:inherit; display:block;"
                   aria-label="${DOMPurify.sanitize(story.title)}"
                 >
@@ -799,7 +799,7 @@ const row = (
                         }
                       }
                     })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target')); }"
+                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="farcaster-embed-container">
@@ -1376,7 +1376,7 @@ const row = (
                                   }
                                 }
                               })();
-                            } else { window.open(el.dataset.href, el.getAttribute('target')); }`}"
+                            } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
