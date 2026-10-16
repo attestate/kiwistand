@@ -356,7 +356,9 @@ const Bell = (props) => {
           className="kn-tab-inner mobile-bell"
           onClick={handleDelegationClick}
         >
-          <MS name="user-bold" size={24} />
+          <span className="kn-tab-icon">
+            <MS name="user" size={24} />
+          </span>
           <span>Sign in</span>
         </button>
       ) : (
@@ -384,7 +386,9 @@ const Bell = (props) => {
             className="kn-tab-inner mobile-bell"
             onClick={handleLoginClick}
           >
-            <MS name="user-bold" size={24} />
+            <span className="kn-tab-icon">
+              <MS name="user" size={24} />
+            </span>
             <span>Log in</span>
           </button>
         ) : (
@@ -425,7 +429,9 @@ const Bell = (props) => {
         className={`kn-tab-inner mobile-bell${active ? " kn-tab-active" : ""}`}
         onClick={handleClick}
       >
-        <MS name={active ? "bell-fill" : "bell-bold"} size={24} />
+        <span className="kn-tab-icon">
+          <MS name={active ? "bell-bold" : "bell"} size={24} />
+        </span>
         <span>Notifications</span>
         {notificationCount > 0 && (
           <span className="kn-tab-badge">{notificationCount}</span>

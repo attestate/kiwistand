@@ -13,7 +13,8 @@ const spinner =
 // Notifications (or Log in) tab into .mobile-bell-container; until then the
 // matching stand-in shows (html[data-signed-out], news.css), like iOS's
 // Notifications / Log In tab.
-// NOTE: Phosphor, 24px: bold, or the filled glyph on the active tab.
+// NOTE: Phosphor, 24px: regular, or bold inside the green circle on the
+// active tab (Tim, 16 Oct: a floating pill like the app's tab bar).
 const tab = (href, icon, label, active, dataIcon) => html`
   <a
     data-no-instant
@@ -23,7 +24,7 @@ const tab = (href, icon, label, active, dataIcon) => html`
     aria-current="${active ? "page" : "false"}"
     onclick="${spinner}"
   >
-    ${ms(`${icon}-${active ? "fill" : "bold"}`, 24)}
+    <span class="kn-tab-icon">${ms(active ? `${icon}-bold` : icon, 24)}</span>
     <span>${label}</span>
   </a>
 `;
@@ -35,10 +36,12 @@ const nav = (path) => html`
     ${tab("/submit", "plus-circle", "Submit", path === "/submit", "submit")}
     <div class="mobile-bell-container kn-tab">
       <span class="kn-tab-ph kn-tab-ph-in"
-        >${ms("bell-bold", 24)}<span>Notifications</span></span
+        ><span class="kn-tab-icon">${ms("bell", 24)}</span
+        ><span>Notifications</span></span
       >
       <span class="kn-tab-ph kn-tab-ph-out"
-        >${ms("user-bold", 24)}<span>Log in</span></span
+        ><span class="kn-tab-icon">${ms("user", 24)}</span
+        ><span>Log in</span></span
       >
     </div>
   </nav>
