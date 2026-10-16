@@ -29,11 +29,11 @@ export default function TestFlightCard() {
               href="${TESTFLIGHT}"
               target="_blank"
               rel="noopener"
-              >Open TestFlight ${ms("north_east", 13)}</a
+              >Open TestFlight ${ms("arrow-up-right", 13)}</a
             >
           </div>
           <button class="kn-tf-close" type="button" aria-label="Dismiss">
-            ${ms("close", 18)}
+            ${ms("x", 18)}
           </button>
         </div>
       </td>

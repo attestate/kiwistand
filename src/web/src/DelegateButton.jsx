@@ -316,7 +316,7 @@ const DelegateButton = (props) => {
     border: "none",
     fontSize: "15px",
     lineHeight: "1.325",
-    fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontFamily: "var(--kn-font)",
     ...props.style,
   };
 

@@ -16,9 +16,9 @@ const ReadingListBox = () => html`
   <div class="kn-side-box kn-reading-box">
     <span class="kn-eyebrow">Your reading list</span>
     <ul class="kn-reading-tips">
-      <li>${ms("bookmark", 16)}<span>Save any story with the bookmark under it.</span></li>
-      <li>${ms("lock", 16)}<span>Only you can see this list.</span></li>
-      <li>${ms("smartphone", 16)}<span>It syncs with the Kiwi News iOS app.</span></li>
+      <li>${ms("bookmark-simple", 16)}<span>Save any story with the bookmark under it.</span></li>
+      <li>${ms("lock-simple", 16)}<span>Only you can see this list.</span></li>
+      <li>${ms("device-mobile", 16)}<span>It syncs with the Kiwi News iOS app.</span></li>
     </ul>
   </div>
 `;
@@ -39,7 +39,7 @@ const SavedPlaceholder = () => html`
     </ul>
   </div>
   <div class="kn-saved-empty kn-saved-ssr-out">
-    ${ms("bookmark", 32)}
+    ${ms("bookmark-simple", 32)}
     <p class="kn-saved-empty-title">Log in to see your saved stories</p>
     <p class="kn-saved-empty-copy">
       Save any story with the bookmark under it. Only you can see this list.

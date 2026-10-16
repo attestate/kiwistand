@@ -48,8 +48,8 @@ async function share(story) {
   }
 }
 
-const Row = ({ story, onRemove }) => (
-  <li className="kn-saved-item">
+const Row = ({ story, onRemove, removing }) => (
+  <li className={`kn-saved-item${removing ? " kn-saved-removing" : ""}`}>
     <a className="kn-saved-text" href={storyPath(story)}>
       <span className="kn-saved-domain">{source(story.href)}</span>
       <span className="kn-saved-title">{story.title}</span>
@@ -69,16 +69,20 @@ const Row = ({ story, onRemove }) => (
       title="Share"
       onClick={() => share(story)}
     >
-      <MS name="ios_share" size={20} />
+      <MS name="export" size={20} />
     </button>
     <button
       type="button"
       className="kn-saved-btn kn-saved-remove"
       aria-label="Remove from saved"
       title="Remove from saved"
+      disabled={removing}
       onClick={() => onRemove(story)}
     >
-      <MS name="bookmark-fill" size={20} />
+      <MS
+        name={removing ? "bookmark-simple" : "bookmark-simple-fill"}
+        size={20}
+      />
     </button>
   </li>
 );
@@ -98,16 +102,27 @@ export default function SavedStories({ delegations, toast }) {
       .catch((err) => setError(err.message));
   }, [account]);
 
+  const [removing, setRemoving] = useState(null);
+
+  // NOTE: Tapping the filled bookmark ("Saved stories · List · Tap bookmark
+  // (removing)"): the row dims and its bookmark turns outlined on a light
+  // green circle while the unsave is signed and sent, then the row goes and
+  // a toast offers Undo ("… Removed via bookmark (Undo)").
   const remove = async (story) => {
-    const before = stories;
-    setStories(stories.filter((item) => item !== story));
+    if (removing) return;
+    setRemoving(story.index);
     try {
-      await setBookmark(account, story.index, false);
+      await Promise.all([
+        setBookmark(account, story.index, false),
+        new Promise((resolve) => setTimeout(resolve, 350)),
+      ]);
     } catch (err) {
-      setStories(before);
+      setRemoving(null);
       toast?.error?.(err.message);
       return;
     }
+    setRemoving(null);
+    setStories((current) => current.filter((item) => item !== story));
     toast?.(
       (t) => (
         <span className="kn-toast-undo">
@@ -132,14 +147,30 @@ export default function SavedStories({ delegations, toast }) {
           </button>
         </span>
       ),
-      { duration: 5000 },
+      // NOTE: The design's dark toast, at the bottom (above the tab bar on
+      // phones, see .kn-toast-undo-host in news.css).
+      {
+        duration: 5000,
+        position: "bottom-center",
+        className: "kn-toast-undo-host",
+        style: {
+          background: "var(--kn-toast-bg)",
+          color: "var(--kn-toast-text)",
+          border: 0,
+          borderRadius: "var(--kn-radius)",
+          padding: "10px 14px",
+          fontFamily: "var(--kn-font)",
+          fontSize: "14px",
+          boxShadow: "none",
+        },
+      },
     );
   };
 
   if (!account) {
     return (
       <div className="kn-saved-empty">
-        <MS name="bookmark" size={32} />
+        <MS name="bookmark-simple" size={32} />
         <p className="kn-saved-empty-title">Log in to see your saved stories</p>
         <p className="kn-saved-empty-copy">
           Save any story with the bookmark under it. Only you can see this list.
@@ -195,7 +226,7 @@ export default function SavedStories({ delegations, toast }) {
       </p>
       {stories.length === 0 ? (
         <div className="kn-saved-empty">
-          <MS name="bookmark" size={32} />
+          <MS name="bookmark-simple" size={32} />
           <p className="kn-saved-empty-title">Nothing saved yet</p>
           <p className="kn-saved-empty-copy">
             Tap the bookmark under any story to read it later.
@@ -204,7 +235,12 @@ export default function SavedStories({ delegations, toast }) {
       ) : (
         <ul className="kn-saved-list">
           {stories.map((story) => (
-            <Row key={story.index} story={story} onRemove={remove} />
+            <Row
+              key={story.index}
+              story={story}
+              onRemove={remove}
+              removing={removing === story.index}
+            />
           ))}
         </ul>
       )}

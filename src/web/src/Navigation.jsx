@@ -37,7 +37,7 @@ const Profile = (props) => {
       href={"/upvotes?address=" + address}
       className={`kn-menu-item${active ? " kn-menu-item-active" : ""}`}
     >
-      <MS name="account_box" size={22} />
+      <MS name="user-square" size={22} />
       <span>Profile</span>
     </a>
   );
@@ -127,7 +127,7 @@ const DisconnectButton = () => {
               onClick={logout}
               className="kn-menu-item kn-menu-logout"
             >
-              <MS name="logout" size={22} />
+              <MS name="sign-out" size={22} />
               <span>Log out</span>
             </button>
     );
@@ -147,7 +147,7 @@ const DisconnectButton = () => {
               onClick={logout}
               className="kn-menu-item kn-menu-logout"
             >
-              <MS name="logout" size={22} />
+              <MS name="sign-out" size={22} />
               <span>Log out</span>
             </button>
           );
@@ -161,7 +161,7 @@ const DisconnectButton = () => {
               onClick={logout}
               className="kn-menu-item kn-menu-logout"
             >
-              <MS name="logout" size={22} />
+              <MS name="sign-out" size={22} />
               <span>Log out</span>
             </button>
           );
@@ -174,7 +174,7 @@ const DisconnectButton = () => {
             onClick={openAccountModal}
             className="kn-menu-item kn-menu-logout"
           >
-            <MS name="logout" size={22} />
+            <MS name="sign-out" size={22} />
             <span>Disconnect</span>
           </button>
         );

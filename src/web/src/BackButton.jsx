@@ -87,7 +87,7 @@ const BackButton = () => {
       aria-label="Back"
       onClick={handleBackClick}
     >
-      <MS name="chevron_left" size={20} />
+      <MS name="caret-left-bold" size={20} />
     </a>
   );
 };

@@ -1057,7 +1057,7 @@ const row = (
           height="24"
           loading="${getImageLoading(isAboveFold, submitterAvatar)}"
         />`
-      : html`<span class="kn-avatar kn-avatar-empty">${ms("person", 14)}</span>`;
+      : html`<span class="kn-avatar kn-avatar-empty">${ms("user", 14)}</span>`;
 
     const byline = html`<div class="story-subtitle kn-byline">
       ${story.identity
@@ -1065,12 +1065,12 @@ const row = (
             href="${profileHref}"
             class="kn-byline-person"
             onclick="${spinnerOnclick}"
-            >${avatar}<span class="meta-link submitter-name"
+            >${avatar}<span class="kn-by">submitted by</span><span class="meta-link submitter-name"
               >${story.displayName}</span
             ></a
           >`
         : html`<span class="kn-byline-person"
-            >${avatar}<span class="meta-link submitter-name"
+            >${avatar}<span class="kn-by">submitted by</span><span class="meta-link submitter-name"
               >${story.displayName}</span
             ></span
           >`}
@@ -1182,7 +1182,7 @@ const row = (
             target="_blank"
             rel="noopener"
             onclick="${outboundOnclick}"
-            >${ms("north_east", 16)}<span>Read original article</span></a
+            >${ms("arrow-up-right", 16)}<span>Read original article</span></a
           >`
         : "";
 
@@ -1263,7 +1263,7 @@ const row = (
                               width="28"
                               height="28"
                             />`
-                          : ms("person", 16)}
+                          : ms("user", 16)}
                       </span>
                       <span class="kn-cp-body">
                         <span class="kn-cp-head">

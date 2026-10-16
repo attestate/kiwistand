@@ -275,7 +275,7 @@ const EmbedDrawer = ({ toast }) => {
               textDecoration: "none",
               color: "var(--text-primary)",
               fontSize: "11pt",
-              fontFamily: "Verdana, Geneva, sans-serif",
+              fontFamily: "var(--kn-font)",
               padding: "5px",
               cursor: "pointer"
             }}
@@ -306,7 +306,7 @@ const EmbedDrawer = ({ toast }) => {
             padding: "0 12px",
             height: "32px",
             fontSize: "10pt",
-            fontFamily: "Verdana, Geneva, sans-serif"
+            fontFamily: "var(--kn-font)"
           }}>
             <button
               onClick={copyLink}
@@ -356,7 +356,7 @@ const EmbedDrawer = ({ toast }) => {
               borderRadius: "4px",
               color: "var(--text-primary)",
               fontSize: "10pt",
-              fontFamily: "Verdana, Geneva, sans-serif",
+              fontFamily: "var(--kn-font)",
               padding: "6px 16px",
               cursor: "pointer",
               display: "flex",
@@ -455,7 +455,7 @@ const EmbedDrawer = ({ toast }) => {
                   borderRadius: "4px",
                   color: "var(--text-primary)",
                   fontSize: "12pt",
-                  fontFamily: "Verdana, Geneva, sans-serif",
+                  fontFamily: "var(--kn-font)",
                   padding: "8px 16px",
                   cursor: "pointer",
                   display: "flex",
@@ -493,7 +493,7 @@ const EmbedDrawer = ({ toast }) => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: "Verdana, Geneva, sans-serif",
+                fontFamily: "var(--kn-font)",
                 textAlign: "center"
               }}
             >
@@ -518,7 +518,7 @@ const EmbedDrawer = ({ toast }) => {
                   borderRadius: "4px",
                   color: "var(--text-primary)",
                   fontSize: "14pt",
-                  fontFamily: "Verdana, Geneva, sans-serif",
+                  fontFamily: "var(--kn-font)",
                   padding: "12px 32px",
                   cursor: "pointer",
                   display: "inline-flex",

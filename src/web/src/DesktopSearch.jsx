@@ -33,7 +33,7 @@ const DesktopSearch = () => {
   return (
     <>
       {keyIndicator}
-      <MS name="search" size={16} />
+      <MS name="magnifying-glass" size={16} />
       <input
         ref={inputRef}
         id="desktop-search-input"

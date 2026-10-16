@@ -125,8 +125,8 @@ async function saveProfile(privateKey, name, avatar = "") {
   });
   const body = await response.json().catch(() => ({}));
   if (body.status === "success") return "";
-  if (avatar) return body.details || "Couldn't save your picture.";
-  return body.details || "Couldn't save your nickname. Please try another.";
+  if (avatar) return body.details || "Couldn’t save your picture.";
+  return body.details || "Couldn’t save your nickname. Please try another.";
 }
 
 // Same message as the email form in Bell.jsx (comment reply notifications).
@@ -142,7 +142,7 @@ async function subscribeReplies(email, privateKey) {
   const port = window.location.port;
   const response = await API.send(value, signature, wait, endpoint, port);
   if (response.status !== "success") {
-    throw new Error(response.details || "Couldn't subscribe.");
+    throw new Error(response.details || "Couldn’t subscribe.");
   }
 }
 
@@ -183,7 +183,7 @@ function Guidelines({ onDone }) {
           <p>These are the terms you agree to when using Kiwi&nbsp;News:</p>
           {[
             ...rules(),
-            "Report posts, comments and people from their \"…\" menu, or block them. We review reports within 24 hours and remove violating content and accounts.",
+            "Report posts, comments and people via the “…” menu, or block them. We review reports within 24 hours and remove violating content and accounts.",
           ].map(bullet)}
           <div className="kob-doc-contact">
             Contact:{" "}
@@ -417,7 +417,7 @@ export default function Onboarding({ onClose, start }) {
     } catch (err) {
       passkeyFailed(passkey, err, {
         cancelled: "Sign-in was cancelled.",
-        failed: "Couldn't sign in with your passkey. Please try again.",
+        failed: "Couldn’t sign in with your passkey. Please try again.",
       });
     }
   };
@@ -456,7 +456,7 @@ export default function Onboarding({ onClose, start }) {
     } catch (err) {
       passkeyFailed(passkey, err, {
         cancelled: "",
-        failed: "Couldn't create your passkey. Please try again.",
+        failed: "Couldn’t create your passkey. Please try again.",
       });
     }
   };
@@ -496,7 +496,7 @@ export default function Onboarding({ onClose, start }) {
     } catch (err) {
       console.error("Profile picture upload failed", err);
       setBusy(false);
-      setError(`Couldn't upload the picture: ${err.message}`);
+      setError(`Couldn’t upload the picture: ${err.message}`);
     }
   };
 
@@ -513,7 +513,7 @@ export default function Onboarding({ onClose, start }) {
     } catch (err) {
       console.error("Email sign-up failed", err);
       setBusy(false);
-      setError("Couldn't subscribe this email. Please try again.");
+      setError("Couldn’t subscribe this email. Please try again.");
     }
   };
   const skipEmail = () => {
@@ -557,7 +557,7 @@ export default function Onboarding({ onClose, start }) {
           ...rules(),
           desk
             ? "Report posts, comments and people from their “…” menu, or block them. We review reports within 24 hours."
-            : "Report posts, comments and people from their \"…\" menu, or block them. We review reports within 24 hours and remove violating content and accounts.",
+            : "Report posts, comments and people via the “…” menu, or block them. We review reports within 24 hours and remove violating content and accounts.",
         ].map((rule) => (
           <div className="kob-rule" key={rule}>
             <span className="kob-rule-mark">{desk ? "—" : "•"}</span>
@@ -633,11 +633,11 @@ export default function Onboarding({ onClose, start }) {
 
   const join = desk ? (
     <>
-      <Tile icon="person_add" desk />
+      <Tile icon="user-plus" desk />
       <Heading title={passkeys ? "Create your account" : "Join Kiwi News"}>
         <p>
           {passkeys
-            ? "No wallet needed. Your account is secured with a passkey on this device, so there's no password or seed phrase to remember."
+            ? "No wallet needed. Your account is secured with a passkey on this device, so there’s no password or seed phrase to remember."
             : "Connect your wallet. Reading never needs an account."}
         </p>
       </Heading>
@@ -680,11 +680,11 @@ export default function Onboarding({ onClose, start }) {
     </>
   ) : (
     <>
-      <Tile icon="person_add" />
+      <Tile icon="user-plus" />
       <Heading title="Join Kiwi News">
         {passkeys && (
           <p>
-            Create an account in a few seconds. You don't need a wallet or a
+            Create an account in a few seconds. You don’t need a wallet or a
             seed phrase.
           </p>
         )}
@@ -725,7 +725,7 @@ export default function Onboarding({ onClose, start }) {
   const taken = nameState === "taken";
   const nicknamePage = (
     <>
-      <Tile icon="alternate_email" desk={desk} />
+      <Tile icon="at" desk={desk} />
       <Heading title="Pick a nickname">
         <p>
           This is how others see you on Kiwi News. You can change it later in
@@ -758,7 +758,7 @@ export default function Onboarding({ onClose, start }) {
               aria-label="Clear"
               onClick={() => setNickname("")}
             >
-              <Icon name="cancel" size={20} />
+              <Icon name="x-circle-fill" size={20} />
             </button>
           )}
         </div>
@@ -768,19 +768,19 @@ export default function Onboarding({ onClose, start }) {
         >
           {nameState === "available" && (
             <>
-              <Icon name="check_circle" size={16} />
+              <Icon name="check-circle-fill" size={16} />
               Available
             </>
           )}
           {taken && (
             <>
-              <Icon name="error" size={16} />
+              <Icon name="warning-circle-fill" size={16} />
               That name is taken. Try another one.
             </>
           )}
           {nameState === "invalid" && (
             <>
-              <Icon name="error" size={16} />
+              <Icon name="warning-circle-fill" size={16} />
               {nameProblem(nickname)}
             </>
           )}
@@ -816,7 +816,7 @@ export default function Onboarding({ onClose, start }) {
             {preview ? <img src={preview} alt="Your profile picture" /> : letter}
           </div>
           <div className="kob-avatar-badge">
-            <Icon name={preview ? "edit" : "photo_camera"} size={18} />
+            <Icon name={preview ? "pencil-simple" : "camera"} size={18} />
           </div>
         </div>
         <input
@@ -852,7 +852,7 @@ export default function Onboarding({ onClose, start }) {
           </button>
         ) : (
           <button type="button" className="kob-btn" onClick={chooseFile}>
-            {desk && <Icon name="upload" size={16} />}
+            {desk && <Icon name="upload-simple" size={16} />}
             {desk ? "Upload picture" : "Choose photo"}
           </button>
         )}
@@ -879,7 +879,7 @@ export default function Onboarding({ onClose, start }) {
 
   const emailPage = (
     <>
-      <Tile icon="mail" desk={desk} />
+      <Tile icon="envelope-simple" desk={desk} />
       <Heading title="Replies by email">
         <p>
           Optional: get an email when someone replies to your comments
@@ -918,11 +918,11 @@ export default function Onboarding({ onClose, start }) {
 
   const donePage = (
     <>
-      <Tile icon="verified" desk={desk} />
-      <Heading title="You're all set!">
+      <Tile icon="check-circle" desk={desk} />
+      <Heading title="You’re all set!">
         <p>
           {path === "signin"
-            ? "You're signed in. Like, comment and submit stories right away."
+            ? "You’re signed in. Like, comment and submit stories right away."
             : "Your account is ready. Like, comment and submit stories right away."}
         </p>
       </Heading>
@@ -988,7 +988,7 @@ export default function Onboarding({ onClose, start }) {
                   <li key={name} className={`kob-step ${state}`}>
                     <span className="kob-step-n">
                       {state === "kob-done" ? (
-                        <Icon name="check" size={12} />
+                        <Icon name="check-bold" size={12} />
                       ) : (
                         pad(i + 1)
                       )}
@@ -1026,7 +1026,7 @@ export default function Onboarding({ onClose, start }) {
                 onClick={finish}
                 disabled={busy}
               >
-                <Icon name="close" size={18} />
+                <Icon name="x" size={18} />
               </button>
             )}
           </div>
