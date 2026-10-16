@@ -795,10 +795,16 @@ body {
 }
 
 /* Hide like counts from non-logged-in users. The body gets the
-   `kiwi-logged-in` class from main.jsx once an identity is resolved. */
+   `kiwi-logged-in` class from main.jsx once an identity is resolved.
+   NOTE: Browsers with a Kiwi key show the count from the first paint
+   (html:not([data-signed-out]), set in theme-init.js): waiting for the body
+   class made the count pop in after the page had painted, which pushed the
+   comment button (and on desktop the heart) to the right whenever you
+   switched between Hot, New and Best. */
 .like-count {
   display: none;
 }
+html:not([data-signed-out]) .like-count,
 body.kiwi-logged-in .like-count {
   display: inline;
 }
@@ -3589,6 +3595,13 @@ html:not([data-signed-out]) .kn-tab-ph-out {
     gap: 64px;
     box-sizing: border-box;
     align-items: flex-start;
+  }
+  /* The menu drawer's mount point is an empty block before the feed (the
+     drawer itself is a portal). As a flex item it took a 64px gap on the
+     left only, so the feed sat 64px right of centre, most visibly once the
+     right column is gone (641-1100px). Out of the flow it takes no gap. */
+  .container.container > #sidebar-drawer {
+    position: absolute;
   }
   .kn-header-cell {
     height: 0;
