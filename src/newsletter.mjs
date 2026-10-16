@@ -15,10 +15,13 @@ export const SOURCE_TAGS = [
   "weekly",
 ];
 
-// Older client names for the same places.
+// Older client names for the same places, and finer analytics names that
+// share a Buttondown tag ("story_sidebar" is the story page's right column
+// card, "story" the one below the summary).
 const SOURCE_ALIASES = {
   feed_card: "feed",
   scroll_modal: "modal",
+  story_sidebar: "story",
 };
 
 export function sourceTag(source) {

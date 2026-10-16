@@ -594,7 +594,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
           ${RightColumn({
             newsletter: false,
             children: [
-              NewsletterCardElement("story", storyHeadline, storyCopy),
+              NewsletterCardElement("story_sidebar", storyHeadline, storyCopy),
               related.stories.length > 0 ? RelatedBox(related) : null,
             ],
           })}

@@ -23,6 +23,7 @@ test("sourceTag only forwards known sources", (t) => {
   t.is(sourceTag(" Story "), "story");
   t.is(sourceTag("feed_card"), "feed");
   t.is(sourceTag("scroll_modal"), "modal");
+  t.is(sourceTag("story_sidebar"), "story");
   t.is(sourceTag("vip"), null);
   t.is(sourceTag(""), null);
   t.is(sourceTag(undefined), null);
