@@ -74,14 +74,28 @@ ${urls.join("\n")}
 </urlset>`;
 }
 
-export function buildSitemapIndex(months) {
+// The newest <lastmod> in a urlset (YYYY-MM-DD strings sort by date), so the
+// index can tell crawlers which child sitemaps changed since their last visit.
+export function newestLastmod(xml) {
+  let newest = null;
+  for (const [, date] of xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)) {
+    if (!newest || date > newest) newest = date;
+  }
+  return newest;
+}
+
+// `lastmods` maps a child sitemap's file name to its newest lastmod.
+export function buildSitemapIndex(months, lastmods = {}) {
+  const entry = (name) => {
+    const lastmod = lastmods[name];
+    return `  <sitemap><loc>${BASE_URL}/${name}</loc>${
+      lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
+    }</sitemap>`;
+  };
   const entries = [
-    `  <sitemap><loc>${BASE_URL}/sitemap-static.xml</loc></sitemap>`,
-    `  <sitemap><loc>${BASE_URL}/sitemap-weekly.xml</loc></sitemap>`,
-    ...months.map(
-      (month) =>
-        `  <sitemap><loc>${BASE_URL}/sitemap-${month}.xml</loc></sitemap>`,
-    ),
+    entry("sitemap-static.xml"),
+    entry("sitemap-weekly.xml"),
+    ...months.map((month) => entry(`sitemap-${month}.xml`)),
   ];
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -113,17 +127,18 @@ export function generateSitemaps() {
   const months = listSitemapMonths();
   const lastComments = latestCommentTimestamps();
 
+  const lastmods = {};
   for (const month of months) {
     const xml = buildMonthlySitemap(listSitemapEntries(month), lastComments);
     writeAtomic(`sitemap-${month}.xml`, xml);
+    lastmods[`sitemap-${month}.xml`] = newestLastmod(xml);
   }
 
   writeAtomic("sitemap-static.xml", STATIC_SITEMAP);
-  writeAtomic(
-    "sitemap-weekly.xml",
-    buildWeeklySitemap(listWeeks({ activity: true })),
-  );
-  writeAtomic("sitemap.xml", buildSitemapIndex(months));
+  const weekly = buildWeeklySitemap(listWeeks({ activity: true }));
+  writeAtomic("sitemap-weekly.xml", weekly);
+  lastmods["sitemap-weekly.xml"] = newestLastmod(weekly);
+  writeAtomic("sitemap.xml", buildSitemapIndex(months, lastmods));
 
   log(`Generated sitemaps for ${months.length} months`);
 }

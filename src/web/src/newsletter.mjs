@@ -1,14 +1,13 @@
 // Shared client-side newsletter sign-up: posts to the Buttondown proxy and
 // tracks the funnel in PostHog. The email address is never sent to PostHog.
+//
+// NOTE: Events go through the analytics queue (analytics.mjs), not
+// window.posthog directly: posthog-js only loads on the first interaction or
+// 5s after load, so a direct call before then was silently dropped.
+import { capture } from "./analytics.mjs";
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const SUBSCRIBED_KEY = "newsletter-subscribed";
-
-function capture(event, props) {
-  try {
-    window.posthog?.capture?.(event, props);
-  } catch (err) {}
-}
 
 export function markSubscribed() {
   try {

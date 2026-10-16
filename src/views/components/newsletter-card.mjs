@@ -14,7 +14,7 @@ export const copy =
 // for readers who already subscribed or dismissed it.
 // The card itself. `source` tells the sign-ups apart in analytics:
 // "feed_card" in the hot feed, "sidebar" in the desktop right column, "story"
-// below a story's summary. `title` and `text` override the headline and copy
+// below a story's summary, "story_sidebar" in the story page's right column. `title` and `text` override the headline and copy
 // (also passed to the client card through data-headline and data-copy).
 export function NewsletterCardElement(source = "feed_card", title, text) {
   return html`

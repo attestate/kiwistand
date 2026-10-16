@@ -13,7 +13,7 @@
 //   - A Farcaster hub directly, no paid API: FC_FID, FC_SIGNER_PRIVATE_KEY
 //     (an ed25519 key registered for the account, see
 //     `node scripts/create-farcaster-key.mjs`) and FC_HUB_URL (a hub's HTTP
-//     API, e.g. https://<hub>:2281).
+//     API, e.g. https://haatz.quilibrium.com, a free public hub on 443).
 //   Neynar is tried first; when it fails (e.g. the plan lapsed) or isn't
 //   set up, the cast goes to the hub. The old FC_SEED_PHRASE path used
 //   Warpcast's private PUT /v2/auth, which now answers 404.

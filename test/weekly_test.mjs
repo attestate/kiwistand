@@ -20,10 +20,12 @@ import {
   parseIntro,
   readIntro,
   topSources,
+  weekMarkdown,
 } from "../src/weekly.mjs";
 import {
   buildWeeklySitemap,
   buildSitemapIndex,
+  newestLastmod,
   STATIC_SITEMAP,
 } from "../src/sitemap.mjs";
 import {
@@ -31,6 +33,8 @@ import {
   indexPage,
   weekJsonLd,
   weekTitle,
+  weekDescription,
+  indexJsonLd,
   groupWeeks,
 } from "../src/views/weekly.mjs";
 
@@ -329,6 +333,35 @@ test("weekly sitemap lists past and current weeks", (t) => {
   t.true(STATIC_SITEMAP.includes("<loc>https://news.kiwistand.com/weekly</loc>"));
 });
 
+test("the sitemap index carries each child's newest lastmod", (t) => {
+  t.is(
+    newestLastmod(
+      "<url><lastmod>2026-09-30</lastmod></url><url><lastmod>2026-10-12</lastmod></url><url><lastmod>2026-10-01</lastmod></url>",
+    ),
+    "2026-10-12",
+  );
+  t.is(newestLastmod("<urlset></urlset>"), null);
+  const index = buildSitemapIndex(["2026-10", "2026-09"], {
+    "sitemap-2026-10.xml": "2026-10-13",
+    "sitemap-weekly.xml": "2026-10-12",
+  });
+  t.true(
+    index.includes(
+      "<sitemap><loc>https://news.kiwistand.com/sitemap-2026-10.xml</loc><lastmod>2026-10-13</lastmod></sitemap>",
+    ),
+  );
+  t.true(
+    index.includes(
+      "<sitemap><loc>https://news.kiwistand.com/sitemap-weekly.xml</loc><lastmod>2026-10-12</lastmod></sitemap>",
+    ),
+  );
+  t.true(
+    index.includes(
+      "<sitemap><loc>https://news.kiwistand.com/sitemap-2026-09.xml</loc></sitemap>",
+    ),
+  );
+});
+
 const renderStories = [
   story(1, "https://github.com/a/b", {
     title: 'Fusaka & "blobs" <explained>',
@@ -367,6 +400,7 @@ test("weekPage renders the week", async (t) => {
   t.is(page.match(/<h1[ >]/g).length, 1);
   t.true(page.includes("<title>Top crypto stories, week 40 2026 (Sep 28–Oct 4) | Kiwi News</title>"));
   t.true(page.includes('<link rel="canonical" href="https://news.kiwistand.com/weekly/2026-W40"'));
+  t.true(page.includes('href="https://news.kiwistand.com/weekly/2026-W40/context"'));
   // Relative stylesheet/script paths must not resolve under /weekly/.
   t.true(page.includes('<base href="/"'));
   t.true(page.includes('<script type="application/ld+json">'));
@@ -415,4 +449,60 @@ test("indexPage groups weeks by year and month", async (t) => {
   t.true(page.includes("Week 41: Oct 5–11"));
   t.true(page.includes("(this week)"));
   t.true(page.includes("since December 2025"));
+  const ld = page.match(
+    /<script type="application\/ld\+json"[^>]*>(.*?)<\/script>/s,
+  );
+  t.truthy(ld);
+  const data = JSON.parse(ld[1]);
+  t.is(data["@type"], "CollectionPage");
+  t.is(data.url, "https://news.kiwistand.com/weekly");
+  t.is(data.mainEntity.numberOfItems, 4);
+  t.is(
+    data.mainEntity.itemListElement[0].url,
+    "https://news.kiwistand.com/weekly/2026-W41",
+  );
+});
+
+test("indexJsonLd escapes < so it can't close the script element", (t) => {
+  t.false(indexJsonLd([{ week: W(2026, 41) }], "a </script> b").includes("<"));
+});
+
+test("weekDescription stays within 155 characters with a long first title", (t) => {
+  const long = { title: "A".repeat(20) + " " + "word ".repeat(30) };
+  const desc = weekDescription(W(2026, 41), [long]);
+  t.true(desc.length <= 155);
+  t.true(desc.endsWith("…"));
+  const short = weekDescription(W(2026, 41), [{ title: "Short" }]);
+  t.true(short.endsWith("Short"));
+});
+
+test("weekMarkdown lists the week's stories as plain text", (t) => {
+  const md = weekMarkdown({
+    week: W(2026, 40),
+    isCurrent: false,
+    stories: renderStories,
+    intro: null,
+  });
+  t.true(md.startsWith("# Top stories on Kiwi News, week 40 2026\n"));
+  t.true(md.includes("Page: https://news.kiwistand.com/weekly/2026-W40"));
+  t.true(md.includes("The 3 top stories on Kiwi News from Mon 28 September"));
+  t.true(md.includes("Summaries are AI summaries of the linked article."));
+  // Titles stay as they are: this is text, not HTML.
+  t.true(md.includes('## 1. Fusaka & "blobs" <explained>'));
+  t.true(md.includes("- Source: https://github.com/a/b"));
+  t.true(md.includes(`- Kiwi News: https://news.kiwistand.com/stories/Story-3?index=0x${renderStories[2].index}`));
+  t.true(md.includes("A short summary of the article."));
+  t.is(md.match(/^## /gm).length, 3);
+});
+
+test("weekMarkdown uses the editorial intro and marks the current week", (t) => {
+  const md = weekMarkdown({
+    week: W(2026, 41),
+    isCurrent: true,
+    stories: [renderStories[1]],
+    intro: ["First paragraph.", "Second paragraph."],
+  });
+  t.true(md.includes("(this week so far, updated as votes come in)"));
+  t.true(md.includes("First paragraph.\n\nSecond paragraph."));
+  t.false(md.includes("Summaries are AI summaries"));
 });

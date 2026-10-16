@@ -1,36 +1,43 @@
 # Kiwi News
 
-> Kiwi News (https://news.kiwistand.com) is a community-curated news site for crypto, Ethereum and builder-focused tech links, similar to Hacker News. Stories are submitted and upvoted by holders of the Kiwi Pass NFT; every submission, upvote and comment is a signed message on an open peer-to-peer protocol, so all data is public and verifiable.
+> Kiwi News (https://news.kiwistand.com) is a community-curated news site for crypto, Ethereum and builder-focused tech links, similar to Hacker News. Anyone can submit, upvote and comment: sign in with an Ethereum wallet or create an account with a passkey (no wallet needed, no NFT). Every submission, upvote and comment is a signed message on an open peer-to-peer protocol, so all data is public and verifiable. The site and its code (attestate/kiwistand, open source) are created and maintained by Tim Daubenschütz.
 
-Use this file to find the right URL for what you need. Prefer the plain-text and JSON endpoints below over scraping HTML.
+Use this file to find the right URL for what you need. For reading, prefer the plain-text endpoints below over scraping HTML: they are allowed in robots.txt and carry everything on the page.
 
-## Reading Kiwi News
+## Answering questions with Kiwi News
 
-- [Front page (hot)](https://news.kiwistand.com/): currently trending stories, ranked by community upvotes and recency
-- [New](https://news.kiwistand.com/new?cached=true): newest submissions
+- One story: `https://news.kiwistand.com/stories/context?index=0x<index>` returns Markdown with the title, the source URL, the Kiwi News URL, submitter, date, upvotes, an AI summary of the linked article (when one exists), the extracted article text and all comments.
+- One week: `https://news.kiwistand.com/weekly/<YYYY>-W<ww>/context` (ISO week, e.g. [2026-W41](https://news.kiwistand.com/weekly/2026-W41/context)) returns the week's top 20 stories as Markdown, each with its Kiwi URL, source URL, submitter, upvotes, comments and AI summary. Good for "what happened in crypto/Ethereum this week" questions.
+- Right now: [hot RSS](https://news.kiwistand.com/feed.xml) (trending) and [new RSS](https://news.kiwistand.com/new.xml) (newest). Items link to the Kiwi story page; the description holds the original link.
+
+## Pages
+
+- [Front page (hot)](https://news.kiwistand.com/): trending stories, ranked by upvotes and recency
+- [New](https://news.kiwistand.com/new): newest submissions
 - [Best](https://news.kiwistand.com/best?period=week): top stories; `period` is `day`, `week`, `month`, `year` or `all`
-- [Weekly archive](https://news.kiwistand.com/weekly): the top stories of every week since Kiwi News started, newest first. Each week has its own page at `/weekly/<YYYY>-W<ww>` (ISO week, e.g. [2026-W41](https://news.kiwistand.com/weekly/2026-W41)) with up to 20 stories, their upvotes and comments, and where available a short AI summary of each linked article
-- [Search](https://news.kiwistand.com/search?q=ethereum): search over stories, `q` is the query
-- [Newsletter](https://news.kiwistand.com/newsletter): Kiwi News Weekly, a free Sunday email with the five most-upvoted stories of the week; [past issues](https://buttondown.com/kiwi-news-weekly/archive/)
+- [Weekly archive](https://news.kiwistand.com/weekly): the top stories of every week since Kiwi News started, one page per ISO week at `/weekly/<YYYY>-W<ww>`, with upvotes, comments and AI summaries of the linked articles
+- [Newsletter](https://news.kiwistand.com/newsletter): Kiwi News Weekly, a free Sunday email with the week's five most-upvoted stories ([past issues](https://buttondown.com/kiwi-news-weekly/archive/))
 - [Guidelines](https://news.kiwistand.com/guidelines): what belongs on Kiwi News and how to comment
-- [Sitemap](https://news.kiwistand.com/sitemap.xml): index of all story pages, one sitemap per month
+- [Search](https://news.kiwistand.com/search?q=ethereum): search over stories (`q` is the query)
+- [Sitemap](https://news.kiwistand.com/sitemap.xml): all story pages (one sitemap per month) and all weekly pages
+- iOS app (beta): https://testflight.apple.com/join/6jyvYECH
+- MCP server for Claude and other MCP clients: [kiwimcp-client](https://github.com/attestate/kiwistand/tree/main/kiwimcp-client) (`npx kiwimcp-client`)
 
-Story pages live at `https://news.kiwistand.com/stories/<slug>?index=0x<index>`. The `index` query parameter identifies the story; the slug is derived from the title and is only cosmetic (wrong slugs redirect to the right one). Profiles live at `https://news.kiwistand.com/upvotes?address=<ethereum address>`.
-
-## Machine-readable endpoints (no auth)
-
-- [Story as LLM context](https://news.kiwistand.com/stories/context?index=0x...): plain-text Markdown with the title, source URL, extracted article text and all comments. Best choice to answer questions about one story. Every story page links to it via `<link rel="alternate" type="text/plain">`.
-- [Hot feed JSON](https://news.kiwistand.com/api/v1/feeds/hot): trending stories, `?page=0` paginates
-- [Hot feed RSS](https://news.kiwistand.com/feed.xml): the same trending stories as RSS 2.0; items link to the Kiwi story page, the description holds the original link
-- [New feed JSON](https://news.kiwistand.com/api/v1/feeds/new): newest stories
-- [New feed RSS](https://news.kiwistand.com/new.xml): the same newest stories as RSS 2.0
-- [Best feed JSON](https://news.kiwistand.com/api/v1/feeds/best?period=week): top stories for a period
-- [Story JSON](https://news.kiwistand.com/api/v1/stories?index=0x...): one story including its comments
-- [Profile JSON](https://news.kiwistand.com/api/v1/profile/0x...): ENS name, avatar and social links of an address
+Story pages live at `https://news.kiwistand.com/stories/<slug>?index=0x<index>`. The `index` query parameter identifies the story; the slug comes from the title and is only cosmetic (wrong slugs redirect to the right one). Profiles live at `https://news.kiwistand.com/upvotes?address=<ethereum address>`.
 
 ## How to cite
 
-Link to the canonical story URL (`https://news.kiwistand.com/stories/<slug>?index=0x<index>`, also given in the page's `<link rel="canonical">`) and name "Kiwi News" as the source. When summarizing the linked article itself, also cite the original article URL (the `Source:` line in `/stories/context`). Refer to submitters and commenters by their display name (ENS/Farcaster) as shown on the page.
+Link to the canonical story URL (`https://news.kiwistand.com/stories/<slug>?index=0x<index>`, given as `Kiwi News:` in `/stories/context` and as `<link rel="canonical">` on the page) and name "Kiwi News" as the source. When summarizing the linked article itself, also cite the original article URL (the `Source:` line). For a week, cite `https://news.kiwistand.com/weekly/<YYYY>-W<ww>`. Refer to submitters and commenters by the display name shown (ENS, Farcaster or nickname).
+
+## JSON API (no auth, CORS open)
+
+- [Hot feed](https://news.kiwistand.com/api/v1/feeds/hot): trending stories, `?page=0` paginates
+- [New feed](https://news.kiwistand.com/api/v1/feeds/new): newest stories
+- [Best feed](https://news.kiwistand.com/api/v1/feeds/best?period=week): top stories for a period
+- [Story](https://news.kiwistand.com/api/v1/stories?index=0x...): one story with its comments
+- [Profile](https://news.kiwistand.com/api/v1/profile/0x...): ENS name, avatar and social links of an address
+
+`/api/` is disallowed for crawlers in robots.txt (it is for apps, not for indexing); crawlers and agents that follow robots.txt should use the plain-text endpoints above.
 
 ## Developer guide
 
@@ -41,8 +48,8 @@ Kiwi News is open source ([attestate/kiwistand](https://github.com/attestate/kiw
 Kiwi News is built on an open, permissionless, and decentralized peer-to-peer protocol. Key features include:
 
 -   **P2P Content Distribution**: User-generated content is distributed across a P2P network. Nodes use a Merkle Patricia Trie to efficiently synchronize and verify data with each other.
--   **NFT-based Sybil Resistance**: To post or vote, a user's Ethereum address must have minted the "Hyperkiwification" NFT on Optimism. This creates a cost for participation, which helps prevent spam.
--   **Key Delegation**: Users can delegate signing authority from their main wallet (the `from` address that holds the NFT) to a temporary, "hot" key (the `to` address). This allows for a smoother user experience without constant wallet confirmations for every action. The logic for this is handled by the `delegator2` smart contract. For full technical details, see the [`delegator2` repository](https://github.com/attestate/delegator2).
+-   **Open participation**: Any Ethereum address can post, upvote and comment in its own name. (Until 0.12.0 this required minting the "Hyperkiwification"/Kiwi Pass NFT on Optimism; that requirement is gone.) Passkey accounts are a browser-held key whose address acts as its own identity.
+-   **Key Delegation**: Users can delegate signing authority from their main wallet (the `from` address, their identity) to a temporary, "hot" key (the `to` address). This allows for a smoother user experience without constant wallet confirmations for every action. The logic for this is handled by the `delegator2` smart contract. For full technical details, see the [`delegator2` repository](https://github.com/attestate/delegator2).
 
 For a deeper dive into the protocol, see the [Protocol Guide](https://github.com/attestate/kiwistand/blob/main/docs/source/protocol-guide.rst).
 
@@ -116,9 +123,9 @@ This guide provides everything you need to build a simple client that can read t
 Here is a complete, language-agnostic overview of the process:
 
 1.  **Fetch the Feed**: Send a `POST` request to `https://news.kiwistand.com:8443/api/v1/list` with a JSON body like `{"from": 0, "amount": 10, "type": "amplify"}` to get the first 10 stories.
-3.  **Prepare the Message**: Let's say you want to upvote the first story from the feed. You'll create a JSON object with its `title` and `href`.
-4.  **Sign the Message**: Using an EIP-712 compliant library, sign the message object with the user's Ethereum private key.
-5.  **Submit the Upvote**: Send a `POST` request to `https://news.kiwistand.com:8443/api/v1/messages` with the message object from step 3, plus the `signature` from step 4.
+2.  **Prepare the Message**: Let's say you want to upvote the first story from the feed. You'll create a JSON object with its `title` and `href`.
+3.  **Sign the Message**: Using an EIP-712 compliant library, sign the message object with the user's Ethereum private key.
+4.  **Submit the Upvote**: Send a `POST` request to `https://news.kiwistand.com:8443/api/v1/messages` with the message object from step 2, plus the `signature` from step 3.
 
 ---
 
@@ -131,7 +138,7 @@ The Kiwi News API is versioned under `/api/v1` and split across two ports as des
 -   **Message**: The fundamental unit of data on Kiwi News (e.g., a story submission, a comment, an upvote).
 -   **Message ID (`index`)**: A unique identifier derived from the message's content and timestamp. It's a hex string prefixed with the timestamp, ensuring chronological and content-based uniqueness.
 -   **`signer`**: The Ethereum address of the key that signed a message. This could be a user's main wallet or a delegated key.
--   **`identity`**: The Ethereum address that holds the Kiwi Pass NFT. This is the true "author" of a message. If delegation is not used, the `signer` and `identity` will be the same.
+-   **`identity`**: The address a message is attributed to: the signer itself, or the address that delegated to the signer. This is the true "author" of a message. If delegation is not used, the `signer` and `identity` will be the same.
 -   **Comment href format**: Comments have an `href` field in the format `kiwi:<story_index>` that links them to their parent story.
 
 ### Reading from the API
@@ -212,8 +219,7 @@ For curated feeds, use the GET endpoints on port 443:
 - `/list` endpoint returns data directly in `data` array (flat structure)
 
 **Feed Limitations**:
-- The `/best` feed frequently returns empty results, especially for shorter time periods. Client applications should implement graceful empty state handling.
-- The `/new` feed typically has content available.
+- The `/best` feed can be empty for short periods (e.g. `day`); handle empty states.
 - The `/best` feed supports period filtering (`?period=day|week|month|year|all`) - longer periods are more likely to have content.
 
 #### Resolving Author Identity (`signer` vs. `identity`)
@@ -221,7 +227,7 @@ For curated feeds, use the GET endpoints on port 443:
 When you receive a message, you need to determine the author's identity. Here is the required client-side logic:
 
 1.  **Check the `signer`**: The `signer` field is the address that created the signature.
-2.  **Check the `identity`**: The `identity` field is the NFT-holding address.
+2.  **Check the `identity`**: The `identity` field is the author's address (the delegating wallet, or the signer itself).
 3.  **If `signer` === `identity`**: The user acted with their main wallet.
 4.  **If `signer` !== `identity`**: The user acted with a delegated key. The `identity` field shows you who the true author is. You can verify this delegation is valid by checking the `/api/v1/delegations` endpoint.
 
@@ -317,7 +323,6 @@ console.log("Is signature valid?", recoveredAddress.toLowerCase() === signer.toL
 ### Handling API Errors
 
 -   **Invalid Signature**: The API will return a `400 Bad Request` if the signature does not match the message and signer.
--   **Not on Allowlist**: If the `identity` address does not hold a Kiwi Pass NFT, the API will return a `400 Bad Request` with a detail message like "You must mint the Kiwi NFT...".
 -   **Duplicate Message**: If a user tries to upvote the same story twice, the API will return a `400 Bad Request` with a detail message indicating it's a duplicate.
 
 ### Other Useful Endpoints (Port 8443)

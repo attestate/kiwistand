@@ -11,19 +11,17 @@ Kiwi News is built on an open, permissionless and decentralized peer to peer
 protocol which facilitates:
 
 - asynchronously verifiable distribution of all user-generated content using a `Patricia Merkle trie <https://ethereum.org/en/developers/docs/data-structures-and-encoding/patricia-merkle-trie/>`_.
-- an NFT-based, sybil-resistant mechanism to let Ethereum addresses post and upvote content in the name of their ENS domain.
+- signed EIP-712 messages that let any Ethereum address post and upvote content in the name of its ENS domain, optionally through a delegated key.
 
 Decentralizing content using a PMT
 __________________________________
 
 Kiwi creates a total order over all user-generated messages. It sorts these messages into a Merkle Patricia trie. The trie's root is then gossiped to a p2p mesh network where two nodes with different root hashes start a synchronization process.
 
-NFT-based sybil-resistance
-__________________________
+Identity (formerly NFT-based sybil-resistance)
+______________________________________________
 
-Kiwi News Protocol implements sybil-resistance by causing costs during a user's
-sign-up. Technically, any user can send signed EIP-712 messages to a Kiwi node, however,
-all messages are signed and a node will only consider messages valid where the message's signer is an Ethereum address who had previously minted the "Hyperkiwification" NFT at `oeth:0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45 <https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45>`_.
+Until version 0.12.0, a node only accepted messages whose signer had minted the "Hyperkiwification" NFT at `oeth:0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45 <https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45>`_ (or a key delegated by such an address). 0.12.0 removed that requirement: any address can sign messages for itself, and a key delegated through `delegator2 <https://github.com/attestate/delegator2>`_ signs in the name of the delegating address.
 
 Introducing Set Reconciliation
 ------------------------------

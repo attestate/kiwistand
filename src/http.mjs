@@ -247,7 +247,11 @@ const noindexPaths = new Set([
   "/comment-debug",
 ]);
 app.use((req, res, next) => {
-  if (noindexPaths.has(req.path) || req.path.startsWith("/api/")) {
+  if (
+    noindexPaths.has(req.path) ||
+    req.path.startsWith("/api/") ||
+    /^\/weekly\/[^/]+\/context$/.test(req.path)
+  ) {
     res.setHeader("X-Robots-Tag", "noindex");
   }
   next();
@@ -2247,7 +2251,20 @@ export async function launch(trie, libp2p, isPrimary = true) {
       comments.map((c) => ens.resolve(c.identity)),
     );
 
+    const submitter = await ens.resolve(submission.identity);
+    const submitterName =
+      submitter?.displayName ||
+      submitter?.truncatedAddress ||
+      submission.identity;
+    const submitted = new Date(submission.timestamp * 1000)
+      .toISOString()
+      .slice(0, 10);
+    const kiwiUrl = `https://news.kiwistand.com/stories/${getSlug(
+      submission.title,
+    )}?index=${index}`;
     let md = `# ${submission.title}\n\nSource: ${submission.href}\n`;
+    md += `Kiwi News: ${kiwiUrl}\n`;
+    md += `Submitted by ${submitterName} on ${submitted} UTC, ${submission.upvotes} upvote${submission.upvotes === 1 ? "" : "s"}, ${comments.length} comment${comments.length === 1 ? "" : "s"}\n`;
 
     // The summary comes first so it isn't lost when a reader truncates; the
     // article then needs its own heading to not read as part of it.
@@ -2565,6 +2582,29 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  app.get("/weekly/:week/context", async (request, reply) => {
+    const resolved = isoweek.resolveRequest(request.params.week);
+    if (resolved.status === 308) {
+      return reply.redirect(308, `${resolved.location}/context`);
+    }
+    const data =
+      resolved.status === 200
+        ? await weekly.getWeek(resolved.week, resolved.isCurrent)
+        : null;
+    if (!data) {
+      return reply.status(404).type("text/plain").send("Week not found");
+    }
+    reply.header(
+      "Cache-Control",
+      resolved.isCurrent
+        ? "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400"
+        : "public, s-maxage=604800, max-age=0, stale-while-revalidate=31536000",
+    );
+    return reply
+      .status(200)
+      .type("text/plain; charset=utf-8")
+      .send(weekly.weekMarkdown(data));
   });
   app.get("/weekly/:week", async (request, reply) => {
     const resolved = isoweek.resolveRequest(request.params.week);

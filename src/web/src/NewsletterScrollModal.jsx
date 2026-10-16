@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Modal from "react-modal";
 import { EMAIL_RE, subscribe } from "./newsletter.mjs";
+import { capture } from "./analytics.mjs";
 
 const SOURCE = "scroll_modal";
 
@@ -72,7 +73,7 @@ const NewsletterScrollModal = ({ toast }) => {
       if (rect.top <= window.innerHeight) {
         if (!hasTrackedShownRef.current) {
           hasTrackedShownRef.current = true;
-          window.posthog?.capture?.("newsletter_modal_shown", {
+          capture("newsletter_modal_shown", {
             source: SOURCE,
           });
         }
@@ -95,7 +96,7 @@ const NewsletterScrollModal = ({ toast }) => {
     try {
       localStorage.setItem("newsletter-modal-dismissed", "true");
     } catch (err) {}
-    window.posthog?.capture?.("newsletter_modal_dismissed", { source: SOURCE });
+    capture("newsletter_modal_dismissed", { source: SOURCE });
   };
 
   const handleSubscribe = async (e) => {
