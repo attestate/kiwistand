@@ -122,6 +122,7 @@
      --kn-segment-track: #EEEFEA;
      --kn-segment-thumb: #D4EC37;
      --kn-tab-selected: #EEF6C8;
+     --kn-tab-pill: rgba(238, 239, 234, 0.98);
      --kn-comment-strip: #F4F5EF;
      --kn-placeholder: #E9E7DD;
      --kn-placeholder-icon: rgba(0, 0, 0, 0.25);
@@ -168,6 +169,7 @@
      --kn-button-bg: rgba(255, 255, 255, 0.12);
      --kn-segment-track: #2E3529;
      --kn-tab-selected: #47541A;
+     --kn-tab-pill: rgba(46, 53, 41, 0.98);
      --kn-comment-strip: #30372A;
      --kn-placeholder: #333333;
      --kn-placeholder-icon: rgba(255, 255, 255, 0.3);
@@ -2750,11 +2752,13 @@ body {
 }
 
 /* -- Tab bar (phones) ---------------------------------------------------- */
-/* NOTE: Docked to the bottom edge like main before the redesign (and the
-   iOS system tab bar): full width, the safe area below the tabs, hidden
-   while scrolling down in iOS Safari (main.jsx). Only the look is NEU 2:
-   translucent glass with a hairline on top. */
+/* NOTE: Still docked to the bottom edge and hidden while scrolling down in
+   iOS Safari (main.jsx), but drawn as a floating pill (Tim, 16 Oct, after
+   the app's tab bar): a rounded grey bar inset from the edges, thin icons,
+   and the selected tab's icon in a green circle. The pill is ::before, so
+   the bar keeps its box (and the safe-area padding main.jsx sets inline). */
 .bottom-nav {
+  --kn-tabbar-gap: max(8px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   position: fixed;
   left: 0;
@@ -2762,38 +2766,48 @@ body {
   bottom: 0;
   width: 100%;
   height: auto;
-  padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+  padding: 0 16px var(--kn-tabbar-gap) !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0;
-  background: var(--kn-glass);
+  background: transparent;
   border: 0;
-  border-top: 0.5px solid var(--kn-separator);
   border-radius: 0;
   box-shadow: none;
   z-index: 110;
+}
+.bottom-nav::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  bottom: var(--kn-tabbar-gap);
+  border-radius: 24px;
+  background: var(--kn-tab-pill);
+  border: 0.5px solid var(--kn-glass-border);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
+  pointer-events: none;
 }
 .kn-tab,
 .bottom-nav .mobile-bell,
 .kn-tab-inner {
   box-sizing: border-box;
   flex: 1 1 0;
-  height: 50px;
+  height: 68px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border-radius: var(--kn-radius-sm);
-  color: var(--kn-text-primary) !important;
+  color: var(--kn-text-secondary) !important;
   text-decoration: none;
   font-family: var(--kn-font);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  line-height: 12px;
+  line-height: 14px;
   background: transparent;
   border: 0;
   padding: 0;
@@ -2801,21 +2815,38 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   position: relative;
+  z-index: 1;
 }
 .kn-tab span,
 .kn-tab-inner span {
-  font-size: 10px;
-  color: var(--kn-text-primary);
+  font-size: 11px;
+  color: var(--kn-text-secondary);
 }
-/* A light tint for the selected tab (the design's solid tile was heavy,
-   above all in dark mode). */
-.kn-tab-active,
-.kn-tab-inner.kn-tab-active {
-  background: var(--kn-kiwi-green-light);
+/* Every tab's icon sits in the same 40px box, so the labels line up whether
+   or not the circle shows. */
+.bottom-nav .kn-tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--kn-text-secondary);
+}
+.bottom-nav .kn-tab-icon svg {
+  width: 22px;
+  height: 22px;
+  color: inherit;
+}
+.kn-tab-active .kn-tab-icon,
+.kn-tab-inner.kn-tab-active .kn-tab-icon {
+  background: var(--kn-accent);
+  color: var(--kn-accent-text);
 }
 .kn-tab-active span,
 .kn-tab-inner.kn-tab-active span {
   font-weight: 600;
+  color: var(--kn-text-primary);
 }
 .mobile-bell-container.kn-tab {
   padding: 0;
@@ -3142,6 +3173,14 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   font-size: 12px;
   color: var(--kn-text-secondary);
   white-space: nowrap;
+  /* 4px to the name, like a word space (the design's row gap), against the
+     person link's avatar gap (7px, 8px on desktop). */
+  margin-right: -3px;
+}
+@media (min-width: 641px) {
+  .kn-byline .kn-by {
+    margin-right: -4px;
+  }
 }
 .kn-avatar {
   box-sizing: border-box;
@@ -3521,9 +3560,9 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 
 /* -- Phones -------------------------------------------------------------- */
 @media (max-width: 640px) {
-  /* The docked tab bar: 50px tabs, 8px padding, the safe area. */
+  /* The tab bar: 68px tabs, then 8px or the safe area below the pill. */
   #hnmain {
-    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(68px + max(8px, env(safe-area-inset-bottom, 0px)));
   }
   .kn-only-mobile {
     display: flex;
@@ -4603,7 +4642,7 @@ html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
 }
 @media (max-width: 640px) {
   .kn-toast-undo-host {
-    margin-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-bottom: calc(80px + max(8px, env(safe-area-inset-bottom, 0px))) !important;
   }
 }
 /* The row being removed: dimmed text and share, the bookmark outlined on a
@@ -4981,7 +5020,7 @@ appkit-modal {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(68px + max(8px, env(safe-area-inset-bottom, 0px)));
   z-index: 109;
   display: flex;
   align-items: flex-end;
@@ -5062,7 +5101,7 @@ body.kn-dock-typing .bottom-nav {
 @media (max-width: 640px) {
   body.kn-has-dock #hnmain,
   #hnmain:has(.comment-input-host) {
-    padding-bottom: calc(58px + 48px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(68px + 48px + max(8px, env(safe-area-inset-bottom, 0px)));
   }
   /* Signed in, the composer is the docked bar: nothing to reserve inline. */
   html:not([data-signed-out]) .comment-input-host {
@@ -5105,7 +5144,7 @@ body.kn-dock-typing .bottom-nav {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(68px + max(8px, env(safe-area-inset-bottom, 0px)));
     z-index: 109;
     width: auto;
     gap: 12px;
