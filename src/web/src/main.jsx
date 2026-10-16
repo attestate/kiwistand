@@ -1919,6 +1919,14 @@ async function start() {
   // Add the analytics consent banner
   await addAnalyticsConsent();
 
+  // NOTE: The newsletter sign-up cards don't depend on the wallet,
+  // delegations or comments, so they mount now instead of after that chain
+  // (about 15s in an emulated iPhone on the live site). Until they mount, a
+  // submit is a plain form post that PostHog never sees.
+  addNewsletterFeedCard().catch((err) =>
+    console.error("Newsletter card failed to mount", err),
+  );
+
 
   const { fetchDelegations } = await import("./API.mjs");
 
@@ -1974,7 +1982,6 @@ async function start() {
     addSavedStories(await delegationsPromise, toast),
     addImageViewer(),
     addSidebarDrawer(await delegationsPromise, toast),
-    addNewsletterFeedCard(),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addEditProfile(toast),
