@@ -121,9 +121,11 @@ function resetPostHog() {
 
 // Our own page speed checks (scripts/pagespeed) and Lighthouse aren't
 // visitors; counting them showed up as a spike of ~70 users per run.
-const isSyntheticVisit = /KiwiPagespeed|Chrome-Lighthouse/.test(
-  navigator.userAgent,
-);
+// Lighthouse's user agent looks like plain Chrome, but navigator.webdriver is
+// set in headless and automated browsers (see public/conditional-tracking.js).
+const isSyntheticVisit =
+  !!navigator.webdriver ||
+  /KiwiPagespeed|Chrome-Lighthouse|HeadlessChrome/.test(navigator.userAgent);
 
 // Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
