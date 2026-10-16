@@ -96,9 +96,17 @@ if (!send) {
 }
 
 const tx = await gateway.add(1, key, 1, metadata);
-console.log(`Sent ${tx.hash}, waiting for confirmation...`);
-await tx.wait();
-console.log("Registered. Add to .env:");
+// NOTE: Print the key before waiting: if the wait throws (RPC hiccup,
+// timeout) the transaction may still land, and a key we didn't keep would be
+// gas spent on a signer nobody can use.
+console.log(`Sent ${tx.hash}. Add to .env once it's confirmed:`);
 console.log(`FC_FID=${fid}`);
 console.log(`FC_SIGNER_PRIVATE_KEY=0x${privateKey.toString("hex")}`);
-console.log("FC_HUB_URL=<a hub's HTTP API, e.g. https://<hub>:2281>");
+// NOTE: A free public hub (Snapchain HTTP API) reachable on port 443; any
+// hub's HTTP API works.
+console.log("FC_HUB_URL=https://haatz.quilibrium.com");
+console.log("Waiting for confirmation...");
+await tx.wait();
+console.log(
+  `Registered. Check: https://haatz.quilibrium.com/v1/onChainSignersByFid?fid=${fid}`,
+);
