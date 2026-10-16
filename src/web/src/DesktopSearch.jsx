@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
+import MS from "./ms.jsx";
 
 const DesktopSearch = () => {
   const [keyIndicator, setKeyIndicator] = useState(null);
@@ -19,80 +20,37 @@ const DesktopSearch = () => {
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
+      // NOTE: The surrounding <form> would submit too.
+      e.preventDefault();
       // Show spinner before navigation
       showSpinnerOverlay();
       window.location.href = "/search?q=" + encodeURIComponent(e.target.value);
     }
   };
 
+  // NOTE: Renders into the server-rendered <form class="kn-search"> of the
+  // top bar (views/components/header.mjs), with the same markup.
   return (
-    <div
-      className="desktop-search"
-      style={{ display: "flex", alignItems: "center" }}
-    >
+    <>
       {keyIndicator}
-      <div style={{ position: "relative" }}>
-        <span
-          style={{
-            position: "absolute",
-            left: "8px",
-            top: "50%",
-            transform: "translateY(-50%)",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 256 256"
-            style={{ width: "1.2rem", color: "var(--text-primary)" }}
-          >
-            <rect width="256" height="256" fill="none" />
-            <circle
-              cx="112"
-              cy="112"
-              r="80"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="16"
-            />
-            <line
-              x1="168.57"
-              y1="168.57"
-              x2="224"
-              y2="224"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="16"
-            />
-          </svg>
-        </span>
-        <input
-          ref={inputRef}
-          id="desktop-search-input"
-          type="text"
-          placeholder="Search..."
-          defaultValue={
-            window.location.pathname === "/search"
-              ? new URLSearchParams(window.location.search).get("q")
-              : ""
-          }
-          style={{
-            width: "200px",
-            height: "32px",
-            padding: "4px 4px 4px 32px",
-            fontSize: "0.75rem",
-            fontVariant: "small-caps",
-            border: "var(--border-thin)",
-            backgroundColor: "var(--bg-white)",
-            color: "var(--text-primary)",
-          }}
-          onKeyDown={handleKeyDown}
-        />
-      </div>
-    </div>
+      <MS name="magnifying-glass" size={16} />
+      <input
+        ref={inputRef}
+        id="desktop-search-input"
+        type="search"
+        name="q"
+        placeholder="Search stories"
+        aria-label="Search stories"
+        autoComplete="off"
+        defaultValue={
+          window.location.pathname === "/search"
+            ? new URLSearchParams(window.location.search).get("q")
+            : ""
+        }
+        onKeyDown={handleKeyDown}
+      />
+      <kbd>{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘S" : "Ctrl S"}</kbd>
+    </>
   );
 };
 

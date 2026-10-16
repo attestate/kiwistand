@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { WagmiProvider, useAccount } from "wagmi";
+import { useAccount } from "wagmi";
+import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 
@@ -291,11 +292,11 @@ const queryClient = new QueryClient();
 const Form = (props) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client} reconnectOnMount={false}>
+      <KiwiWagmiProvider>
         <RainbowKitProvider chains={chains}>
           <Avatar {...props} />
         </RainbowKitProvider>
-      </WagmiProvider>
+      </KiwiWagmiProvider>
     </QueryClientProvider>
   );
 };

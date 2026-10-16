@@ -29,6 +29,40 @@
     document.documentElement.setAttribute('data-signed-out', '');
   }
 
+  // NOTE: Your own profile page (/upvotes?address=<you>) shows "Edit
+  // profile", "Saved stories" and the settings gear (views/upvotes.mjs).
+  // The page is cached for everyone, so this marks it before the first
+  // paint, from this browser's Kiwi key (same key names as above); pages.css
+  // then shows them right away instead of when EditProfile.jsx mounts.
+  try {
+    if (!anonMode && hasKey && location.pathname === '/upvotes') {
+      const address = (urlParams.get('address') || '').toLowerCase();
+      const own = Object.keys(localStorage).some(function (key) {
+        const match = key.match(/^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/);
+        return match && match[1].toLowerCase() === address;
+      });
+      if (own) document.documentElement.setAttribute('data-own-profile', '');
+    }
+  } catch (err) {}
+
+  // NOTE: The newsletter sign-up cards (newsletter-card.mjs) are server
+  // rendered for everyone; NewsletterFeedCard.jsx removes them once the
+  // bundle loads for readers who subscribed, dismissed them or browse in anon
+  // mode (same keys as shouldHideCard there). Marking that here, before the
+  // first paint, lets news.css hide them right away, so a dismissed card
+  // doesn't flash and the right column doesn't jump. ?newsletter=test shows
+  // them again (shouldHideCard clears the keys).
+  try {
+    const test = urlParams.get('newsletter') === 'test';
+    const hideNewsletter =
+      anonMode ||
+      !!localStorage.getItem('newsletter-subscribed') ||
+      !!localStorage.getItem('newsletter-card-dismissed');
+    if (hideNewsletter && !test) {
+      document.documentElement.setAttribute('data-nl-hidden', '');
+    }
+  } catch (err) {}
+
   // NOTE: The "Kiwi News for iPhone" TestFlight card (testflight-card.mjs) is for iPhone
   // Safari visitors, not inside a Farcaster mini app (an iframe) or a home
   // screen web app. Hidden for good after "x", and for 30 days after a tap.

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import sdk from "@farcaster/frame-sdk";
 import { useWebHaptics } from "web-haptics/react";
+import MS from "./ms.jsx";
 
 const BackButton = () => {
   const [canGoBack, setCanGoBack] = useState(false);
@@ -77,38 +78,17 @@ const BackButton = () => {
     }
   };
 
+  // NOTE: The NEU 2 glass button (same as the server-rendered one in
+  // views/components/header.mjs that this replaces).
   return (
-    <div style={{ display: "flex", alignItems: "center", padding: "0 7px", height: "100%", width: "100%" }}>
-      <a
-        href="/"
-        style={{
-          color: "var(--text-primary)",
-          textDecoration: "none",
-          fontSize: "11pt",
-          display: "inline-flex",
-          alignItems: "center",
-          minHeight: "44px",
-          minWidth: "44px",
-          padding: "0 5px",
-          cursor: "pointer"
-        }}
-        onClick={handleBackClick}
-      >
-        <svg
-          height="21px"
-          viewBox="0 0 13 21"
-          style={{ marginRight: "6px" }}
-          stroke="currentColor"
-          strokeWidth="2.5"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="11.5 1.5 1.5 10.5 11.5 19.5" />
-        </svg>
-        <span style={{ marginTop: "1px" }}>Back</span>
-      </a>
-    </div>
+    <a
+      href="/"
+      className="kn-glass"
+      aria-label="Back"
+      onClick={handleBackClick}
+    >
+      <MS name="caret-left-bold" size={20} />
+    </a>
   );
 };
 

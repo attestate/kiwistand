@@ -2,191 +2,159 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
+import { ms } from "./icons.mjs";
+
 const html = htm.bind(vhtml);
 
-const KiwiWordmark = (heightPx) => html`
+// The Kiwi News wordmark (Bricolage Grotesque 500, outlined, with a 3.5
+// unit round contour): the letters in the text colour and the bar over the
+// i's in the wordmark green (--kn-wordmark-green), so it follows light and
+// dark mode with the page's CSS, without a flash. 105.15 x 18 in the nav.
+// NOTE: Logo rules: the wordmark always stands alone (no mascot or symbol
+// next to it) and never without its bar.
+export const WORDMARK_VIEWBOX = "2.65 -70.25 428.2 73.3";
+export const WORDMARK_TEXT = "M15.1 0l-10.7 0 0-68.5 10.7 0 0 37.5q4.2-1.5 7.75-3.95 3.55-2.45 6.3-5.4 2.75-2.95 4.5-6 1.75-3.05 2.25-5.65l0 0 12.3 0q-0.9 3.5-3.1 7.15-2.2 3.65-5.5 7-3.3 3.35-7.5 6-4.2 2.65-9.2 4.15l0 0 0 0.8q6.4-0.7 10.55 0.3 4.15 1 6.6 3.2 2.45 2.2 3.8 5.25 1.35 3.05 2.15 6.55l0 0 2.6 11.6-11.7 0-1.4-8.2q-0.8-4.2-2.25-7.35-1.45-3.15-4.6-4.95-3.15-1.8-9.05-1.8l0 0-4.5-0.1 0 22.4z m51.8 0l-10.9 0 0-51.9 10.9 0 0 51.9z m35 0l-14.4 0-13.9-51.9 11.6 0 9.5 42.5 0.6 0 9.9-42.5 12.4 0 9.5 42.5 0.5 0 10.2-42.5 11.1 0-14.2 51.9-14.5 0-8.8-40.2-0.4 0-9.1 40.2z m64.6 0l-10.9 0 0-51.9 10.9 0 0 51.9z m43.2 0l-10.9 0 0-25.9-0.1-26 9.8 0-1.1 23.7 0.9 0q0.6-8.5 2.75-14.05 2.15-5.55 6.1-8.3 3.95-2.75 9.65-2.75l0 0q8.8 0 13 6.15 4.2 6.15 4.2 18.75l0 0 0 28.4-10.9 0 0-27.6q0-8.2-2.25-12.1-2.25-3.9-7.45-3.9l0 0q-4.3 0-7.4 3-3.1 3-4.7 9.15-1.6 6.15-1.6 15.95l0 0 0 15.5z m67.4 1.3l0 0q-6.4 0-11.15-1.95-4.75-1.95-7.85-5.55-3.1-3.6-4.6-8.45-1.5-4.85-1.5-10.65l0 0q0-5.7 1.45-10.75 1.45-5.05 4.45-8.95 3-3.9 7.6-6.1 4.6-2.2 10.8-2.2l0 0q5.8 0 10.15 2 4.35 2 7.2 5.65 2.85 3.65 4 8.75 1.15 5.1 0.45 11.3l0 0-39.4 0.7 0-6.9 31.3-0.5-2 3.9q0.3-4.8-0.9-8.35-1.2-3.55-3.85-5.5-2.65-1.95-6.95-1.95l0 0q-4.6 0-7.65 2.3-3.05 2.3-4.55 6.5-1.5 4.2-1.5 9.7l0 0q0 9 3.8 13.7 3.8 4.7 11 4.7l0 0q3.5 0 5.85-1.1 2.35-1.1 3.75-2.85 1.4-1.75 1.9-3.85 0.5-2.1 0.4-4.1l0 0 10.1 0.7q0.1 4-1.2 7.55-1.3 3.55-4.05 6.3-2.75 2.75-7 4.35-4.25 1.6-10.05 1.6z m55.1-1.3l-14.4 0-13.9-51.9 11.6 0 9.5 42.5 0.6 0 9.9-42.5 12.4 0 9.5 42.5 0.5 0 10.2-42.5 11.1 0-14.2 51.9-14.5 0-8.8-40.2-0.4 0-9.1 40.2z m74.9 1.3l0 0q-5 0-9.3-1.05-4.3-1.05-7.4-3.35-3.1-2.3-4.7-6.1-1.6-3.8-1.2-9.2l0 0 9.8-0.9q-0.2 4.5 1.4 7.2 1.6 2.7 4.65 3.85 3.05 1.15 7.05 1.15l0 0q5.2 0 8.2-1.75 3-1.75 3-4.95l0 0q0-2.5-1.5-3.85-1.5-1.35-4.4-2.2-2.9-0.85-7-1.75l0 0q-4.3-0.9-8.1-1.95-3.8-1.05-6.7-2.7-2.9-1.65-4.5-4.3-1.6-2.65-1.6-6.65l0 0q0-5 2.65-8.6 2.65-3.6 7.35-5.55 4.7-1.95 11-1.95l0 0q5.8 0 10.75 1.9 4.95 1.9 7.8 6.05 2.85 4.15 2.35 10.85l0 0-9.6 1.1q0.3-3.9-1.2-6.4-1.5-2.5-4.25-3.75-2.75-1.25-6.45-1.25l0 0q-4.6 0-7.3 1.85-2.7 1.85-2.7 4.95l0 0q0 2.6 1.65 4.05 1.65 1.45 4.7 2.25 3.05 0.8 7.05 1.6l0 0q3.5 0.7 7.1 1.6 3.6 0.9 6.6 2.6 3 1.7 4.9 4.55 1.9 2.85 1.9 7.35l0 0q0 4.7-2.65 8.15-2.65 3.45-7.55 5.3-4.9 1.85-11.8 1.85z";
+export const WORDMARK_BAR = "M56-68.5h110.5v8.5h-110.5z";
+export const KiwiWordmark = (heightPx = 18) => html`
   <svg
     class="kiwi-wordmark"
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 212.56 53.42"
-    style="height: ${heightPx}px; width: auto;"
+    viewBox="${WORDMARK_VIEWBOX}"
+    width="${Math.round(((heightPx * 428.2) / 73.3) * 100) / 100}"
+    height="${heightPx}"
     aria-label="Kiwi News"
+    role="img"
+    stroke-width="3.498"
+    stroke-linejoin="round"
   >
-    <path
-      style="fill: #a6b052;"
-      d="M16.9,40.56c0,.86-.45,1.32-1.32,1.32h-4.89c-.86,0-1.32-.45-1.32-1.32v-23.68c0-.86.45-1.32,1.32-1.32h4.89c.86,0,1.32.45,1.32,1.32v8.04c0,.38.07.41.3.11l5.64-8.38c.49-.71,1.2-1.09,2.07-1.09h6.09c.49,0,.86.64.56,1.09l-7.37,10.98c-.49.71-.49,1.47,0,2.18l7.37,10.98c.3.45-.08,1.09-.56,1.09h-6.09c-.86,0-1.58-.38-2.07-1.09l-5.64-8.38c-.23-.3-.3-.26-.3.11v8.04Z"
-    />
-    <path
-      style="fill: #a6b052;"
-      d="M36.56,15.69c2.26,0,3.76,1.5,3.76,3.76s-1.5,3.76-3.76,3.76-3.76-1.5-3.76-3.76,1.5-3.76,3.76-3.76ZM32.8,26.78c0-.86.45-1.32,1.32-1.32h4.89c.86,0,1.32.45,1.32,1.32v13.72c0,.86-.45,1.32-1.32,1.32h-4.89c-.86,0-1.32-.45-1.32-1.32v-13.72Z"
-    />
-    <path
-      style="fill: #a6b052;"
-      d="M55.5,20.93c.26-.83.83-1.28,1.69-1.28h4.89c.86,0,1.43.45,1.69,1.28l3.08,10.3c.11.38.19.38.3,0l3.08-10.3c.26-.83.83-1.28,1.69-1.28h4.89c.86,0,1.17.41.9,1.24l-6.54,19.74c-.26.83-.86,1.24-1.73,1.24h-4.89c-.86,0-1.47-.41-1.73-1.24l-3.01-9.1c-.11-.34-.26-.34-.38,0l-3.01,9.1c-.26.83-.86,1.24-1.73,1.24h-4.89c-.86,0-1.47-.41-1.73-1.24l-6.54-19.74c-.26-.83.04-1.24.9-1.24h4.89c.86,0,1.43.45,1.69,1.28l3.08,10.3c.11.38.19.38.3,0l3.08-10.3Z"
-    />
-    <path
-      style="fill: #a6b052;"
-      d="M82.72,15.73c2.26,0,3.76,1.5,3.76,3.76s-1.5,3.76-3.76,3.76-3.76-1.5-3.76-3.76,1.5-3.76,3.76-3.76ZM78.96,26.72c0-.86.45-1.32,1.32-1.32h4.89c.86,0,1.32.45,1.32,1.32v13.77c0,.86-.45,1.32-1.32,1.32h-4.89c-.86,0-1.32-.45-1.32-1.32v-13.77Z"
-    />
-    <path
-      fill="currentColor"
-      d="M111.7,19.02c5.07,0,8.68,3.05,8.68,9.96v11.58c0,.86-.45,1.32-1.32,1.32h-4.89c-.86,0-1.32-.45-1.32-1.32v-9.7c0-3.46-1.62-4.62-3.23-4.62s-3.23,1.54-3.23,4.62v9.7c0,.86-.45,1.32-1.32,1.32h-4.89c-.86,0-1.32-.45-1.32-1.32v-19.59c0-.86.45-1.32,1.32-1.32h4.89c.86,0,1.32.45,1.32,1.32v.38c0,.38.07.41.3.11,1.24-1.65,2.93-2.44,5-2.44Z"
-    />
-    <path
-      fill="currentColor"
-      d="M129.78,32.44c-.38,0-.53.19-.38.53.64,1.58,1.95,2.52,3.31,2.52,1.01,0,1.95-.49,2.67-1.28.64-.71,1.17-.79,1.84-.38l4.32,2.67c.79.49.94,1.13.45,1.84-1.99,2.86-5.19,4.29-9.25,4.29-6.73,0-11.24-4.51-11.24-11.8s4.51-11.8,11.31-11.8,11.31,4.51,11.31,11.8v.3c0,.86-.45,1.32-1.32,1.32h-13.04ZM135.9,29.28c.38,0,.53-.19.38-.53-.64-1.62-2.03-2.59-3.46-2.59s-2.82.98-3.46,2.59c-.15.34,0,.53.38.53h6.16Z"
-    />
-    <path
-      fill="currentColor"
-      d="M157.82,20.93c.26-.83.83-1.28,1.69-1.28h4.89c.86,0,1.43.45,1.69,1.28l3.08,10.3c.11.38.19.38.3,0l3.08-10.3c.26-.83.83-1.28,1.69-1.28h4.89c.86,0,1.17.41.9,1.24l-6.54,19.74c-.26.83-.86,1.24-1.73,1.24h-4.89c-.86,0-1.47-.41-1.73-1.24l-3.01-9.1c-.11-.34-.26-.34-.38,0l-3.01,9.1c-.26.83-.86,1.24-1.73,1.24h-4.89c-.86,0-1.47-.41-1.73-1.24l-6.54-19.74c-.26-.83.04-1.24.9-1.24h4.89c.86,0,1.43.45,1.69,1.28l3.08,10.3c.11.38.19.38.3,0l3.08-10.3Z"
-    />
-    <path
-      fill="currentColor"
-      d="M194.95,28.34c-1.5,0-1.16-2.14-4.28-2.14-2.26,0-2.67.71-2.67,1.5,0,2.29,13.19-.94,13.19,8.53,0,3.16-3.2,6.39-10.9,6.39-8.23,0-10.19-3.98-10.49-7.97-.07-.86.38-1.32,1.28-1.32h5.11c1.28,0,.34,2.14,4.1,2.14,2.26,0,3.2-.71,3.2-1.5,0-1.92-13.19.56-13.19-8.53,0-2.78,1.92-6.43,10.37-6.43,6.73,0,9.44,3.08,9.81,8.01.08.86-.38,1.32-1.28,1.32h-4.25Z"
-    />
+    <path class="kiwi-wordmark-text" d="${WORDMARK_TEXT}" />
+    <path class="kiwi-wordmark-bar" d="${WORDMARK_BAR}" />
   </svg>
 `;
 
+// NOTE: Shows the spinner on a plain left click, like every other in-app link.
+const spinner =
+  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
+
+const discoverPaths = ["/", "/new", "/best", "/stories"];
+
+export const Logo = (className = "") => html`
+  <a
+    class="kn-logo${className ? ` ${className}` : ""}"
+    href="/"
+    onclick="${spinner}"
+    aria-label="Kiwi News"
+  >
+    ${KiwiWordmark()}
+    <span class="anon-mode-label">anon-mode</span>
+  </a>
+`;
+
+// The NEU 2 top bar. Phones: a menu (or back) button, the logo in the
+// middle and search, like the iOS app. Desktop (641px and up): logo and
+// nav links on the left; search, Submit, the account buttons (Bell.jsx
+// mounts into #bell) and the menu on the right. On desktop the bar spans
+// the window (see .kn-topbar in news.css).
+//
+// NOTE: There is no Communities link (they come later) and no Leaderboard
+// link (the site has no leaderboard page).
 const header = (theme, path) => {
   const isStoryPage = path === "/stories";
-  return html` <td style="height: 70px;">
-    <nav-delegation-modal />
-    <table
-      style="padding:5px 7px 5px 7px;"
-      width="100%"
-      cellspacing="0"
-      cellpadding="0"
-      border="0"
+  // NOTE: Phones show a back button and the page's title instead of the
+  // menu and the logo on these pages (iOS "Saved stories" frame).
+  const titled = { "/saved": "Saved stories" }[path];
+  const hasBack = isStoryPage || Boolean(titled);
+  const navLink = (href, label, active) => html`
+    <a
+      href="${href}"
+      class="kn-navlink${active ? " kn-navlink-active" : ""}"
+      aria-current="${active ? "page" : "false"}"
+      onclick="${spinner}"
+      >${label}</a
     >
-      <tbody>
-        <tr>
-          <td style="line-height:12pt; height:62px;">
-            <div
-              style="display: flex; flex-wrap: nowrap; justify-content: space-between; align-items: center;"
-            >
-              <div class="kn-banner-desk">
-                <a
-                  style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary);"
-                  href="/"
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                >
-                  <div
-                    class="kiwi-logo-img"
-                    style="width: 35px; height: 35px;"
-                  ></div>
-                  <div style="display: flex; flex-direction: column; gap: 0;">
-                    ${KiwiWordmark(25)}
-                    <span class="anon-mode-label">anon-mode</span>
-                  </div></a
-                >
-              </div>
-              <nav-header-avatar
-                class="${isStoryPage ? "story-back-button" : "sidebar-toggle"}"
-                style="width: 33%;"
-              >
-                ${isStoryPage
-                  ? // Static Back button for story pages (server-side)
-                    html`
-                      <div
-                        style="display: flex; align-items: center; padding: 0 7px; height: 100%; width: 100%;"
-                      >
-                        <a
-                          href="/"
-                          style="color: var(--text-primary); text-decoration: none; font-size: 11pt; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 5px;"
-                        >
-                          <svg
-                            height="21px"
-                            viewBox="0 0 13 21"
-                            style="margin-right: 6px;"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          >
-                            <polyline points="11.5 1.5 1.5 10.5 11.5 19.5" />
-                          </svg>
-                          <span style="margin-top: 1px;">Back</span>
-                        </a>
-                      </div>
-                    `
-                  : // Default Menu button for non-story pages (React will replace if logged in)
-                    html`
-                      <div
-                        style="padding: 0 13px 0 7px; background: var(--button-bg); border-radius: 2px; display: flex; align-items: center;"
-                      >
-                        <div
-                          style="display: flex; cursor: pointer; align-items: center; justify-content: left; padding: 7px 0 7px 7px;"
-                        >
-                          <svg
-                            style="padding-top: 2px;"
-                            viewBox="0 0 100 80"
-                            width="20"
-                            height="20"
-                          >
-                            <rect width="100" height="10"></rect>
-                            <rect y="30" width="100" height="10"></rect>
-                            <rect y="60" width="100" height="10"></rect>
-                          </svg>
-                          <span style="color: var(--text-primary); margin-left: 10px;"
-                            >Menu</span
-                          >
-                        </div>
-                      </div>
-                    `}
-              </nav-header-avatar>
-
-              <a
-                class="mobile-center"
-                href="/"
-                style="user-select: none; width: 33%; display: flex; justify-content: center; align-items: center;"
-              >
-                <span class="pagetop mobile-logo-lockup">
-                  <div
-                    class="kiwi-logo-img mobile-logo-icon"
-                    style="width: 22px; height: 22px;"
-                  ></div>
-                  ${KiwiWordmark(25)}
-                </span>
+  `;
+  return html`<td class="kn-header-cell">
+    <nav-delegation-modal />
+    <header id="kn-topbar" class="kn-topbar">
+      <div class="kn-topbar-left">
+        ${hasBack
+          ? html`<div class="story-back-button kn-only-mobile">
+              <a class="kn-glass" href="/" aria-label="Back">
+                ${ms("caret-left-bold", 20)}
               </a>
-              <div class="desktop-nav">
-                <a
-                  href="https://t.me/+QGAviVT67m00Njc8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Join our Telegram community"
-                  class="meta-link"
-                  style="display: flex; align-items: center; color: #2CA5E0;"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="14" height="14" fill="none" stroke="#2CA5E0" stroke-linecap="round" stroke-linejoin="round" stroke-width="16">
-                    <rect width="256" height="256" fill="none" stroke="none"/>
-                    <path d="M80,134.87,170.26,214a8,8,0,0,0,13.09-4.21L224,33.22a1,1,0,0,0-1.34-1.15L20,111.38A6.23,6.23,0,0,0,21,123.3Z"/>
-                    <line x1="80" y1="134.87" x2="223.41" y2="32.09"/>
-                    <path d="M124.37,173.78,93.76,205.54A8,8,0,0,1,80,200V134.87"/>
-                  </svg>
-                  <span style="margin-left: 4px;">Join our TG</span>
-                </a>
-                <a
-                  class="meta-link primary-action"
-                  href="/submit"
-                  data-no-instant
-                  onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                  >Submit</a
-                >
-                <span class="header-disconnect">Disconnect</span>
-              </div>
-              <div
-                class="header-bell"
-                style="width: 33%; padding: 7px 4px 7px 0; display: flex; justify-content: flex-end; align-items: center;"
-              >
-                <div id="bell"></div>
-                <div id="search"></div>
-              </div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            </div>`
+          : html`<button
+              type="button"
+              class="kn-glass sidebar-toggle kn-only-mobile"
+              aria-label="Menu"
+            >
+              ${ms("list-bold", 20)}
+            </button>`}
+        ${Logo(titled ? "kn-only-desktop" : "")}
+        ${titled
+          ? html`<span class="kn-topbar-title kn-only-mobile">${titled}</span>`
+          : null}
+        <nav class="kn-navlinks kn-only-desktop" aria-label="Main">
+          ${navLink("/", "Discover", discoverPaths.includes(path))}
+          ${navLink("/saved", "Saved stories", path === "/saved")}
+        </nav>
+      </div>
+      <div class="kn-topbar-right">
+        <form
+          id="static-desktop-search"
+          class="kn-search kn-only-wide"
+          action="/search"
+          method="get"
+          role="search"
+        >
+          ${ms("magnifying-glass", 16)}
+          <input
+            type="search"
+            name="q"
+            placeholder="Search stories"
+            aria-label="Search stories"
+            autocomplete="off"
+          />
+          <kbd>⌘S</kbd>
+        </form>
+        <a
+          class="kn-btn kn-btn-accent kn-only-desktop"
+          href="/submit"
+          data-no-instant
+          onclick="${spinner}"
+        >
+          ${ms("plus-bold", 16)}<span>Submit</span>
+        </a>
+        <div id="bell" class="kn-account kn-only-desktop">
+          ${
+            // NOTE: Stand-ins until Bell.jsx mounts, the same size as what
+            // it renders, so nothing shifts: the bell and the avatar, or
+            // "Log in" for browsers without a Kiwi key (theme-init.js sets
+            // data-signed-out before the first paint; news.css picks one).
+            ""
+          }
+          <span class="kn-account-ph kn-account-ph-in" aria-hidden="true">
+            <span class="kn-iconbtn">${ms("bell-bold", 18)}</span>
+            <span class="kn-account-avatar">${ms("user", 18)}</span>
+          </span>
+          <span class="kn-account-ph kn-account-ph-out" aria-hidden="true">
+            <span class="kn-btn kn-btn-outline">Log in</span>
+          </span>
+        </div>
+        <button
+          type="button"
+          class="kn-iconbtn sidebar-toggle kn-only-desktop"
+          aria-label="Menu"
+        >
+          ${ms("list-bold", 18)}
+        </button>
+        <div id="search" class="kn-only-mobile${titled ? " kn-hidden" : ""}">
+          <a class="kn-glass" href="/search" aria-label="Search">
+            ${ms("magnifying-glass-bold", 20)}
+          </a>
+        </div>
+      </div>
+    </header>
   </td>`;
 };
 export default header;

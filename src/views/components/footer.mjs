@@ -67,7 +67,7 @@ const footer = (theme, path) => html`
   ${Nav(path)}
   <footer style="overflow-y: hidden; background-color: var(--header-beige);">
     <div
-      class="footer-table"
+      class="footer-table kn-site-footer"
       style="display: flex; justify-content: space-around; padding: 0.75rem 0 1rem 0;"
     >
       <div>
@@ -106,11 +106,11 @@ const footer = (theme, path) => html`
         ><br />
       </div>
     </div>
-    <div id="private-rpc-footer"></div>
     <div
-      style="display: flex; justify-content: center; align-items: center; gap: 0.5rem;"
+      class="kn-site-footer"
+      style="display: flex; justify-content: center; align-items: center; gap: 0.5rem; padding: 0 16px;"
     >
-      <div>
+      <div style="text-align: center;">
         <span>This instance of Kiwi News is hosted by </span>
         <a
           style="text-decoration: underline;"

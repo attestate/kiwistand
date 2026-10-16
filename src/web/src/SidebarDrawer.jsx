@@ -1,207 +1,160 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ConnectedProfile, ConnectedDisconnectButton } from "./Navigation.jsx";
-
-const HomeSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M152,208V160a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v48a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V115.54a8,8,0,0,1,2.62-5.92l80-75.54a8,8,0,0,1,10.77,0l80,75.54a8,8,0,0,1,2.62,5.92V208a8,8,0,0,1-8,8H160A8,8,0,0,1,152,208Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
-
-const HomeFullSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
-const AboutSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M48,216a24,24,0,0,1,24-24H208V32H72A24,24,0,0,0,48,56Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <polyline
-      points="48 216 48 224 192 224"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
-
-const AboutFullSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M216,32V192a8,8,0,0,1-8,8H72a16,16,0,0,0-16,16H192a8,8,0,0,1,0,16H48a8,8,0,0,1-8-8V56A32,32,0,0,1,72,24H208A8,8,0,0,1,216,32Z"
-      fill="currentColor"
-    />
-  </svg>
-);
+import { getCookie } from "./session.mjs";
+import MS from "./ms.jsx";
 
 // NOTE: Rendered only while the drawer is open (the drawer itself is mounted
-// on every page), so this chunk loads on first open, not with the page.
-const PrivateRpcSetting = lazy(() => import("./PrivateRpcSetting.jsx"));
+// on every page), so these chunks load on first open, not with the page.
+const LoginModal = lazy(() => import("./LoginModal.jsx"));
 
 const iOS =
   typeof navigator !== "undefined" &&
   /iPad|iPhone|iPod/.test(navigator.userAgent);
 
+const phoneQuery = "(max-width: 640px)";
+
+const Item = ({ href, icon, label, active, external, onClick }) => (
+  <a
+    href={href}
+    className={`kn-menu-item${active ? " kn-menu-item-active" : ""}`}
+    aria-current={active ? "page" : undefined}
+    target={external ? "_blank" : undefined}
+    rel={external ? "noopener noreferrer" : undefined}
+    onClick={onClick}
+  >
+    <MS name={icon} size={22} />
+    <span>{label}</span>
+  </a>
+);
+
+// The NEU 2 menu (iOS "Menu" frames): a bottom sheet on phones, a panel from
+// the right on wider screens. Home, Profile, Saved stories, Settings; then
+// Guidelines, Privacy Policy, Wiki; then Log out (or Log in). The anon-rpc
+// switch lives only on /settings (Settings is the first group's last item).
 const SidebarDrawer = ({ delegations, toast }) => {
   const [open, setOpen] = useState(false);
+  const [login, setLogin] = useState(false);
+  const [isPhone, setIsPhone] = useState(
+    () => window.matchMedia(phoneQuery).matches,
+  );
   const path = window.location.pathname;
 
   useEffect(() => {
     window.openSidebar = () => setOpen(true);
     window.closeSidebar = () => setOpen(false);
+    const media = window.matchMedia(phoneQuery);
+    const onChange = () => setIsPhone(media.matches);
+    media.addEventListener?.("change", onChange);
     return () => {
       delete window.openSidebar;
       delete window.closeSidebar;
+      media.removeEventListener?.("change", onChange);
     };
   }, []);
 
   const isHome =
     path === "/" || path === "/new" || path === "/best" || path === "/stories";
+  const isAnonMode = localStorage.getItem("anon-mode") === "true";
+  const loggedIn = isAnonMode || Boolean(getCookie("identity"));
+  const close = () => setOpen(false);
 
   return (
-    <SwipeableDrawer
-      anchor="left"
-      open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
-      disableBackdropTransition={!iOS}
-      disableDiscovery={iOS}
-      SwipeAreaProps={{ sx: { width: 20 } }}
-      PaperProps={{
-        sx: {
-          width: "80%",
-          maxWidth: 300,
-          backgroundColor: "var(--header-beige)",
-          color: "var(--text-primary)",
-          paddingTop: "env(safe-area-inset-top, 0px)",
-        },
-      }}
-    >
-      <style>{`
-        .sidebar-nav {
-          display: flex;
-          flex-direction: column;
-          padding: 48px 16px 24px 0;
-        }
-        .sidebar-nav > a,
-        .sidebar-nav > div {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 14px 24px;
-          color: var(--text-primary);
-          text-decoration: none;
-          font-size: 1.25rem;
-          cursor: pointer;
-          border-radius: 0 32px 32px 0;
-          transition: background-color 0.15s;
-        }
-        .sidebar-nav > a:active,
-        .sidebar-nav > div:active {
-          background-color: var(--button-bg);
-        }
-        .sidebar-nav .sidebar-div {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 14px 24px;
-          font-size: 1.25rem;
-          cursor: pointer;
-          border-radius: 0 32px 32px 0;
-          color: var(--text-primary);
-          margin: 0;
-          min-width: unset;
-          font-variant: normal;
-          transition: background-color 0.15s;
-        }
-        .sidebar-nav .sidebar-div:active {
-          background-color: var(--button-bg);
-        }
-        .sidebar-nav svg {
-          width: 28px;
-          height: 28px;
-          flex-shrink: 0;
-          color: var(--text-primary);
-        }
-        .sidebar-nav .svg-container {
-          width: 28px;
-          height: 28px;
-          padding: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .sidebar-nav a > div,
-        .sidebar-nav .sidebar-div > div {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .sidebar-nav span {
-          font-size: 1.25rem;
-        }
-        .sidebar-nav .active-nav {
-          font-weight: bold;
-          background-color: var(--button-bg);
-        }
-      `}</style>
-
-      <div className="sidebar-nav">
-        <a
-          href="/"
-          className={isHome ? "active-nav" : ""}
-          onClick={() => setOpen(false)}
-        >
-          {isHome ? <HomeFullSVG /> : <HomeSVG />}
-          <span>Home</span>
-        </a>
-
-        <ConnectedProfile toast={toast} delegations={delegations} />
-
-        <a
-          href="https://kiwistand.github.io/kiwi-docs/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={path === "/welcome" ? "active-nav" : ""}
-          onClick={() => setOpen(false)}
-        >
-          {path === "/welcome" ? <AboutFullSVG /> : <AboutSVG />}
-          <span>Wiki</span>
-        </a>
-
-        {open && (
-          <Suspense fallback={null}>
-            <PrivateRpcSetting />
-          </Suspense>
-        )}
-
-        <ConnectedDisconnectButton toast={toast} />
-      </div>
-    </SwipeableDrawer>
+    <>
+      <SwipeableDrawer
+        anchor={isPhone ? "bottom" : "right"}
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={close}
+        disableBackdropTransition={!iOS}
+        disableDiscovery={iOS}
+        disableSwipeToOpen={isPhone}
+        SwipeAreaProps={{ sx: { width: isPhone ? 0 : 20 } }}
+        PaperProps={{
+          className: `kn-menu-paper${isPhone ? " kn-menu-sheet" : ""}`,
+        }}
+      >
+        <nav className="kn-menu sidebar-nav" aria-label="Menu">
+          {isPhone && <span className="kn-menu-grabber" aria-hidden="true" />}
+          <div className="kn-menu-group">
+            <Item
+              href="/"
+              icon="house"
+              label="Home"
+              active={isHome}
+              onClick={close}
+            />
+            <ConnectedProfile toast={toast} delegations={delegations} />
+            {loggedIn && !isAnonMode && (
+              <Item
+                href="/saved"
+                icon="bookmark-simple"
+                label="Saved stories"
+                active={path === "/saved"}
+                onClick={close}
+              />
+            )}
+            <Item
+              href="/settings"
+              icon="gear-six"
+              label="Settings"
+              active={path === "/settings"}
+              onClick={close}
+            />
+          </div>
+          <div className="kn-menu-group">
+            <Item
+              href="/guidelines"
+              icon="book-open"
+              label="Guidelines"
+              active={path === "/guidelines"}
+              onClick={close}
+            />
+            <Item
+              href="/privacy-policy"
+              icon="lock-simple"
+              label="Privacy Policy"
+              active={path === "/privacy-policy"}
+              onClick={close}
+            />
+            <Item
+              href="https://kiwistand.github.io/kiwi-docs/"
+              icon="book"
+              label="Wiki"
+              external
+              onClick={close}
+            />
+          </div>
+          <div className="kn-menu-group kn-menu-account">
+            {loggedIn ? (
+              <ConnectedDisconnectButton toast={toast} />
+            ) : (
+              <button
+                type="button"
+                className="kn-menu-item"
+                onClick={() => {
+                  close();
+                  setLogin(true);
+                }}
+              >
+                <MS name="user-circle" size={22} />
+                <span>Log in</span>
+              </button>
+            )}
+          </div>
+        </nav>
+      </SwipeableDrawer>
+      {login && (
+        <Suspense fallback={null}>
+          <LoginModal
+            defaultOpen={true}
+            delegations={delegations}
+            toast={toast}
+            onClose={() => setLogin(false)}
+          />
+        </Suspense>
+      )}
+    </>
   );
 };
 

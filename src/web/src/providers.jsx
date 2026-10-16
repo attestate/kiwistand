@@ -1,8 +1,7 @@
 import React from "react";
-import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
-import { client } from "./client.mjs";
+import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 
 // Create a single QueryClient instance
 const queryClient = new QueryClient();
@@ -18,20 +17,18 @@ export function Providers({ children }) {
   if (isAnonMode) {
     return (
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={client} reconnectOnMount={false}>
+        <KiwiWagmiProvider>
           {children}
-        </WagmiProvider>
+        </KiwiWagmiProvider>
       </QueryClientProvider>
     );
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client} reconnectOnMount={false}>
-        <RainbowKitProvider>
-          {children}
-        </RainbowKitProvider>
-      </WagmiProvider>
+      <KiwiWagmiProvider>
+        <RainbowKitProvider>{children}</RainbowKitProvider>
+      </KiwiWagmiProvider>
     </QueryClientProvider>
   );
 }

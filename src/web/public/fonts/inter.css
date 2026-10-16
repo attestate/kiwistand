@@ -1,9 +1,34 @@
+/* NOTE: Two faces per weight. The *-latin.woff2 subsets (~31 KB instead
+   of ~113 KB) have the Latin range below: English and Western European
+   text, punctuation, arrows. The full files only have the ranges of
+   Inter's other characters (Latin Extended, Greek, Cyrillic, symbols), so
+   a browser downloads one only for a page with such a character, and never
+   for emoji, which Inter doesn't have. Subsets: fontTools subset of the
+   full files with every OpenType feature kept. Preloads in
+   views/components/head.mjs. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  font-display: optional;
+  src: url(/fonts/Inter-Light-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 300;
   font-display: optional;
   src: url(/fonts/Inter-Light.woff2) format('woff2');
+  unicode-range: U+0100-032C, U+0337-0338, U+0342-03DD, U+03F0-04FF, U+052F, U+0E3F, U+1D00, U+1D0D, U+1D1B, U+1D43-1D65, U+1D9C-1DA0, U+1DBB-1FFE, U+2070-20C0, U+20DB-20DE, U+20E8-20F0, U+2100-2109, U+2113-2132, U+213B, U+214D-2189, U+21A9-21BB, U+21D0-21D4, U+21DE-21EA, U+2202-2206, U+220F-2211, U+221A-221E, U+222B, U+2236, U+2248, U+2260-2265, U+2295-2298, U+2303-2305, U+2318, U+2325-232B, U+2380-238B, U+23CE-23CF, U+2423, U+2460-2468, U+24B6-24CF, U+24EA, U+25A0-25CF, U+25E6, U+25EF, U+2600-2606, U+263C, U+2661-266B, U+26A0, U+2713-2717, U+2756, U+2764, U+2780-2788, U+27EF-27FA, U+2913, U+2A38, U+2B06, U+2B12-2B13, U+2B1C-2B24, U+2C7C-2C7F, U+2DFF, U+2E18, U+A69F, U+A7FF, U+A92E, U+E000-E05E, U+E06A-E0BD, U+E0C8-E0CC, U+E0DC-E0E6, U+E0F3-E0F5, U+E106-E118, U+E121-E163, U+E1C3, U+E1D2-E2DC, U+EE01-EEE1, U+F6C3, U+1F12F-1F149, U+1F16A-1F16B, U+1F850-1F852;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url(/fonts/Inter-Regular-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Inter';
@@ -11,6 +36,15 @@
   font-weight: 400;
   font-display: optional;
   src: url(/fonts/Inter-Regular.woff2) format('woff2');
+  unicode-range: U+0100-032C, U+0337-0338, U+0342-03DD, U+03F0-04FF, U+052F, U+0E3F, U+1D00, U+1D0D, U+1D1B, U+1D43-1D65, U+1D9C-1DA0, U+1DBB-1FFE, U+2070-20C0, U+20DB-20DE, U+20E8-20F0, U+2100-2109, U+2113-2132, U+213B, U+214D-2189, U+21A9-21BB, U+21D0-21D4, U+21DE-21EA, U+2202-2206, U+220F-2211, U+221A-221E, U+222B, U+2236, U+2248, U+2260-2265, U+2295-2298, U+2303-2305, U+2318, U+2325-232B, U+2380-238B, U+23CE-23CF, U+2423, U+2460-2468, U+24B6-24CF, U+24EA, U+25A0-25CF, U+25E6, U+25EF, U+2600-2606, U+263C, U+2661-266B, U+26A0, U+2713-2717, U+2756, U+2764, U+2780-2788, U+27EF-27FA, U+2913, U+2A38, U+2B06, U+2B12-2B13, U+2B1C-2B24, U+2C7C-2C7F, U+2DFF, U+2E18, U+A69F, U+A7FF, U+A92E, U+E000-E05E, U+E06A-E0BD, U+E0C8-E0CC, U+E0DC-E0E6, U+E0F3-E0F5, U+E106-E118, U+E121-E163, U+E1C3, U+E1D2-E2DC, U+EE01-EEE1, U+F6C3, U+1F12F-1F149, U+1F16A-1F16B, U+1F850-1F852;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: optional;
+  src: url(/fonts/Inter-Medium-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Inter';
@@ -18,6 +52,15 @@
   font-weight: 500;
   font-display: optional;
   src: url(/fonts/Inter-Medium.woff2) format('woff2');
+  unicode-range: U+0100-032C, U+0337-0338, U+0342-03DD, U+03F0-04FF, U+052F, U+0E3F, U+1D00, U+1D0D, U+1D1B, U+1D43-1D65, U+1D9C-1DA0, U+1DBB-1FFE, U+2070-20C0, U+20DB-20DE, U+20E8-20F0, U+2100-2109, U+2113-2132, U+213B, U+214D-2189, U+21A9-21BB, U+21D0-21D4, U+21DE-21EA, U+2202-2206, U+220F-2211, U+221A-221E, U+222B, U+2236, U+2248, U+2260-2265, U+2295-2298, U+2303-2305, U+2318, U+2325-232B, U+2380-238B, U+23CE-23CF, U+2423, U+2460-2468, U+24B6-24CF, U+24EA, U+25A0-25CF, U+25E6, U+25EF, U+2600-2606, U+263C, U+2661-266B, U+26A0, U+2713-2717, U+2756, U+2764, U+2780-2788, U+27EF-27FA, U+2913, U+2A38, U+2B06, U+2B12-2B13, U+2B1C-2B24, U+2C7C-2C7F, U+2DFF, U+2E18, U+A69F, U+A7FF, U+A92E, U+E000-E05E, U+E06A-E0BD, U+E0C8-E0CC, U+E0DC-E0E6, U+E0F3-E0F5, U+E106-E118, U+E121-E163, U+E1C3, U+E1D2-E2DC, U+EE01-EEE1, U+F6C3, U+1F12F-1F149, U+1F16A-1F16B, U+1F850-1F852;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: optional;
+  src: url(/fonts/Inter-SemiBold-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Inter';
@@ -25,6 +68,15 @@
   font-weight: 600;
   font-display: optional;
   src: url(/fonts/Inter-SemiBold.woff2) format('woff2');
+  unicode-range: U+0100-032C, U+0337-0338, U+0342-03DD, U+03F0-04FF, U+052F, U+0E3F, U+1D00, U+1D0D, U+1D1B, U+1D43-1D65, U+1D9C-1DA0, U+1DBB-1FFE, U+2070-20C0, U+20DB-20DE, U+20E8-20F0, U+2100-2109, U+2113-2132, U+213B, U+214D-2189, U+21A9-21BB, U+21D0-21D4, U+21DE-21EA, U+2202-2206, U+220F-2211, U+221A-221E, U+222B, U+2236, U+2248, U+2260-2265, U+2295-2298, U+2303-2305, U+2318, U+2325-232B, U+2380-238B, U+23CE-23CF, U+2423, U+2460-2468, U+24B6-24CF, U+24EA, U+25A0-25CF, U+25E6, U+25EF, U+2600-2606, U+263C, U+2661-266B, U+26A0, U+2713-2717, U+2756, U+2764, U+2780-2788, U+27EF-27FA, U+2913, U+2A38, U+2B06, U+2B12-2B13, U+2B1C-2B24, U+2C7C-2C7F, U+2DFF, U+2E18, U+A69F, U+A7FF, U+A92E, U+E000-E05E, U+E06A-E0BD, U+E0C8-E0CC, U+E0DC-E0E6, U+E0F3-E0F5, U+E106-E118, U+E121-E163, U+E1C3, U+E1D2-E2DC, U+EE01-EEE1, U+F6C3, U+1F12F-1F149, U+1F16A-1F16B, U+1F850-1F852;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url(/fonts/Inter-Bold-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: 'Inter';
@@ -32,4 +84,5 @@
   font-weight: 700;
   font-display: optional;
   src: url(/fonts/Inter-Bold.woff2) format('woff2');
+  unicode-range: U+0100-032C, U+0337-0338, U+0342-03DD, U+03F0-04FF, U+052F, U+0E3F, U+1D00, U+1D0D, U+1D1B, U+1D43-1D65, U+1D9C-1DA0, U+1DBB-1FFE, U+2070-20C0, U+20DB-20DE, U+20E8-20F0, U+2100-2109, U+2113-2132, U+213B, U+214D-2189, U+21A9-21BB, U+21D0-21D4, U+21DE-21EA, U+2202-2206, U+220F-2211, U+221A-221E, U+222B, U+2236, U+2248, U+2260-2265, U+2295-2298, U+2303-2305, U+2318, U+2325-232B, U+2380-238B, U+23CE-23CF, U+2423, U+2460-2468, U+24B6-24CF, U+24EA, U+25A0-25CF, U+25E6, U+25EF, U+2600-2606, U+263C, U+2661-266B, U+26A0, U+2713-2717, U+2756, U+2764, U+2780-2788, U+27EF-27FA, U+2913, U+2A38, U+2B06, U+2B12-2B13, U+2B1C-2B24, U+2C7C-2C7F, U+2DFF, U+2E18, U+A69F, U+A7FF, U+A92E, U+E000-E05E, U+E06A-E0BD, U+E0C8-E0CC, U+E0DC-E0E6, U+E0F3-E0F5, U+E106-E118, U+E121-E163, U+E1C3, U+E1D2-E2DC, U+EE01-EEE1, U+F6C3, U+1F12F-1F149, U+1F16A-1F16B, U+1F850-1F852;
 }

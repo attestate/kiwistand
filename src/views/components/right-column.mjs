@@ -3,42 +3,112 @@ import htm from "htm";
 import vhtml from "vhtml";
 
 import { NewsletterCardElement } from "./newsletter-card.mjs";
+import { ms } from "./icons.mjs";
 
 const html = htm.bind(vhtml);
 
-// The newsletter sign-up sits below the QR code on every page with a right
-// column (desktop only), except where a page opts out. The Private RPC switch
-// goes last (desktop has no menu drawer).
-export default function RightColumn({ newsletter = true } = {}) {
-  return html`
-    <div class="right-column" style="width:280px;flex-shrink:0;">
-      <div id="testflight-qr-container">
-        <div
-          style="background-color:var(--bg-white);border-radius:2px;border:var(--border);padding:16px;"
-        >
-          <div
-            style="display:flex;flex-direction:column;align-items:center;gap:12px;"
-          >
-            <span
-              style="font-size:14px;font-weight:500;color:var(--text-primary);"
-              >New: native iOS app</span>
-            <img
-              src="/testflight-qr.png"
-              alt="TestFlight QR Code"
-              width="150"
-              height="150"
-              style="border-radius:4px;"
-            />
-            <p
-              style="font-size:12px;color:var(--text-tertiary);text-align:center;margin:0;line-height:1.4;"
-            >
-              Rebuilt from scratch. Scan with<br />your iPhone to try it on TestFlight
-            </p>
-          </div>
-        </div>
-      </div>
-      ${newsletter ? NewsletterCardElement("sidebar") : null}
-      <div id="private-rpc-card"></div>
+export const sidebarHeadline = "The week's five, every Sunday.";
+export const sidebarCopy =
+  "The stories the Kiwi community liked most, in one short email.";
+
+const TESTFLIGHT = "https://testflight.apple.com/join/6jyvYECH";
+
+// The iPhone beta box of the NEU 2 right column.
+export const AppBox = () => html`
+  <div id="testflight-qr-container" class="kn-side-box kn-app-box">
+    <div class="kn-qr-tile">
+      <img
+        src="/testflight-qr.png"
+        alt="TestFlight QR code"
+        width="84"
+        height="84"
+      />
     </div>
+    <div class="kn-app-text">
+      <span class="kn-eyebrow">iPhone beta</span>
+      <span class="kn-app-title">Kiwi News for iPhone</span>
+      <a
+        class="kn-app-link"
+        href="${TESTFLIGHT}"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Open TestFlight ${ms("arrow-up-right", 13)}</a
+      >
+    </div>
+  </div>
+`;
+
+const BRAND_ASSETS =
+  "https://drive.google.com/drive/folders/1vH5vEcXCsbbrYfCpTIvimLSzDMgq1eIa?usp=sharing";
+
+const TELEGRAM = "https://t.me/+QGAviVT67m00Njc8";
+
+// NOTE: The design's "Side footer" ("Web 2 · Desktop · Home · Hot" →
+// Sidebar → Side footer): three plain rows of links (About Guidelines
+// Privacy API Newsletter / Weekly archive, RSS Hot · New, LLMs / Source
+// code, MCP client, Brand assets), then "Made for the open web." and
+// "Hosted by attestate.com (Kontakt).". Telegram (Tim's ask) follows
+// Newsletter in the first row. "Docs" was the same page as "About".
+export const SideFooter = () => html`
+  <div class="kn-side-footer">
+    <nav class="kn-side-links" aria-label="Footer">
+      <div class="kn-side-row">
+        <a href="https://kiwistand.github.io/kiwi-docs/" target="_blank"
+          >About</a
+        >
+        <a href="/guidelines">Guidelines</a>
+        <a href="/privacy-policy">Privacy</a>
+        <a href="https://attestate.com/kiwistand/main/" target="_blank">API</a>
+        <a href="/newsletter">Newsletter</a>
+        <a href="${TELEGRAM}" target="_blank" rel="noopener noreferrer"
+          >Telegram</a
+        >
+      </div>
+      <div class="kn-side-row">
+        <a href="/weekly">Weekly archive</a>
+        <span class="kn-side-pair"
+          ><a href="/feed.xml">RSS Hot</a
+          ><span aria-hidden="true">${" "}·${" "}</span
+          ><a href="/new.xml" aria-label="RSS New">New</a></span
+        >
+        <a href="/llms.txt">LLMs</a>
+      </div>
+      <div class="kn-side-row">
+        <a href="https://github.com/attestate/kiwistand" target="_blank"
+          >Source code</a
+        >
+        <a
+          href="https://github.com/attestate/kiwistand/tree/main/kiwimcp-client"
+          target="_blank"
+          >MCP client</a
+        >
+        <a href="${BRAND_ASSETS}" target="_blank">Brand assets</a>
+      </div>
+    </nav>
+    <div class="kn-side-colophon">
+      <span class="kn-side-made">Made for the open web.</span>
+      <span class="kn-side-made"
+        >Hosted by${" "}<a href="https://attestate.com" target="_blank"
+          >attestate.com</a
+        >${" "}(Kontakt).</span
+      >
+    </div>
+  </div>
+`;
+
+// The desktop right column (1101px and up): the newsletter sign-up, the
+// iPhone beta and the footer links. A page can opt out of the sign-up
+// (`newsletter: false`) or put its own boxes in (`children`, e.g. the story
+// page's "More from Hot"). anon-rpc lives only on /settings.
+export default function RightColumn({ newsletter = true, children = null } = {}) {
+  return html`
+    <aside class="right-column kn-right">
+      ${newsletter
+        ? NewsletterCardElement("sidebar", sidebarHeadline, sidebarCopy)
+        : null}
+      ${children}
+      ${AppBox()}
+      ${SideFooter()}
+    </aside>
   `;
 }

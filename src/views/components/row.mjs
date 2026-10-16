@@ -16,6 +16,7 @@ import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
 import { getImageLoading, transformImageUrl } from "../utils/imageLoading.mjs";
 import { splitQuote, isDeletedTweet, tweetHandle } from "../../quote.mjs";
+import { ms } from "./icons.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -157,6 +158,62 @@ const expandSVG = html`
 `;
 
 
+const spinnerOnclick =
+  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
+const shareOnclick = "event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const href = this.getAttribute('data-story-href'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; if(localStorage.getItem('anon-mode')!=='true'){try { navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent(href) + '&type=native'); } catch(e) {}} if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}).catch(function(){}); } else { const doCopy = async () => { try { await navigator.clipboard.writeText(url); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (err) { try { const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (e2) { if (window.toast && window.toast.error) { window.toast.error('Could not copy link'); } } } }; doCopy(); }";
+const commentOnclick = "event.preventDefault(); var si=this.dataset.storyIdx; this.classList.toggle('comment-button-active'); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var commentPreview = document.querySelector('.comment-preview-0x'+si); if (commentPreview) { commentPreview.style.opacity = 1; } var borderElem = document.querySelector('.without-comment-preview-0x'+si); if (borderElem) { borderElem.classList.toggle('no-border'); }";
+
+const commentsSVG = html`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+    <path
+      d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+
+// Phosphor "bookmark-simple", like the design's save button. The filled
+// one shows once the story is saved (bookmarks.mjs in the web bundle).
+export const bookmarkSVG = html`
+  <svg class="kn-save-off" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M192,224l-64-40L64,224V48a8,8,0,0,1,8-8H184a8,8,0,0,1,8,8Z"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+export const bookmarkFullSVG = html`
+  <svg class="kn-save-on" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
+    <rect width="256" height="256" fill="none" />
+    <path
+      d="M192,224l-64-40L64,224V48a8,8,0,0,1,8-8H184a8,8,0,0,1,8,8Z"
+      fill="currentColor"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="16"
+    />
+  </svg>
+`;
+
 const formatDistanceToNowStrict = (date) => {
   return originalFormatDistance(date)
     .replace(/ years?/, "y")
@@ -267,9 +324,8 @@ const row = (
   hideCast,
   period,
   invert = false,
-  // NOTE: query is currently only used when we want to mark a comment preview
-  // as visited, and so since comment previews are only active on / and /new, we
-  // don't have to properly set query anywhere else.
+  // NOTE: Unused since the comment preview links to the comment on the story
+  // page (like notifications do); kept so callers' positional arguments stay.
   query = "",
   debugMode = false,
   isAboveFold = false,
@@ -469,23 +525,67 @@ const row = (
         story.lastComment.identity.lens) &&
       !invert;
 
-    return html`
-      <tr style="${invert ? "background-color: var(--bg-inverted);" : ""}">
-        <td>
-          <div
-            class="${interactive ? "" : "content-row"} ${invert
-              ? "inverted-row"
-              : ""} ${displayImage ||
-            canRenderTweetPreview ||
-            canRenderFarcasterPreview
-              ? "content-row-elevated"
-              : ""}"
-            style="${invert ? "display:none;" : ""} ${style}"
-            data-content-id="${submissionId}"
-            data-content-type="submission"
-            data-position="${(start || 0) + (i || 0) + 1}"
-          >
-            ${canRenderTweetPreview
+    // NOTE: NEU 2 story card. Every part is a direct child of .content-row
+    // (a flex column), so CSS can put the picture first on phones (like the
+    // iOS app) and below the title on desktop.
+    const position = (start || 0) + (i || 0) + 1;
+    const showRank =
+      !interactive && (path === "/" || path === "/new" || path === "/best");
+    const sourceLabel = isTextPost ? "text post" : extractedDomain;
+    const hasEmbed =
+      canRenderTweetPreview ||
+      canRenderFarcasterPreview ||
+      canRenderBlueskyPreview;
+    const storyPath = `/stories/${getSlug(story.title)}?index=0x${story.index}`;
+    const outboundOnclick = `var el=this; event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href))}; if (window.ReactNativeWebView || window !== window.parent) {
+                    (function() {
+                      var targetUrl = el.dataset.href;
+                      var canIframe = el.dataset.canIframe === 'true';
+
+                      try {
+                        var urlObj = new window.URL(targetUrl);
+                        var hostname = urlObj.hostname.toLowerCase();
+
+                        // Domains that should always use openUrl
+                        var alwaysOpenDomains = [
+                          'x.com',
+                          'twitter.com',
+                          'www.x.com',
+                          'www.twitter.com',
+                          'farcaster.xyz',
+                          'warpcast.com'
+                        ];
+
+                        // Check if it's a Substack domain
+                        var isSubstack = hostname.endsWith('.substack.com');
+
+                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
+                          return hostname === domain || hostname.endsWith('.' + domain);
+                        });
+
+                        if (shouldAlwaysOpen) {
+                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                            window.sdk.actions.openUrl(targetUrl);
+                          } else {
+                            window.open(targetUrl, '_blank');
+                          }
+                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
+                          window.sdk.actions.openUrl(targetUrl);
+                        } else {
+                          if (window.openEmbedDrawer) {
+                            window.openEmbedDrawer(targetUrl);
+                          } else {
+                            // Fallback if drawer not ready yet
+                            window.open(targetUrl, '_blank');
+                          }
+                        }
+                      } catch (e) {
+                        // Fallback to embed on error
+                        window.openEmbedDrawer(targetUrl);
+                      }
+                    })();
+                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`;
+    const embedBlock = canRenderTweetPreview
               ? html`<a
                   class="tweet-preview-container"
                   data-no-instant
@@ -544,7 +644,7 @@ const row = (
                         }
                       }
                     })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target')); }"
+                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
                   style="text-decoration:none; color:inherit; display:block;"
                   aria-label="${DOMPurify.sanitize(story.title)}"
                 >
@@ -634,9 +734,6 @@ const row = (
                           : null}
                       </div>
                     </div>
-                    <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                      <span style="font-size: 11px; opacity: 0.55; color: var(--embed-twitter-text);">x.com</span>
-                    </div>
                   </div>
                 </a>`
               : canRenderFarcasterPreview
@@ -702,7 +799,7 @@ const row = (
                         }
                       }
                     })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target')); }"
+                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="farcaster-embed-container">
@@ -789,9 +886,6 @@ const row = (
                               </div>
                             `
                           : null}
-                      </div>
-                      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                        <span style="font-size: 11px; opacity: 0.75; color: var(--color-farcaster-light);">farcaster.xyz</span>
                       </div>
                     </div>
                   </div>
@@ -894,153 +988,336 @@ const row = (
                             `
                           : null}
                       </div>
-                      <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                        <span style="font-size: 11px; opacity: 0.75; color: var(--color-bluesky);">bsky.app</span>
-                      </div>
                     </div>
                   </div>
                 </a>`
-              : displayImage
-              ? html` <a
-                  data-no-instant
-                  style="display: block; width: 100%;${isCloudflare ? " cursor: zoom-in;" : ""}"
-                  class="row-image-preview"
-                  href="${DOMPurify.sanitize(story.href)}"
-                  data-href="${DOMPurify.sanitize(story.href)}"
-                  data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                  onclick="${isCloudflare
-                    ? `event.preventDefault(); if(window.openImageViewer) { window.openImageViewer(this.dataset.href); }`
-                    : `var el=this; event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href))}; if (window.ReactNativeWebView || window !== window.parent) {
-                    (function() {
-                      var targetUrl = el.dataset.href;
-                      var canIframe = el.dataset.canIframe === 'true';
+              : null;
 
-                      try {
-                        var urlObj = new window.URL(targetUrl);
-                        var hostname = urlObj.hostname.toLowerCase();
+    // NOTE: Feed pictures keep main's box: 2:1, cropped to fill (uploaded
+    // pictures are shown whole), 600px wide files. Only the frame around
+    // them follows the NEU 2 design.
+    let imageBlock = null;
+    if (displayImage) {
+      const imageSrc = isCloudflare
+        ? DOMPurify.sanitize(
+            story.href.endsWith("/public")
+              ? story.href.replace("/public", "/w=600,q=80,fit=cover,f=auto")
+              : story.href + "/w=600,q=80,fit=cover,f=auto",
+          )
+        : DOMPurify.sanitize(story.metadata.image);
+      imageBlock = html`<a
+        data-no-instant
+        class="row-image-preview kn-media${isCloudflare ? " kn-media-zoom" : ""}"
+        href="${DOMPurify.sanitize(story.href)}"
+        data-href="${DOMPurify.sanitize(story.href)}"
+        data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
+        onclick="${isCloudflare
+          ? `event.preventDefault(); if(window.openImageViewer) { window.openImageViewer(this.dataset.href); }`
+          : outboundOnclick}"
+      >
+        <div class="kn-media-box">
+          <img
+            alt="${DOMPurify.sanitize(story.title)}"
+            loading="${getImageLoading(isAboveFold, isCloudflare ? story.href : story.metadata.image)}"
+            width="600"
+            height="300"
+            style="object-fit: ${isCloudflare ? "contain" : "cover"};"
+            src="${imageSrc}"
+          />
+          ${isCloudflare ? null : html`<span class="kn-host-badge">${extractedDomain}</span>`}
+        </div>
+      </a>`;
+    } else if (
+      !embedBlock &&
+      path === "/stories" &&
+      story.metadata &&
+      story.metadata.image
+    ) {
+      // NOTE: As on main: an empty 2:1 box where the picture would be.
+      imageBlock = html`<div class="row-image-preview" style="display:block; width:100%;">
+        <div style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); border-radius: 2px; contain: content; contain-intrinsic-size: 600px 300px;"></div>
+      </div>`;
+    }
 
-                        // Domains that should always use openUrl
-                        var alwaysOpenDomains = [
-                          'x.com',
-                          'twitter.com',
-                          'www.x.com',
-                          'www.twitter.com',
-                          'farcaster.xyz',
-                          'warpcast.com'
-                        ];
+    let submitterKarmaPoints = null;
+    try {
+      submitterKarmaPoints = story.identity ? karma.resolve(story.identity) : null;
+    } catch (e) {
+      submitterKarmaPoints = null;
+    }
+    const submitterAvatar = story.submitter && story.submitter.safeAvatar;
+    const profileHref = interactive ? "" : `/upvotes?address=${story.identity}`;
+    const age = formatDistanceToNowStrict(new Date(story.timestamp * 1000));
+    const avatar = submitterAvatar
+      ? html`<img
+          class="kn-avatar"
+          src="${DOMPurify.sanitize(submitterAvatar)}"
+          alt=""
+          width="24"
+          height="24"
+          loading="${getImageLoading(isAboveFold, submitterAvatar)}"
+        />`
+      : html`<span class="kn-avatar kn-avatar-empty">${ms("user", 14)}</span>`;
 
-                        // Check if it's a Substack domain
-                        var isSubstack = hostname.endsWith('.substack.com');
+    const byline = html`<div class="story-subtitle kn-byline">
+      ${story.identity
+        ? html`<a
+            href="${profileHref}"
+            class="kn-byline-person"
+            onclick="${spinnerOnclick}"
+            >${avatar}<span class="kn-by">submitted by</span><span class="meta-link submitter-name"
+              >${story.displayName}</span
+            ></a
+          >`
+        : html`<span class="kn-byline-person"
+            >${avatar}<span class="kn-by">submitted by</span><span class="meta-link submitter-name"
+              >${story.displayName}</span
+            ></span
+          >`}
+      ${submitterKarmaPoints !== null
+        ? html`<span class="kn-karma"
+            >${Number(submitterKarmaPoints).toLocaleString("en-US")}<span
+              aria-hidden="true"
+              >🥝</span
+            ></span
+          >`
+        : ""}
+      <span class="kn-dot" aria-hidden="true"></span>
+      ${story.index
+        ? html`<a class="meta-link kn-age${isStoryNew ? " kn-age-new" : ""}" href="${storyPath}" onclick="${spinnerOnclick}">${age}</a>`
+        : html`<span class="kn-age${isStoryNew ? " kn-age-new" : ""}">${age}</span>`}
+      <span
+        class="story-analytics meta-item"
+        data-submitter="${story.identity || ""}"
+        data-href="${story.href || ""}"
+        style="display: none; white-space: nowrap;"
+      >
+        <span class="kn-dot" aria-hidden="true"></span>
+        <span class="analytics-impressions">0</span> views
+        <span class="kn-dot" aria-hidden="true"></span>
+        <span class="analytics-clicks">0</span> clicks
+      </span>
+    </div>`;
 
-                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
-                          return hostname === domain || hostname.endsWith('.' + domain);
-                        });
+    const likeButton = html`<div
+      data-title="${DOMPurify.sanitize(story.title)}"
+      data-href="${DOMPurify.sanitize(story.href)}"
+      data-upvoters="${JSON.stringify(story.upvoters)}"
+      class="like-button-container kn-action"
+    >
+      <button class="interaction-button like-button" aria-label="Upvote">
+        <span class="heart-icon">${heartSVG}</span>
+        <span class="like-count kn-count"
+          >${story.upvoters ? story.upvoters.length : 0}</span
+        >
+      </button>
+    </div>`;
 
-                        if (shouldAlwaysOpen) {
-                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                            window.sdk.actions.openUrl(targetUrl);
-                          } else {
-                            window.open(targetUrl, '_blank');
-                          }
-                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                          window.sdk.actions.openUrl(targetUrl);
-                        } else {
-                          if (window.openEmbedDrawer) {
-                            window.openEmbedDrawer(targetUrl);
-                          } else {
-                            // Fallback if drawer not ready yet
-                            window.open(targetUrl, '_blank');
-                          }
-                        }
-                      } catch (e) {
-                        // Fallback to embed on error
-                        window.openEmbedDrawer(targetUrl);
-                      }
-                    })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target')); }`}"
+    const commentButton =
+      path !== "/demonstration" && path !== "/submit"
+        ? html`<div
+            data-story-index="0x${story.index}"
+            data-comment-count="${commentCount}"
+            class="comment-button-container kn-action"
+          >
+            <a
+              class="interaction-button comment-button"
+              aria-label="${commentCount > 0 ? commentCount + " " : ""}comments"
+              id="chat-bubble-${story.index}"
+              href="${path === "/stories" ? "#comments" : storyPath}"
+              data-story-idx="${story.index}"
+              onclick="${path === "/stories" ? "" : commentOnclick}"
+            >
+              ${commentsSVG}
+              ${commentCount > 0
+                ? html`<span class="kn-count">${commentCount}</span>`
+                : ""}
+            </a>
+          </div>`
+        : "";
+
+    const shareButton = html`<div class="share-button-container kn-action">
+      <button
+        class="interaction-button share-button"
+        aria-label="Share"
+        data-story-title="${DOMPurify.sanitize(story.title)}"
+        data-story-slug="${getSlug(story.title)}"
+        data-story-index="0x${story.index}"
+        data-story-href="${DOMPurify.sanitize(story.href)}"
+        onclick="${shareOnclick}"
+      >
+        ${shareSVG}
+      </button>
+    </div>`;
+
+    const saveButton =
+      story.index && path !== "/demonstration" && path !== "/submit"
+        ? html`<div class="kn-action kn-action-save">
+            <button
+              type="button"
+              class="interaction-button kn-save"
+              aria-label="Save story"
+              aria-pressed="false"
+              data-story-index="0x${story.index}"
+            >
+              ${bookmarkSVG}${bookmarkFullSVG}
+            </button>
+          </div>`
+        : "";
+
+    // NOTE: The story page's "Read original article" (desktop only, see
+    // .kn-read-original). Same outbound tracking as the title link.
+    const readOriginal =
+      path === "/stories" &&
+      !isTextPost &&
+      !isCloudflare &&
+      story.href &&
+      story.href.startsWith("http")
+        ? html`<a
+            class="kn-read-original"
+            data-no-instant
+            href="${DOMPurify.sanitize(story.href)}"
+            data-href="${DOMPurify.sanitize(story.href)}"
+            data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
+            target="_blank"
+            rel="noopener"
+            onclick="${outboundOnclick}"
+            >${ms("arrow-up-right", 16)}<span>Read original article</span></a
+          >`
+        : "";
+
+    const aiButton =
+      path === "/stories" &&
+      !isTextPost &&
+      story.href &&
+      !story.href.startsWith("data:") &&
+      !story.href.startsWith("kiwi:")
+        ? html`<div class="kn-action kn-action-ai">
+                          <div class="ai-dropdown-trigger">
+                            <button class="interaction-button ai-button" type="button" aria-label="AI tools">
+                              <span class="ai-button-icon">${aiSparkleSVG}</span>
+                            </button>
+                            <div class="ai-dropdown-menu" style="display:none;">
+                              <a
+                                class="ai-dropdown-item ai-dropdown-link"
+                                href="https://chatgpt.com/?hints=search&q=${encodeURIComponent("Please read and analyze this article so I can ask questions about it: " + domain + "/stories/context?index=0x" + story.index)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" fill="currentColor"/></svg>
+                                Ask in ChatGPT
+                              </a>
+                              <a
+                                class="ai-dropdown-item ai-dropdown-link ai-desktop-only"
+                                href="https://claude.ai/new?q=${encodeURIComponent("Please read and analyze this article so I can ask questions about it: " + domain + "/stories/context?index=0x" + story.index)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg"><path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z"/></svg>
+                                Ask in Claude
+                              </a>
+                              <button
+                                class="ai-dropdown-item ai-copy-btn"
+                                data-copy-path="/stories/context?index=0x${story.index}"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><polyline points="216 184 216 40 72 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><rect x="40" y="72" width="144" height="144" rx="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Copy context link
+                              </button>
+                            </div>
+                          </div>
+                        </div>`
+        : "";
+
+    // NOTE: The design's comment strip ("comment-preview" / "Latest
+    // comment"): round avatar, name and time in mono, the comment's text.
+    // The text keeps main's wrapping and truncation (user content); see
+    // .kn-cp in news.css.
+    const commentPreview = displayCommentPreview
+      ? html` <div
+                  class="comment-preview kn-comment-preview comment-preview-0x${story.index} ${displayImage ||
+                  canRenderTweetPreview ||
+                  canRenderFarcasterPreview
+                    ? "elevating-comment-preview"
+                    : "comment-preview-no-mobile-image"}"
+                  style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
                 >
                   <div
-                    style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); contain: content; contain-intrinsic-size: 600px 300px;"
+                    class="interaction-element"
+                    data-story-idx="${story.index}"
+                    data-last-comment-idx="${story.lastComment.index}"
+                    style="margin: 0; display: flex; width: 100%;"
                   >
-                    <img
-                      alt="${DOMPurify.sanitize(story.title)}"
-                      loading="${getImageLoading(isAboveFold, isCloudflare ? story.href : story.metadata.image)}"
-                      width="600"
-                      height="300"
-                      style="position: absolute; inset: 0; object-fit:${isCloudflare
-                        ? "contain"
-                        : "cover"}; width: 100%; height: 100%; display: block;"
-                      src="${isCloudflare
-                        ? DOMPurify.sanitize(
-                            story.href.endsWith("/public")
-                              ? story.href.replace(
-                                  "/public",
-                                  "/w=600,q=80,fit=cover,f=auto",
-                                )
-                              : story.href + "/w=600,q=80,fit=cover,f=auto",
-                          )
-                        : DOMPurify.sanitize(story.metadata.image)}"
-                    />
-                    <span
-                      style="gap: 5px; position: absolute; bottom: 8px; left: 16px; background: var(--bg-white); padding: 2px 4px; border-radius: 2px; font-size: 10px !important; line-height: 1; display: inline-flex; align-items: center; font-weight: normal; transform: none; z-index: 5; height: 18px; white-space: nowrap;"
+                    <a
+                      class="comment-preview-anchor kn-cp"
+                      href="${storyPath}#0x${story.lastComment.index}"
+                      onclick="${spinnerOnclick}"
                     >
-                      ${![
-                        "farcaster.xyz",
-                        "warpcast.com",
-                        "hey.xyz",
-                        "lens.xyz",
-                        "zora.co",
-                        "etherscan.io",
-                        "basescan.org",
-                        "arbiscan.io",
-                      ].includes(extractedDomain)
-                        ? html`<img
-                            alt=""
-                            src="/api/v1/favicon?domain=${encodeURIComponent(
-                              extractedDomain,
-                            )}"
-                            width="10"
-                            height="10"
-                            style="margin-right: 5px; display: inline-block; vertical-align: middle; width: 10px; height: 10px; object-fit: contain;"
-                            loading="${getImageLoading(isAboveFold, '/api/v1/favicon')}"
-                            onerror="this.style.display='none'"
-                          />`
-                        : ""}
-                      <span style="font-size: 10px !important;"
-                        >${extractedDomain}</span
-                      >
-                    </span>
+                      <span class="kn-cp-avatar">
+                        ${story.lastComment.identity.safeAvatar
+                          ? html`<img
+                              loading="${getImageLoading(isAboveFold, story.lastComment.identity.safeAvatar)}"
+                              src="${DOMPurify.sanitize(
+                                story.lastComment.identity.safeAvatar,
+                              )}"
+                              alt=""
+                              width="28"
+                              height="28"
+                            />`
+                          : ms("user", 16)}
+                      </span>
+                      <span class="kn-cp-body">
+                        <span class="kn-cp-head">
+                          <span class="kn-cp-name"
+                            >${DOMPurify.sanitize(
+                              story.lastComment.identity.displayName,
+                            )}</span
+                          >
+                          <span class="kn-cp-when"
+                            >· ${formatDistanceToNowStrict(
+                              new Date(story.lastComment.timestamp * 1000),
+                            )}${" "}ago</span
+                          >
+                        </span>
+                        <span
+                          class="comment-preview-text kn-cp-text"
+                          >${truncateComment(
+                            DOMPurify.sanitize(story.lastComment.title),
+                          )}</span
+                        >
+                      </span>
+                      <span class="kn-cp-expand">${expandSVG}</span>
+                    </a>
                   </div>
-                </a>`
-              : path === "/stories" && story.metadata && story.metadata.image
-              ? html`
-                  <div class="row-image-preview" style="display:block; width:100%;">
-                    <div style="position: relative; width: 100%; aspect-ratio: 2 / 1; background: var(--button-bg); border-radius: 2px; contain: content; contain-intrinsic-size: 600px 300px;"></div>
-                  </div>
-                `
+                </div>`
+      : null;
+
+    return html`
+      <tr style="${invert ? "background-color: var(--bg-inverted);" : ""}">
+        <td>
+          <div
+            class="${interactive ? "" : "content-row"} kn-story ${invert
+              ? "inverted-row"
+              : ""} ${displayImage || hasEmbed ? "content-row-elevated" : ""} ${hasEmbed ? "kn-story-embed" : ""} ${displayImage ? "kn-story-image" : ""} ${path === "/stories" ? "kn-story-detail" : ""}"
+            style="${invert ? "display:none;" : ""} ${style}"
+            data-content-id="${submissionId}"
+            data-content-type="submission"
+            data-position="${position}"
+          >
+            ${embedBlock || imageBlock
+              ? html`<div class="kn-story-media">${embedBlock || imageBlock}</div>`
               : null}
-            <div
-              class="${displayCommentPreview
-                ? "with-comment-preview"
-                : `without-comment-preview without-comment-preview-0x${story.index}`}"
-              style="display: flex; flex-direction: column; padding: ${
-                canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? "8px 20px" : "12px 20px"
-              }; box-sizing: border-box;"
-              class:mobile-information-row
+            <div class="kn-source">
+              ${showRank
+                ? html`<span class="kn-rank">${String(position).padStart(2, "0")}</span>`
+                : null}
+              ${sourceLabel
+                ? html`<span class="kn-domain">${sourceLabel}</span>`
+                : null}
+            </div>
+            <h2
+              class="kn-title ${hasEmbed ? "anon-only-title" : ""}"
             >
-              <div
-                class="content-container"
-                style="display: flex; align-items: start; gap: 12px; margin-bottom: ${
-                  canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? "4px" : "8px"
-                }; width: 100%;"
-              >
-                <div
-                  class="story-link-container-wrapper"
-                  style="display:flex; justify-content: center; flex-direction: column; flex-grow: 1; line-height: 1.3; padding-right: 14px;"
-                >
-                  <span class="${canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? 'anon-only-title' : ''}" style="${canRenderTweetPreview || canRenderFarcasterPreview || canRenderBlueskyPreview ? 'display: none;' : ''}">
-                    <span>
-                    <span class="story-link-container">
+              <span class="story-link-container">
                       <a
                         data-no-instant
                         href="${path === "/submit" || path === "/demonstration"
@@ -1099,7 +1376,7 @@ const row = (
                                   }
                                 }
                               })();
-                            } else { window.open(el.dataset.href, el.getAttribute('target')); }`}"
+                            } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
@@ -1120,7 +1397,6 @@ const row = (
                         ((isCloudflare || isTextPost) && story.index)
                           ? "_self"
                           : "_blank"}"
-                        style="user-select: text; line-height: 15pt; font-size: 13pt; padding-right: 14px;"
                       >
                         ${(() => {
                           const displayTitle =
@@ -1137,432 +1413,35 @@ const row = (
                             : html`${truncateLongWords(DOMPurify.sanitize(displayTitle))}`;
                         })()}
                       </a>
-                      <span> </span>
-                    </span>
+              </span>
+            </h2>
+            ${tweetDeleted
+              ? html`<div class="deleted-post-note kn-note">
+                  <span aria-hidden="true">🗑️</span>
+                  <span>
+                    ${tweetHandle(story.title) || "The author"} deleted this
+                    post on X. The discussion stays here.
                   </span>
-                  </span>
-                  ${tweetDeleted
-                    ? html`<div
-                        class="deleted-post-note"
-                        style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); background: var(--bg-off-white); border: var(--border); border-radius: 2px; padding: 6px 8px; width: fit-content; max-width: 100%;"
-                      >
-                        <span aria-hidden="true">🗑️</span>
-                        <span>
-                          ${tweetHandle(story.title) || "The author"} deleted this
-                          post on X. The discussion stays here.
-                        </span>
-                      </div>`
-                    : ""}
-                  <div
-                    class="story-subtitle subtitle-flex"
-                  style="font-size: 9pt; margin-top: ${ 
-                    canRenderTweetPreview || canRenderFarcasterPreview ? "-4px" : "3px"
-                  }; display: flex; flex-wrap: wrap; align-items: center; column-gap: 6px; row-gap: 2px;"
-                  >
-                  <span class="meta-item" style="opacity: 0.8; gap: 4px; white-space: nowrap; flex-wrap: nowrap; min-width: 0;">
-                    ${(() => {
-                      // Compute submitter karma once per row render
-                      let submitterKarmaPoints = null;
-                      try {
-                        submitterKarmaPoints = story.identity
-                          ? karma.resolve(story.identity)
-                          : null;
-                      } catch (e) {
-                        submitterKarmaPoints = null;
-                      }
-                      const trendingThreshold = 10;
-                      const upvoterCount = Array.isArray(story.upvoters)
-                        ? story.upvoters.length
-                        : story.upvotes || 0;
-                      const isTrending = upvoterCount >= trendingThreshold;
-                      return html`
-                        <span class="meta-item" style="opacity:${
-                          canRenderFarcasterPreview || canRenderTweetPreview
-                            ? 0.6
-                            : 0.9
-                        };">by </span>
-                        ${story.identity
-                          ? html`<a
-                              href="${interactive
-                                ? ""
-                                : `/upvotes?address=${story.identity}`}"
-                              class="meta-link meta-item submitter-name"
-                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                              style="display:inline-block; font-weight: 600; user-select: text; color: var(--text-primary); flex: 0 0 auto;"
-                            >
-                              ${story.displayName}
-                            </a>`
-                          : path === "/demonstration"
-                          ? html`<a class="meta-link meta-item submitter-name" href="javascript:void(0);" style="display:inline-block; font-weight: 600; color: var(--text-primary); flex: 0 0 auto;">${story.displayName}</a>`
-                          : html`<span class="meta-link meta-item submitter-name" style="display:inline-block; font-weight: 600; color: var(--text-primary); flex: 0 0 auto;">${story.displayName}</span>`}
-                        ${submitterKarmaPoints !== null
-                          ? html`<span
-                              style="background: var(--button-bg); padding: 2px 6px; border-radius: 999px; font-size: 9px; font-weight: 600; color: var(--text-primary); margin-left: 6px; display: inline-block;"
-                            >
-                              ${submitterKarmaPoints} 🥝
-                            </span>`
-                          : ""}
-                        <span style="opacity:0.6; white-space: pre;"> • </span>
-                      `;
-                    })()}
-                      ${story.index
-                        ? html`
-                            <a
-                              class="meta-link meta-item"
-                              style="user-select: text; ${isStoryNew ? 'background: rgba(0,186,124,0.15); padding: 0 4px; border-radius: 3px;' : ''}"
-                              href="/stories/${getSlug(
-                                story.title,
-                              )}?index=0x${story.index}"
-                              onclick="if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}"
-                            >
-                              ${formatDistanceToNowStrict(
-                                new Date(story.timestamp * 1000),
-                              )}
-                            </a>
-                          `
-                        : html`
-                            <span style="${isStoryNew ? 'background: rgba(0,186,124,0.15); padding: 0 4px; border-radius: 3px;' : ''}">
-                              ${formatDistanceToNowStrict(
-                                new Date(story.timestamp * 1000),
-                              )}
-                            </span>
-                          `}
-                      ${!interactive &&
-                      (path === "/" ||
-                        path === "/new" ||
-                        path === "/best" ||
-                        path === "/stories") &&
-                      !isCloudflare &&
-                      !isTextPost &&
-                      !displayImage
-                        ? html`
-                            <span class="domain-text domain-flex meta-item" style="padding-right: 12px; display: inline-flex; align-items: center; min-width: 0; gap: 4px; flex-shrink: 1;">
-                              <span style="opacity:0.6; flex: 0 0 auto; white-space: pre;"> • </span>
-                              ${![
-                                "farcaster.xyz",
-                                "warpcast.com",
-                                "hey.xyz",
-                                "lens.xyz",
-                                "zora.co",
-                                "etherscan.io",
-                                "basescan.org",
-                                "arbiscan.io",
-                              ].includes(extractedDomain)
-                                ? html`<img
-                                    alt=""
-                                    src="/api/v1/favicon?domain=${encodeURIComponent(
-                                      extractedDomain,
-                                    )}"
-                                    width="10"
-                                    height="10"
-                                    style="vertical-align: middle; position: relative; top: -1px; margin-right: 3px; opacity: 0.7; display: inline-block; flex-shrink: 0; width: 10px; height: 10px; object-fit: contain;"
-                                    loading="${getImageLoading(isAboveFold, '/api/v1/favicon')}"
-                                    onerror="this.style.display='none'"
-                                  />`
-                                : ""}
-                              <span style="display: inline-block; white-space: nowrap; font-size: 11px;">
-                                ${extractedDomain}
-                              </span>
-                            </span>
-                          `
-                        : ""}
-                      <span 
-                        class="story-analytics meta-item" 
-                        data-submitter="${story.identity || ''}" 
-                        data-href="${story.href || ''}"
-                        style="display: none; white-space: nowrap;"
-                      >
-                        <span style="opacity:0.6;"> • </span>
-                        <span class="analytics-impressions">0</span> views
-                        <span style="opacity:0.6;"> • </span>
-                        <span class="analytics-clicks">0</span> clicks
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              ${canRenderTextPostPreview && textPostContent
-                ? html`<div
-                    class="text-post-preview"
-                    style="padding: 12px 20px; margin-top: 8px;"
-                  >
-                    <div style="white-space: pre-wrap; word-break: break-word; line-height: 1.6; font-size: 13px; color: var(--text-primary); opacity: 0.85;">
-                      ${DOMPurify.sanitize(textPostContent)}
-                    </div>
-                  </div>`
-                : null}
-              ${!interactive
-                ? html`<div
-                    class="interaction-bar"
-                    style="display: flex; gap: 0; margin-top: ${
-                      canRenderTweetPreview || canRenderFarcasterPreview ? "2px" : "8px"
-                    }; padding: 0; justify-content: space-between;"
-                  >
-                    <div
-                      data-title="${DOMPurify.sanitize(story.title)}"
-                      data-href="${DOMPurify.sanitize(story.href)}"
-                      data-upvoters="${JSON.stringify(story.upvoters)}"
-                      class="like-button-container"
-                      style="flex: 1; display: flex; justify-content: center;"
-                    >
-                      <button
-                        class="interaction-button like-button"
-                        aria-label="Upvote"
-                        style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease;"
-                        onmouseover="this.style.backgroundColor='rgba(249, 24, 128, 0.1)'"
-                        onmouseout="this.style.backgroundColor='transparent'"
-                      >
-                        <span
-                          class="heart-icon"
-                          style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
-                          >${heartSVG}</span
-                        >
-                        <span
-                          class="like-count"
-                          style="font-size: 13px; color: var(--color-vote-default); font-weight: 400;"
-                          >${story.upvoters ? story.upvoters.length : 0}</span
-                        >
-                      </button>
-                    </div>
-                    ${path !== "/stories" &&
-                    path !== "/demonstration" &&
-                    path !== "/submit"
-                      ? html`<div
-                          data-story-index="0x${story.index}"
-                          data-comment-count="${commentCount}"
-                          class="comment-button-container"
-                          style="flex: 1; display: flex; justify-content: center;"
-                        >
-                          <a
-                            class="interaction-button comment-button"
-                            aria-label="${commentCount > 0 ? commentCount + " " : ""}comments"
-                            id="chat-bubble-${story.index}"
-                            href="/stories/${getSlug(
-                              story.title,
-                            )}?index=0x${story.index}"
-                            data-story-idx="${story.index}"
-                            onclick="event.preventDefault(); var si=this.dataset.storyIdx; this.classList.toggle('comment-button-active'); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var commentPreview = document.querySelector('.comment-preview-0x'+si); if (commentPreview) { commentPreview.style.opacity = 1; } var borderElem = document.querySelector('.without-comment-preview-0x'+si); if (borderElem) { borderElem.classList.toggle('no-border'); }"
-                            style="min-width: 60px; padding: 8px 12px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s ease; text-decoration: none; color: inherit;"
-                            onmouseover="this.style.backgroundColor='rgba(29, 155, 240, 0.1)'"
-                            onmouseout="this.style.backgroundColor='transparent'"
-                          >
-                            <span
-                              style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
-                            >
-                              <svg
-                                style="width: 20px; height: 20px; color: var(--color-vote-default);"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 256 256"
-                              >
-                                <rect width="256" height="256" fill="none" />
-                                <path
-                                  d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="16"
-                                />
-                                <path
-                                  d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="16"
-                                />
-                              </svg>
-                            </span>
-                            ${commentCount > 0
-                              ? html`<span
-                                  style="font-size: 13px; color: var(--color-vote-default); font-weight: 400;"
-                                  >${commentCount}</span
-                                >`
-                              : ""}
-                          </a>
-                        </div>`
-                      : ""}
-                    <div
-                      class="share-button-container"
-                      style="flex: 1; display: flex; justify-content: center;"
-                    >
-                      <button
-                        class="interaction-button share-button"
-                        aria-label="Share"
-                        data-story-title="${DOMPurify.sanitize(story.title)}"
-                        data-story-slug="${getSlug(story.title)}"
-                        data-story-index="0x${story.index}"
-                        data-story-href="${DOMPurify.sanitize(story.href)}"
-                        style="min-width: 40px; padding: 8px; border: none; background: transparent; border-radius: 999px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
-                        onclick="event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const href = this.getAttribute('data-story-href'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; if(localStorage.getItem('anon-mode')!=='true'){try { navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent(href) + '&type=native'); } catch(e) {}} if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}).catch(function(){}); } else { const doCopy = async () => { try { await navigator.clipboard.writeText(url); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (err) { try { const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (e2) { if (window.toast && window.toast.error) { window.toast.error('Could not copy link'); } } } }; doCopy(); }"
-                        onmouseover="this.style.backgroundColor='rgba(0, 186, 124, 0.1)'"
-                        onmouseout="this.style.backgroundColor='transparent'"
-                      >
-                        <span
-                          style="width: 20px; height: 20px; color: var(--color-vote-default); display: flex; align-items: center; justify-content: center;"
-                          >${shareSVG}</span
-                        >
-                      </button>
-                    </div>
-                    ${!isTextPost && story.href && !story.href.startsWith('data:') && !story.href.startsWith('kiwi:')
-                      ? html`<div
-                          style="flex: 1; display: flex; justify-content: center;"
-                        >
-                          <div class="ai-dropdown-trigger">
-                            <button class="interaction-button ai-button" type="button" aria-label="AI tools">
-                              <span class="ai-button-icon">${aiSparkleSVG}</span>
-                            </button>
-                            <div class="ai-dropdown-menu" style="display:none;">
-                              <a
-                                class="ai-dropdown-item ai-dropdown-link"
-                                href="https://chatgpt.com/?hints=search&q=${encodeURIComponent("Please read and analyze this article so I can ask questions about it: " + domain + "/stories/context?index=0x" + story.index)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" fill="currentColor"/></svg>
-                                Ask in ChatGPT
-                              </a>
-                              <a
-                                class="ai-dropdown-item ai-dropdown-link ai-desktop-only"
-                                href="https://claude.ai/new?q=${encodeURIComponent("Please read and analyze this article so I can ask questions about it: " + domain + "/stories/context?index=0x" + story.index)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg"><path d="M4.709 15.955l4.72-2.647.08-.23-.08-.128H9.2l-.79-.048-2.698-.073-2.339-.097-2.266-.122-.571-.121L0 11.784l.055-.352.48-.321.686.06 1.52.103 2.278.158 1.652.097 2.449.255h.389l.055-.157-.134-.098-.103-.097-2.358-1.596-2.552-1.688-1.336-.972-.724-.491-.364-.462-.158-1.008.656-.722.881.06.225.061.893.686 1.908 1.476 2.491 1.833.365.304.145-.103.019-.073-.164-.274-1.355-2.446-1.446-2.49-.644-1.032-.17-.619a2.97 2.97 0 01-.104-.729L6.283.134 6.696 0l.996.134.42.364.62 1.414 1.002 2.229 1.555 3.03.456.898.243.832.091.255h.158V9.01l.128-1.706.237-2.095.23-2.695.08-.76.376-.91.747-.492.584.28.48.685-.067.444-.286 1.851-.559 2.903-.364 1.942h.212l.243-.242.985-1.306 1.652-2.064.73-.82.85-.904.547-.431h1.033l.76 1.129-.34 1.166-1.064 1.347-.881 1.142-1.264 1.7-.79 1.36.073.11.188-.02 2.856-.606 1.543-.28 1.841-.315.833.388.091.395-.328.807-1.969.486-2.309.462-3.439.813-.042.03.049.061 1.549.146.662.036h1.622l3.02.225.79.522.474.638-.079.485-1.215.62-1.64-.389-3.829-.91-1.312-.329h-.182v.11l1.093 1.068 2.006 1.81 2.509 2.33.127.578-.322.455-.34-.049-2.205-1.657-.851-.747-1.926-1.62h-.128v.17l.444.649 2.345 3.521.122 1.08-.17.353-.608.213-.668-.122-1.374-1.925-1.415-2.167-1.143-1.943-.14.08-.674 7.254-.316.37-.729.28-.607-.461-.322-.747.322-1.476.389-1.924.315-1.53.286-1.9.17-.632-.012-.042-.14.018-1.434 1.967-2.18 2.945-1.726 1.845-.414.164-.717-.37.067-.662.401-.589 2.388-3.036 1.44-1.882.93-1.086-.006-.158h-.055L4.132 18.56l-1.13.146-.487-.456.061-.746.231-.243 1.908-1.312-.006.006z"/></svg>
-                                Ask in Claude
-                              </a>
-                              <button
-                                class="ai-dropdown-item ai-copy-btn"
-                                data-copy-path="/stories/context?index=0x${story.index}"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><polyline points="216 184 216 40 72 40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><rect x="40" y="72" width="144" height="144" rx="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-                                Copy context link
-                              </button>
-                            </div>
-                          </div>
-                        </div>`
-                      : ""}
-                  </div>`
-                : ""}
-            </div>
-            ${displayCommentPreview
-              ? html` <div
-                  class="comment-preview comment-preview-0x${story.index} ${displayImage ||
-                  canRenderTweetPreview ||
-                  canRenderFarcasterPreview
-                    ? "elevating-comment-preview"
-                    : "comment-preview-no-mobile-image"}"
-                  style="touch-action: manipulation; user-select: none; cursor: pointer; display: flex;"
+                </div>`
+              : ""}
+            ${byline}
+            ${canRenderTextPostPreview && textPostContent
+              ? html`<div
+                  class="text-post-preview kn-text-post"
+                  style="padding: 12px 20px; margin-top: 8px;"
                 >
-                  <div
-                    class="interaction-element"
-                    data-story-idx="${story.index}"
-                    data-last-comment-idx="${story.lastComment.index}"
-                    data-alt-hash-a="${path === "/"
-                      ? `/new?cached=true#0x${story.lastComment.index}`
-                      : `/#0x${story.lastComment.index}`}"
-                    data-alt-hash-b="${path === "/"
-                      ? `/#0x${story.lastComment.index}`
-                      : `/new?cached=true#0x${story.lastComment.index}`}"
-                    onclick="var si=this.dataset.storyIdx; (function(a,b){history.replaceState(null,'',a);history.replaceState(null,'',b);})(this.dataset.altHashA,this.dataset.altHashB),document.querySelector('.comment-preview-0x'+si).style.opacity = 0.5,window.addToQueue(new CustomEvent('open-comments-0x'+si,{detail:{source:'comment-preview'}}));window.dispatchEvent(new HashChangeEvent('hashchange'));var cb=document.getElementById('chat-bubble-'+si);if(cb)cb.classList.toggle('comment-button-active');"
-                    style="margin: 0; padding: 12px 16px; display: flex; width: 100%; background-color: var(--background-color1);"
-                  >
-                    <a
-                      class="comment-preview-anchor"
-                      href="${path === "/" ? "" : path}${query}#0x${story
-                        .lastComment.index}"
-                      style="width: 100%; display: flex; pointer-events: none;"
-                    >
-                      <div style="width:90%;">
-                        ${story.lastComment.previousParticipants &&
-                        story.lastComment.previousParticipants.length > 0 &&
-                        html`
-                          <div
-                            style="opacity: 0.7; margin-bottom: 8px; display: flex; align-items: center;"
-                          >
-                            <div
-                              style="display: inline-flex; position:relative;"
-                            >
-                              ${story.lastComment.previousParticipants.map(
-                                (participant, index) => html`
-                                  <img
-                                    loading="${getImageLoading(isAboveFold, participant.safeAvatar)}"
-                                    src="${DOMPurify.sanitize(
-                                      participant.safeAvatar,
-                                    )}"
-                                    alt="previous participant"
-                                    width="${size}"
-                                    height="${size}"
-                                    style="z-index: ${index}; width: ${size}px; height: ${size}px; border: 1px solid var(--text-secondary); border-radius: 2px; margin-left: ${index ===
-                                    0
-                                      ? "0"
-                                      : "5px"};"
-                                  />
-                                `,
-                              )}
-                            </div>
-                            <span
-                              style="margin-left: 10px; font-size: 9pt; color: var(--text-tertiary);"
-                            >
-                              Previous in thread
-                            </span>
-                          </div>
-                        `}
-                        <div style="display: flex; align-items: flex-start;">
-                          ${story.lastComment.identity.safeAvatar &&
-                          html`<div
-                            style="width: 32px; flex-shrink: 0; margin-right: 14px;"
-                          >
-                            <img
-                              loading="${getImageLoading(isAboveFold, story.lastComment.identity.safeAvatar)}"
-                              src="${DOMPurify.sanitize(
-                                story.lastComment.identity.safeAvatar,
-                              )}"
-                              alt="avatar"
-                              width="32"
-                              height="32"
-                              style="width: 32px; height: 32px; border: 1px solid var(--text-secondary); border-radius: 0;"
-                            />
-                          </div>`}
-                          <div style="flex: 1; min-width: 0;">
-                            <div
-                              style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;"
-                            >
-                              <span
-                                style="font-size: 10pt; touch-action: manipulation;user-select: none; font-weight: 500;"
-                                >${DOMPurify.sanitize(
-                                  story.lastComment.identity.displayName,
-                                )}</span
-                              >
-                              <span style="opacity:0.6; white-space: pre;"> • </span>
-                              <span style="font-size: 9pt; opacity: 0.9;">
-                                ${formatDistanceToNowStrict(
-                                  new Date(story.lastComment.timestamp * 1000),
-                                )}
-                                <span> </span>
-                                ago
-                              </span>
-                            </div>
-                            <span
-                              class="comment-preview-text"
-                              style="display: block; white-space: pre-wrap; word-break: break-word; touch-action: manipulation;user-select: none;"
-                              >${truncateComment(
-                                DOMPurify.sanitize(story.lastComment.title),
-                              )}</span
-                            >
-                          </div>
-                        </div>
-                        <span> </span>
-                      </div>
-                      <div
-                        style="width:10%; display: flex; align-items: center; justify-content: end; padding-right: 7px;"
-                      >
-                        ${expandSVG}
-                      </div>
-                    </a>
+                  <div style="white-space: pre-wrap; word-break: break-word; line-height: 1.6; font-size: 13px; color: var(--text-primary); opacity: 0.85;">
+                    ${DOMPurify.sanitize(textPostContent)}
                   </div>
                 </div>`
               : null}
+            ${!interactive
+              ? html`<div class="interaction-bar kn-actions">
+                  ${likeButton} ${commentButton} ${shareButton} ${aiButton}
+                  ${saveButton} ${readOriginal}
+                </div>`
+              : ""}
+            ${commentPreview}
             ${
               // Show full Paragraph post content for Paragraph.xyz links only on /stories page
               isParagraphPost &&

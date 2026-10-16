@@ -24,6 +24,7 @@ export function NewsletterCardElement(source = "feed_card", title, text) {
       data-copy=${text}
     >
       <div class="newsletter-card">
+        <div class="newsletter-card-eyebrow">Kiwi weekly</div>
         <div class="newsletter-card-title">${title || headline}</div>
         <p class="newsletter-card-copy">
           ${text || copy}${" "}<a class="newsletter-card-more" href="/newsletter">What's in it?</a>

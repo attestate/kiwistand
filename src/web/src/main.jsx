@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import sdk from "@farcaster/frame-sdk";
 import DOMPurify from "isomorphic-dompurify";
 import { Providers } from "./providers.jsx";
+import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 import { bindHapticsToElements } from "./haptics.js";
 import { initSpinnerOverlay } from "./spinnerOverlay.js";
 import {
@@ -316,6 +317,7 @@ async function addDynamicComments(delegations, toast) {
       );
       const hasPreview = arrow.getAttribute("data-has-preview") === "true";
       const alwaysShown = arrow.getAttribute("data-always-shown") === "true";
+      const firstComment = arrow.getAttribute("data-first-comment") === "true";
       createRoot(arrow).render(
         <StrictMode>
           <Providers>
@@ -325,6 +327,7 @@ async function addDynamicComments(delegations, toast) {
               storyTitle={storyTitle}
               hasPreview={hasPreview}
               alwaysShown={alwaysShown}
+              firstComment={firstComment}
               delegations={delegations}
               toast={toast}
             />
@@ -605,15 +608,87 @@ async function addAnalyticsConsent() {
   );
 }
 
-async function addTestFlightQR() {
-  const container = document.getElementById("testflight-qr-container");
-  if (!container || container.children.length > 0) return;
+// The bookmark button under each story (views/components/row.mjs) saves it
+// to the account's saved stories (/saved), with the existing signed
+// bookmarks API. Logged out, it opens the login modal.
+async function addSaveButtons(delegations, toast) {
+  const buttons = document.querySelectorAll(".kn-save[data-story-index]");
+  if (buttons.length === 0) return;
+  const { bookmarkAccount, cachedIndexes, isSaved, listBookmarks, setBookmark } =
+    await import("./bookmarks.mjs");
+  const account = bookmarkAccount();
 
-  const TestFlightQR = (await import("./TestFlightQR.jsx")).default;
+  const mark = () =>
+    buttons.forEach((button) => {
+      const saved = isSaved(button.dataset.storyIndex);
+      button.setAttribute("aria-pressed", saved ? "true" : "false");
+      button.setAttribute("aria-label", saved ? "Remove from saved" : "Save story");
+    });
+  if (account) {
+    mark();
+    const cached = cachedIndexes();
+    if (!cached || Date.now() - cached.at > 5 * 60 * 1000) {
+      listBookmarks(account)
+        .then(mark)
+        .catch((err) => console.error("Couldn't load saved stories", err));
+    }
+  }
+
+  let loginRoot;
+  const openLogin = async () => {
+    const LoginModal = (await import("./LoginModal.jsx")).default;
+    if (!loginRoot) {
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      loginRoot = createRoot(container);
+    }
+    loginRoot.render(
+      <StrictMode>
+        <Providers>
+          <LoginModal
+            key={Date.now()}
+            defaultOpen={true}
+            delegations={delegations}
+            toast={toast}
+          />
+        </Providers>
+      </StrictMode>,
+    );
+  };
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      if (!account) {
+        openLogin();
+        return;
+      }
+      if (button.dataset.busy) return;
+      button.dataset.busy = "true";
+      const saved = button.getAttribute("aria-pressed") !== "true";
+      button.setAttribute("aria-pressed", saved ? "true" : "false");
+      try {
+        await setBookmark(account, button.dataset.storyIndex, saved);
+        mark();
+        toast.success(saved ? "Saved" : "Removed from saved stories");
+      } catch (err) {
+        button.setAttribute("aria-pressed", saved ? "false" : "true");
+        toast.error(err.message);
+      } finally {
+        delete button.dataset.busy;
+      }
+    });
+  });
+}
+
+async function addSavedStories(delegations, toast) {
+  const container = document.querySelector("kiwi-saved-stories");
+  if (!container) return;
+  const SavedStories = (await import("./SavedStories.jsx")).default;
   createRoot(container).render(
     <StrictMode>
       <Providers>
-        <TestFlightQR />
+        <SavedStories delegations={delegations} toast={toast} />
       </Providers>
     </StrictMode>,
   );
@@ -629,23 +704,6 @@ async function addSidebarDrawer(delegations, toast) {
       <Providers>
         <SidebarDrawer delegations={delegations} toast={toast} />
       </Providers>
-    </StrictMode>,
-  );
-}
-
-// NOTE: Desktop has no menu drawer, so the Private RPC switch sits below the
-// newsletter card in the right column there, or in the footer at widths that
-// have neither the drawer nor the right column. Mobile uses the drawer.
-async function addPrivateRpcDesktop() {
-  const container = ["private-rpc-card", "private-rpc-footer"]
-    .map((id) => document.getElementById(id))
-    .find((el) => el && el.offsetParent !== null);
-  if (!container) return;
-
-  const PrivateRpcSetting = (await import("./PrivateRpcSetting.jsx")).default;
-  createRoot(container).render(
-    <StrictMode>
-      <PrivateRpcSetting variant="compact" />
     </StrictMode>,
   );
 }
@@ -854,6 +912,43 @@ async function addAvatar() {
 }
 
 // "Edit profile" on your own profile page (views/upvotes.mjs).
+// NOTE: /settings (views/settings.mjs): account, analytics and Private RPC.
+async function addSettings(delegations, toast) {
+  const elem = document.getElementById("n2-settings");
+  if (!elem) return;
+  const Settings = (await import("./Settings.jsx")).default;
+  createRoot(elem).render(
+    <StrictMode>
+      <Providers>
+        <Settings delegations={delegations} toast={toast} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
+// NOTE: <kiwi-login-button> on server-rendered pages (e.g. the logged-out
+// notifications page): a button that opens the login.
+async function addLoginButtons(delegations, toast) {
+  const elems = document.querySelectorAll("kiwi-login-button");
+  if (elems.length === 0) return;
+  const LoginButton = (await import("./LoginButton.jsx")).default;
+  elems.forEach((elem) => {
+    createRoot(elem).render(
+      <StrictMode>
+        <Providers>
+          <LoginButton
+            className={elem.dataset.class}
+            delegations={delegations}
+            toast={toast}
+          >
+            {elem.textContent.trim() || "Log in"}
+          </LoginButton>
+        </Providers>
+      </StrictMode>,
+    );
+  });
+}
+
 async function addEditProfile(toast) {
   const elem = document.querySelector("kiwi-edit-profile");
   if (!elem) return;
@@ -861,7 +956,11 @@ async function addEditProfile(toast) {
   createRoot(elem).render(
     <StrictMode>
       <Providers>
-        <EditProfileButton address={elem.dataset.address} toast={toast} />
+        <EditProfileButton
+          address={elem.dataset.address}
+          variant={elem.dataset.variant}
+          toast={toast}
+        />
       </Providers>
     </StrictMode>,
   );
@@ -911,7 +1010,6 @@ async function addStoryEmojiReactions(delegations, toast) {
       ]);
 
     const { EmojiReaction } = commentSection;
-    const { WagmiProvider } = wagmi;
     const { QueryClient, QueryClientProvider } = tanstackQuery;
     const { RainbowKitProvider } = rainbowKit;
     const { client, chains } = clientConfig;
@@ -931,7 +1029,7 @@ async function addStoryEmojiReactions(delegations, toast) {
           <StrictMode>
             <Providers>
               <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={client} reconnectOnMount={false}>
+                <KiwiWagmiProvider>
                   <RainbowKitProvider chains={chains}>
                     <EmojiReaction
                       comment={comment}
@@ -939,7 +1037,7 @@ async function addStoryEmojiReactions(delegations, toast) {
                       toast={toast}
                     />
                   </RainbowKitProvider>
-                </WagmiProvider>
+                </KiwiWagmiProvider>
               </QueryClientProvider>
             </Providers>
           </StrictMode>
@@ -1207,6 +1305,11 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
 }
 
 function hideDesktopLinks() {
+  // NOTE: Greys out the header's Submit for readers without an account,
+  // like before the redesign (news.css, .kn-no-account). theme-init.js's
+  // data-signed-out already does it before the first paint for browsers
+  // without a Kiwi key; announceAccountChange (session.mjs) undoes both.
+  document.documentElement.classList.add("kn-no-account");
   const desktopNav = document.querySelector(".desktop-nav");
   if (desktopNav) {
     const submitLink = desktopNav.querySelector('.meta-link[href="/submit"]');
@@ -1660,18 +1763,18 @@ async function shouldReconnectWallet() {
 // The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
 // taps and dismissals (theme-init.js reads them) and measure it in PostHog.
 function initTestFlightCard() {
-  const card = document.querySelector(".tf-card");
+  const card = document.querySelector(".kn-tf-card");
   const root = document.documentElement;
   if (!card || !root.hasAttribute("data-tf-card") || isIOSApp()) return;
   const props = { path: window.location.pathname };
   capture("testflight_card_shown", props);
-  card.querySelector(".tf-card-get")?.addEventListener("click", () => {
+  card.querySelector(".kn-tf-get")?.addEventListener("click", () => {
     try {
       localStorage.setItem("kiwi-tf-card-tapped", String(Date.now()));
     } catch {}
     capture("testflight_card_clicked", props);
   });
-  card.querySelector(".tf-card-close")?.addEventListener("click", () => {
+  card.querySelector(".kn-tf-close")?.addEventListener("click", () => {
     try {
       localStorage.setItem("kiwi-tf-card-dismissed", "1");
     } catch {}
@@ -1748,6 +1851,10 @@ async function start() {
   bindHapticsToElements(".second-header button", "selection");
 
   const urlParams = new URL(window.location.href).searchParams;
+  // A reaction notification: pop the emoji on the comment it opened.
+  if (urlParams.has("reaction")) {
+    import("./reactionBurst.mjs").then((module) => module.default());
+  }
   if (urlParams.get("miniapp") === "true") {
     sdk.actions.addFrame();
   }
@@ -1812,8 +1919,6 @@ async function start() {
   // Add the analytics consent banner
   await addAnalyticsConsent();
 
-  // Add TestFlight QR code
-  await addTestFlightQR();
 
   const { fetchDelegations } = await import("./API.mjs");
 
@@ -1865,13 +1970,16 @@ async function start() {
     addLeaderboardInteractions(),
     addEmbedDrawer(toast),
     addSidebarDrawer(await delegationsPromise, toast),
-    addPrivateRpcDesktop(),
+    addSaveButtons(await delegationsPromise, toast),
+    addSavedStories(await delegationsPromise, toast),
     addImageViewer(),
     addSidebarDrawer(await delegationsPromise, toast),
     addNewsletterFeedCard(),
     addNewsletterScrollModal(toast),
     addAvatar(),
     addEditProfile(toast),
+    addSettings(await delegationsPromise, toast),
+    addLoginButtons(await delegationsPromise, toast),
     addNicknamePrompt(toast),
     addBackButton(),
     addDelegateButton(await delegationsPromise, toast),

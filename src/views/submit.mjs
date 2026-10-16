@@ -1,12 +1,9 @@
 import htm from "htm";
 import vhtml from "vhtml";
 
-import Header from "./components/header.mjs";
-import Footer from "./components/footer.mjs";
-import Sidebar from "./components/sidebar.mjs";
-import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
 import * as parser from "../parser.mjs";
+import { Page, Icon } from "./components/n2.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -27,214 +24,161 @@ export default async function submit(theme, url = "", title = "") {
     }
   }
   const path = "/submit";
-  return "<!DOCTYPE html>" + html`
-    <html lang="en" op="news">
-      <head>
-        ${custom(undefined, "Submit | Kiwi News", "Submit a link to share with the Kiwi News community.", undefined, ["/"])}
-      </head>
-      <body ontouchstart="">
-        <div class="container">
-          ${Sidebar(path)}
-          ${RightColumn({ newsletter: false })}
-          <div id="hnmain" class="scaled-hnmain">
-            <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">
-              <tr>
-                ${await Header(theme)}
-              </tr>
-              <tr>
-                <td>
-                  <form style="${formContainerStyle}" onsubmit="event.preventDefault(); return false;">
-                    <div style="${labelInputContainerStyle}">
-                      <label for="title" style="${labelStyle}">Title:</label>
-                      <div
-                        contenteditable="true"
-                        role="textbox"
-                        aria-multiline="true"
-                        id="titleInput"
-                        name="title"
-                        maxlength="80"
-                        required
-                        style="${editableContent}"
-                        wrap="soft"
-                        data-placeholder="Enter title"
-                        onpaste="
-                          event.preventDefault();
-                          const text = event.clipboardData.getData('text/plain');
-                          document.execCommand('insertText', false, text);"
-                      >
-                        ${title}
+  const remaining = 80 - title.length;
+  return Page({
+    theme,
+    path,
+    wide: true,
+    head: custom(
+      undefined,
+      "Submit | Kiwi News",
+      "Submit a link to share with the Kiwi News community.",
+      undefined,
+      ["/"],
+    ),
+    body: html`<div class="n2-submit">
+      <form
+                      id="n2-submit-form"
+                      class="n2-submit-form"
+                      onsubmit="event.preventDefault(); return false;"
+                    >
+                      <header class="n2-page-head n2-submit-head">
+                        <h1 class="n2-title">
+                          <span class="n2-d">Submit a story</span>
+                          <span class="n2-m">Share with the community</span>
+                        </h1>
+                        <p class="n2-sub">
+                          <span class="n2-sub-link"
+                            >A link, an idea, a fresh perspective.</span
+                          >
+                          <span class="n2-sub-text"
+                            >Start a thoughtful conversation.</span
+                          >
+                        </p>
+                      </header>
+                      <div class="n2-field n2-field-title">
+                        <label for="titleInput" class="n2-label"
+                          >Title<span class="n2-m">:</span></label
+                        >
+                        <div
+                          contenteditable="true"
+                          role="textbox"
+                          aria-multiline="true"
+                          id="titleInput"
+                          class="n2-input n2-title-input"
+                          name="title"
+                          maxlength="80"
+                          required
+                          wrap="soft"
+                          data-placeholder="Enter title"
+                          onpaste="
+                            event.preventDefault();
+                            const text = event.clipboardData.getData('text/plain');
+                            document.execCommand('insertText', false, text);"
+                        >${title}</div>
+                        <div class="n2-hint-row">
+                          <span class="n2-hint n2-d"
+                            >Use the original title. No clickbait.</span
+                          >
+                          <span class="n2-count"
+                            ><span class="n2-m">Characters remaining: </span
+                            ><span class="remaining">${remaining}</span
+                            ><span class="n2-d"> characters left</span></span
+                          >
+                        </div>
                       </div>
-                      <span style="font-size: 0.8rem; color: var(--text-secondary);">
-                        <span>Characters remaining: </span>
-                        <span class="remaining"
-                          >${80 - title.length}</span
-                        ></span
-                      >
-                    </div>
-                    <div id="submit-button">
-                      <div style="${labelInputContainerStyle}">
-                        <div style="display: flex; gap: 0; border-bottom: 1px solid var(--text-secondary); margin-bottom: 15px;">
+                      <div id="submit-button" class="n2-submit-root">
+                        <div class="n2-tabs" role="tablist">
                           <button
                             type="button"
-                            class="tab-button tab-link"
-                            style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid var(--hn-orange); cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-primary);"
+                            role="tab"
+                            aria-selected="true"
+                            class="n2-tab is-active"
                             disabled
                           >
                             Link
                           </button>
                           <button
                             type="button"
-                            class="tab-button tab-text"
-                            style="padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: 14px; font-weight: 400; color: var(--text-secondary);"
+                            role="tab"
+                            aria-selected="false"
+                            class="n2-tab"
                             disabled
                           >
                             Text
                           </button>
                         </div>
-
-                        <div class="tab-content tab-content-link">
-                          <div style="display: flex; align-items: center;">
-                            <input
-                              placeholder="Enter or paste article URL"
-                              id="urlInput"
-                              type="text"
-                              name="link"
-                              size="50"
-                              maxlength="2048"
-                              required
-                              style="${inputStyle}"
-                              value="${url}"
-                            />
-                            <input
-                              type="file"
-                              id="imageUpload"
-                              accept="image/*"
-                              style="display: none;"
-                              disabled
-                            />
-                            <label
-                              for="imageUpload"
-                              style="
-                                margin-left: 10px;
-                                padding: 0 16px;
-                                background-color: var(--button-primary-bg);
-                                color: var(--button-primary-text);
-                                border-radius: 2px;
-                                cursor: pointer;
-                                font-size: 14px;
-                                height: 50px;
-                                box-sizing: border-box;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                text-align: center;
-                              "
+                        <div class="n2-field n2-field-link">
+                          <label for="urlInput" class="n2-label n2-d"
+                            >Link</label
+                          >
+                          <input
+                            placeholder="Enter or paste article URL"
+                            id="urlInput"
+                            class="n2-input"
+                            type="text"
+                            name="link"
+                            size="50"
+                            maxlength="2048"
+                            required
+                            value="${url}"
+                          />
+                          <div class="n2-hint-row n2-d">
+                            <span class="n2-hint"
+                              >Paste the link to the original source.</span
                             >
-                              Upload Image
-                            </label>
                           </div>
                         </div>
-
-                        <div class="tab-content tab-content-text" style="display: none;">
-                          <textarea
-                            placeholder="Enter your text content here..."
-                            id="textInput"
-                            rows="6"
-                            maxlength="2048"
-                            style="border-radius: 2px; border: 2px solid var(--text-primary); color: var(--text-primary); width: 100%; padding: 12px 16px; font-size: 16px; box-sizing: border-box; background: var(--bg-white); resize: vertical; font-family: inherit;"
-                            disabled
-                          ></textarea>
+                        <div class="n2-upload-row">
+                          <span class="n2-btn-outline n2-upload" aria-disabled="true"
+                            >${Icon("addPhoto")}<span class="n2-d"
+                              >Upload image</span
+                            ><span class="n2-m">Upload Image</span></span
+                          >
+                          <span class="n2-hint n2-d"
+                            >Optional. Replaces the preview image from the
+                            link.</span
+                          >
+                        </div>
+                        <div class="n2-actions">
+                          <button id="button-onboarding" class="n2-btn" disabled>
+                            Submit
+                          </button>
+                          <span class="n2-note n2-d"
+                            >Your submission is signed with your account and is
+                            public.</span
+                          >
                         </div>
                       </div>
-                      <button
-                        id="button-onboarding"
-                        disabled
-                        style="width: 100%;max-width: 600px;margin-top: 2rem;padding: 5px;font-size: 16px;cursor: pointer;"
-                      >
-                        Loading...
-                      </button>
-                    </div>
-                  </form>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <div style="${previewContainerStyle}">
-                    <div style="${previewStyle}" id="embed-preview"></div>
-                  </div>
-                </td>
-              </tr>
-            </table>
-            ${Footer(theme)}
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
+                      <div class="n2-preview-wrap">
+                        <div class="n2-eyebrow n2-d">Preview</div>
+                        <div
+                          style="${previewStyle}"
+                          id="embed-preview"
+                          class="n2-preview"
+                        ></div>
+                      </div>
+                    </form>
+                    <aside class="n2-submit-aside n2-d" aria-label="Before you submit">
+                      <div class="n2-card n2-tips">
+                        <div class="n2-eyebrow">Before you submit</div>
+                        <ul>
+                          <li>${Icon("check")}Link to the original source, not a repost.</li>
+                          <li>${Icon("check")}Keep the original title. No clickbait or ALL CAPS.</li>
+                          <li>${Icon("check")}Check it hasn't been posted this week.</li>
+                          <li>${Icon("check")}Builders, research, tools and ideas do best.</li>
+                        </ul>
+                        <a class="n2-arrow-link" href="/guidelines"
+                          >Read the guidelines${Icon("arrow")}</a
+                        >
+                      </div>
+                    </aside>
+    </div>`,
+  });
 }
-const submitButtonStyles = {
-  width: "100%",
-  maxWidth: "600px",
-  marginTop: "1rem",
-  padding: "5px",
-  fontSize: "16px",
-  cursor: "pointer",
-};
-const formContainerStyle = `
-   display: flex;
-   flex-direction: column;
-   gap: 15px;
-   margin: 0 auto;
-   padding: 1rem 1rem;
- `;
 
-const labelInputContainerStyle = `
-   display: flex;
-   flex-direction: column;
-   gap: 5px;
-   max-width: 600px;
- `;
-
-const labelStyle = `
-   font-size: 16px;
-   color: var(--text-primary);
- `;
-const inputStyle = `
-   width: 80%;
-   padding: 12px 16px;
-   font-size: 16px;
-   box-sizing: border-box;
-   border: 2px solid var(--text-primary);
-   background-color: var(--bg-white);
-   color: var(--text-primary);
-   min-height: 50px;
-   border-radius: 2px;
-`;
-
-const editableContent = `
-   overflow-wrap: anywhere;
-   width: 100%;
-   max-width: 600px;
-   height: 105px;
-   padding: 20px;
-   font-size: 19px;
-   box-sizing: border-box;
-   border: 1px solid var(--text-secondary);
-   overflow: auto;
-   resize: both;
-   white-space: pre-wrap;
-   background-color: var(--bg-white);
-   color: var(--text-primary);
-   border-radius: 2px;
- `;
-
-const previewContainerStyle = `
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  padding: 1rem 1rem;
-`;
-
+// NOTE: The link preview (parser.mjs render, SubmitButton.jsx) is user
+// content and keeps main's box.
 const previewStyle = `
   width: 100%;
   max-width: 600px;

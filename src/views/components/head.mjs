@@ -11,6 +11,21 @@ import PwaLinks from "./pwaLinks.mjs";
 
 const html = htm.bind(vhtml);
 
+// NOTE: Don't paint until the top bar (header.mjs) is parsed. The desktop
+// layout (.container:has(.kn-topbar) in news.css: the 112px top padding and
+// the centered columns) only applies once it's in the DOM, and it comes after
+// the right column in the HTML. A paint in between (on a slow CPU the parser
+// yields wherever it likes) showed the right column at the top left and then
+// moved it into place: a layout shift (CI's layout-shift check on /weekly).
+// Pages without a top bar render once the document is parsed. A page with
+// <base href="/"> (story.mjs, weekly.mjs) must put this before <base>: the
+// href has to resolve to the page's own URL.
+export const expectTopbar = html`<link
+  rel="expect"
+  href="#kn-topbar"
+  blocking="render"
+/>`;
+
 function decodeHtmlEntities(value) {
   if (!value || typeof value !== "string" || !value.includes("&")) {
     return value;
@@ -35,6 +50,16 @@ try {
 } catch (err) {
   console.warn("Could not read news.css for cache busting:", err.message);
   cssHash = Date.now().toString();
+}
+
+// NOTE: fonts/inter.css is versioned too, so a change to it (e.g. the Latin
+// subsets) reaches browsers right away instead of after a day.
+let interHash = "";
+try {
+  const interContent = readFileSync(join(__dirname, "../../public/fonts/inter.css"), "utf8");
+  interHash = createHash("md5").update(interContent).digest("hex").substring(0, 8);
+} catch (err) {
+  interHash = cssHash;
 }
 
 // Read Vite manifest to get JS bundle URL for early modulepreload
@@ -106,6 +131,11 @@ export function custom(
   documentTitle = documentTitle
     ? decodeHtmlEntities(DOMPurify.sanitize(decodeHtmlEntities(documentTitle)))
     : ogTitle;
+  // NOTE: The font preloads are the faces the first screen uses: Inter 400
+  // and 600 (phone titles), Inter 700 on desktop (its titles) and JetBrains
+  // Mono 400 (rank numbers, counts, times), Inter as the Latin subsets (see
+  // fonts/inter.css). Inter is font-display: optional, so a face that isn't
+  // in within ~100ms of the first paint is skipped for that page view.
   ogType =
     ogType ||
     (canonicalUrl && canonicalUrl.includes("/stories/") ? "article" : "website");
@@ -119,25 +149,36 @@ export function custom(
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/Inter-Regular.woff2"
+      href="/fonts/Inter-Regular-latin.woff2"
       crossorigin
     />
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/Inter-SemiBold.woff2"
+      href="/fonts/Inter-SemiBold-latin.woff2"
       crossorigin
     />
     <link
       rel="preload"
-      as="style"
-      href="/fonts/inter.css"
+      as="font"
+      type="font/woff2"
+      href="/fonts/Inter-Bold-latin.woff2"
+      media="(min-width: 641px)"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/jetbrains-mono-latin-400.woff2"
+      crossorigin
     />
     <link
       rel="stylesheet"
-      href="/fonts/inter.css"
+      href="/fonts/inter.css?v=${interHash}"
     />
+    ${expectTopbar}
     <style>
       /* Critical CSS to prevent layout shift */
       :root {

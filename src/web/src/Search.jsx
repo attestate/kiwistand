@@ -3,6 +3,7 @@ import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ChatsSVG } from "./icons.jsx";
 import { isIOS } from "./session.mjs";
 import { useWebHaptics } from "web-haptics/react";
+import MS from "./ms.jsx";
 
 // List of paths where the search component should be hidden
 const HIDDEN_PATHS = [
@@ -126,55 +127,15 @@ const SearchInterface = () => {
   return (
     <>
       <button
+        type="button"
+        className="kn-glass"
         onClick={() => {
           haptic.trigger("selection");
           setIsOpen(true);
         }}
-        style={{
-          padding: "5px",
-          border: "none",
-          borderRadius: "2px",
-          cursor: "pointer",
-          backgroundColor: "transparent",
-          color: "var(--text-primary)",
-          WebkitTapHighlightColor: "transparent",
-          WebkitAppearance: "none",
-          appearance: "none",
-          WebkitTextFillColor: "var(--text-primary)",
-        }}
         aria-label="Open search"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 256 256"
-          style={{
-            fill: "currentColor",
-            width: "1.5rem",
-          }}
-        >
-          <rect width="256" height="256" fill="none" />
-          <circle
-            cx="112"
-            cy="112"
-            r="80"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="16"
-          />
-          <line
-            x1="168.57"
-            y1="168.57"
-            x2="224"
-            y2="224"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="16"
-          />
-        </svg>
+        <MS name="magnifying-glass-bold" size={20} />
       </button>
 
       <SwipeableDrawer

@@ -104,28 +104,16 @@ function getNewKey() {
   }
   return newKey;
 }
-const DelegateButton = (props) => {
+// NOTE: The delegation itself: a new app key, the "etch" transaction on
+// Optimism and waiting until the key is indexed. Shared by DelegateButton and
+// the onboarding (onboarding/Onboarding.jsx). With `onIndexed` the caller
+// decides what happens once the key is indexed; otherwise `callback` runs and
+// the page goes to "/" as before.
+export function useDelegation(props) {
   const chainId = useChainId();
   const from = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { switchChain, switchChainAsync } = useSwitchChain();
   const [keyName, setKeyName] = useState(null);
-
-  // Modal wrapper
-  const wrapperStyle = {
-    backgroundColor: "transparent",
-    maxWidth: "100%",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
-    padding: "0",
-    borderRadius: "0",
-    boxShadow: "none",
-    border: "none",
-    fontSize: "15px",
-    lineHeight: "1.325",
-    fontFamily: "ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    ...props.style,
-  };
 
   useEffect(() => {
     if (from.address) {
@@ -145,8 +133,6 @@ const DelegateButton = (props) => {
 
   const [confirmation, setConfirmation] = useState("");
   const provider = useProvider();
-  const [isButtonHovered, setIsButtonHovered] = useState(false);
-  const [isButtonActive, setIsButtonActive] = useState(false);
 
   const [payload, setPayload] = useState(null);
   const [indexedDelegation, setIndexedDelegation] = useState(false);
@@ -178,11 +164,49 @@ const DelegateButton = (props) => {
   const {
     data: writeData,
     writeContract,
+    writeContractAsync,
     isPending: isWriteLoading,
     isSuccess: isWriteContractSuccess,
   } = useWriteContract();
 
-  const isLoading = isWriteLoading;
+  // NOTE: One tap: switch the wallet to Optimism if needed, then send the
+  // etch transaction. The button used to wait for (and only work with) the
+  // simulation's result, `config`. When that read hadn't come back (e.g. a
+  // WalletConnect wallet whose connector client wasn't ready, or a slow or
+  // failing RPC), the tap was a silent no-op, and wallet errors were never
+  // shown. Now it falls back to sending the call itself (the wallet estimates
+  // the gas) and every failure ends up in `delegateError`.
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [delegateError, setDelegateError] = useState("");
+  const delegate = async () => {
+    if (!payload || !from.address) return;
+    setDelegateError("");
+    try {
+      if (chainId !== optimism.id) {
+        setIsSwitching(true);
+        try {
+          await switchChainAsync({ chainId: optimism.id });
+        } finally {
+          setIsSwitching(false);
+        }
+      }
+      const request =
+        config && config.request
+          ? config.request
+          : { ...prepArgs, account: from.address };
+      await writeContractAsync({ ...request, chainId: optimism.id });
+    } catch (err) {
+      console.error("Delegation failed", err);
+      const message = err?.shortMessage || err?.message || String(err);
+      setDelegateError(
+        /reject|denied|cancel/i.test(message)
+          ? "You cancelled it in your wallet."
+          : message,
+      );
+    }
+  };
+
+  const isLoading = isWriteLoading || isSwitching;
   const data = writeData;
   const isSuccess = isWriteContractSuccess && data;
   if (isSuccess) {
@@ -208,7 +232,16 @@ const DelegateButton = (props) => {
           if (Object.keys(delegations).includes(wallet.address)) {
             setIndexedDelegation(true);
             clearInterval(intervalId);
-            if (props.callback && typeof props.callback === "function") {
+            if (props.onIndexed) {
+              const isAnonMode = localStorage.getItem('anon-mode') === 'true';
+              if (!isAnonMode) {
+                posthog.capture("delegation_performed");
+              }
+              props.onIndexed();
+            } else if (
+              props.callback &&
+              typeof props.callback === "function"
+            ) {
               const isAnonMode = localStorage.getItem('anon-mode') === 'true';
               if (!isAnonMode) {
                 posthog.capture("delegation_performed");
@@ -229,6 +262,63 @@ const DelegateButton = (props) => {
       return () => clearInterval(intervalId);
     })();
   }, [key, wallet, from.address, props]);
+
+  return {
+    chainId,
+    from,
+    switchChain,
+    key,
+    wallet,
+    isPersistent,
+    indexedDelegation,
+    isLoading,
+    isError,
+    isSuccess,
+    config,
+    writeContract,
+    payload,
+    delegate,
+    delegateError,
+  };
+}
+
+const DelegateButton = (props) => {
+  const {
+    chainId,
+    from,
+    switchChain,
+    key,
+    wallet,
+    isPersistent,
+    indexedDelegation,
+    isLoading,
+    isError,
+    isSuccess,
+    config,
+    writeContract,
+    payload,
+    delegate,
+    delegateError,
+  } = useDelegation(props);
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const [isButtonActive, setIsButtonActive] = useState(false);
+
+  // Modal wrapper
+  const wrapperStyle = {
+    backgroundColor: "transparent",
+    maxWidth: "100%",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    padding: "0",
+    borderRadius: "0",
+    boxShadow: "none",
+    border: "none",
+    fontSize: "15px",
+    lineHeight: "1.325",
+    fontFamily: "var(--kn-font)",
+    ...props.style,
+  };
 
   const localAccount = getLocalAccount(from.address);
 
@@ -311,15 +401,9 @@ const DelegateButton = (props) => {
   let content;
   let activity;
   let handler;
-  if (chainId === 10) {
-    content = isLoading ? "Please sign in wallet" : <span>Enable</span>;
-    activity = !writeContract || (!writeContract && !isError) || isLoading || isSuccess;
-    handler = () => config && writeContract(config.request);
-  } else {
-    content = <span>Switch to Optimism</span>;
-    activity = false;
-    handler = () => switchChain?.({ chainId: 10 });
-  }
+  content = isLoading ? "Please sign in wallet" : <span>Enable</span>;
+  activity = !payload || isLoading || isSuccess;
+  handler = delegate;
   // Notify parent that we're not in indexing state (showing delegation button)
   if (props.onIndexingStateChange) {
     props.onIndexingStateChange(false);
@@ -390,6 +474,12 @@ const DelegateButton = (props) => {
                 </div>
               </button>
             </div>
+
+            {delegateError && (
+              <div style={{ padding: "0 16px", fontSize: "13px", color: "var(--color-error, #c0392b)", overflowWrap: "anywhere" }}>
+                {delegateError}
+              </div>
+            )}
 
             {/* Account section */}
             <div style={{

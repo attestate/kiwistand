@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 
 import { capture } from "./analytics.mjs";
-import { useAccount, WagmiProvider } from "wagmi";
+import { useAccount } from "wagmi";
+import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
 import { RainbowKitProvider, ConnectButton } from "@rainbow-me/rainbowkit";
@@ -21,6 +22,7 @@ import {
 import theme from "./theme.jsx";
 import { maybeShowUpvoteNewsletterPrompt } from "./UpvoteNewsletterPrompt.jsx";
 import { getLocalAccount, isIOSApp } from "./session.mjs";
+import useAccountChange from "./useAccountChange.js";
 import {
   openDelegationModalForAction,
   isDelegationModalNeeded,
@@ -65,11 +67,11 @@ const queryClient = new QueryClient();
 const Container = (props) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client} reconnectOnMount={false}>
+      <KiwiWagmiProvider>
         <RainbowKitProvider chains={chains}>
           <Vote {...props} />
         </RainbowKitProvider>
-      </WagmiProvider>
+      </KiwiWagmiProvider>
     </QueryClientProvider>
   );
 };
@@ -151,6 +153,7 @@ const Vote = (props) => {
 
   let address;
   const account = useAccount();
+  useAccountChange();
   const localAccount = getLocalAccount(account.address);
   if (account.isConnected) {
     address = account.address;

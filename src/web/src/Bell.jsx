@@ -6,12 +6,18 @@ import { Wallet } from "@ethersproject/wallet";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 import * as API from "./API.mjs";
-import { getLocalAccount, getCookie } from "./session.mjs";
+import {
+  getLocalAccount,
+  getCookie,
+  ACCOUNT_CHANGE_EVENT,
+} from "./session.mjs";
 import { useProvider } from "./client.mjs";
 import { subscribe } from "./newsletter.mjs";
 import { dynamicPrefetch } from "./main.jsx";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
 import LoginModal from "./LoginModal.jsx";
+import MS from "./ms.jsx";
+import useAccountChange from "./useAccountChange.js";
 import { useWebHaptics } from "web-haptics/react";
 import { openDelegationModalForAction } from "./delegationModalManager.js";
 
@@ -201,9 +207,30 @@ const ConnectedEmailSubscriptionForm = EmailSubscriptionForm;
 
 export { ConnectedEmailSubscriptionForm };
 
+// NOTE: Re-renders on a login without a page load (announceAccountChange
+// in session.mjs) and then also fetches the delegations again (uncached), so
+// a key delegated during the onboarding counts.
+function useFreshDelegations(initial) {
+  const [delegations, setDelegations] = useState(initial);
+  useEffect(() => setDelegations(initial), [initial]);
+  useEffect(() => {
+    const refresh = async () => {
+      try {
+        const fresh = await API.fetchDelegations(false);
+        if (fresh && typeof fresh === "object") setDelegations(fresh);
+      } catch (err) {}
+    };
+    window.addEventListener(ACCOUNT_CHANGE_EVENT, refresh);
+    return () => window.removeEventListener(ACCOUNT_CHANGE_EVENT, refresh);
+  }, []);
+  return delegations;
+}
+
 let wasTitleSet = false;
 const Bell = (props) => {
   let address;
+  const delegations = useFreshDelegations(props.delegations);
+  useAccountChange();
   const account = useAccount();
   const localAccount = getLocalAccount(account.address);
   const loginModalRef = useRef();
@@ -215,8 +242,7 @@ const Bell = (props) => {
   } else if (account.isConnected) {
     address = account.address;
   }
-  const isEligible =
-    address && resolveIdentity(props.delegations, address);
+  const isEligible = address && resolveIdentity(delegations, address);
   const needsDelegation = isEligible && !localAccount && account?.isConnected;
 
   const localLastUpdate = parseInt(getCookie("lastUpdate"), 10);
@@ -225,7 +251,13 @@ const Bell = (props) => {
   const [readNotifications, setReadNotifications] = useState(0);
   const [isFull, setIsFull] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const link = isEligible ? `/activity?address=${address}` : "/";
+  // NOTE: The cookie's lastUpdate (the newest notification already seen) goes
+  // into the link, so the page (cached per URL) shows the unread rows, "N
+  // new" and "Mark all as read" like the design.
+  const seen = parseInt(getCookie("lastUpdate"), 10);
+  const link = isEligible
+    ? `/activity?address=${address}${seen ? `&lastUpdate=${seen}` : ""}`
+    : "/";
 
   const handleClick = (event) => {
     // Added event parameter
@@ -271,32 +303,26 @@ const Bell = (props) => {
     });
   }, [notificationCount]);
 
-  const mobileBellStyle = props.mobile
-    ? {
-        padding: "0", // Remove padding
-        backgroundColor: "transparent", // No background
-        border: "none", // No border
-        display: "flex", // Use flex for layout
-        flexDirection: "column", // Stack icon and text vertically
-        alignItems: "center", // Center items horizontally
-        justifyContent: "center", // Center items vertically
-        position: "relative",
-        textDecoration: "none", // Remove underline from link
-        color: "var(--color-black)", // Ensure text color uses theme variable
-        height: "100%", // Fill container height
-      }
-    : {
-        // Desktop styles
-        padding: "10px 10px",
-        backgroundColor: "var(--background-color1)",
-        border: "var(--border)",
-        borderRadius: "2px",
-        display: "inline-flex",
-        position: "relative",
-      };
+  // Desktop: the account's avatar next to the bell (NEU 2 top bar).
+  const [avatar, setAvatar] = useState(null);
+  useEffect(() => {
+    if (props.mobile || !address) return;
+    let cancelled = false;
+    fetch(`/api/v1/profile/${address}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled && json?.data?.safeAvatar) setAvatar(json.data.safeAvatar);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [address, props.mobile]);
 
+  // NOTE: A signed-in account without notifications yet (e.g. right after a
+  // passkey sign-in, which sets no lastUpdate) still gets its bell and
+  // avatar; returning nothing here left an empty gap in the header.
   if (
-    (!needsDelegation && isEligible && !lastUpdate && readNotifications === 0) ||
     window.location.pathname === "/indexing" ||
     window.location.pathname === "/demonstration" ||
     window.location.pathname === "/invite" ||
@@ -306,9 +332,6 @@ const Bell = (props) => {
     window.location.pathname === "/friends"
   ) {
     // Render nothing for these specific paths or conditions
-    // For mobile nav consistency, we might want to render *something*
-    // but for now, adhering to original logic.
-    // If a placeholder is needed on mobile, return null conditionally based on props.mobile
     return null;
   }
 
@@ -321,100 +344,33 @@ const Bell = (props) => {
       return null;
     }
     if (needsDelegation) {
-      const mobileDelegationStyle = props.mobile
-        ? {
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--color-black)",
-            textAlign: "center",
-            fontSize: "9pt",
-            padding: "0",
-            flexGrow: 1,
-            border: "none",
-            backgroundColor: "transparent",
-            textDecoration: "none",
-            height: "100%",
-            cursor: "pointer",
-          }
-        : {
-            color: "var(--color-black)",
-            textAlign: "center",
-            fontSize: "9pt",
-            display: "inline",
-            padding: "10px 10px",
-            border: "3px inset var(--full-contrast-color)",
-            backgroundColor: "var(--accent-primary)",
-            cursor: "pointer",
-          };
-
       const handleDelegationClick = (e) => {
         e.preventDefault();
         haptic.trigger("medium");
         openDelegationModalForAction();
       };
 
-      return (
+      return props.mobile ? (
         <button
-          className={props.mobile ? "mobile-bell" : "bell-button"}
-          style={mobileDelegationStyle}
+          type="button"
+          className="kn-tab-inner mobile-bell"
           onClick={handleDelegationClick}
         >
-          {props.mobile ? (
-            <>
-              <svg
-                style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 256 256"
-              >
-                <rect width="256" height="256" fill="none" />
-                <path
-                  d="M93.17,122.83A71.68,71.68,0,0,1,88,95.91c0-38.58,31.08-70.64,69.64-71.87A72,72,0,0,1,232,98.36C230.73,136.92,198.67,168,160.09,168a71.68,71.68,0,0,1-26.92-5.17h0L120,176H96v24H72v24H40a8,8,0,0,1-8-8V187.31a8,8,0,0,1,2.34-5.65l58.83-58.83Z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="16"
-                />
-                <circle cx="180" cy="76" r="12" />
-              </svg>
-              <span style={{ fontSize: "9px", marginTop: "2px" }}>Sign in</span>
-            </>
-          ) : (
-            "Sign in"
-          )}
+          <span className="kn-tab-icon">
+            <MS name="user" size={24} />
+          </span>
+          <span>Sign in</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="kn-btn kn-btn-outline bell-button"
+          onClick={handleDelegationClick}
+        >
+          Sign in
         </button>
       );
     }
-    const mobileConnectStyle = props.mobile
-      ? {
-          display: "flex", // Changed to flex for column layout
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "var(--color-black)",
-          textAlign: "center",
-          fontSize: "9pt", // Adjusted size slightly
-          padding: "0", // Remove padding for tighter fit
-          flexGrow: 1,
-          border: "none",
-          backgroundColor: "transparent", // No background needed
-          textDecoration: "none", // Ensure no underline
-          height: "100%", // Fill container height
-          cursor: "pointer",
-        }
-      : {
-          // Desktop styles remain the same
-          color: "var(--color-black)",
-          textAlign: "center",
-          fontSize: "9pt",
-          display: "inline",
-          padding: "10px 10px",
-          border: "3px inset var(--full-contrast-color)",
-          backgroundColor: "var(--accent-primary)",
-          cursor: "pointer",
-        };
 
     const handleLoginClick = (e) => {
       e.preventDefault();
@@ -424,58 +380,29 @@ const Bell = (props) => {
 
     return (
       <>
-        <button
-          className={props.mobile ? "mobile-bell" : "bell-button"}
-          style={mobileConnectStyle}
-          onClick={handleLoginClick}
-        >
-          {props.mobile ? (
-            // Using Fragment to group elements for flex layout
-            <>
-              <svg
-                style={{ width: "24px", height: "24px", color: "var(--color-black)" }}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 256 256"
-              >
-                <rect width="256" height="256" fill="none" />
-                <circle
-                  cx="128"
-                  cy="128"
-                  r="96"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="16"
-                />
-                <circle
-                  cx="128"
-                  cy="120"
-                  r="40"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="16"
-                />
-                <path
-                  d="M63.8,199.37a72,72,0,0,1,128.4,0"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="16"
-                />
-              </svg>
-              <span style={{ fontSize: "9px", marginTop: "2px" }}>Log In</span>
-            </>
-          ) : (
-            "Log In" // Desktop text
-          )}
-        </button>
+        {props.mobile ? (
+          <button
+            type="button"
+            className="kn-tab-inner mobile-bell"
+            onClick={handleLoginClick}
+          >
+            <span className="kn-tab-icon">
+              <MS name="user" size={24} />
+            </span>
+            <span>Log in</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="kn-btn kn-btn-outline bell-button"
+            onClick={handleLoginClick}
+          >
+            Log in
+          </button>
+        )}
         <LoginModal
           ref={loginModalRef}
-          delegations={props.delegations}
+          delegations={delegations}
           toast={props.toast}
         />
       </>
@@ -490,58 +417,58 @@ const Bell = (props) => {
   }
 
   const disabled = !lastUpdate && readNotifications === 0;
+  const active = isFull || window.location.pathname === "/activity";
+
+  if (props.mobile) {
+    return (
+      <a
+        data-no-instant
+        disabled={disabled}
+        title="Notifications"
+        href={link}
+        className={`kn-tab-inner mobile-bell${active ? " kn-tab-active" : ""}`}
+        onClick={handleClick}
+      >
+        <span className="kn-tab-icon">
+          <MS name={active ? "bell-bold" : "bell"} size={24} />
+        </span>
+        <span>Notifications</span>
+        {notificationCount > 0 && (
+          <span className="kn-tab-badge">{notificationCount}</span>
+        )}
+      </a>
+    );
+  }
 
   return (
-    <a
-      data-no-instant
-      disabled={disabled}
-      title="Notifications"
-      href={link}
-      className={props.mobile ? "mobile-bell" : "bell-button"}
-      onClick={handleClick}
-      style={mobileBellStyle}
-    >
-      <div
-        style={
-          props.mobile ? { position: "relative", display: "inline-block" } : {}
+    <>
+      <a
+        data-no-instant
+        disabled={disabled}
+        title="Notifications"
+        aria-label={
+          notificationCount > 0
+            ? `${notificationCount} new notifications`
+            : "Notifications"
         }
+        href={link}
+        className="kn-iconbtn bell-button"
+        onClick={handleClick}
       >
-        {isFull || window.location.pathname === "/activity" ? (
-          <BellSVGFull mobile={props.mobile} />
-        ) : (
-          <BellSVG
-            mobile={props.mobile}
-            style={disabled ? { color: "grey" } : {}}
-          />
-        )}
-        {notificationCount > 0 && (
-          <span
-            style={{
-              position: "absolute",
-              top: props.mobile ? "-2px" : "5px", // Adjusted position for mobile
-              right: props.mobile ? "-5px" : "8px", // Adjusted position for mobile
-              backgroundColor: "var(--color-alert)",
-              borderRadius: "50%", // Make it round
-              color: "var(--text-white)",
-              padding: "1px",
-              fontSize: "8px",
-              fontWeight: "bold",
-              minWidth: "13px", // Keep min width
-              height: "13px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              lineHeight: "1", // Ensure text fits vertically
-            }}
-          >
-            {notificationCount}
-          </span>
-        )}
-      </div>
-      {props.mobile && (
-        <span style={{ fontSize: "9px", marginTop: "2px" }}>Notifications</span>
-      )}
-    </a>
+        {/* NOTE: The desktop frames keep the outlined bell, also on the
+            notifications page. */}
+        <MS name="bell-bold" size={18} />
+        {notificationCount > 0 && <span className="kn-iconbtn-dot" />}
+      </a>
+      <a
+        href="/profile"
+        className="kn-account-avatar"
+        title="Your profile"
+        aria-label="Your profile"
+      >
+        {avatar ? <img src={avatar} alt="" /> : <MS name="user" size={18} />}
+      </a>
+    </>
   );
 };
 
@@ -549,54 +476,3 @@ export default Bell;
 
 // Export Bell directly if it's used standalone elsewhere
 export { Bell };
-
-const BellSVGFull = (props) => (
-  <svg
-    style={
-      props.mobile
-        ? { width: "24px", height: "24px", color: "var(--color-black)" } // Explicit size for mobile
-        : {
-            color: "var(--color-black)",
-            width: "1.5rem", // Desktop size
-          }
-    }
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z" fill="currentColor" />
-  </svg>
-);
-const BellSVG = (props) => (
-  <svg
-    style={
-      props.mobile
-        ? { width: "24px", height: "24px", color: "var(--color-black)", ...props.style } // Explicit size for mobile
-        : {
-            color: "var(--color-black)",
-            width: "1.5rem", // Desktop size
-            ...props.style,
-          }
-    }
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-  >
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M96,192a32,32,0,0,0,64,0"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <path
-      d="M56,104a72,72,0,0,1,144,0c0,35.82,8.3,64.6,14.9,76A8,8,0,0,1,208,192H48a8,8,0,0,1-6.88-12C47.71,168.6,56,139.81,56,104Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);

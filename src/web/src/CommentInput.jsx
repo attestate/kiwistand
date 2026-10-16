@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import posthog from "posthog-js";
 import { RainbowKitProvider, useConnectModal } from "@rainbow-me/rainbowkit";
-import { WagmiProvider, useAccount } from "wagmi";
+import { useAccount } from "wagmi";
+import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Wallet } from "@ethersproject/wallet";
 import { resolveIdentity } from "@attestate/delegator2";
@@ -36,6 +37,9 @@ function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
+// NOTE: NEU 2 "Logged out · bottom" (Web 2 · Desktop · Story · logged out):
+// a calm strip with "Log in to join the discussion." and a lime "Log in".
+// Styles: .kn-composer-loggedout in news.css.
 const SiteExplainer = () => {
   const loginModalRef = useRef();
   const { openConnectModal } = useConnectModal();
@@ -52,41 +56,16 @@ const SiteExplainer = () => {
   };
 
   return (
-    <div
-      className="site-explainer"
-      style={{
-        padding: "0.75rem",
-        marginTop: "1rem",
-        marginBottom: "1rem",
-        backgroundColor: "var(--middle-beige)",
-        borderRadius: "2px",
-        border: "var(--border)",
-      }}
-    >
-      <p
-        style={{
-          fontSize: "11pt",
-          margin: "0 0 12px 0",
-          color: "var(--text-tertiary)",
-        }}
-      >
-        Want to leave a comment, like this link or join our community of 500+
-        hackers and builders?
-      </p>
-
+    <div className="site-explainer kn-composer-loggedout">
+      <span className="kn-composer-loggedout-text">
+        Log in to join the discussion.
+      </span>
       <button
+        type="button"
+        className="kn-composer-login"
         onClick={handleConnect}
-        style={{
-          padding: "6px 12px",
-          background: "var(--button-primary-bg)",
-          color: "var(--button-primary-text)",
-          border: "1px solid var(--button-primary-bg)",
-          borderRadius: "2px",
-          cursor: "pointer",
-          fontSize: "10pt",
-        }}
       >
-        {isInIOSApp ? "Connect to comment" : "Sign in to comment"}
+        {isInIOSApp ? "Connect" : "Log in"}
       </button>
 
       <LoginModal
@@ -285,6 +264,117 @@ const MobileComposer = ({
   );
 };
 
+// NOTE: Phones (the tab bar's breakpoint) on a story page: the iOS "Story"
+// frame's composer, a bar docked right above the tab bar. While typing, the
+// tab bar hides and the bar rides on top of the keyboard (visualViewport,
+// for iOS Safari). The field grows with the text up to a few lines.
+const usePhone = () => {
+  const query = "(max-width: 640px)";
+  const [phone, setPhone] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(query).matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const onChange = () => setPhone(media.matches);
+    media.addEventListener?.("change", onChange);
+    return () => media.removeEventListener?.("change", onChange);
+  }, []);
+  return phone;
+};
+
+const DockComposer = ({
+  text,
+  setText,
+  onSubmit,
+  isLoading,
+  canPost,
+  onBeforeFocus,
+  placeholder,
+}) => {
+  const fieldRef = useRef(null);
+  const [typing, setTyping] = useState(false);
+  const [keyboard, setKeyboard] = useState(0);
+
+  useLayoutEffect(() => {
+    const field = fieldRef.current;
+    if (!field) return;
+    field.style.height = "auto";
+    field.style.height = `${Math.min(field.scrollHeight, 120)}px`;
+  }, [text]);
+
+  useEffect(() => {
+    document.body.classList.add("kn-has-dock");
+    return () => document.body.classList.remove("kn-has-dock");
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle("kn-dock-typing", typing);
+    const viewport = window.visualViewport;
+    if (!typing || !viewport) {
+      setKeyboard(0);
+      return () => document.body.classList.remove("kn-dock-typing");
+    }
+    const update = () =>
+      setKeyboard(
+        Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop),
+      );
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+      document.body.classList.remove("kn-dock-typing");
+    };
+  }, [typing]);
+
+  const ready = canPost && text.trim().length > 0;
+  return (
+    <form
+      className={`kn-dock${typing ? " kn-dock-active" : ""}`}
+      style={typing ? { bottom: `${keyboard}px` } : undefined}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (ready) onSubmit(e);
+      }}
+    >
+      <textarea
+        ref={fieldRef}
+        className="kn-dock-field"
+        rows="1"
+        placeholder={placeholder}
+        aria-label="Post your reply"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onFocus={(e) => {
+          if (onBeforeFocus && onBeforeFocus() === false) {
+            e.target.blur();
+            return;
+          }
+          setTyping(true);
+        }}
+        onBlur={() => setTyping(false)}
+        disabled={isLoading}
+      ></textarea>
+      <button
+        type="submit"
+        className="kn-dock-send"
+        aria-label="Post"
+        disabled={!ready || isLoading}
+        // Keep the field focused (and the keyboard up) while tapping send.
+        onMouseDown={(e) => e.preventDefault()}
+      >
+        <svg viewBox="0 0 256 256" width="18" height="18" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M208.49,120.49a12,12,0,0,1-17,0L140,69V216a12,12,0,0,1-24,0V69L64.49,120.49a12,12,0,0,1-17-17l72-72a12,12,0,0,1,17,0l72,72A12,12,0,0,1,208.49,120.49Z"
+          />
+        </svg>
+      </button>
+    </form>
+  );
+};
+
 const CommentInput = (props) => {
   const { toast, delegations } = props;
   const { isMiniApp, loading } = useIsMiniApp();
@@ -383,6 +473,10 @@ const CommentInput = (props) => {
   const [disableAutoOpen, setDisableAutoOpen] = useState(false);
   const [storyTitle, setStoryTitle] = useState(null);
   const isMobile = useIsMobile();
+  const phone = usePhone();
+  const isStoryPageNow =
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/stories");
   useEffect(() => {
     localStorage.setItem(`-kiwi-news-comment-${address}-${getIndex()}`, text);
   }, [text]);
@@ -646,6 +740,15 @@ const CommentInput = (props) => {
     }
   }
   const textareaRef = useRef(null);
+
+  // The desktop composer's field starts one line high and grows with the
+  // text (capped in news.css, where it scrolls).
+  useLayoutEffect(() => {
+    const field = textareaRef.current;
+    if (!field || isMobile) return;
+    field.style.height = "auto";
+    field.style.height = `${field.scrollHeight}px`;
+  }, [text, isMobile, isEligible]);
   
   // Auto-focus the textarea when component mounts (desktop only, and only if no existing comments)
   useEffect(() => {
@@ -712,24 +815,39 @@ const CommentInput = (props) => {
 
   if (isEligible === false) {
     return (
-      <div
-        style={{
-          margin: "0 1rem 1rem 1rem",
-          ...props.style,
-        }}
-      >
+      <div className="kn-composer-host" style={props.style}>
         <SiteExplainer />
       </div>
     );
   }
 
+  const canPost = !isLoading && address && isEligible;
+  const remaining = characterLimit - text.length;
+
+  if (phone && isStoryPageNow && address && isEligible) {
+    return (
+      <div className="kn-composer-host" style={props.style}>
+        <DockComposer
+          text={text}
+          setText={setText}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          canPost={canPost}
+          placeholder="Post your reply…"
+          onBeforeFocus={() => {
+            if (isDelegationModalNeeded(address)) {
+              openDelegationModalForAction();
+              return false;
+            }
+            return true;
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div
-      style={{
-        margin: isMobile ? "1rem 1rem 1rem 1rem" : "0 1rem 1rem 1rem",
-        ...props.style,
-      }}
-    >
+    <div className="kn-composer-host" style={props.style}>
       {showMobileComposer && isMobile ? (
         createPortal(
           <MobileComposer
@@ -813,60 +931,15 @@ const CommentInput = (props) => {
               </span>
             </div>
           ) : (
-            <textarea
-              ref={textareaRef}
-              onFocus={(e) => {
-                toggleNavigationItems();
-              }}
-              onBlur={toggleNavigationItems}
-              rows="12"
-              cols="80"
-              style={{
-                display: "block",
-                width: "100%",
-                boxSizing: "border-box",
-                border: "var(--border)",
-                backgroundColor: "var(--bg-white)",
-                color: "var(--text-primary)",
-                fontSize: "1rem",
-                borderRadius: "2px",
-                resize: "vertical",
-                padding: "10px",
-              }}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              disabled={isLoading || !address || !isEligible}
-            ></textarea>
-          )}
-          {!isMobile && (
+            // NOTE: NEU 2 "Composer · bottom" (Web 2 · Desktop · Story): one
+            // card with the text field and a lime "Post" inside on the
+            // right. The field grows with the text. Styles: .kn-composer in
+            // news.css.
             <>
-              <span>
-                Characters remaining:{" "}
-                {(characterLimit - text.length).toLocaleString()}
-              </span>
-              <br />
-              <br />
-            </>
-          )}
-          {!isMobile && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <button
-                id="button-onboarding"
-                style={{
-                  marginBottom: "10px",
-                  width: "auto",
-                  backgroundColor: "var(--button-primary-bg)",
-                  color: "var(--button-primary-text)",
-                  border: "1px solid var(--button-primary-bg)"
-                }}
-                disabled={isLoading || !address || !isEligible}
-                onClick={async (e) => {
+              <form
+                className="kn-composer"
+                onSubmit={async (e) => {
+                  e.preventDefault();
                   // Add haptic feedback for comment submission only in frames
                   if (isMiniApp) {
                     try {
@@ -879,9 +952,34 @@ const CommentInput = (props) => {
                   handleSubmit(e);
                 }}
               >
-                {isLoading ? "Submitting..." : "Add comment"}
-              </button>
-            </div>
+                <textarea
+                  ref={textareaRef}
+                  className="kn-composer-field"
+                  onFocus={(e) => {
+                    toggleNavigationItems();
+                  }}
+                  onBlur={toggleNavigationItems}
+                  rows="1"
+                  placeholder={props.placeholder || "Add a comment…"}
+                  aria-label="Add a comment"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  disabled={isLoading || !address || !isEligible}
+                ></textarea>
+                <button
+                  type="submit"
+                  className="kn-composer-post"
+                  disabled={!canPost}
+                >
+                  {isLoading ? "Posting…" : "Post"}
+                </button>
+              </form>
+              {remaining < 1000 && (
+                <div className="kn-composer-count">
+                  {remaining.toLocaleString()} characters remaining
+                </div>
+              )}
+            </>
           )}
         </>
       )}
@@ -895,11 +993,11 @@ const queryClient = new QueryClient();
 const Container = (props) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={client} reconnectOnMount={false}>
+      <KiwiWagmiProvider>
         <RainbowKitProvider chains={chains}>
           <CommentInput {...props} />
         </RainbowKitProvider>
-      </WagmiProvider>
+      </KiwiWagmiProvider>
     </QueryClientProvider>
   );
 };

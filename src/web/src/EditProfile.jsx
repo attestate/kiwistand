@@ -398,8 +398,21 @@ export function EditProfileModal(props) {
 }
 
 // "Edit profile" on your own profile page (views/upvotes.mjs).
+// NOTE: Phosphor "pencil-simple".
+const EditSVG = () => (
+  <svg
+    className="n2-icon"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 256 256"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z" />
+  </svg>
+);
+
 export default function EditProfileButton(props) {
-  const { address, toast } = props;
+  const { address, toast, variant } = props;
   const { identity, local } = useIdentity();
   const [open, setOpen] = useState(false);
 
@@ -409,18 +422,30 @@ export default function EditProfileButton(props) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        style={{
-          ...secondaryStyle,
-          padding: "2px 10px",
-          height: "24px",
-          fontSize: "13px",
-        }}
-      >
-        Edit profile
-      </button>
+      {variant === "row" ? (
+        // NOTE: The profile page's "Edit profile" row (public/pages.css).
+        <button
+          type="button"
+          className="n2-own-row"
+          onClick={() => setOpen(true)}
+        >
+          <EditSVG />
+          <span>Edit profile</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{
+            ...secondaryStyle,
+            padding: "2px 10px",
+            height: "24px",
+            fontSize: "13px",
+          }}
+        >
+          Edit profile
+        </button>
+      )}
       <EditProfileModal
         identity={identity}
         local={local}

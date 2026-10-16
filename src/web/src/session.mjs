@@ -176,3 +176,19 @@ export async function logout() {
   // Reload the page to reset app state
   window.location.reload();
 }
+
+// NOTE: The header's islands (Bell.jsx on desktop and in the tab bar) are
+// separate React roots that read the account from localStorage and cookies
+// when they render. After a login that happens without a page load (the
+// onboarding: passkey sign-in, new account, wallet), announceAccountChange()
+// makes them read it again, so the bell and avatar show up in place.
+export const ACCOUNT_CHANGE_EVENT = "kiwi-account-change";
+
+export function announceAccountChange() {
+  try {
+    document.documentElement.removeAttribute("data-signed-out");
+    document.documentElement.classList.remove("kn-no-account");
+    document.body.classList.add("kiwi-logged-in");
+  } catch (err) {}
+  window.dispatchEvent(new Event(ACCOUNT_CHANGE_EVENT));
+}
