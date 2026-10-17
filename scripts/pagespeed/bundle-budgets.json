@@ -40,11 +40,11 @@
     "src/SavedStories.jsx": 2100,
     "src/Search.jsx": 1500,
     "src/SidebarDrawer.jsx": 1800,
-    "src/SubmitButton.jsx": 6600,
+    "src/SubmitButton.jsx": 9000,
     "src/Vote.jsx": 4200,
     "src/anon-transport.mjs": 19200,
     "src/bookmarks.mjs": 1100,
-    "src/onboarding/Delegate.jsx": 1300,
+    "src/onboarding/Delegate.jsx": 1400,
     "src/reactionBurst.mjs": 1100
   },
   "css": {

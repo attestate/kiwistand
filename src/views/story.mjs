@@ -21,6 +21,7 @@ import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import Row, { extractDomain } from "./components/row.mjs";
 import { getSlug, isCloudflareImage } from "../utils.mjs";
+import { getPost } from "../web/src/post.mjs";
 import { cachedMetadata } from "../parser.mjs";
 import { getSubmission, getBest } from "../cache.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
@@ -270,8 +271,19 @@ export default async function (trie, theme, index, value, referral, commentIndex
 
   // Handle text posts (data:text/plain URLs)
   let textContent = null;
-  if (value.href && value.href.startsWith("data:text/plain,")) {
-    textContent = decodeURIComponent(value.href.replace("data:text/plain,", ""));
+  // A post (text and maybe a picture, web/src/post.mjs): its text without
+  // the picture's URL.
+  const post = getPost(value);
+  if (post) {
+    textContent = post.text;
+  } else if (value.href && value.href.startsWith("data:text/plain,")) {
+    try {
+      textContent = decodeURIComponent(
+        value.href.replace("data:text/plain,", ""),
+      );
+    } catch (err) {
+      textContent = null;
+    }
   }
 
   // Skip metadata fetching for text posts and kiwi: references
@@ -474,7 +486,11 @@ export default async function (trie, theme, index, value, referral, commentIndex
   
   // Default to story preview if not a comment
   if (!commentIndex) {
-    if (isCloudflareImage(value.href)) {
+    if (post && post.image) {
+      // The post's picture, cropped to the share card's 1200 wide.
+      ogImage = post.image.replace("/public", "/w=1200,q=80,fit=cover,f=auto");
+      frameImage = ogImage;
+    } else if (isCloudflareImage(value.href)) {
       // Use Cloudflare image URL directly with appropriate parameters for OG image
       ogImage = value.href.endsWith("/public")
         ? value.href.replace("/public", "/w=1200,q=80,fit=cover,f=auto")

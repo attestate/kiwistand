@@ -545,7 +545,7 @@ body.n2 #hnmain > table.n2-table {
   order: 2;
 }
 .n2-field-link,
-.n2-field-text {
+.n2-field-post {
   order: 3;
 }
 .n2-upload-row {
@@ -573,15 +573,29 @@ body.n2 #hnmain > table.n2-table {
   content: attr(data-placeholder);
   color: var(--n2-muted);
 }
-.n2-sub-text,
-.n2-submit-form.is-text .n2-sub-link {
+/* The Post tab (SubmitButton.jsx sets .is-post on the form and the page):
+   its own heading, subtitle and tips, no title field (the title is cut
+   from the text, web/src/post.mjs). */
+.n2-head-post,
+.n2-sub-post,
+.n2-tips ul.n2-tips-post,
+.n2-submit-form.is-post .n2-head-link,
+.n2-submit-form.is-post .n2-sub-link,
+.n2-submit.is-post .n2-tips ul.n2-tips-link,
+.n2-submit-form.is-post .n2-field-title,
+.n2-submit-form.is-post .n2-field-link,
+.n2-submit-form.is-post .n2-upload-row {
   display: none;
 }
-.n2-submit-form.is-text .n2-sub-text {
+.n2-submit-form.is-post .n2-head-post,
+.n2-submit-form.is-post .n2-sub-post {
   display: inline;
 }
+.n2-submit.is-post .n2-tips ul.n2-tips-post {
+  display: flex;
+}
 
-/* Mobile: Link / Text underlined tabs. */
+/* Mobile: Link / Post underlined tabs. */
 .n2-tabs {
   display: flex;
   gap: 20px;
@@ -707,19 +721,10 @@ body.n2 #hnmain > table.n2-table {
     font-weight: 600;
   }
   .n2-field-link,
-  .n2-field-text {
+  .n2-field-post {
     order: 2;
   }
   .n2-field-title {
-    order: 3;
-  }
-  /* NOTE: A text post has no link to derive the title from, so the title
-     comes first and the text follows (SubmitButton.jsx sets .is-text). The
-     design only has the Link tab on desktop. */
-  .n2-submit-form.is-text .n2-field-title {
-    order: 2;
-  }
-  .n2-submit-form.is-text .n2-field-text {
     order: 3;
   }
   .n2-upload-row {
@@ -781,6 +786,180 @@ body.n2 #hnmain > table.n2-table {
 }
 .n2-tips .n2-arrow-link {
   padding-top: 4px;
+}
+
+/* The Post field: one box with the text, the picture's thumbnail, "Add
+   image (n/1)" and the countdown ring; the live preview below is the feed's
+   post card (news.css .kn-post). */
+.n2-post-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--n2-text-2);
+  border-radius: var(--n2-radius-lg);
+  background: var(--n2-surface);
+}
+.n2-post-box:focus-within {
+  border-color: var(--n2-text);
+}
+.n2-post-box.is-invalid {
+  border-color: var(--n2-alert);
+}
+.n2 .n2-post-textarea {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  max-height: 320px;
+  /* NOTE: Grows with the text where supported (200 characters fit). */
+  field-sizing: content;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--n2-text);
+  font-family: var(--n2-font);
+  font-size: 16px;
+  line-height: 1.4;
+  resize: vertical;
+  box-shadow: none;
+}
+.n2 .n2-post-textarea::placeholder {
+  color: var(--n2-muted);
+}
+.n2-post-thumb {
+  position: relative;
+  width: 128px;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--n2-card-border);
+  border-radius: var(--n2-radius-lg);
+  overflow: hidden;
+  background: var(--n2-placeholder);
+}
+.n2-post-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.n2 .n2-post-thumb-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(16, 19, 29, 0.75);
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+}
+.n2-post-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.n2 .n2-post-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--n2-border);
+  border-radius: var(--n2-radius);
+  color: var(--n2-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.n2 .n2-post-add .n2-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+.n2-post-add[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+.n2-post-add-count {
+  font-family: var(--n2-mono);
+  font-size: 11px;
+  color: var(--n2-muted);
+}
+.n2-ring {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--n2-mono);
+  font-size: 12px;
+  color: var(--n2-text-2);
+}
+.n2-ring svg {
+  display: block;
+}
+.n2-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+.n2-ring-track {
+  stroke: var(--n2-border);
+}
+.n2-ring-bar {
+  stroke: var(--n2-accent-strong);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.15s;
+}
+.n2-ring.is-near .n2-ring-bar {
+  stroke: #e8a317;
+}
+.n2-ring.is-over .n2-ring-bar {
+  stroke: var(--n2-alert);
+}
+.n2-ring.is-over {
+  color: var(--n2-alert);
+}
+.n2-hint-error {
+  color: var(--n2-alert);
+}
+.n2-eyebrow-note {
+  margin-left: 8px;
+  font-family: var(--n2-font);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--n2-muted);
+}
+.n2-post-preview-wrap {
+  gap: 4px;
+}
+.n2-main .n2-post-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0 4px;
+  border-bottom: 0.5px solid var(--kn-separator);
+  font-family: var(--kn-font);
+  text-align: left;
+}
+@media (min-width: 641px) {
+  .n2-post-box {
+    border-color: var(--n2-border);
+    border-radius: var(--n2-radius);
+    background: var(--n2-card);
+  }
+  .n2-post-box:focus-within {
+    border-color: var(--n2-text-2);
+  }
+  .n2-main .n2-post-preview {
+    max-width: 600px;
+  }
 }
 
 /* --------------------------------------------------------- notifications */

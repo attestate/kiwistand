@@ -25,6 +25,13 @@ import { openOnboarding } from "./LoginModal.jsx";
 import ShareModal from "./ShareModal.jsx";
 import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
+import { uploadImage } from "./uploadImage.mjs";
+import {
+  MAX_POST_LENGTH,
+  normalizeText,
+  splitLinks,
+  validatePost,
+} from "./post.mjs";
 
 export function getSlug(title) {
   return slugify(DOMPurify.sanitize(title), { strict: true });
@@ -48,22 +55,261 @@ function safeExtractDomain(link) {
   return tld;
 }
 
+// The signed-in account's address (a local key's identity first), or null.
+function useSignedInAddress() {
+  const account = useAccount();
+  const localAccount = getLocalAccount(account.address);
+  if (localAccount) return localAccount.identity;
+  if (account.isConnected) return account.address;
+  return null;
+}
+
+// The countdown ring next to the post field: fills up to 200 characters,
+// shows the number when 20 or fewer are left, turns red past the limit.
+const CounterRing = ({ count, remaining }) => {
+  const radius = 9;
+  const circumference = 2 * Math.PI * radius;
+  const progress = Math.min(count / MAX_POST_LENGTH, 1);
+  const state = remaining < 0 ? "is-over" : remaining <= 20 ? "is-near" : "";
+  return (
+    <span
+      className={`n2-ring ${state}`}
+      role="status"
+      aria-label={`${remaining} characters left`}
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <circle className="n2-ring-track" cx="12" cy="12" r={radius} />
+        <circle
+          className="n2-ring-bar"
+          cx="12"
+          cy="12"
+          r={radius}
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - progress)}
+          transform="rotate(-90 12 12)"
+        />
+      </svg>
+      {remaining <= 20 && <span className="n2-ring-count">{remaining}</span>}
+    </span>
+  );
+};
+
+// The text with its links underlined, as the feed shows it.
+const PostText = ({ text }) =>
+  splitLinks(text).map((part, i) =>
+    part.href ? (
+      <span key={i} className="kn-post-link">
+        {part.display}
+      </span>
+    ) : (
+      <React.Fragment key={i}>{part.text}</React.Fragment>
+    ),
+  );
+
+const previewIcons = {
+  heart:
+    "M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z",
+  comment:
+    "M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8ZM80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176",
+  share: "M176 152 224 104 176 56M192 216H32V88M72,176a96,96,0,0,1,93-72h59",
+  save: "M192,224l-64-40L64,224V48a8,8,0,0,1,8-8H184a8,8,0,0,1,8,8Z",
+};
+const PreviewAction = ({ icon, save }) => (
+  <div className={`kn-action${save ? " kn-action-save" : ""}`}>
+    <span className="interaction-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
+        <path
+          d={previewIcons[icon]}
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="16"
+        />
+      </svg>
+    </span>
+  </div>
+);
+
+// NOTE: The same markup and classes as a post in the feed (PostCard in
+// views/components/row.mjs, styled in news.css), with static actions.
+const PostPreview = ({ text, image, profile }) => (
+  <div className="kn-story kn-post n2-post-preview" aria-hidden="true">
+    <span className="kn-post-avatar">
+      {profile && profile.safeAvatar ? (
+        <img src={profile.safeAvatar} alt="" width="40" height="40" />
+      ) : null}
+    </span>
+    <div className="kn-post-body">
+      <div className="kn-post-head">
+        <span className="kn-post-name">
+          {(profile && profile.displayName) || "You"}
+        </span>
+        <span className="kn-dot" aria-hidden="true"></span>
+        <span className="kn-post-age">now</span>
+      </div>
+      <div className="kn-post-text">
+        <PostText text={text} />
+      </div>
+      {image && (
+        <div className="kn-post-media">
+          <img src={sizedImageUrl(image, 800)} alt="" />
+        </div>
+      )}
+      <div className="interaction-bar kn-actions">
+        <PreviewAction icon="heart" />
+        <PreviewAction icon="comment" />
+        <PreviewAction icon="share" />
+        <PreviewAction icon="save" save />
+      </div>
+    </div>
+  </div>
+);
+
+// Cloudflare Images' flexible variant for a smaller copy (like
+// views/utils/imageLoading.mjs' sizedImageUrl).
+function sizedImageUrl(url, width) {
+  return url.replace(/\/public$/, `/w=${width},fit=scale-down,f=auto`);
+}
+
+const PostField = (props) => {
+  const { text, setText, image, setImage, toast, address, validation } = props;
+  const [isUploading, setIsUploading] = useState(false);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (!address) return setProfile(null);
+    let cancelled = false;
+    fetch(`/api/v1/profile/${address}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json) => !cancelled && json && setProfile(json.data || null))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
+
+  const handlePick = (e) => {
+    if (address) return;
+    // NOTE: Pictures are only for signed-in accounts.
+    e.preventDefault();
+    toast("Please sign in to add a picture.");
+    openOnboarding();
+  };
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      setImage(await uploadImage(file));
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error(error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const showError = text.trim() && validation.error;
+  return (
+    <>
+      <div className="n2-field n2-field-post">
+        <label htmlFor="postInput" className="n2-label n2-d">
+          Post
+        </label>
+        <div className={`n2-post-box${showError ? " is-invalid" : ""}`}>
+          <textarea
+            placeholder="What's on your mind?"
+            id="postInput"
+            className="n2-post-textarea"
+            rows="4"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            aria-invalid={showError ? "true" : "false"}
+            aria-describedby="postHint"
+          />
+          {image && (
+            <div className="n2-post-thumb">
+              <img src={sizedImageUrl(image, 240)} alt="Your picture" />
+              <button
+                type="button"
+                className="n2-post-thumb-remove"
+                aria-label="Remove picture"
+                onClick={() => setImage(null)}
+              >
+                ×
+              </button>
+            </div>
+          )}
+          <div className="n2-post-tools">
+            <input
+              type="file"
+              id="postImageUpload"
+              accept="image/*"
+              onChange={handleUpload}
+              disabled={Boolean(image) || isUploading}
+              style={{ display: "none" }}
+            />
+            <label
+              htmlFor="postImageUpload"
+              className="n2-post-add"
+              aria-disabled={image || isUploading ? "true" : "false"}
+              onClick={handlePick}
+            >
+              <AddPhotoSVG />
+              {isUploading ? "Uploading…" : "Add image"}
+              <span className="n2-post-add-count">{image ? 1 : 0}/1</span>
+            </label>
+            <CounterRing
+              count={validation.count}
+              remaining={validation.remaining}
+            />
+          </div>
+        </div>
+        <div className="n2-hint-row">
+          <span
+            id="postHint"
+            className={`n2-hint${showError ? " n2-hint-error" : ""}`}
+          >
+            {showError
+              ? validation.error
+              : "Links work. The picture shows under your text."}
+          </span>
+        </div>
+      </div>
+      {text.trim() && (
+        <div className="n2-preview-wrap n2-post-preview-wrap">
+          <div className="n2-eyebrow">
+            Preview <span className="n2-eyebrow-note">how it will look in the feed</span>
+          </div>
+          <PostPreview
+            text={normalizeText(text)}
+            image={image}
+            profile={profile}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
 const UrlInput = (props) => {
-  const { url, setURL, toast } = props;
+  const { url, setURL, toast, isPostMode, setIsPostMode } = props;
   const [checkedURLs, setCheckedURLs] = useState(new Set());
   const [isUploading, setIsUploading] = useState(false);
-  const [isTextMode, setIsTextMode] = useState(false);
-  const [textContent, setTextContent] = useState("");
+  const address = useSignedInAddress();
 
   useEffect(() => {
     if (
       !checkedURLs.has(url) &&
       (url.includes("http") || url.includes("https")) &&
-      !isTextMode
+      !isPostMode
     ) {
       fetchMetadata(url);
     }
-  }, [url, isTextMode]);
+  }, [url, isPostMode]);
 
   const fetchMetadata = async (url) => {
     try {
@@ -83,46 +329,14 @@ const UrlInput = (props) => {
     }
   };
 
+  // The Link tab's picture story: the uploaded picture is the link.
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
+    e.target.value = "";
     if (!file) return;
-
-    // Only allow image files
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
-    }
-
     setIsUploading(true);
-
     try {
-      // Step 1: Get upload URL from our backend
-      const tokenResponse = await fetch("/api/v1/image-upload-token");
-      if (!tokenResponse.ok) throw new Error("Failed to get upload token");
-
-      const tokenData = await tokenResponse.json();
-      const { uploadURL } = tokenData.data;
-
-      // Step 2: Upload file directly to Cloudflare
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResponse = await fetch(uploadURL, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) throw new Error("Failed to upload image");
-
-      // Step 3: Generate the final image URL
-      // The URL pattern for Cloudflare Images is:
-      // https://imagedelivery.net/[account hash]/[image id]/[variant]
-      const imageId = tokenData.data.id;
-      const accountHash = uploadURL.split("/").slice(-2)[0];
-      const imageUrl = `https://imagedelivery.net/${accountHash}/${imageId}/public`;
-
-      // Set the URL in the input field
-      setURL(imageUrl);
+      setURL(await uploadImage(file));
       toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
@@ -132,49 +346,27 @@ const UrlInput = (props) => {
     }
   };
 
-  // Handle toggle between URL and Text mode
-  const handleModeToggle = () => {
-    const newMode = !isTextMode;
-    setIsTextMode(newMode);
-
-    if (newMode) {
-      // Switching to text mode - decode if there's a data URL
-      if (url.startsWith("data:text/plain,")) {
-        const decoded = decodeURIComponent(url.replace("data:text/plain,", ""));
-        setTextContent(decoded);
-      } else {
-        setTextContent("");
-      }
-      setURL("");
-    } else {
-      // Switching to URL mode - encode text if there is any
-      if (textContent.trim()) {
-        const encoded = `data:text/plain,${encodeURIComponent(textContent)}`;
-        setURL(encoded);
-      }
-      setTextContent("");
-    }
-  };
-
-  // Update URL when text content changes in text mode
-  useEffect(() => {
-    if (isTextMode && textContent.trim()) {
-      const encoded = `data:text/plain,${encodeURIComponent(textContent)}`;
-      setURL(encoded);
-    } else if (isTextMode) {
-      setURL("");
-    }
-  }, [textContent, isTextMode]);
-
-  // NOTE: The page's subtitle and layout differ between the Link and Text
-  // tabs (views/submit.mjs, public/pages.css).
+  // NOTE: The page's heading, subtitle, tips and layout differ between the
+  // Link and Post tabs (views/submit.mjs, public/pages.css).
   useEffect(() => {
     document
+      .querySelector(".n2-submit")
+      ?.classList.toggle("is-post", isPostMode);
+    document
       .getElementById("n2-submit-form")
-      ?.classList.toggle("is-text", isTextMode);
-  }, [isTextMode]);
-
-  const textRemaining = 2048 - textContent.length;
+      ?.classList.toggle("is-post", isPostMode);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (isPostMode) params.set("tab", "post");
+      else params.delete("tab");
+      const query = params.toString();
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + (query ? `?${query}` : ""),
+      );
+    } catch {}
+  }, [isPostMode]);
 
   return (
     <>
@@ -182,27 +374,27 @@ const UrlInput = (props) => {
         <button
           type="button"
           role="tab"
-          aria-selected={!isTextMode}
-          className={`n2-tab${!isTextMode ? " is-active" : ""}`}
-          onClick={() => setIsTextMode(false)}
+          aria-selected={!isPostMode}
+          className={`n2-tab${!isPostMode ? " is-active" : ""}`}
+          onClick={() => setIsPostMode(false)}
         >
           Link
         </button>
         <button
           type="button"
           role="tab"
-          aria-selected={isTextMode}
-          className={`n2-tab${isTextMode ? " is-active" : ""}`}
-          onClick={() => setIsTextMode(true)}
+          aria-selected={isPostMode}
+          className={`n2-tab${isPostMode ? " is-active" : ""}`}
+          onClick={() => setIsPostMode(true)}
         >
-          Text
+          Post
         </button>
       </div>
 
       {/* Link Tab Content */}
       <div
         className="n2-field n2-field-link"
-        style={{ display: !isTextMode ? undefined : "none" }}
+        style={{ display: !isPostMode ? undefined : "none" }}
       >
         <label htmlFor="urlInput" className="n2-label n2-d">
           Link
@@ -225,7 +417,7 @@ const UrlInput = (props) => {
       </div>
       <div
         className="n2-upload-row"
-        style={{ display: !isTextMode ? undefined : "none" }}
+        style={{ display: !isPostMode ? undefined : "none" }}
       >
         <input
           type="file"
@@ -250,32 +442,7 @@ const UrlInput = (props) => {
         </span>
       </div>
 
-      {/* Text Tab Content */}
-      <div
-        className="n2-field n2-field-text"
-        style={{ display: isTextMode ? undefined : "none" }}
-      >
-        <label htmlFor="textInput" className="n2-label n2-d">
-          Text
-        </label>
-        <textarea
-          placeholder="Enter your text content here..."
-          id="textInput"
-          className="n2-input n2-textarea"
-          rows="6"
-          maxLength="2048"
-          required
-          value={textContent}
-          onChange={(e) => setTextContent(e.target.value)}
-        />
-        <div className="n2-hint-row">
-          <span className="n2-count">
-            <span className="n2-m">Characters remaining: </span>
-            {textRemaining}
-            <span className="n2-d"> characters left</span>
-          </span>
-        </div>
-      </div>
+      {isPostMode && <PostField {...props} address={address} />}
     </>
   );
 };
@@ -295,9 +462,12 @@ const AddPhotoSVG = () => (
 
 
 const SubmitButton = (props) => {
-  const { toast, url } = props;
+  const { toast, isPostMode, post } = props;
+  // NOTE: In the Post tab the href and title come from the text and picture
+  // (post.mjs); there's no title field.
+  const url = isPostMode ? post.href : props.url;
   const [isLoading, setIsLoading] = useState(false);
-  const [title, setTitle] = useState("");
+  const [titleField, setTitle] = useState("");
   const [remainingChars, setRemainingChars] = useState(80);
   const [showShareModal, setShowShareModal] = useState(false);
   const [storyData, setStoryData] = useState(null);
@@ -481,21 +651,27 @@ const SubmitButton = (props) => {
     }
 
     const canonicalURL = url;
-    // Check for emojis in the title
+    if (isPostMode && !post.ok) {
+      toast.error(post.error);
+      setIsLoading(false);
+      return;
+    }
+    const title = isPostMode ? post.title : titleField;
+    // Check for emojis in the title (a post's title is cut from its text,
+    // which may have emojis)
     const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
-    if (emojiRegex.test(title)) {
+    if (!isPostMode && emojiRegex.test(title)) {
       toast.error("Emojis are not allowed in the title.");
       setIsLoading(false);
       return;
     }
-    
 
     const value = API.messageFab(
       title.replace(/(\r\n|\n|\r)/gm, " "),
       canonicalURL,
     );
 
-    if (title.length > 80 || canonicalURL.length > 2048) {
+    if ([...title].length > 80 || canonicalURL.length > 2048) {
       toast.error(
         "The title should be no more than 80 characters, and the URL should be no more than 2048 characters.",
       );
@@ -503,7 +679,7 @@ const SubmitButton = (props) => {
       return;
     }
     if (title.length === 0) {
-      toast.error("Please add a title.");
+      toast.error(isPostMode ? "Write something to post." : "Please add a title.");
       setIsLoading(false);
       return;
     }
@@ -551,7 +727,9 @@ const SubmitButton = (props) => {
       response.details.includes("Message with marker")
     ) {
       toast.success(
-        "You've voted on this link already earlier, redirecting...",
+        isPostMode
+          ? "You've posted this already, redirecting..."
+          : "You've voted on this link already earlier, redirecting...",
       );
       const nextPage = new URL(
         window.location.origin + `/stories/${getSlug(title)}`,
@@ -699,21 +877,31 @@ const SubmitButton = (props) => {
           }}
           disabled={
             isLoading ||
-            title.length > 80 ||
-            url.length > 2048 ||
-            title.length === 0 ||
-            url.length === 0 ||
-            (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("data:text/plain,"))
+            (isPostMode
+              ? !post.ok
+              : titleField.length > 80 ||
+                url.length > 2048 ||
+                titleField.length === 0 ||
+                url.length === 0 ||
+                (!url.startsWith("https://") &&
+                  !url.startsWith("http://") &&
+                  !url.startsWith("data:text/plain,")))
           }
         >
           {isLoading
             ? !localAccount
               ? "Please confirm signature..."
-              : "Submitting..."
-            : "Submit"}
+              : isPostMode
+                ? "Posting..."
+                : "Submitting..."
+            : isPostMode
+              ? "Post"
+              : "Submit"}
         </button>
         <span className="n2-note n2-d">
-          Your submission is signed with your account and is public.
+          {isPostMode
+            ? "Your post is signed with your account and is public."
+            : "Your submission is signed with your account and is public."}
         </span>
       </>
       {showShareModal && storyData && (
@@ -745,6 +933,16 @@ const queryClient = new QueryClient();
 const Form = (props) => {
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
+  const [isPostMode, setIsPostMode] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get("tab") === "post";
+    } catch {
+      return false;
+    }
+  });
+  const [postText, setPostText] = useState("");
+  const [postImage, setPostImage] = useState(null);
+  const post = validatePost(postText, postImage);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("focus") !== "url") return;
@@ -764,8 +962,24 @@ const Form = (props) => {
     <QueryClientProvider client={queryClient}>
       <KiwiWagmiProvider>
         <RainbowKitProvider chains={chains}>
-          <UrlInput url={url} setURL={setURL} toast={toast} />
-          <SubmitButton {...props} url={url} />
+          <UrlInput
+            url={url}
+            setURL={setURL}
+            toast={toast}
+            isPostMode={isPostMode}
+            setIsPostMode={setIsPostMode}
+            text={postText}
+            setText={setPostText}
+            image={postImage}
+            setImage={setPostImage}
+            validation={post}
+          />
+          <SubmitButton
+            {...props}
+            url={url}
+            isPostMode={isPostMode}
+            post={post}
+          />
         </RainbowKitProvider>
       </KiwiWagmiProvider>
     </QueryClientProvider>

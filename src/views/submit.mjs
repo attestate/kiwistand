@@ -7,7 +7,10 @@ import { Page, Icon } from "./components/n2.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function submit(theme, url = "", title = "") {
+export default async function submit(theme, url = "", title = "", tab = "") {
+  // NOTE: /submit?tab=post opens the Post tab (SubmitButton.jsx keeps the
+  // parameter in sync), rendered here already so nothing jumps.
+  const isPost = tab === "post" && !url;
   if (url && !title) {
     let data;
     try {
@@ -36,23 +39,27 @@ export default async function submit(theme, url = "", title = "") {
       undefined,
       ["/"],
     ),
-    body: html`<div class="n2-submit">
+    body: html`<div class="n2-submit${isPost ? " is-post" : ""}">
       <form
                       id="n2-submit-form"
-                      class="n2-submit-form"
+                      class="n2-submit-form${isPost ? " is-post" : ""}"
                       onsubmit="event.preventDefault(); return false;"
                     >
                       <header class="n2-page-head n2-submit-head">
                         <h1 class="n2-title">
-                          <span class="n2-d">Submit a story</span>
-                          <span class="n2-m">Share with the community</span>
+                          <span class="n2-head-link"
+                            ><span class="n2-d">Submit a story</span
+                            ><span class="n2-m">Share with the community</span></span
+                          >
+                          <span class="n2-head-post">Share with the community</span>
                         </h1>
                         <p class="n2-sub">
                           <span class="n2-sub-link"
                             >A link, an idea, a fresh perspective.</span
                           >
-                          <span class="n2-sub-text"
-                            >Start a thoughtful conversation.</span
+                          <span class="n2-sub-post"
+                            >Say something. Up to 200 characters and one
+                            picture.</span
                           >
                         </p>
                       </header>
@@ -92,8 +99,8 @@ export default async function submit(theme, url = "", title = "") {
                           <button
                             type="button"
                             role="tab"
-                            aria-selected="true"
-                            class="n2-tab is-active"
+                            aria-selected="${isPost ? "false" : "true"}"
+                            class="n2-tab${isPost ? "" : " is-active"}"
                             disabled
                           >
                             Link
@@ -101,13 +108,40 @@ export default async function submit(theme, url = "", title = "") {
                           <button
                             type="button"
                             role="tab"
-                            aria-selected="false"
-                            class="n2-tab"
+                            aria-selected="${isPost ? "true" : "false"}"
+                            class="n2-tab${isPost ? " is-active" : ""}"
                             disabled
                           >
-                            Text
+                            Post
                           </button>
                         </div>
+                        ${isPost
+                          ? html`<div class="n2-field n2-field-post">
+                              <label class="n2-label n2-d">Post</label>
+                              <div class="n2-post-box">
+                                <textarea
+                                  class="n2-post-textarea"
+                                  rows="4"
+                                  placeholder="What's on your mind?"
+                                  disabled
+                                ></textarea>
+                                <div class="n2-post-tools">
+                                  <span class="n2-post-add" aria-disabled="true"
+                                    >${Icon("addPhoto")}Add image<span
+                                      class="n2-post-add-count"
+                                      >0/1</span
+                                    ></span
+                                  >
+                                </div>
+                              </div>
+                              <div class="n2-hint-row">
+                                <span class="n2-hint"
+                                  >Links work. The picture shows under your
+                                  text.</span
+                                >
+                              </div>
+                            </div>`
+                          : null}
                         <div class="n2-field n2-field-link">
                           <label for="urlInput" class="n2-label n2-d"
                             >Link</label
@@ -142,11 +176,12 @@ export default async function submit(theme, url = "", title = "") {
                         </div>
                         <div class="n2-actions">
                           <button id="button-onboarding" class="n2-btn" disabled>
-                            Submit
+                            ${isPost ? "Post" : "Submit"}
                           </button>
                           <span class="n2-note n2-d"
-                            >Your submission is signed with your account and is
-                            public.</span
+                            >${isPost
+                              ? "Your post is signed with your account and is public."
+                              : "Your submission is signed with your account and is public."}</span
                           >
                         </div>
                       </div>
@@ -162,11 +197,17 @@ export default async function submit(theme, url = "", title = "") {
                     <aside class="n2-submit-aside n2-d" aria-label="Before you submit">
                       <div class="n2-card n2-tips">
                         <div class="n2-eyebrow">Before you submit</div>
-                        <ul>
+                        <ul class="n2-tips-link">
                           <li>${Icon("check")}Link to the original source, not a repost.</li>
                           <li>${Icon("check")}Keep the original title. No clickbait or ALL CAPS.</li>
                           <li>${Icon("check")}Check it hasn't been posted this week.</li>
                           <li>${Icon("check")}Builders, research, tools and ideas do best.</li>
+                        </ul>
+                        <ul class="n2-tips-post">
+                          <li>${Icon("check")}Say something builders want to read.</li>
+                          <li>${Icon("check")}One picture, yours to share. No NSFW.</li>
+                          <li>${Icon("check")}No ads, shilling or giveaways.</li>
+                          <li>${Icon("check")}A link? Use the Link tab instead.</li>
                         </ul>
                         <a class="n2-arrow-link" href="/guidelines"
                           >Read the guidelines${Icon("arrow")}</a

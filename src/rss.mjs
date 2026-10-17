@@ -1,5 +1,6 @@
 // @format
 import { getSlug } from "./utils.mjs";
+import { getPost } from "./web/src/post.mjs";
 
 const BASE_URL = "https://news.kiwistand.com";
 
@@ -23,14 +24,7 @@ function textPostContent(href) {
   }
 }
 
-function describe(story) {
-  const parts = [];
-  const text = textPostContent(story.href);
-  if (text) {
-    parts.push(text.length > 500 ? `${text.slice(0, 500)}…` : text);
-  } else if (/^https?:\/\//.test(story.href)) {
-    parts.push(`Link: ${story.href}`);
-  }
+function meta(story) {
   const upvotes = Array.isArray(story.upvoters)
     ? story.upvoters.length
     : story.upvotes || 0;
@@ -41,7 +35,43 @@ function describe(story) {
     );
   }
   if (story.displayName) meta.push(`submitted by ${story.displayName}`);
-  parts.push(meta.join(", "));
+  return meta.join(", ");
+}
+
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+// A post (web/src/post.mjs) as HTML: its text, its picture, the counts.
+function describePost(post, story) {
+  const paragraphs = post.text
+    .split(/\n{2,}/)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`);
+  if (post.image) {
+    paragraphs.push(
+      `<p><img src="${escapeHtml(
+        post.image.replace("/public", "/w=1200,fit=scale-down,f=auto"),
+      )}" alt="" /></p>`,
+    );
+  }
+  paragraphs.push(`<p>${escapeHtml(meta(story))}</p>`);
+  return paragraphs.join("");
+}
+
+function describe(story) {
+  const post = getPost(story);
+  if (post) return describePost(post, story);
+  const parts = [];
+  const text = textPostContent(story.href);
+  if (text) {
+    parts.push(text.length > 500 ? `${text.slice(0, 500)}…` : text);
+  } else if (/^https?:\/\//.test(story.href)) {
+    parts.push(`Link: ${story.href}`);
+  }
+  parts.push(meta(story));
   return parts.join("\n\n");
 }
 
