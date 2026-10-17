@@ -121,8 +121,12 @@ export function truncateName(name) {
   return name.slice(0, maxLength) + "...";
 }
 
+// NOTE: Only a link to the picture itself: a post's data: href has its
+// picture's URL inside (web/src/post.mjs) and isn't one.
 export function isCloudflareImage(url) {
-  return url && typeof url === "string" && url.includes("imagedelivery.net");
+  return (
+    typeof url === "string" && url.startsWith("https://imagedelivery.net/")
+  );
 }
 
 export function appdir() {

@@ -90,6 +90,8 @@ import {
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
+import * as imageupload from "./imageupload.mjs";
+import { getPost } from "./web/src/post.mjs";
 import * as profiles from "./profiles.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
@@ -1948,9 +1950,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // If tokenMetadata flag is set, return ERC-721 compliant metadata
     if (tokenMetadata) {
       let imageUrl = submission.href;
-      
+      const post = getPost(submission);
+      if (post) imageUrl = post.image || "";
+
       // If href is not an imagedelivery domain, fetch the actual image from the page
-      if (!submission.href.includes("imagedelivery.net")) {
+      if (!post && !submission.href.includes("imagedelivery.net")) {
         try {
           const result = await parse(submission.href, true); // forceFetch = true
           if (result.image) {
@@ -2762,6 +2766,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.locals.theme,
       DOMPurify.sanitize(url),
       DOMPurify.sanitize(title),
+      request.query.tab === "post" ? "post" : "",
     );
 
     if (url || title) {
@@ -3169,69 +3174,119 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
 
-  app.get("/api/v1/image-upload-token", async (request, reply) => {
-    reply.header("Cache-Control", "no-cache");
+  // One-time Cloudflare Images upload URLs (posts, image stories, avatars).
+  // GET is anonymous (every shipped client), POST is signed; both are rate
+  // limited, see imageupload.mjs.
+  async function imageUploadToken(request, reply, identity) {
+    reply.header("Cache-Control", "no-store");
 
-    // Check if we have the required environment variables
+    const ip = imageupload.clientIP(request);
+    const limit = imageupload.check({ ip, identity });
+    if (!limit.ok) {
+      reply.header("Retry-After", String(limit.retryAfter));
+      return sendError(
+        reply,
+        429,
+        "Too Many Requests",
+        "Too many picture uploads, please try again later.",
+      );
+    }
+
     if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
       log(
         `Missing required environment variables: CF_API_TOKEN or CF_ACCOUNT_ID`,
       );
-      const code = 500;
-      const httpMessage = "Internal Server Error";
-      const details = "Missing Cloudflare API credentials";
-      return sendError(reply, code, httpMessage, details);
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        "Missing Cloudflare API credentials",
+      );
     }
 
-    // Create Cloudflare client
     let client;
     try {
       client = new Cloudflare({
         apiToken: env.CF_API_TOKEN,
       });
-      log(
-        `Successfully created Cloudflare client for account ID: ${env.CF_ACCOUNT_ID}`,
-      );
     } catch (err) {
       log(`Error creating Cloudflare client: ${err.toString()}`);
-      const code = 500;
-      const httpMessage = "Internal Server Error";
-      const details = "Failed to initialize Cloudflare client";
-      return sendError(reply, code, httpMessage, details);
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        "Failed to initialize Cloudflare client",
+      );
     }
 
-    // Request a direct upload URL
+    const params = imageupload.directUploadParams({
+      accountId: env.CF_ACCOUNT_ID,
+      identity,
+      ip,
+      client: request.headers["x-kiwi-client"],
+    });
     let directUpload;
     try {
-      directUpload = await client.images.v2.directUploads.create({
-        account_id: env.CF_ACCOUNT_ID,
-      });
-      log(`Successfully requested direct upload URL from Cloudflare`);
+      directUpload = await client.images.v2.directUploads.create(params);
     } catch (err) {
-      log(`Error requesting direct upload URL: ${err.toString()}`);
-      const code = 500;
-      const httpMessage = "Internal Server Error";
-      const details = "Failed to request upload URL from Cloudflare";
-      return sendError(reply, code, httpMessage, details);
+      // NOTE: Never fail an upload over the expiry/metadata options.
+      log(
+        `Direct upload with options failed, retrying without: ${err.toString()}`,
+      );
+      try {
+        directUpload = await client.images.v2.directUploads.create({
+          account_id: env.CF_ACCOUNT_ID,
+        });
+      } catch (err2) {
+        log(`Error requesting direct upload URL: ${err2.toString()}`);
+        return sendError(
+          reply,
+          500,
+          "Internal Server Error",
+          "Failed to request upload URL from Cloudflare",
+        );
+      }
     }
 
-    // Validate the response
     if (!directUpload || !directUpload.uploadURL) {
       log(`Invalid response from Cloudflare - missing uploadURL`);
-      const code = 500;
-      const httpMessage = "Internal Server Error";
-      const details = "Received invalid response from Cloudflare";
-      return sendError(reply, code, httpMessage, details);
+      return sendError(
+        reply,
+        500,
+        "Internal Server Error",
+        "Received invalid response from Cloudflare",
+      );
     }
 
-    // Return successful response
-    const code = 200;
-    const httpMessage = "OK";
-    const details = "Generated upload URL";
-    return sendStatus(reply, code, httpMessage, details, {
+    return sendStatus(reply, 200, "OK", "Generated upload URL", {
       uploadURL: directUpload.uploadURL,
       id: directUpload.id,
+      maxBytes: imageupload.MAX_IMAGE_BYTES,
     });
+  }
+
+  app.get("/api/v1/image-upload-token", async (request, reply) => {
+    if (imageupload.requireAuth()) {
+      reply.header("Cache-Control", "no-store");
+      return sendError(
+        reply,
+        401,
+        "Unauthorized",
+        "Please sign in to upload pictures.",
+      );
+    }
+    return imageUploadToken(request, reply, null);
+  });
+
+  app.post("/api/v1/image-upload-token", async (request, reply) => {
+    let identity;
+    try {
+      identity = await bookmarks.verify(request.body, ["imageupload"]);
+    } catch (err) {
+      reply.header("Cache-Control", "no-store");
+      return sendError(reply, 401, "Unauthorized", err.message);
+    }
+    return imageUploadToken(request, reply, identity);
   });
 
   app.get("/api/v1/primary-name", async (request, reply) => {

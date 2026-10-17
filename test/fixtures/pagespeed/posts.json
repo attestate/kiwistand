@@ -1,0 +1,28 @@
+{
+  "note": "Posts (text and maybe one picture, src/web/src/post.mjs) for the fixture server, added to fixture.json's stories by scripts/pagespeed/seed.mjs. Kept apart so make-fixture.mjs can regenerate fixture.json. imageSize is the measured size the server would cache (src/postimage.mjs). Ages are seconds before the seed.",
+  "posts": [
+    {
+      "text": "Sunrise at the lake before day two of Devconnect. Spent breakfast reading the Glamsterdam EIP list: ePBS and block-level access lists in one fork is ambitious. Who's going to the zkEVM talk at 11?",
+      "image": "https://imagedelivery.net/C5bPuWCkK_P2Rg7LwXEwPQ/c707d049-e32e-4944-b167-26ae5d803000/public",
+      "imageSize": { "width": 1200, "height": 800 },
+      "age": 7100,
+      "by": "p01",
+      "upvotes": [{ "by": "p02", "age": 6000 }],
+      "comments": [
+        {
+          "by": "p03",
+          "text": "See you at 11! Row three, left side.",
+          "age": 1500,
+          "reactions": []
+        }
+      ]
+    },
+    {
+      "text": "Hot take: the best onboarding upgrade this year wasn't faster blocks. It was wallets showing what you're signing. https://eips.ethereum.org/EIPS/eip-7702 did more for new users than any airdrop.",
+      "age": 9000,
+      "by": "p04",
+      "upvotes": [],
+      "comments": []
+    }
+  ]
+}

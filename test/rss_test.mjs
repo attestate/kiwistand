@@ -67,3 +67,31 @@ test("hotFeed keeps the front page channel", (t) => {
   t.true(xml.includes("<link>https://news.kiwistand.com/</link>"));
   t.true(xml.includes('<atom:link href="https://news.kiwistand.com/feed.xml" rel="self"'));
 });
+
+test("posts carry their text and picture as HTML", async (t) => {
+  const { buildPostHref, deriveTitle } = await import("../src/web/src/post.mjs");
+  const text = "gm <frens>\n\nsecond paragraph";
+  const image =
+    "https://imagedelivery.net/C5bPuWCkK_P2Rg7LwXEwPQ/abc-123/public";
+  const xml = hotFeed(
+    [
+      {
+        index: "0".repeat(70) + "03",
+        title: deriveTitle(text),
+        href: buildPostHref(text, image),
+        timestamp: 1700000000,
+        upvoters: [],
+        commentCount: 0,
+      },
+    ],
+    new Date(1700000000000),
+  );
+  t.true(xml.includes("<title>gm &lt;frens&gt; second paragraph</title>"));
+  t.true(xml.includes("&lt;p&gt;gm &amp;lt;frens&amp;gt;&lt;/p&gt;"));
+  t.true(
+    xml.includes(
+      "&lt;img src=&quot;https://imagedelivery.net/C5bPuWCkK_P2Rg7LwXEwPQ/abc-123/w=1200,fit=scale-down,f=auto&quot;",
+    ),
+  );
+  t.false(xml.includes("imagedelivery.net%2F"));
+});

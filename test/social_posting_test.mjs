@@ -591,3 +591,22 @@ test("the scheduler pushes once per slot, also across restarts", async (t) => {
   t.is(off, null);
   t.true(logs.includes("push: daily push off (DAILY_PUSH=false)"));
 });
+
+test("posts go out as their text, with the picture as a Farcaster embed", async (t) => {
+  const { buildPostHref, deriveTitle } = await import("../src/web/src/post.mjs");
+  const text =
+    "Sunrise at the lake before day two of Devconnect. Spent breakfast reading the Glamsterdam EIP list.";
+  const image = "https://imagedelivery.net/C5bPuWCkK_P2Rg7LwXEwPQ/abc-123/public";
+  const story = {
+    title: deriveTitle(text),
+    href: buildPostHref(text, image),
+    index: "0x" + "0".repeat(70) + "04",
+    summary: "Ignored for posts.",
+  };
+  const url = "https://news.kiwistand.com/stories/x?index=0x1";
+  const cast = social.formatForFarcaster(story, url);
+  t.is(cast.text, text);
+  t.deepEqual(cast.embeds, [image, url]);
+  t.is(social.formatForX(story, url), `${text}\n\n${url}`);
+  t.false(social.formatForX(story, url).includes("imagedelivery"));
+});

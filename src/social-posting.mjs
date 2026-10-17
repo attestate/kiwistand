@@ -57,6 +57,7 @@ import {
 } from "@farcaster/hub-nodejs";
 
 import { getSlug } from "./utils.mjs";
+import { getPost } from "./web/src/post.mjs";
 
 export const CHANNELS = ["x", "farcaster", "telegram"];
 export const PUSH_CHANNELS = ["neynar", "onesignal"];
@@ -241,6 +242,10 @@ export function hookOf(summary, max = 220) {
 // Title, an optional hook and the source; drops the hook first and then
 // shortens the title until the post fits.
 function compose(story, fits) {
+  // A post (web/src/post.mjs) goes out as its own text, not the title cut
+  // from it, and without a hook or source.
+  const post = getPost(story);
+  if (post) return truncate(post.text, fits);
   const title = capitalize(String(story.title || "").trim());
   const hook = hookOf(story.summary);
   const source = sourceOf(story.href);
@@ -257,7 +262,11 @@ export function formatForX(story, url = storyUrl(story)) {
 
 export function formatForFarcaster(story, url = storyUrl(story)) {
   const text = compose(story, (s) => Buffer.byteLength(s, "utf8") <= FC_MAX_BYTES);
-  return { text, embeds: [url] };
+  // NOTE: A post's picture goes first, so clients show it big; the story
+  // link second (Farcaster allows two embeds).
+  const post = getPost(story);
+  const embeds = post && post.image ? [post.image, url] : [url];
+  return { text, embeds };
 }
 
 export function formatForTelegram(story, url = storyUrl(story)) {
@@ -269,6 +278,7 @@ export function formatForTelegram(story, url = storyUrl(story)) {
 export function formatForPush(story, url = storyUrl(story), tag = DAILY_PUSH_TAG) {
   const title = tag ? `Kiwi News: ${tag}` : "Kiwi News";
   const storyTitle = capitalize(String(story.title || "").trim());
+  // NOTE: Posts use their derived title too (it's at most 80 characters).
   const domain = pushDomainOf(story.href);
   const body = domain ? `${storyTitle} - ${domain}` : storyTitle;
   return { title, body, url };
