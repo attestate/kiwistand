@@ -4872,8 +4872,6 @@ appkit-modal {
   background: var(--kn-comment-strip);
   color: var(--kn-text-primary);
   text-decoration: none;
-  /* The strip's own onclick (row.mjs) opens the comments. */
-  pointer-events: none;
 }
 .kn-cp-avatar {
   flex: 0 0 auto;

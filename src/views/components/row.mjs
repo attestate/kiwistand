@@ -166,6 +166,12 @@ const spinnerOnclick =
 const shareOnclick = "event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const href = this.getAttribute('data-story-href'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; if(localStorage.getItem('anon-mode')!=='true'){try { navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent(href) + '&type=native'); } catch(e) {}} if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}).catch(function(){}); } else { const doCopy = async () => { try { await navigator.clipboard.writeText(url); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (err) { try { const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (e2) { if (window.toast && window.toast.error) { window.toast.error('Could not copy link'); } } } }; doCopy(); }";
 const commentOnclick = "event.preventDefault(); var si=this.dataset.storyIdx; this.classList.toggle('comment-button-active'); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var commentPreview = document.querySelector('.comment-preview-0x'+si); if (commentPreview) { commentPreview.style.opacity = 1; } var borderElem = document.querySelector('.without-comment-preview-0x'+si); if (borderElem) { borderElem.classList.toggle('no-border'); }";
 
+// NOTE: The comment preview under a feed row opens the comments inline, like
+// the chat bubble, and lands on the previewed comment (the last one):
+// scrolled to and highlighted via its #0x anchor. Cmd/Ctrl/Shift/middle
+// click keeps the link to the story page.
+const previewOnclick = "if(event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) return; event.preventDefault(); var si=this.dataset.storyIdx; history.replaceState(null, '', location.pathname + location.search + '#0x' + this.dataset.commentIdx); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'comment-preview' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var cb=document.getElementById('chat-bubble-'+si); if (cb) cb.classList.add('comment-button-active');";
+
 const commentsSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
     <rect width="256" height="256" fill="none" />
@@ -1253,7 +1259,9 @@ const row = (
                     <a
                       class="comment-preview-anchor kn-cp"
                       href="${storyPath}#0x${story.lastComment.index}"
-                      onclick="${spinnerOnclick}"
+                      data-story-idx="${story.index}"
+                      data-comment-idx="${story.lastComment.index}"
+                      onclick="${previewOnclick}"
                     >
                       <span class="kn-cp-avatar">
                         ${story.lastComment.identity.safeAvatar
