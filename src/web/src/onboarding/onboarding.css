@@ -1079,3 +1079,22 @@
   cursor: default;
   opacity: 0.6;
 }
+
+/* "Passkeys don't work in this app's built-in browser", on Join (see
+   PasskeyHelp in Onboarding.jsx). */
+.kob-passkey-help {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--kob-surface);
+}
+
+.kob-passkey-help p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--kob-text2);
+}
