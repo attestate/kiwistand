@@ -6,6 +6,7 @@ import Database from "better-sqlite3";
 
 import { listSitemapMonths, listSitemapEntries, listWeeks } from "./cache.mjs";
 import { getSlug } from "./utils.mjs";
+import { moderate } from "./views/moderation.mjs";
 import * as isoweek from "./isoweek.mjs";
 import log from "./logger.mjs";
 
@@ -36,6 +37,16 @@ export function latestCommentTimestamps() {
     log(`Sitemap: couldn't read comment timestamps: ${err.toString()}`);
     return new Map();
   }
+}
+
+// NOTE: Story pages of moderated stories (banned submitter or link, links
+// ChainPatrol flags) aren't shown in the feeds and some 404, so they don't
+// belong in the sitemap either. Same filter as IndexNow uses. Without a
+// policy (moderation lists couldn't be loaded) nothing is dropped.
+export function visibleEntries(entries, policy, moderateFn = moderate) {
+  if (!policy) return entries;
+  const kept = new Set(moderateFn(entries, policy).map(({ index }) => index));
+  return entries.filter(({ index }) => kept.has(index));
 }
 
 export function buildMonthlySitemap(entries, lastComments = new Map()) {
@@ -123,13 +134,14 @@ function writeAtomic(name, content) {
   renameSync(tmp, path);
 }
 
-export function generateSitemaps() {
+export function generateSitemaps(policy) {
   const months = listSitemapMonths();
   const lastComments = latestCommentTimestamps();
 
   const lastmods = {};
   for (const month of months) {
-    const xml = buildMonthlySitemap(listSitemapEntries(month), lastComments);
+    const entries = visibleEntries(listSitemapEntries(month), policy);
+    const xml = buildMonthlySitemap(entries, lastComments);
     writeAtomic(`sitemap-${month}.xml`, xml);
     lastmods[`sitemap-${month}.xml`] = newestLastmod(xml);
   }
