@@ -14,6 +14,7 @@ import {
   preloadDelegationModal,
 } from "./delegationModalManager.js";
 import { isSafariOnIOS, isIOSApp } from "./session.mjs";
+import { setMiniApp, autoConnectMiniAppWallet } from "./miniapp.mjs";
 
 // Make SDK available globally for use in other parts of the app
 window.sdk = sdk;
@@ -1745,21 +1746,34 @@ function initEndlessScroll() {
 // downloads and runs the WalletConnect, MetaMask and Coinbase SDKs: about
 // 1.2s of main-thread time on a mid-range phone. Most visitors have never
 // connected a wallet here, so only reconnect when wagmi remembers a
-// connector (it keeps recentConnectorId even after a disconnect), in the
-// iOS app, or inside a Farcaster mini app, whose connector signs in by
-// itself. Connecting later still loads everything on demand.
-async function shouldReconnectWallet() {
+// connector (it keeps recentConnectorId even after a disconnect) or in the
+// iOS app. Connecting later still loads everything on demand. The Farcaster
+// mini app connects its own wallet instead (connectWallet below).
+function shouldReconnectWallet() {
   if (document.documentElement.classList.contains("kiwi-ios-app")) return true;
   try {
-    if (localStorage.getItem("wagmi.recentConnectorId")) return true;
+    return !!localStorage.getItem("wagmi.recentConnectorId");
   } catch {
     return true;
   }
-  try {
-    return await sdk.isInMiniApp();
-  } catch {
-    return false;
+}
+
+// NOTE: In the Farcaster mini app, connect the Farcaster wallet right away
+// (miniapp.mjs) rather than reconnect(): reconnect only picks up a wallet
+// that is already authorized and walks every other connector first, so mini
+// app visitors were left with "Log in" and wallet options that don't work
+// there. In anon mode no wallet connects at all.
+async function connectWallet(isMiniApp) {
+  if (isMiniApp && !isAnonMode) {
+    setMiniApp({ isMiniApp: true });
+    return autoConnectMiniAppWallet();
   }
+  if (!shouldReconnectWallet()) return;
+  const [{ reconnect }, { client }] = await Promise.all([
+    import("@wagmi/core"),
+    import("./client.mjs"),
+  ]);
+  return reconnect(client);
 }
 
 // The "Kiwi News for iPhone" card (components/testflight-card.mjs): remember
@@ -1802,15 +1816,8 @@ async function start() {
   // Manually trigger wagmi reconnect (deferred from mount via
   // reconnectOnMount={false} in providers.jsx to reduce TBT).
   // Fire-and-forget: don't await, so it doesn't block start().
-  shouldReconnectWallet()
-    .then((should) => {
-      if (!should) return;
-      return Promise.all([
-        import("@wagmi/core"),
-        import("./client.mjs"),
-      ]).then(([{ reconnect }, { client }]) => reconnect(client));
-    })
-    .catch(() => {});
+  const isMiniAppPromise = sdk.isInMiniApp().catch(() => false);
+  isMiniAppPromise.then(connectWallet).catch(() => {});
 
   warmUpPrivateRpc();
 
@@ -1827,7 +1834,7 @@ async function start() {
     .then(() => console.log("applySafeAreaInsets completed"))
     .catch((err) => console.log("applySafeAreaInsets error:", err));
 
-  const isMiniApp = await sdk.isInMiniApp();
+  const isMiniApp = await isMiniAppPromise;
   const bottomNav = document.querySelector(".bottom-nav");
   const isKiwiIOSApp = isIOSApp();
 

@@ -5,6 +5,8 @@ import { resolveIdentity } from "@attestate/delegator2";
 
 import { EthereumSVG } from "./icons.jsx";
 import MS from "./ms.jsx";
+import { autoConnectMiniAppWallet } from "./miniapp.mjs";
+import { useMiniApp } from "./useMiniApp.js";
 import {
   getLocalAccount,
   getCookie,
@@ -208,6 +210,24 @@ export const PrimaryActionButton = (props) => {
 };
 
 export const CustomConnectButton = (props) => {
+  const miniApp = useMiniApp();
+  // NOTE: In the Farcaster mini app the Farcaster wallet connects by itself
+  // (miniapp.mjs); the wallet picker doesn't work there.
+  if (miniApp.isMiniApp) {
+    if (miniApp.wallet !== "unavailable") return null;
+    return (
+      <PrimaryActionButton
+        className={props.className}
+        style={props.style}
+        icon={<EthereumSVG style={{ width: "16px" }} />}
+        text="Connect Farcaster wallet"
+        onClick={(e) => {
+          e.preventDefault();
+          autoConnectMiniAppWallet({ retry: true });
+        }}
+      />
+    );
+  }
   return (
     <ConnectButton.Custom>
       {({ account, chain, mounted, openConnectModal }) => {
