@@ -14,7 +14,10 @@ import log from "../../logger.mjs";
 import { twitterFrontends } from "../../parser.mjs";
 import ParagraphFullPost from "./paragraph-full-post.mjs";
 import * as karma from "../../karma.mjs";
-import { getImageLoading, transformImageUrl } from "../utils/imageLoading.mjs";
+import {
+  getImageLoading,
+  sizedImageUrl,
+} from "../utils/imageLoading.mjs";
 import { splitQuote, isDeletedTweet, tweetHandle } from "../../quote.mjs";
 import { ms } from "./icons.mjs";
 
@@ -728,7 +731,7 @@ const row = (
                                 style="margin-top: 12px; width: 100%; container-type: inline-size; background: var(--button-bg); overflow: hidden; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1);"
                               >
                                 <img
-                                  src="${DOMPurify.sanitize(transformImageUrl(story.metadata.image))}"
+                                  src="${DOMPurify.sanitize(sizedImageUrl(story.metadata.image, 600))}"
                                   alt="Tweet image"
                                   width="${tweetImageSize.width}"
                                   height="${tweetImageSize.height}"
@@ -814,7 +817,7 @@ const row = (
                         ${story.metadata.farcasterCast?.author?.pfp
                           ? html`<img
                               src="${DOMPurify.sanitize(
-                                story.metadata.farcasterCast.author.pfp,
+                                sizedImageUrl(story.metadata.farcasterCast.author.pfp, 72),
                               )}"
                               alt="${DOMPurify.sanitize(
                                 story.metadata.farcasterCast.author.username || "farcaster",
@@ -882,7 +885,7 @@ const row = (
                           ? html`
                               <div style="margin-top: 12px; width: 100%; container-type: inline-size; background: var(--button-bg); border-radius: 2px; overflow: hidden;">
                                 <img
-                                  src="${DOMPurify.sanitize(farcasterImageUrl)}"
+                                  src="${DOMPurify.sanitize(sizedImageUrl(farcasterImageUrl, 600))}"
                                   alt="Cast image"
                                   width="${farcasterImageSize.width}"
                                   height="${farcasterImageSize.height}"
@@ -1010,7 +1013,7 @@ const row = (
               ? story.href.replace("/public", "/w=600,q=80,fit=cover,f=auto")
               : story.href + "/w=600,q=80,fit=cover,f=auto",
           )
-        : DOMPurify.sanitize(story.metadata.image);
+        : DOMPurify.sanitize(sizedImageUrl(story.metadata.image, 600));
       imageBlock = html`<a
         data-no-instant
         class="row-image-preview kn-media${isCloudflare ? " kn-media-zoom" : ""}"
@@ -1057,7 +1060,7 @@ const row = (
     const avatar = submitterAvatar
       ? html`<img
           class="kn-avatar"
-          src="${DOMPurify.sanitize(submitterAvatar)}"
+          src="${DOMPurify.sanitize(sizedImageUrl(submitterAvatar, 72))}"
           alt=""
           width="24"
           height="24"
@@ -1265,7 +1268,7 @@ const row = (
                           ? html`<img
                               loading="${getImageLoading(isAboveFold, story.lastComment.identity.safeAvatar)}"
                               src="${DOMPurify.sanitize(
-                                story.lastComment.identity.safeAvatar,
+                                sizedImageUrl(story.lastComment.identity.safeAvatar, 72),
                               )}"
                               alt=""
                               width="28"

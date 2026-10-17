@@ -249,7 +249,9 @@ export default async function index(theme, page, period, domain) {
                     false, // invert
                     "", // query
                     false, // debugMode
-                    false, // isAboveFold = false for lazy loading
+                    // NOTE: On a phone the first picture is the largest paint; rows
+                    // without one are short, so it can be the third row's.
+                    i < 3, // isAboveFold
                   )(story, i),
               )}
               <tr class="spacer" style="height:15px"></tr>
