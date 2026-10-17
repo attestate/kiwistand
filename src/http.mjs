@@ -2523,7 +2523,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       const content = await activity.page(
         reply.locals.theme,
         DOMPurify.sanitize(request.query.address),
-        data.notifications,
+        data.feed,
         parseInt(request.query.lastUpdate, 10),
         true, // isQueryParamVersion
       );
@@ -2559,7 +2559,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const content = await activity.page(
       reply.locals.theme,
       DOMPurify.sanitize(address),
-      data.notifications,
+      data.feed,
       parseInt(request.cookies.lastUpdate, 10),
       false,
     );

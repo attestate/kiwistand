@@ -11,6 +11,13 @@ import { custom } from "./components/head.mjs";
 import { Page, EmptyState, Icon, timeAgo } from "./components/n2.mjs";
 import { getSlug } from "../utils.mjs";
 import {
+  MAX_AVATARS,
+  newestDistinct,
+  othersText,
+  headlineText,
+  groupReactions,
+} from "./activity-groups.mjs";
+import {
   getUpvotes,
   getComments,
   getReactionsToComments,
@@ -61,8 +68,9 @@ function linkFromComment(activity) {
   // For reaction notifications
   // NOTE: The same #0x… anchor as a comment notification (the story page
   // scrolls to and highlights the comment), plus the emoji: the story page
-  // then pops it on the comment's reaction chip (reactionBurst.mjs).
-  if (activity.verb === "reacted") {
+  // then pops it on the comment's reaction chip (reactionBurst.mjs). A
+  // group of reactions pops the newest one.
+  if (activity.verb === "reacted" || activity.verb === "reactions") {
     const submissionIndex = activity.message.submissionId.split(":")[1];
     const commentId = activity.message.commentId.split(":")[1];
     const slug = getSlug(activity.message.submission_title);
@@ -79,8 +87,21 @@ function linkFromComment(activity) {
   return link;
 }
 
+function linkFromLike(activity) {
+  const title = DOMPurify.sanitize(activity.message.title);
+  return `/stories/${getSlug(title)}?index=0x${activity.message.index}`;
+}
+
+export function href(activity) {
+  return activity.verb === "liked"
+    ? linkFromLike(activity)
+    : linkFromComment(activity);
+}
+
 const spinnerOnClick =
   "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
+
+const profileLink = (address) => `/upvotes?address=${address}`;
 
 // NOTE: Mobile shows the apps' marks (heart with "+1 🥝", the commenter's
 // avatar, a spark for reactions); desktop shows a small icon box, like the
@@ -135,6 +156,67 @@ function Row({ isNew, href, i, mark, headline, comment, timestamp }) {
   </li>`;
 }
 
+// NOTE: One of the faces above a grouped notification (Farcaster's
+// NotificationAvatars): 24px, links to the person's profile. Fixed sizes, so
+// the row doesn't shift when the images load.
+function Face(actor) {
+  const name = actor.displayName || actor.address;
+  return html`<a
+    class="n2-notif-face"
+    href="${profileLink(actor.address)}"
+    title="${name}"
+    aria-label="${name}"
+    >${actor.safeAvatar
+      ? html`<img
+          src="${DOMPurify.sanitize(actor.safeAvatar)}"
+          width="24"
+          height="24"
+          loading="lazy"
+          alt=""
+        />`
+      : Icon("person")}</a
+  >`;
+}
+
+// NOTE: Likes on a story and reactions to a comment, grouped like the
+// Farcaster client's notification groups: the mark, the faces of up to
+// MAX_AVATARS people (newest first), "<newest> and N others <predicate>" and
+// the story's title or the comment in the secondary colour. The faces and
+// the name link to profiles, so the row isn't one link: a cover link under
+// them goes to the story (no links inside links).
+function GroupRow({ isNew, href, i, kind, activity, predicate, extra, text }) {
+  const [newest] = activity.actors;
+  const name = newest.displayName || newest.address;
+  const label = `${headlineText(name, activity.actorCount, predicate)}${
+    extra ? ` ${extra}` : ""
+  }`;
+  return html`<li class="n2-notif n2-notif-group${isNew ? " is-new" : ""}">
+    <div class="n2-notif-link">
+      <a
+        class="n2-notif-cover notification"
+        href="${href}"
+        aria-label="${label}"
+        data-no-instant="${i < 3}"
+        onclick="${spinnerOnClick}"
+      ></a>
+      ${Mark(kind)}
+      <span class="n2-notif-body">
+        <span class="n2-notif-faces">${activity.actors.map(Face)}</span>
+        <span class="n2-notif-headline"
+          ><a class="n2-notif-name" href="${profileLink(newest.address)}"
+            >${name}</a
+          >${othersText(activity.actorCount)} ${predicate}${extra
+            ? html` <span class="n2-notif-emojis">${extra}</span>`
+            : null}</span
+        >
+        ${text ? html`<span class="n2-notif-comment">${text}</span>` : null}
+        <span class="n2-notif-when">${timeAgo(activity.timestamp)}</span>
+      </span>
+      ${isNew ? html`<span class="n2-notif-dot" aria-label="New"></span>` : null}
+    </div>
+  </li>`;
+}
+
 const Quote = (text) => html`<span class="n2-q">${text}</span>`;
 
 function generateRow(lastUpdate) {
@@ -156,45 +238,33 @@ function generateRow(lastUpdate) {
       });
     }
 
-    if (activity.verb === "reacted") {
-      const identity = activity.identities[0];
-      return Row({
+    if (activity.verb === "reactions" && activity.actors?.length) {
+      return GroupRow({
         isNew,
         i,
         href: linkFromComment(activity),
-        mark: Mark("react", identity),
-        headline: html`${identity.displayName} reacted ${activity.emoji} to
-          your comment on${" "}${Quote(
-            DOMPurify.sanitize(activity.message.submission_title),
-          )}`,
-        comment: DOMPurify.sanitize(
+        kind: "react",
+        activity,
+        predicate: "reacted to your comment",
+        extra: activity.emojis.join(" "),
+        text: DOMPurify.sanitize(
           truncateComment(activity.message.comment_title),
         ),
-        timestamp: activity.timestamp,
       });
     }
 
-    const title = DOMPurify.sanitize(activity.message.title);
-    const identity = activity.identities[activity.identities.length - 1];
-    const upvoter = [...activity.identities]
-      .reverse()
-      .filter((identity) => identity.safeAvatar)
-      .slice(0, 5)
-      .pop();
-    const others = activity.identities.length - 1;
-    return Row({
-      isNew,
-      i,
-      href: `/stories/${getSlug(title)}?index=0x${activity.message.index}${
-        upvoter ? `&upvoter=${upvoter.address}` : ""
-      }`,
-      mark: Mark("like"),
-      headline: html`${identity.displayName}${others > 0
-          ? ` and ${others} ${others === 1 ? "other" : "others"}`
-          : ""}${" "}liked your submission${" "}${Quote(title.substring(0, 80))}`,
-      comment: null,
-      timestamp: activity.timestamp,
-    });
+    if (activity.verb === "liked" && activity.actors?.length) {
+      return GroupRow({
+        isNew,
+        i,
+        href: linkFromLike(activity),
+        kind: "like",
+        activity,
+        predicate: "liked your story",
+        text: DOMPurify.sanitize(activity.message.title),
+      });
+    }
+    return null;
   };
 }
 
@@ -206,6 +276,8 @@ const Heading = html`<header class="n2-page-head">
   <p class="n2-sub n2-m">The conversation continues.</p>
 </header>`;
 
+// NOTE: `notifications` is data()'s `feed`: likes grouped per story and
+// reactions grouped per comment.
 export async function page(
   theme,
   identity,
@@ -223,7 +295,7 @@ export async function page(
       : html`<ol class="n2-notif-list">
           ${notifications.map(generateRow(lastUpdate))}
         </ol>`;
-  const preloadNotifs = notifications.slice(0, 3).map(linkFromComment);
+  const preloadNotifs = notifications.slice(0, 3).map(href);
   return Page({
     theme,
     path: "/activity",
@@ -337,47 +409,135 @@ export async function data(
 
   activities.sort((a, b) => b.timestamp - a.timestamp);
 
-  let notifications = [];
-  await Promise.allSettled(
-    activities.slice(0, 20).map(async (activity) => {
-      const identities = [];
-      if (!skipDetails) {
-        const ensPromises = activity.identities.map(async (identity) => {
-          const ensData = await ens.resolve(identity);
-          return {
-            address: identity,
-            ...ensData,
-          };
-        });
-        const results = await Promise.allSettled(ensPromises);
-        identities.push(
-          ...results
-            .filter((result) => result.status === "fulfilled")
-            .map((result) => result.value),
-        );
-      }
+  // NOTE: Profiles are cached (ens.resolve reads the cache and fetches
+  // misses in the background), and each address is resolved once per
+  // request: a story with hundreds of likes only resolves the MAX_AVATARS
+  // newest likers it shows (and the oldest one, the apps' first actor).
+  const profiles = new Map();
+  const profile = (address) => {
+    const key = address.toLowerCase();
+    if (!profiles.has(key)) {
+      profiles.set(
+        key,
+        ens
+          .resolve(address)
+          .then((ensData) => ({ address, ...ensData }))
+          .catch(() => null),
+      );
+    }
+    return profiles.get(key);
+  };
+  const unresolved = (address) => {
+    const truncatedAddress = `${address.slice(0, 6)}...${address.slice(-4)}`;
+    return {
+      address,
+      truncatedAddress,
+      displayName: truncatedAddress,
+      safeAvatar: null,
+    };
+  };
+  const actor = ({ address, displayName, safeAvatar }) => ({
+    address,
+    displayName,
+    safeAvatar: safeAvatar || null,
+  });
 
-      // Skip reaction activities if the reactor doesn't have an avatar
-      if (activity.verb === "reacted") {
-        if (
-          identities.length === 0 ||
-          !identities.some((identity) => identity.safeAvatar)
-        ) {
-          return;
-        }
-      }
+  const enriched = new Map();
+  const enrich = (activity) => {
+    if (!enriched.has(activity)) {
+      enriched.set(
+        activity,
+        enrichOne(activity).catch(() => null),
+      );
+    }
+    return enriched.get(activity);
+  };
+  async function enrichOne(activity) {
+    if (skipDetails) return { ...activity, identities: [] };
 
-      notifications.push({
+    if (activity.verb === "liked") {
+      // NOTE: `identities` stays every liker, oldest first (the iOS app
+      // counts them and names the first); `actors` are the newest distinct
+      // ones the rows show, `actorCount` all distinct likers.
+      const newest = newestDistinct(activity.identities, identity);
+      const shown = newest.slice(0, MAX_AVATARS);
+      const resolve = new Set(
+        [...shown, activity.identities[0]].map((a) => a.toLowerCase()),
+      );
+      const identities = (
+        await Promise.all(
+          activity.identities.map((address) =>
+            resolve.has(address.toLowerCase())
+              ? profile(address)
+              : unresolved(address),
+          ),
+        )
+      ).filter(Boolean);
+      const actors = (await Promise.all(shown.map(profile)))
+        .filter(Boolean)
+        .map(actor);
+      return {
         ...activity,
         identities,
-      });
-    }),
-  );
+        actors,
+        actorCount: newest.length,
+      };
+    }
 
-  // Re-sort: Promise.allSettled resolves in non-deterministic order when
-  // callbacks contain awaits (e.g. ENS resolution), so the push order above
-  // does not match the original sort from line 519.
-  notifications.sort((a, b) => b.timestamp - a.timestamp);
+    const identities = (
+      await Promise.all(activity.identities.map(profile))
+    ).filter(Boolean);
+    // Skip reaction activities if the reactor doesn't have an avatar
+    if (
+      activity.verb === "reacted" &&
+      !identities.some((identity) => identity.safeAvatar)
+    ) {
+      return null;
+    }
+    return { ...activity, identities };
+  }
+
+  // NOTE: Reactions to one comment are one row on the page, like the
+  // Farcaster client groups reactions per cast. Reactors without an avatar
+  // are left out, like single reaction notifications.
+  async function enrichReactions(group) {
+    const resolved = await Promise.all(group.reactors.slice(0, 50).map(profile));
+    const reactors = resolved.filter((p) => p && p.safeAvatar);
+    if (reactors.length === 0) return null;
+    return {
+      ...group,
+      actors: reactors.slice(0, MAX_AVATARS).map(actor),
+      actorCount: reactors.length,
+    };
+  }
+
+  const notifications = (
+    await Promise.all(activities.slice(0, 20).map(enrich))
+  ).filter(Boolean);
+
+  // NOTE: The page's rows (`feed`): likes and comments as in
+  // `notifications`, reactions grouped per comment. The API keeps
+  // `notifications` as it was (the iOS app reads it).
+  let feed = [];
+  if (!skipDetails) {
+    const groups = groupReactions(
+      activities.filter((activity) => activity.verb === "reacted"),
+      identity,
+    );
+    const rows = [
+      ...activities.filter((activity) => activity.verb !== "reacted"),
+      ...groups,
+    ]
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 20);
+    feed = (
+      await Promise.all(
+        rows.map((row) =>
+          row.verb === "reactions" ? enrichReactions(row) : enrich(row),
+        ),
+      )
+    ).filter(Boolean);
+  }
 
   let lastUpdate = "0";
   if (notifications.length > 0) {
@@ -385,6 +545,7 @@ export async function data(
   }
   return {
     notifications: notifications,
+    feed,
     lastUpdate,
     latestValue,
   };

@@ -805,7 +805,7 @@ body.n2 #hnmain > table.n2-table {
 .n2-notif.is-new {
   background: var(--n2-green-light);
 }
-.n2 a.n2-notif-link {
+.n2 .n2-notif-link {
   position: relative;
   display: flex;
   gap: 12px;
@@ -820,7 +820,7 @@ body.n2 #hnmain > table.n2-table {
 .n2 a.n2-notif-link.notification:link {
   color: var(--n2-text) !important;
 }
-.n2-notif:not(.is-new) a.n2-notif-link::after {
+.n2-notif:not(.is-new) .n2-notif-link::after {
   content: "";
   position: absolute;
   left: 64px;
@@ -921,6 +921,69 @@ body.n2 #hnmain > table.n2-table {
   flex-shrink: 0;
   background: var(--kn-notification-dot);
 }
+/* NOTE: Grouped likes and reactions (Farcaster's notification groups): a
+   cover link to the story under the faces and the name, which link to
+   profiles. */
+.n2 a.n2-notif-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.n2-notif-group .n2-notif-mark,
+.n2-notif-group .n2-notif-body,
+.n2-notif-group .n2-notif-dot {
+  pointer-events: none;
+}
+.n2-notif-faces {
+  display: flex;
+  gap: 4px;
+  height: 24px;
+  overflow: hidden;
+}
+.n2 a.n2-notif-face {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--n2-button-bg);
+  color: var(--n2-muted);
+}
+.n2 a.n2-notif-face img {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  display: block;
+}
+.n2 .n2-notif-face .n2-icon {
+  width: 14px;
+  height: 14px;
+}
+.n2 a.n2-notif-name,
+.n2 a.n2-notif-name:visited {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  font-weight: 600;
+  color: var(--n2-text);
+  text-decoration: none;
+}
+.n2 a.n2-notif-name:hover {
+  text-decoration: underline;
+}
+.n2-notif-group .n2-notif-comment {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+}
 .n2-notifs-toolbar {
   display: flex;
   justify-content: space-between;
@@ -959,11 +1022,11 @@ body.n2 #hnmain > table.n2-table {
     border-bottom: 0.5px solid var(--n2-separator);
     border-radius: 0;
   }
-  .n2 a.n2-notif-link {
+  .n2 .n2-notif-link {
     gap: 14px;
     padding: 16px 12px;
   }
-  .n2-notif:not(.is-new) a.n2-notif-link::after {
+  .n2-notif:not(.is-new) .n2-notif-link::after {
     content: none;
   }
   .n2-notif-mark {
@@ -982,7 +1045,7 @@ body.n2 #hnmain > table.n2-table {
   .n2-notif-when {
     color: var(--n2-text-2);
   }
-  .n2 a.n2-notif-link:hover {
+  .n2 .n2-notif-link:hover {
     background: var(--kn-hover-minimal);
   }
 }
