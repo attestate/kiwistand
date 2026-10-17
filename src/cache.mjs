@@ -944,6 +944,14 @@ export function listSitemapMonths() {
   `).all().map((row) => row.month);
 }
 
+// Every story's id and title, newest first, for resolving a story URL that
+// lost its ?index= (src/storyslug.mjs).
+export function listSubmissionTitles() {
+  return db
+    .prepare(`SELECT id, title FROM submissions ORDER BY timestamp DESC`)
+    .all();
+}
+
 export function listSitemapEntries(month) {
   const rows = db.prepare(`
     SELECT id, title, timestamp FROM submissions

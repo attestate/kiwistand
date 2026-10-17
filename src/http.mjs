@@ -49,6 +49,7 @@ process.on("unhandledRejection", (reason, promise) => {
   }
 });
 import story, { generateStory } from "./views/story.mjs";
+import { storyRedirect } from "./storyslug.mjs";
 import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
@@ -2305,6 +2306,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
     try {
       submission = await generateStory(request.query.index);
     } catch (err) {
+      // NOTE: A story URL without (or with a broken) ?index=: find the story
+      // by its slug instead of answering 404 (see src/storyslug.mjs).
+      const location = storyRedirect(request.params.slug, request.query);
+      if (location) return reply.redirect(308, location);
       return reply.status(404).type("text/plain").send(err.message);
     }
 
