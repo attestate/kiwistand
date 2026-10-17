@@ -31,7 +31,8 @@ for (const bad of ["undefined", "NaN", "[object Object]", "Invalid URL", "Invali
 }
 if (/\bnull\b/.test(text)) errors.push('text contains "null"');
 
-const stories = (html.match(/>Read on Kiwi</g) || []).length;
+// Each story is one block (StoryFrame in emails/_components/kit.jsx).
+const stories = (html.match(/class="k-story"/g) || []).length;
 if (stories < minStories) errors.push(`only ${stories} stories (need at least ${minStories})`);
 
 for (const [, href] of html.matchAll(/<a\b[^>]*\bhref="([^"]*)"/gi)) {
