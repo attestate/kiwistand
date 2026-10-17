@@ -23,11 +23,34 @@ let globalIdentity = null;
 // Track if already initialized to prevent multiple initializations
 let isInitialized = false;
 
+// NOTE: Only a Farcaster mini app host can sign a Quick Auth token. In a
+// plain browser getToken() first fetches a nonce from Farcaster's auth
+// server, then fails reading the missing sign-in result, and its own
+// `pending.finally(...)` turns that into an uncaught "Cannot read
+// properties of undefined (reading 'result')" on every impression batch
+// (seen in most session replays). Ask the host once and skip it elsewhere.
+let miniAppCheck = null;
+function isInMiniApp(sdk) {
+  if (!miniAppCheck) {
+    miniAppCheck = Promise.resolve()
+      .then(() =>
+        typeof sdk?.isInMiniApp === "function" ? sdk.isInMiniApp() : false,
+      )
+      .then(Boolean, () => false);
+  }
+  return miniAppCheck;
+}
+
 // Optionally include Farcaster Quick Auth JWT for mini apps
-async function getAuthHeadersIfAvailable() {
+export async function getAuthHeadersIfAvailable(sdk = globalThis.window?.sdk) {
   try {
-    if (window.sdk && window.sdk.quickAuth && typeof window.sdk.quickAuth.getToken === 'function') {
-      const tokenResponse = await window.sdk.quickAuth.getToken();
+    if (
+      sdk &&
+      sdk.quickAuth &&
+      typeof sdk.quickAuth.getToken === "function" &&
+      (await isInMiniApp(sdk))
+    ) {
+      const tokenResponse = await sdk.quickAuth.getToken();
       const token = typeof tokenResponse === 'string' ? tokenResponse : tokenResponse?.token;
       if (token) {
         return { Authorization: `Bearer ${token}` };
@@ -51,6 +74,11 @@ async function getEffectiveIdentity() {
     }
   } catch (_) {}
   return null;
+}
+
+// For tests: forget the cached mini app answer.
+export function resetMiniAppCheck() {
+  miniAppCheck = null;
 }
 
 // Set the signer and identity (called from main.jsx after startWatchAccount)
