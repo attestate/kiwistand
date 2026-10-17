@@ -21,6 +21,8 @@ import {
 } from "../session.mjs";
 import { PROFILE_TYPES, nameProblem } from "../EditProfile.jsx";
 import { uploadImage } from "../uploadImage.mjs";
+import { loginOptions, autoConnectMiniAppWallet } from "../miniapp.mjs";
+import { useMiniApp } from "../useMiniApp.js";
 import {
   useDesktop,
   Icon,
@@ -29,6 +31,7 @@ import {
   Heading,
   Skip,
   ErrorText,
+  Status,
 } from "./ui.jsx";
 
 const DelegateStep = lazy(() => import("./Delegate.jsx"));
@@ -48,6 +51,8 @@ import {
 // - I have my own wallet: the wallet picker (RainbowKit) → One-tap actions
 //   (delegation; "Not now" closes) → Replies by email → Done.
 // "Replies by email" is left out once it was done or skipped in this browser.
+// In the Farcaster mini app, Join only connects the Farcaster wallet (see
+// miniapp.mjs) and continues with One-tap actions: no passkeys, no picker.
 const AGREED = "kiwi-onboarding-agreed";
 const EMAIL_DONE = "kiwi-onboarding-email-done";
 
@@ -299,11 +304,19 @@ function Guidelines({ onDone }) {
 export default function Onboarding({ onClose, start }) {
   const desk = useDesktop();
   const account = useAccount();
+  const miniApp = useMiniApp();
+  const options = loginOptions({
+    isMiniApp: miniApp.isMiniApp,
+    passkeys: canUsePasskey(),
+  });
   const [inApp] = useState(detectInApp);
   // The browser refused a passkey prompt without showing it.
   const [noPasskeys, setNoPasskeys] = useState(false);
-  const passkeys = canUsePasskey() && !noPasskeys;
-  const passkeyHelp = noPasskeys || (!!inApp && !canUsePasskey());
+  const passkeys = options.passkey && !noPasskeys;
+  // The mini app signs in with the Farcaster wallet, so no passkey help there.
+  const passkeyHelp =
+    !options.farcasterWallet &&
+    (noPasskeys || (!!inApp && !canUsePasskey()));
   const [step, setStep] = useState(() =>
     start === "delegate" ? "delegate" : agreedBefore() ? "join" : "welcome",
   );
@@ -311,6 +324,10 @@ export default function Onboarding({ onClose, start }) {
   const [path, setPath] = useState(
     passkeys && start !== "delegate" ? "create" : "wallet",
   );
+  // The mini app can be detected after this opened (main.jsx).
+  useEffect(() => {
+    if (options.farcasterWallet && path !== "wallet") setPath("wallet");
+  }, [options.farcasterWallet, path]);
   const [emailDone] = useState(emailDoneBefore);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -709,7 +726,44 @@ export default function Onboarding({ onClose, start }) {
   const waiting = path === "wallet" && connectModalOpen;
   const walletLabel = waiting ? "Waiting for your wallet…" : null;
 
-  const join = desk ? (
+  // Farcaster mini app: the wallet connects by itself (main.jsx); the effect
+  // above continues to "Enable one-tap actions" once it has.
+  const farcasterJoin = (
+    <>
+      <Tile icon="user-plus" desk={desk} />
+      <Heading title="Join Kiwi News">
+        <p>
+          You join with your Farcaster wallet. Reading never needs an account.
+        </p>
+      </Heading>
+      {miniApp.wallet === "unavailable" ? (
+        <>
+          <ErrorText>
+            Couldn’t connect your Farcaster wallet. Check that your wallet is
+            set up in Farcaster, then try again.
+          </ErrorText>
+          <div className="kob-actions">
+            <button
+              type="button"
+              className="kob-btn"
+              onClick={() => autoConnectMiniAppWallet({ retry: true })}
+            >
+              Try again
+            </button>
+          </div>
+        </>
+      ) : (
+        <Status
+          title="Connecting your Farcaster wallet…"
+          hint="This takes a moment."
+        />
+      )}
+    </>
+  );
+
+  const join = options.farcasterWallet ? (
+    farcasterJoin
+  ) : desk ? (
     <>
       <Tile icon="user-plus" desk />
       <Heading title={passkeys ? "Create your account" : "Join Kiwi News"}>
