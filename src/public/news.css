@@ -117,6 +117,7 @@
      --kn-border: #E6E9DF;
      --kn-separator: rgba(60, 60, 67, 0.29);
      --kn-glass: rgba(255, 255, 255, 0.96);
+     --kn-glass-solid: rgb(255, 255, 255);
      --kn-glass-border: rgba(0, 0, 0, 0.06);
      --kn-button-bg: rgba(0, 0, 0, 0.08);
      --kn-segment-track: #EEEFEA;
@@ -165,6 +166,7 @@
      --kn-border: #414B38;
      --kn-separator: rgba(84, 84, 88, 0.6);
      --kn-glass: rgba(41, 49, 36, 0.96);
+     --kn-glass-solid: rgb(41, 49, 36);
      --kn-glass-border: rgba(255, 255, 255, 0.1);
      --kn-button-bg: rgba(255, 255, 255, 0.12);
      --kn-segment-track: #2E3529;
@@ -5098,6 +5100,20 @@ body:has(.bottom-nav[style*="display: none"]) .kn-dock:not(.kn-dock-active) {
 }
 body.kn-dock-typing .bottom-nav {
   display: none !important;
+}
+/* With the composer docked on top, composer and tab bar are one solid
+   panel: the bar's edges and the gap under it take the composer's colour,
+   fully opaque, instead of showing the page through (Tim, 17 Oct, seen in
+   the Farcaster app). */
+body.kn-has-dock .kn-dock,
+body.kn-has-dock .bottom-nav {
+  background: var(--kn-glass-solid);
+}
+body.kn-has-dock .bottom-nav::before {
+  background: transparent;
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 .kn-dock-field {
   box-sizing: border-box;
