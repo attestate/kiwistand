@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { useAccount } from "wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { KiwiWagmiProvider } from "./KiwiWagmiProvider.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
@@ -17,8 +18,10 @@ import {
   client,
   chains,
   useIsMiniApp,
+  isInIOSApp,
 } from "./client.mjs";
 import { getLocalAccount } from "./session.mjs";
+import { openOnboarding } from "./LoginModal.jsx";
 import ShareModal from "./ShareModal.jsx";
 import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
@@ -450,8 +453,25 @@ const SubmitButton = (props) => {
     };
   }, []);
 
+  const { openConnectModal } = useConnectModal();
+
   const handleClick = async (e) => {
     e.preventDefault();
+
+    // NOTE: Logged out, "Submit" used to fail with the toast "Error! Sad
+    // Kiwi! "Cannot read properties of undefined (reading '_signTypedData')""
+    // (seen in session replays). Open the login instead, like Vote and
+    // CommentInput do; the form keeps what was typed.
+    if (!signer) {
+      if (account.isConnected) {
+        toast("Your wallet is still connecting, please try again.");
+      } else if (isInIOSApp && openConnectModal) {
+        openConnectModal();
+      } else {
+        openOnboarding();
+      }
+      return;
+    }
 
     // Show guidelines drawer for low-karma users first (only once per session)
     if (shouldShowGuidelines && !hasSeenGuidelines) {
