@@ -10,7 +10,7 @@ import { resolveIdentity } from "@attestate/delegator2";
 import slugify from "slugify";
 import DOMPurify from "isomorphic-dompurify";
 import { sdk } from "@farcaster/frame-sdk";
-import { useWebHaptics } from "web-haptics/react";
+import { useHaptics } from "./haptics.js";
 
 import * as API from "./API.mjs";
 import { getLocalAccount } from "./session.mjs";
@@ -378,7 +378,7 @@ const DockComposer = ({
 const CommentInput = (props) => {
   const { toast, delegations } = props;
   const { isMiniApp, loading } = useIsMiniApp();
-  const haptic = useWebHaptics();
+  const haptic = useHaptics();
 
   let address;
   const account = useAccount();

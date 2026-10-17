@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import { ChatsSVG } from "./icons.jsx";
 import { isIOS } from "./session.mjs";
-import { useWebHaptics } from "web-haptics/react";
+import { useHaptics } from "./haptics.js";
 import MS from "./ms.jsx";
 
 // List of paths where the search component should be hidden
@@ -32,7 +32,7 @@ const SearchInterface = () => {
   const [isMobile, setIsMobile] = useState(false);
   const inputRef = useRef(null);
   const debounceTimer = useRef(null);
-  const haptic = useWebHaptics();
+  const haptic = useHaptics();
 
   const iOS =
     typeof navigator !== "undefined" &&

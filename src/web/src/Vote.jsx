@@ -27,7 +27,7 @@ import {
   openDelegationModalForAction,
   isDelegationModalNeeded,
 } from "./delegationModalManager.js";
-import { useWebHaptics } from "web-haptics/react";
+import { useHaptics } from "./haptics.js";
 import LoginModal from "./LoginModal.jsx";
 
 export const iconSVG = (
@@ -111,7 +111,7 @@ const Vote = (props) => {
 
   const { isMiniApp, loading } = useIsMiniApp();
   const [isFarcasterClient, setIsFarcasterClient] = useState(false);
-  const haptic = useWebHaptics();
+  const haptic = useHaptics();
 
   useEffect(() => {
     const determineFarcasterClient = async () => {
