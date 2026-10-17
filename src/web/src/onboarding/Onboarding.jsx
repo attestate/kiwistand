@@ -32,6 +32,11 @@ import {
 } from "./ui.jsx";
 
 const DelegateStep = lazy(() => import("./Delegate.jsx"));
+import {
+  inAppBrowser,
+  openInBrowserUrl,
+  refusedWithoutPrompt,
+} from "../inapp.mjs";
 
 // NOTE: The same flow as the iOS app (OnboardingView.swift), minus "Get
 // notified" (the website has no web push sign-up):
@@ -74,6 +79,64 @@ function canUsePasskey() {
     if (isIOSApp()) return false;
   } catch (err) {}
   return true;
+}
+
+function detectInApp() {
+  try {
+    if (isIOSApp()) return null;
+  } catch (err) {}
+  return inAppBrowser(navigator.userAgent, {
+    standalone: navigator.standalone === true,
+  });
+}
+
+// NOTE: Shown on Join when passkeys can't work here: an in-app browser
+// (X, Instagram, an Android WebView, …) or a browser that refused the
+// passkey prompt without showing it. Before, the passkey buttons were just
+// missing, or "Create account" did nothing visible (its cancel message is
+// empty) and "Sign in" said "Sign-in was cancelled." although nobody
+// cancelled; replays show people tapping them again and again.
+function PasskeyHelp({ inApp }) {
+  const [copied, setCopied] = useState(false);
+  const href = window.location.href;
+  const chrome = inApp ? openInBrowserUrl(href, inApp) : null;
+  const where = inApp
+    ? inApp.name
+      ? `${inApp.name}’s built-in browser`
+      : "this app’s built-in browser"
+    : "this browser";
+  const browser = inApp?.android ? "Chrome" : "Safari";
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(href);
+      setCopied(true);
+    } catch (err) {
+      window.prompt("Copy this link and open it in your browser:", href);
+    }
+  };
+  return (
+    <div className="kob-passkey-help" role="status">
+      <p>
+        Passkeys don’t work in {where}.{" "}
+        {inApp
+          ? `To create an account or log in with a passkey, open Kiwi News in ${browser}. Or connect a wallet.`
+          : "Try Safari or Chrome, or connect a wallet."}
+      </p>
+      {chrome ? (
+        <a className="kob-btn kob-btn-outline" href={chrome}>
+          Open in Chrome
+        </a>
+      ) : inApp ? (
+        <button
+          type="button"
+          className="kob-btn kob-btn-outline"
+          onClick={copy}
+        >
+          {copied ? `Link copied, paste it in ${browser}` : "Copy link"}
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 function agreedBefore() {
@@ -236,7 +299,11 @@ function Guidelines({ onDone }) {
 export default function Onboarding({ onClose, start }) {
   const desk = useDesktop();
   const account = useAccount();
-  const passkeys = canUsePasskey();
+  const [inApp] = useState(detectInApp);
+  // The browser refused a passkey prompt without showing it.
+  const [noPasskeys, setNoPasskeys] = useState(false);
+  const passkeys = canUsePasskey() && !noPasskeys;
+  const passkeyHelp = noPasskeys || (!!inApp && !canUsePasskey());
   const [step, setStep] = useState(() =>
     start === "delegate" ? "delegate" : agreedBefore() ? "join" : "welcome",
   );
@@ -384,8 +451,15 @@ export default function Onboarding({ onClose, start }) {
     go("delegate");
   }, [step, path, account.isConnected, account.address]);
 
-  const passkeyFailed = (passkey, err, fallback) => {
+  const passkeyFailed = (passkey, err, fallback, started) => {
     setBusy(false);
+    if (refusedWithoutPrompt(err, Date.now() - started)) {
+      console.warn("Passkeys are unavailable here", err);
+      setNoPasskeys(true);
+      setPath("wallet");
+      go("join");
+      return;
+    }
     if (passkey && passkey.isCancellation(err)) {
       setError(fallback.cancelled);
       return;
@@ -405,8 +479,10 @@ export default function Onboarding({ onClose, start }) {
     setError("");
     setBusy(true);
     let passkey;
+    let started = Date.now();
     try {
       passkey = await import("../passkey.mjs");
+      started = Date.now();
       const signedIn = await passkey.signIn();
       passkey.storeAccount(signedIn);
       setCookie("identity", signedIn.address, tenYearsInSeconds);
@@ -418,7 +494,7 @@ export default function Onboarding({ onClose, start }) {
       passkeyFailed(passkey, err, {
         cancelled: "Sign-in was cancelled.",
         failed: "Couldn’t sign in with your passkey. Please try again.",
-      });
+      }, started);
     }
   };
 
@@ -432,10 +508,12 @@ export default function Onboarding({ onClose, start }) {
     setError("");
     setBusy(true);
     let passkey;
+    let started = Date.now();
     try {
       let fresh = created;
       if (!fresh) {
         passkey = await import("../passkey.mjs");
+        started = Date.now();
         fresh = await passkey.create({ name: nickname });
         passkey.storeAccount(fresh);
         setCookie("identity", fresh.address, tenYearsInSeconds);
@@ -457,7 +535,7 @@ export default function Onboarding({ onClose, start }) {
       passkeyFailed(passkey, err, {
         cancelled: "",
         failed: "Couldn’t create your passkey. Please try again.",
-      });
+      }, started);
     }
   };
 
@@ -676,6 +754,7 @@ export default function Onboarding({ onClose, start }) {
           </button>
         )}
       </div>
+      {passkeyHelp && <PasskeyHelp inApp={inApp} />}
       <ErrorText>{error}</ErrorText>
     </>
   ) : (
@@ -718,6 +797,7 @@ export default function Onboarding({ onClose, start }) {
       >
         {walletLabel || (passkeys ? "I have my own wallet" : "Connect wallet")}
       </button>
+      {passkeyHelp && <PasskeyHelp inApp={inApp} />}
       <ErrorText>{error}</ErrorText>
     </>
   );
