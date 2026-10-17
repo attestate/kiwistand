@@ -40,6 +40,15 @@ export async function triggerHaptic(preset = "medium") {
   }
 }
 
+// NOTE: Components share the one instance above instead of web-haptics'
+// useWebHaptics(), which made a WebHaptics (and a hidden label) per mounted
+// component, e.g. per story row, and skipped excludeFromAnalytics: its label
+// still showed up in PostHog as "Haptic feedback" clicks and rage clicks.
+const shared = { trigger: (preset) => triggerHaptic(preset) };
+export function useHaptics() {
+  return shared;
+}
+
 export function bindHapticsToElements(selector, preset = "medium") {
   if (typeof window === "undefined") return;
   const elements = document.querySelectorAll(selector);

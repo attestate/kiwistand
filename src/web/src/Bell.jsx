@@ -18,7 +18,7 @@ import { showSpinnerOverlay } from "./spinnerOverlay.js";
 import LoginModal from "./LoginModal.jsx";
 import MS from "./ms.jsx";
 import useAccountChange from "./useAccountChange.js";
-import { useWebHaptics } from "web-haptics/react";
+import { useHaptics } from "./haptics.js";
 import { openDelegationModalForAction } from "./delegationModalManager.js";
 
 const EmailSubscriptionForm = ({
@@ -235,7 +235,7 @@ const Bell = (props) => {
   const localAccount = getLocalAccount(account.address);
   const loginModalRef = useRef();
   const { openConnectModal } = useConnectModal();
-  const haptic = useWebHaptics();
+  const haptic = useHaptics();
 
   if (localAccount) {
     address = localAccount.identity;
