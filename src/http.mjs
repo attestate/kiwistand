@@ -23,9 +23,11 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
+import { buildSafeFaviconUrl, sniffFaviconContentType } from "./favicon.mjs";
 import Row, { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
-import { FileSystemCache, getCacheKey } from "node-fetch-cache";
+import { FileSystemCache, getCacheKey, fetchBuilder } from "node-fetch-cache";
+import { useAgent } from "request-filtering-agent";
 
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
@@ -745,6 +747,18 @@ app.use(loadTheme);
 // NOTE: sendError and sendStatus are duplicated here (compare with
 // /src/api.mjs) because eventually we wanna rip apart the Kiwi News website
 // from the node software.
+
+// Dedicated fetch for the favicon proxy. It is backed by node-fetch (via
+// node-fetch-cache) rather than the global undici fetch so that we can attach
+// request-filtering-agent's `useAgent` — undici silently ignores the `agent`
+// option, which would leave the SSRF guard inert. See parser.mjs for the same
+// pattern.
+const faviconFetchCache = new FileSystemCache({
+  cacheDirectory: path.resolve(env.CACHE_DIR),
+  ttl: 86400000, // 24 hours
+});
+const faviconFetch = fetchBuilder.withCache(faviconFetchCache);
+
 export function sendError(reply, code, message, details) {
   log(`http error: "${code}", "${message}", "${details}"`);
   return reply.status(code).json({
@@ -3264,10 +3278,26 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, code, httpMessage, details);
     }
 
+    // Validate and safely construct the target URL. This rejects path/query/
+    // fragment injection, credentials, non-standard ports, and IP literals.
+    const faviconUrl = buildSafeFaviconUrl(domain);
+    if (!faviconUrl) {
+      const code = 400;
+      const httpMessage = "Bad Request";
+      const details = "Invalid domain parameter";
+      return sendError(reply, code, httpMessage, details);
+    }
+
     try {
-      // Fetch favicon directly from the domain
-      const faviconUrl = `https://${domain}/favicon.ico`;
-      const response = await fetch(faviconUrl);
+      // useAgent (request-filtering-agent) blocks connections to private,
+      // loopback, link-local and cloud-metadata addresses at the socket level,
+      // which also defeats DNS-rebinding. AbortSignal caps the request time.
+      const response = await faviconFetch(faviconUrl, {
+        headers: { "User-Agent": env.USER_AGENT || "KiwiNews/1.0" },
+        agent: useAgent(faviconUrl),
+        signal: AbortSignal.timeout(10000),
+        redirect: "error",
+      });
 
       if (!response.ok) {
         const code = 404;
@@ -3277,17 +3307,28 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
 
       const buffer = await response.arrayBuffer();
-      const contentType = response.headers.get("content-type") || "image/x-icon";
+
+      // Never trust the upstream Content-Type. Derive it from the actual bytes
+      // and reject anything that is not a recognized raster image, so this
+      // endpoint can never serve attacker-controlled HTML/JS same-origin.
+      const contentType = sniffFaviconContentType(buffer);
+      if (!contentType) {
+        const code = 415;
+        const httpMessage = "Unsupported Media Type";
+        const details = "Fetched resource is not a supported image";
+        return sendError(reply, code, httpMessage, details);
+      }
 
       // Set aggressive caching headers (24 hours CDN, 30 days stale)
       reply.header("Cache-Control", "public, s-maxage=86400, max-age=86400, stale-while-revalidate=2592000");
       reply.header("Content-Type", contentType);
+      reply.header("X-Content-Type-Options", "nosniff");
 
       return reply.send(Buffer.from(buffer));
     } catch (err) {
       log(`Error fetching favicon for ${domain}: ${err.toString()}`);
-      const code = 500;
-      const httpMessage = "Internal Server Error";
+      const code = 502;
+      const httpMessage = "Bad Gateway";
       const details = "Failed to fetch favicon";
       return sendError(reply, code, httpMessage, details);
     }
