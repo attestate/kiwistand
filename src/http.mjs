@@ -3323,6 +3323,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.header("Cache-Control", "public, s-maxage=86400, max-age=86400, stale-while-revalidate=2592000");
       reply.header("Content-Type", contentType);
       reply.header("X-Content-Type-Options", "nosniff");
+      // Defense in depth: even though we only ever serve a sniffed raster
+      // image, lock the response down so it can never act as an active document
+      // (e.g. a polyglot) in the Kiwi origin.
+      reply.header("Content-Security-Policy", "default-src 'none'; sandbox");
 
       return reply.send(Buffer.from(buffer));
     } catch (err) {
