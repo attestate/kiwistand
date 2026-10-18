@@ -20,7 +20,7 @@ import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import Row from "./components/row.mjs";
 import { getBest, getLastComment, countImpressions, lifetimeCache } from "../cache.mjs";
-import { metadata } from "../parser.mjs";
+import { metadata, cachedMetadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -45,7 +45,9 @@ export async function recompute() {
     await Promise.all(
       periods.map(async (period) => {
         try {
-          const rendered = await index(null, page, period, "");
+          const rendered = await index(null, page, period, "", {
+            waitMetadata: true,
+          });
           lifetimeCache.set(htmlCacheKey(period, page, ""), rendered);
         } catch (err) {
           log(`recompute /best period=${period} failed: ${err.message}`);
@@ -59,9 +61,14 @@ export async function recompute() {
 }
 
 // Add metadata to a post
-async function addMetadata(post, raw = false) {
+// NOTE: Requests only read the preview cache (a cold entry is fetched in the
+// background), so a page of cold stories can't hold a request on 20 fetches.
+// The digest and the page-0 recompute still wait for the fetch.
+async function addMetadata(post, wait) {
   try {
-    const data = await metadata(post.href, false, undefined, raw);
+    const data = wait
+      ? await metadata(post.href)
+      : (await cachedMetadata(post.href)) || {};
     return {
       ...post,
       metadata: data,
@@ -74,8 +81,17 @@ async function addMetadata(post, raw = false) {
   }
 }
 
+// NOTE: getBest aggregates all submissions on every call (~0.5s for
+// period=all), so we stop at a page no reader gets to and briefly memoize
+// the unfiltered pages, whose number that bounds.
+export const MAX_PAGE = 50;
+const BEST_TTL = 60000;
+const bestMemo = new Map();
+
 export async function getStories(page, period, domain, options = {}) {
-  const { forceFetch = false, rawMetadata = false, createStoryLink = false, amount = parseInt(env.TOTAL_STORIES, 10) } = options;
+  const { forceFetch = false, rawMetadata = false, waitMetadata = false, createStoryLink = false, amount = parseInt(env.TOTAL_STORIES, 10) } = options;
+  if (page > MAX_PAGE) return [];
+
   let startDatetime = 0;
   const unix = (date) => Math.floor(date.getTime() / 1000);
   const now = new Date();
@@ -91,7 +107,15 @@ export async function getStories(page, period, domain, options = {}) {
 
   const from = amount * page;
   const orderBy = null;
-  let result = getBest(amount, from, orderBy, domain, startDatetime);
+  const key = `${period}:${page}:${amount}`;
+  const memo = bestMemo.get(key);
+  let result;
+  if (!domain && memo && Date.now() - memo.time < BEST_TTL) {
+    result = memo.result;
+  } else {
+    result = getBest(amount, from, orderBy, domain, startDatetime);
+    if (!domain) bestMemo.set(key, { result, time: Date.now() });
+  }
 
   const [policy, writers] = await Promise.all([
     moderation.getLists(),
@@ -131,7 +155,7 @@ export async function getStories(page, period, domain, options = {}) {
       })();
 
       const ensPromise = ens.resolve(story.identity, forceFetch);
-      const metadataPromise = addMetadata(story, rawMetadata);
+      const metadataPromise = addMetadata(story, rawMetadata || waitMetadata);
 
       const [, ensData, augmentedStory] = await Promise.all([
         lastCommentPromise,
@@ -183,9 +207,9 @@ export async function getStories(page, period, domain, options = {}) {
   return stories;
 }
 
-export default async function index(theme, page, period, domain) {
+export default async function index(theme, page, period, domain, options) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const stories = await getStories(page, period, domain || "");
+  const stories = await getStories(page, period, domain || "", options);
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
   const prefetch = [
     "/",

@@ -930,18 +930,29 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // immediate redirect
     res.redirect(302, sub.href);
   });
+  // NOTE: Same bound as a story's href (constants.mjs).
+  const TRACKED_URL_MAX_LENGTH = 2048;
   app.post("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     const { url } = request.query;
     if (!url) {
       return reply.status(400).send("URL parameter is required");
     }
+    if (typeof url !== "string" || url.length > TRACKED_URL_MAX_LENGTH) {
+      return reply.status(400).send("Invalid URL parameter");
+    }
     if (!fingerprint) {
       return reply.status(204).send();
     }
 
     const hash = fingerprint.generate(request);
-    trackOutbound(url, hash);
+    // NOTE: normalizeUrl throws on URLs like "http://", and a throw in an
+    // async handler never sends a response.
+    try {
+      trackOutbound(url, hash);
+    } catch (err) {
+      return reply.status(400).send("Invalid URL parameter");
+    }
     return reply.status(204).send();
   });
 
@@ -951,12 +962,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (!url) {
       return reply.status(400).send("URL parameter is required");
     }
+    if (typeof url !== "string" || url.length > TRACKED_URL_MAX_LENGTH) {
+      return reply.status(400).send("Invalid URL parameter");
+    }
     if (!fingerprint) {
       return reply.status(204).send();
     }
 
     const hash = fingerprint.generate(request);
-    trackImpression(url, hash);
+    try {
+      trackImpression(url, hash);
+    } catch (err) {
+      return reply.status(400).send("Invalid URL parameter");
+    }
     return reply.status(204).send();
   });
 
@@ -1729,11 +1747,21 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   }
 
+  // NOTE: listNewest reads 10 * page rows (and two queries per row) on the
+  // primary, so an unbounded page blocked it for over a second. Past the
+  // last page we answer like an exhausted feed, which ends the endless
+  // scroll on the website and in the iOS app.
+  const NEW_ROWS_MAX_PAGE = 50;
+
   // Endless scroll endpoint for /new — returns HTML rows for older stories
   app.get("/api/v1/new/rows", async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 1;
+    }
+    if (page > NEW_ROWS_MAX_PAGE) {
+      reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
+      return reply.status(200).type("text/html").send("");
     }
 
     const endlessPageSize = 10;
@@ -3040,7 +3068,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (!Array.isArray(impressions) || !Array.isArray(clicks)) {
       return sendError(reply, 400, "Bad Request", "Impressions and clicks must be arrays");
     }
-    
+    // NOTE: Each item costs a signature recovery. tracker.mjs sends at most
+    // 50 impressions and 50 clicks per batch.
+    const maxBatchItems = 200;
+    if (impressions.length + clicks.length > maxBatchItems) {
+      return sendError(reply, 400, "Bad Request", `At most ${maxBatchItems} interactions per batch`);
+    }
+
     // Validate each interaction has required fields
     for (const impression of impressions) {
       if (!impression.contentId || !impression.contentType || !impression.message) {
