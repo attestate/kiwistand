@@ -233,19 +233,13 @@ export function useDelegation(props) {
             setIndexedDelegation(true);
             clearInterval(intervalId);
             if (props.onIndexed) {
-              const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-              if (!isAnonMode) {
-                posthog.capture("delegation_performed");
-              }
+              posthog.capture("delegation_performed");
               props.onIndexed();
             } else if (
               props.callback &&
               typeof props.callback === "function"
             ) {
-              const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-              if (!isAnonMode) {
-                posthog.capture("delegation_performed");
-              }
+              posthog.capture("delegation_performed");
               props.callback();
               // NOTE: We have to reload the page here because the Vote
               // component isn't reloading based on the updates in the

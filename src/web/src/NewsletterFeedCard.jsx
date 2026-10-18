@@ -29,11 +29,7 @@ export function shouldHideCard() {
       localStorage.removeItem(DISMISSED_KEY);
     }
   } catch (err) {}
-  return (
-    readFlag("anon-mode") === "true" ||
-    !!readFlag(SUBSCRIBED_KEY) ||
-    !!readFlag(DISMISSED_KEY)
-  );
+  return !!readFlag(SUBSCRIBED_KEY) || !!readFlag(DISMISSED_KEY);
 }
 
 const NewsletterFeedCard = ({ source = "feed_card", headline, copy }) => {

@@ -303,18 +303,15 @@ const Vote = (props) => {
       setUpvotes(upvotes + 1);
       toast.success("Thanks for your like! Have a 🥝");
       triggerLocalHaptic("success");
-      const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-      if (!isAnonMode) {
-        let storyProps = {};
-        try {
-          storyProps = props.getAnalyticsProps?.() || {};
-        } catch (_) {}
-        capture("upvote", {
-          href: props.href,
-          variant: getVariant(),
-          ...storyProps,
-        });
-      }
+      let storyProps = {};
+      try {
+        storyProps = props.getAnalyticsProps?.() || {};
+      } catch (_) {}
+      capture("upvote", {
+        href: props.href,
+        variant: getVariant(),
+        ...storyProps,
+      });
       maybeShowUpvoteNewsletterPrompt(toast);
     } else if (response.status === "error") {
       if (

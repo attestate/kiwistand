@@ -163,7 +163,7 @@ const expandSVG = html`
 
 const spinnerOnclick =
   "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-const shareOnclick = "event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const href = this.getAttribute('data-story-href'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; if(localStorage.getItem('anon-mode')!=='true'){try { navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent(href) + '&type=native'); } catch(e) {}} if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}).catch(function(){}); } else { const doCopy = async () => { try { await navigator.clipboard.writeText(url); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (err) { try { const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (e2) { if (window.toast && window.toast.error) { window.toast.error('Could not copy link'); } } } }; doCopy(); }";
+const shareOnclick = "event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const href = this.getAttribute('data-story-href'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; try { navigator.sendBeacon && navigator.sendBeacon('/share?url=' + encodeURIComponent(href) + '&type=native'); } catch(e) {} if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}).catch(function(){}); } else { const doCopy = async () => { try { await navigator.clipboard.writeText(url); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (err) { try { const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (e2) { if (window.toast && window.toast.error) { window.toast.error('Could not copy link'); } } } }; doCopy(); }";
 const commentOnclick = "event.preventDefault(); var si=this.dataset.storyIdx; this.classList.toggle('comment-button-active'); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var commentPreview = document.querySelector('.comment-preview-0x'+si); if (commentPreview) { commentPreview.style.opacity = 1; } var borderElem = document.querySelector('.without-comment-preview-0x'+si); if (borderElem) { borderElem.classList.toggle('no-border'); }";
 
 // NOTE: The comment preview under a feed row opens the comments inline, like
@@ -546,7 +546,7 @@ const row = (
       canRenderFarcasterPreview ||
       canRenderBlueskyPreview;
     const storyPath = `/stories/${getSlug(story.title)}?index=0x${story.index}`;
-    const outboundOnclick = `var el=this; event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href))}; if (window.ReactNativeWebView || window !== window.parent) {
+    const outboundOnclick = `var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
                     (function() {
                       var targetUrl = el.dataset.href;
                       var canIframe = el.dataset.canIframe === 'true';
@@ -602,7 +602,7 @@ const row = (
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
                   data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                  onclick="var el=this; event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href))}; if (window.ReactNativeWebView || window !== window.parent) {
+                  onclick="var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
                     (function() {
                       var targetUrl = el.dataset.href;
                       var canIframe = el.dataset.canIframe === 'true';
@@ -757,7 +757,7 @@ const row = (
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
                   data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                  onclick="var el=this; event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href))}; if (window.ReactNativeWebView || window !== window.parent) {
+                  onclick="var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
                     (function() {
                       var targetUrl = el.dataset.href;
                       var canIframe = el.dataset.canIframe === 'true';
@@ -906,7 +906,7 @@ const row = (
                   href="${DOMPurify.sanitize(story.href)}"
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
-                  onclick="event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href))}; window.open(this.dataset.href, '_blank');"
+                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href)); window.open(this.dataset.href, '_blank');"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="bluesky-embed-container">
@@ -1326,7 +1326,7 @@ const row = (
                 : null}
             </div>
             <h2
-              class="kn-title ${hasEmbed ? "anon-only-title" : ""}"
+              class="kn-title ${hasEmbed ? "has-embed" : ""}"
             >
               <span class="story-link-container">
                       <a
@@ -1341,8 +1341,8 @@ const row = (
                         data-href="${DOMPurify.sanitize(story.href)}"
                         data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
                         onclick="${(isCloudflare || isTextPost) && story.index
-                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${isTextPost ? '' : `if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href))};`} }`
-                          : `var el=this; event.preventDefault(); if(localStorage.getItem('anon-mode')!=='true'){navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href))}; if (window.ReactNativeWebView || window !== window.parent) {
+                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${isTextPost ? '' : `navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href));`} }`
+                          : `var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
                               (function() {
                                 var targetUrl = el.dataset.href;
                                 var canIframe = el.dataset.canIframe === 'true';

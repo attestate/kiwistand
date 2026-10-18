@@ -13,12 +13,6 @@ export default function AnalyticsConsent() {
         return;
       }
 
-      // Don't show analytics consent in anon mode
-      const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-      if (isAnonMode) {
-        return;
-      }
-
       // Check if we're in a mini app context
       const isMiniApp = window.sdk ? await window.sdk.isInMiniApp() : false;
 

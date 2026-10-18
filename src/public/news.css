@@ -385,143 +385,6 @@
 
 }
 
-/* Anonymous Hacker Theme - Matrix/Terminal Style */
-[data-theme="anon"] {
-     /* ANONYMOUS THEME */
-     --font-family: 'Inter', 'Inter Fallback', Verdana, Geneva, sans-serif;
-
-     /* Logo image - can be changed per theme */
-
-     /* Background colors - Layered blacks/greys for depth */
-     --background-color0: #0d0d0d;        /* Base background - darkest */
-     --background-color1: rgba(0, 255, 0, 0.03);
-     --bg-off-white: #0d0d0d;            /* Same as base */
-     --bg-page: #000000;                  /* Pure black for page */
-     --bg-white: #1a1a1a;                 /* Elevated surfaces - lighter grey */
-     --bg-black: #00FF00;
-     --bg-inverted: #00FF00;
-     --bg-content-row: #151515;           /* Content cards - slightly elevated */
-     --bg-hover: rgba(0, 255, 0, 0.12);   /* Stronger hover for visibility */
-     --bg-hover-subtle: rgba(0, 255, 0, 0.06);
-     --bg-hover-minimal: rgba(0, 255, 0, 0.03);
-     --bg-overlay: rgba(0, 0, 0, 0.95);
-     --bg-spinner: rgba(0, 0, 0, 0.9);
-
-     /* Text colors - Subtle green with proper hierarchy */
-     --text-primary: #d0d0d0;             /* Light grey - main content */
-     --text-secondary: #a0a0a0;           /* Medium grey */
-     --text-tertiary: #808080;            /* Darker grey */
-     --text-muted: #666666;               /* Muted grey */
-     --text-quaternary: #555555;          /* Most subtle */
-     --text-pagetop: #d0d0d0;
-     --text-disabled: #444444;            /* Very dim for disabled */
-     --text-white: #d0d0d0;
-     --visited-link: #888888;             /* Dimmer for visited */
-     --color-black: #d0d0d0;
-     --button-bg: rgba(0, 255, 0, 0.08);
-     --button-active-bg: rgba(0, 255, 0, 0.15);
-
-     /* Border colors - Subtle green borders for separation */
-     --contrast-color: rgba(0, 255, 0, 0.6);
-     --border: 1px solid rgba(0, 255, 0, 0.2);
-     --border-thin: 1px solid rgba(0, 255, 0, 0.12);
-     --border-line: 1px solid rgba(0, 255, 0, 0.2);
-     --border-thick: 1px solid rgba(0, 255, 0, 0.35);
-     --border-inset: 1px inset rgba(0, 255, 0, 0.2);
-     --border-subtle: 1px solid rgba(0, 255, 0, 0.1);
-     --border-embed: 1px solid rgba(0, 255, 0, 0.18);
-     --full-contrast-color: rgba(0, 255, 0, 1);
-
-     /* Terminal/neutral colors - Different elevation levels */
-     --header-beige: #0a0a0a;            /* Header slightly lighter than page */
-     --middle-beige: #121212;            /* Mid-level surfaces */
-     --sidebar-beige: #0f0f0f;           /* Sidebar elevation */
-     --table-bg: #0d0d0d;                /* Table background */
-     --table-bg-mobile: #0d0d0d;
-
-     /* Brand/accent colors - Subtle accent */
-     --accent-primary: #7c9885;
-     --accent-primary-hover: #8fa896;
-     --accent-primary-light: rgba(124, 152, 133, 0.15);
-     --accent-primary-lighter: rgba(124, 152, 133, 0.2);
-     --accent-primary-glow: rgba(124, 152, 133, 0.3);
-     --accent-primary-bright: rgba(124, 152, 133, 0.5);
-     --accent-primary-focus: rgba(124, 152, 133, 0.6);
-
-     /* Button colors - Subtle on dark */
-     --button-primary-bg: #2a2a2a;
-     --button-primary-bg-hover: #333333;
-     --button-primary-text: #d0d0d0;
-
-     /* State colors - Muted */
-     --color-voted: #7c9885;
-     --color-vote-default: rgba(160, 160, 160, 1);
-     --color-success: #7c9885;
-     --color-link-blue: #8faab8;
-     --color-warning-bg: rgba(200, 180, 100, 0.1);
-     --color-warning-border: #c8b464;
-     --color-warning-text: #c8b464;
-     --color-alert: #d08080;
-     --color-notification: #7c9885;
-
-     /* Badge/integration colors - Muted variants */
-     --color-badge-bg: rgba(143, 170, 184, 0.1);
-     --color-badge-icon: #8faab8;
-     --color-farcaster-purple: #9d91a8;
-     --color-farcaster-light: #a89db3;
-     --color-bluesky: #8faab8;
-
-     /* Embed colors - Elevated surfaces */
-     --embed-bg: #1a1a1a;
-     --embed-text: #d0d0d0;
-     --embed-farcaster-text: #d0d0d0;
-     --embed-twitter-text: #d0d0d0;
-     --embed-link: #8faab8;
-
-     /* UI element colors - Subtle shadows */
-     --shadow-default: 0 0 10px rgba(0, 0, 0, 0.5);
-     --shadow-glow: 0 0 10px rgba(124, 152, 133, 0.3);
-}
-
-/* Block all external images and preview containers in anon mode for privacy */
-[data-theme="anon"] .tweet-preview-container,
-[data-theme="anon"] .tweet-embed-container,
-[data-theme="anon"] .farcaster-preview-container,
-[data-theme="anon"] .farcaster-embed-container,
-[data-theme="anon"] .bluesky-preview-container,
-[data-theme="anon"] .bluesky-embed-container {
-  display: none !important;
-}
-
-/* Hide all external images in anon mode except localhost and Cloudflare imagedelivery */
-[data-theme="anon"] img[src^="http://"]:not([src*="localhost"]):not([src*="imagedelivery.net"]),
-[data-theme="anon"] img[src^="https://"]:not([src*="imagedelivery.net"]) {
-  display: none !important;
-}
-
-/* Also hide avatar placeholder divs when they don't contain an image */
-[data-theme="anon"] div[style*="width: 32px"]:has(img[src^="http://"]:not([src*="localhost"]):not([src*="imagedelivery.net"])),
-[data-theme="anon"] div[style*="width: 32px"]:has(img[src^="https://"]:not([src*="imagedelivery.net"])) {
-  display: none !important;
-}
-
-/* Hide row-image-preview containers unless they contain Cloudflare images */
-[data-theme="anon"] .row-image-preview:not(:has(img[src*="imagedelivery.net"])) {
-  display: none !important;
-}
-
-/* Allow localhost, local paths, and Cloudflare imagedelivery (our own uploads) in anon mode */
-[data-theme="anon"] img[src^="http://localhost"],
-[data-theme="anon"] img[src^="/"],
-[data-theme="anon"] img[src*="imagedelivery.net"] {
-  display: revert !important;
-}
-
-/* Show titles in anon mode even when previews are hidden */
-[data-theme="anon"] .anon-only-title {
-  display: block !important;
-}
-
  .scroll-margin-base, .scroll-margin-with-image {
    scroll-margin-top: 100px;
  }
@@ -1340,26 +1203,6 @@ body.react-loaded .comment-input-ssr-placeholder {
      flex: 1;
      padding: 20px;
 }
- /* Anon mode label - creepy handwritten style */
- .anon-mode-label {
-     display: none; /* Hidden by default */
-     font-family: 'Comic Sans MS', 'Comic Sans', cursive;
-     font-size: 9pt;
-     font-weight: 400;
-     letter-spacing: 0.05em;
-     color: #CC0000;
-     margin-top: -3px;
-     font-style: italic;
-     text-transform: lowercase;
-     opacity: 0.9;
-     text-shadow: 0 0 4px rgba(255, 0, 0, 0.4);
- }
-
- /* Show anon-mode label only when anon theme is active */
- [data-theme="anon"] .anon-mode-label {
-     display: block;
-     margin-left: 5px;
- }
  @media (min-width: 641px) {
 
      .feed-container {
@@ -2308,9 +2151,6 @@ newsletter-card {
     color: #ff8a80;
   }
 }
-[data-theme="anon"] .newsletter-card-error {
-  color: #ff8a80;
-}
 /* Hidden before the first paint for readers who subscribed or dismissed it
    (data-nl-hidden, theme-init.js); the bundle then removes it for good. */
 html[data-nl-hidden] newsletter-card,
@@ -2532,14 +2372,6 @@ body {
 .kiwi-wordmark-bar {
   fill: var(--kn-wordmark-green);
   stroke: var(--kn-wordmark-green);
-}
-.kn-logo .anon-mode-label {
-  display: none;
-}
-[data-theme="anon"] .kn-logo .anon-mode-label {
-  display: block;
-  font-family: var(--kn-font-mono);
-  font-size: 10px;
 }
 
 /* -- Top bar ------------------------------------------------------------- */
@@ -3118,7 +2950,7 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   letter-spacing: 0;
   color: var(--kn-text-primary);
 }
-.kn-title.anon-only-title {
+.kn-title.has-embed {
   display: none;
 }
 .kn-title .story-link,
@@ -3653,8 +3485,7 @@ html:not([data-signed-out]) .kn-tab-ph-out {
     cursor: default;
   }
   html[data-signed-out] .kn-account-ph-in,
-  html:not([data-signed-out]) .kn-account-ph-out,
-  html[data-theme="anon"] .kn-account-ph {
+  html:not([data-signed-out]) .kn-account-ph-out {
     display: none;
   }
   #hnmain {
@@ -4569,17 +4400,13 @@ kiwi-saved-stories {
   display: contents;
 }
 html[data-signed-out] .kn-saved-ssr-in,
-html:not([data-signed-out]) .kn-saved-ssr-out,
-html[data-theme="anon"] .kn-saved-ssr-in {
+html:not([data-signed-out]) .kn-saved-ssr-out {
   display: none;
-}
-html[data-theme="anon"] .kn-saved-ssr-out {
-  display: flex;
 }
 /* NOTE: How many stories are saved isn't known until the list arrives, so
    the list gets the window's height: the footer stays below it instead of
    jumping down when the rows come in. */
-html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
+html:not([data-signed-out]) kiwi-saved-stories {
   min-height: 100vh;
 }
 .kn-saved-list {
@@ -4737,11 +4564,6 @@ html:not([data-signed-out]):not([data-theme="anon"]) kiwi-saved-stories {
   margin-top: 2px;
   color: var(--kn-text-secondary);
 }
-/* Anon mode has no account to save to. */
-[data-theme="anon"] .kn-action-save {
-  display: none !important;
-}
-
 @media (min-width: 641px) {
   .kn-saved-page {
     padding: 0 0 24px;

@@ -164,6 +164,5 @@ export function storeAccount({ privateKey, address }) {
   localStorage.setItem(`-kiwi-news-${address}-key`, privateKey);
   try {
     localStorage.setItem(USED_FLAG, "true");
-    localStorage.removeItem("anon-mode");
   } catch (err) {}
 }
