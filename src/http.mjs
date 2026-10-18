@@ -3086,6 +3086,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
         parsedMessage.__jwtValidated = true;
       }
       
+      // NOTE: Every Kiwi message shares one EIP-712 type, so without this
+      // check any recently signed upvote or comment (all public) would
+      // unlock its author's interaction history.
+      if (signature && parsedMessage?.type !== "sync") {
+        return sendError(reply, 401, "Unauthorized", "Invalid message type");
+      }
+
       // Verify the signature and get the user identity (custody address)
       const userIdentity = await interactions.verifyInteraction(parsedMessage, signature);
       
