@@ -911,11 +911,16 @@ export async function launch(trie, libp2p, isPrimary = true) {
     fingerprint = await import("./fingerprint_example.mjs");
   }
 
-  app.get("/redirect/:index", (req, res) => {
+  app.get("/redirect/:index", async (req, res) => {
     let sub;
     try {
       sub = getSubmission(req.params.index);
     } catch {
+      return res.status(404).send("Not found");
+    }
+    // Don't send visitors to links the feeds hide (banned or malicious).
+    const policy = await moderation.getLists();
+    if (moderation.isModerated(sub, policy)) {
       return res.status(404).send("Not found");
     }
     // record outbound fingerprint
@@ -2838,7 +2843,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         href: message.href,
         title: message.title,
         timestamp: message.timestamp,
-        identity: message.walletAddress
+        identity: identityAddress
       });
       
       // Trigger upvote notification for mini app upvotes
@@ -2848,7 +2853,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
           href: message.href,
           title: message.title,
           timestamp: message.timestamp,
-          identity: message.walletAddress
+          identity: identityAddress
         }).catch((err) => {
           log(`Failed to trigger mini app upvote notification: ${err}`);
         });
