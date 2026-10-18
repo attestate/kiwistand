@@ -139,18 +139,7 @@ const deferSetup = (connectorFn) => (config) => {
 // Create wagmi config based on environment
 let client;
 
-// Check if we're in anon mode - if so, create minimal config without wallet connectors
-const isAnonMode = typeof localStorage !== 'undefined' && localStorage.getItem('anon-mode') === 'true';
-
-if (isAnonMode) {
-  // Minimal config for anon mode - no wallet connectors, no RainbowKit analytics
-  client = createConfig({
-    chains,
-    connectors: [], // No connectors needed in anon mode
-    transports,
-    client: createKiwiClient,
-  });
-} else if (isInIOSApp) {
+if (isInIOSApp) {
   // iOS app configuration
   const wallets = [
     metaMaskWallet,

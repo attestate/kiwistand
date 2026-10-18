@@ -69,8 +69,8 @@ export default async function (theme) {
                       A random identifier, stored for up to 400 days, so
                       PostHog can recognize a returning browser. It contains
                       no personal data and is only set if you haven't opted
-                      out of analytics or enabled anon mode. You can delete it
-                      at any time by clearing your cookies.
+                      out of analytics. You can delete it at any time by
+                      clearing your cookies.
                     </li>
                   </ul>
 

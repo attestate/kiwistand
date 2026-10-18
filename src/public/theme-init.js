@@ -1,22 +1,12 @@
 // Theme initialization - must run before CSS render
 (function() {
-  // Check if ?anon query parameter is present
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('anon') !== null) {
-    localStorage.setItem('anon-mode', 'true');
 
-    // Remove the ?anon parameter from URL
-    urlParams.delete('anon');
-    const newUrl = urlParams.toString()
-      ? `${window.location.pathname}?${urlParams.toString()}`
-      : window.location.pathname;
-    window.history.replaceState({}, '', newUrl);
-  }
-
-  const anonMode = localStorage.getItem('anon-mode') === 'true';
-  if (anonMode) {
-    document.documentElement.setAttribute('data-theme', 'anon');
-  }
+  // NOTE: Anon mode was removed. Clear the flag it left behind so readers
+  // who had it on get their account, analytics and newsletter cards back.
+  try {
+    localStorage.removeItem('anon-mode');
+  } catch (err) {}
 
   // NOTE: Lets CSS reserve the right space for what the app renders for
   // people without a Kiwi key (e.g. a "connect to comment" card instead of
@@ -25,7 +15,7 @@
   const hasKey = Object.keys(localStorage).some(function (key) {
     return /^-kiwi-news-0x[a-fA-F0-9]{40}-key$/.test(key);
   });
-  if (!anonMode && !hasKey) {
+  if (!hasKey) {
     document.documentElement.setAttribute('data-signed-out', '');
   }
 
@@ -35,7 +25,7 @@
   // paint, from this browser's Kiwi key (same key names as above); pages.css
   // then shows them right away instead of when EditProfile.jsx mounts.
   try {
-    if (!anonMode && hasKey && location.pathname === '/upvotes') {
+    if (hasKey && location.pathname === '/upvotes') {
       const address = (urlParams.get('address') || '').toLowerCase();
       const own = Object.keys(localStorage).some(function (key) {
         const match = key.match(/^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/);
@@ -47,15 +37,13 @@
 
   // NOTE: The newsletter sign-up cards (newsletter-card.mjs) are server
   // rendered for everyone; NewsletterFeedCard.jsx removes them once the
-  // bundle loads for readers who subscribed, dismissed them or browse in anon
-  // mode (same keys as shouldHideCard there). Marking that here, before the
+  // bundle loads for readers who subscribed or dismissed them (same keys as shouldHideCard there). Marking that here, before the
   // first paint, lets news.css hide them right away, so a dismissed card
   // doesn't flash and the right column doesn't jump. ?newsletter=test shows
   // them again (shouldHideCard clears the keys).
   try {
     const test = urlParams.get('newsletter') === 'test';
     const hideNewsletter =
-      anonMode ||
       !!localStorage.getItem('newsletter-subscribed') ||
       !!localStorage.getItem('newsletter-card-dismissed');
     if (hideNewsletter && !test) {

@@ -42,7 +42,7 @@ export function createAnalytics(getClient, max = MAX_QUEUE) {
     }
   }
 
-  // PostHog will never load (anon mode, no consent, failed import): drop the
+  // PostHog will never load (no consent, failed import): drop the
   // buffer and stop queueing.
   function disable() {
     disabled = true;
