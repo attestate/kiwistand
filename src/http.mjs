@@ -23,12 +23,6 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
-import {
-  buildSafeFaviconUrl,
-  fetchFavicon,
-  sniffFaviconContentType,
-  MAX_FAVICON_BYTES,
-} from "./favicon.mjs";
 import Row, { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
@@ -3256,91 +3250,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     } catch (err) {
       log(`Error looking up primary ENS name for ${address}: ${err.toString()}`);
       return sendError(reply, 502, "Bad Gateway", "Failed to look up primary ENS name");
-    }
-  });
-
-
-  app.get("/api/v1/favicon", async (request, reply) => {
-    const { domain } = request.query;
-
-    if (!domain) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      const details = "Missing domain parameter";
-      return sendError(reply, code, httpMessage, details);
-    }
-
-    // Validate and safely construct the target URL. This rejects path/query/
-    // fragment injection, credentials, non-standard ports, and IP literals.
-    const faviconUrl = buildSafeFaviconUrl(domain);
-    if (!faviconUrl) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      const details = "Invalid domain parameter";
-      return sendError(reply, code, httpMessage, details);
-    }
-
-    try {
-      // fetchFavicon follows redirects with the SSRF guard on every hop and
-      // caps both request time and body size.
-      const response = await fetchFavicon(faviconUrl, {
-        userAgent: env.USER_AGENT || "KiwiNews/1.0",
-      });
-
-      if (!response.ok) {
-        const code = 404;
-        const httpMessage = "Not Found";
-        const details = "Favicon not found for domain";
-        return sendError(reply, code, httpMessage, details);
-      }
-
-      // Fast-reject an honestly-declared oversize body before reading it. A
-      // lying or chunked response is still bounded by fetchFavicon's size cap.
-      const declaredLength = Number(response.headers.get("content-length"));
-      if (Number.isFinite(declaredLength) && declaredLength > MAX_FAVICON_BYTES) {
-        const code = 413;
-        const httpMessage = "Payload Too Large";
-        const details = "Favicon exceeds the maximum allowed size";
-        return sendError(reply, code, httpMessage, details);
-      }
-
-      const buffer = await response.arrayBuffer();
-
-      // Never trust the upstream Content-Type. Derive it from the actual bytes
-      // and reject anything that is not a recognized raster image, so this
-      // endpoint can never serve attacker-controlled HTML/JS same-origin.
-      const contentType = sniffFaviconContentType(buffer);
-      if (!contentType) {
-        const code = 415;
-        const httpMessage = "Unsupported Media Type";
-        const details = "Fetched resource is not a supported image";
-        return sendError(reply, code, httpMessage, details);
-      }
-
-      // Set aggressive caching headers (24 hours CDN, 30 days stale)
-      reply.header("Cache-Control", "public, s-maxage=86400, max-age=86400, stale-while-revalidate=2592000");
-      reply.header("Content-Type", contentType);
-      reply.header("X-Content-Type-Options", "nosniff");
-      // Defense in depth: even though we only ever serve a sniffed raster
-      // image, lock the response down so it can never act as an active document
-      // (e.g. a polyglot) in the Kiwi origin.
-      reply.header("Content-Security-Policy", "default-src 'none'; sandbox");
-
-      return reply.send(Buffer.from(buffer));
-    } catch (err) {
-      log(`Error fetching favicon for ${domain}: ${err.toString()}`);
-      // node-fetch throws FetchError with type "max-size" once the body grows
-      // past MAX_FAVICON_BYTES; surface that as 413 rather than a generic 502.
-      if (err && err.type === "max-size") {
-        const code = 413;
-        const httpMessage = "Payload Too Large";
-        const details = "Favicon exceeds the maximum allowed size";
-        return sendError(reply, code, httpMessage, details);
-      }
-      const code = 502;
-      const httpMessage = "Bad Gateway";
-      const details = "Failed to fetch favicon";
-      return sendError(reply, code, httpMessage, details);
     }
   });
 
