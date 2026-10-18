@@ -1,8 +1,12 @@
+import http from "http";
+
 import test from "ava";
 
 import {
   buildSafeFaviconUrl,
+  fetchFavicon,
   sniffFaviconContentType,
+  MAX_FAVICON_BYTES,
 } from "../src/favicon.mjs";
 
 test("accepts plain registrable domains", (t) => {
@@ -112,8 +116,120 @@ test("sniff rejects HTML/JS and other non-image bodies", (t) => {
   );
   t.is(sniffFaviconContentType(html), null);
   // SVG is deliberately not recognized (active content).
-  const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg">');
+  const svg = new TextEncoder().encode(
+    '<svg xmlns="http://www.w3.org/2000/svg">',
+  );
   t.is(sniffFaviconContentType(svg), null);
   t.is(sniffFaviconContentType(new TextEncoder().encode("{}")), null);
   t.is(sniffFaviconContentType(new Uint8Array([1, 2])), null);
+});
+
+test("accepts punycode IDN TLDs", (t) => {
+  t.is(
+    buildSafeFaviconUrl("example.xn--p1ai"),
+    "https://example.xn--p1ai/favicon.ico",
+  );
+});
+
+// Spin up a local HTTP server for the fetchFavicon tests. The default agent
+// (request-filtering-agent) blocks loopback, so tests that need to reach the
+// local server pass a plain agent; the SSRF test uses the default one.
+async function withServer(handler, fn) {
+  const server = http.createServer(handler);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    return await fn(base);
+  } finally {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const plainAgent = () => new http.Agent();
+
+test("fetchFavicon follows redirects (e.g. apex -> www)", async (t) => {
+  await withServer(
+    (req, res) => {
+      if (req.url === "/favicon.ico") {
+        res.writeHead(301, { Location: "/www/favicon.ico" });
+        return res.end();
+      }
+      res.writeHead(200, { "Content-Type": "image/png" });
+      res.end(PNG);
+    },
+    async (base) => {
+      const response = await fetchFavicon(`${base}/favicon.ico`, {
+        agent: plainAgent,
+      });
+      t.true(response.ok);
+      const buffer = await response.arrayBuffer();
+      t.is(sniffFaviconContentType(buffer), "image/png");
+    },
+  );
+});
+
+test("fetchFavicon blocks loopback targets by default", async (t) => {
+  await withServer(
+    (req, res) => {
+      res.writeHead(200);
+      res.end(PNG);
+    },
+    async (base) => {
+      // Default agent: request-filtering-agent refuses loopback targets.
+      await t.throwsAsync(fetchFavicon(`${base}/favicon.ico`));
+    },
+  );
+});
+
+test("fetchFavicon resolves the agent for every redirect hop", async (t) => {
+  // The SSRF guard is only effective on redirects if node-fetch asks for an
+  // agent per hop rather than reusing the first one.
+  const hops = [];
+  await withServer(
+    (req, res) => {
+      if (req.url === "/favicon.ico") {
+        res.writeHead(302, { Location: "/other/favicon.ico" });
+        return res.end();
+      }
+      res.writeHead(200);
+      res.end(PNG);
+    },
+    async (base) => {
+      await fetchFavicon(`${base}/favicon.ico`, {
+        agent: (parsedURL) => {
+          hops.push(parsedURL.href);
+          return new http.Agent();
+        },
+      });
+      t.deepEqual(hops, [`${base}/favicon.ico`, `${base}/other/favicon.ico`]);
+    },
+  );
+});
+
+test("fetchFavicon caps the body size without a content-length", async (t) => {
+  let sent = 0;
+  await withServer(
+    (req, res) => {
+      res.writeHead(200, { "Content-Type": "image/png" });
+      const chunk = Buffer.alloc(64 * 1024);
+      const write = () => {
+        while (sent < MAX_FAVICON_BYTES * 4) {
+          sent += chunk.length;
+          if (!res.write(chunk)) return res.once("drain", write);
+        }
+        res.end();
+      };
+      write();
+    },
+    async (base) => {
+      const response = await fetchFavicon(`${base}/favicon.ico`, {
+        agent: plainAgent,
+      });
+      const err = await t.throwsAsync(response.arrayBuffer());
+      t.is(err.type, "max-size");
+      t.true(sent < MAX_FAVICON_BYTES * 4);
+    },
+  );
 });

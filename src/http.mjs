@@ -23,11 +23,15 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
-import { buildSafeFaviconUrl, sniffFaviconContentType } from "./favicon.mjs";
+import {
+  buildSafeFaviconUrl,
+  fetchFavicon,
+  sniffFaviconContentType,
+  MAX_FAVICON_BYTES,
+} from "./favicon.mjs";
 import Row, { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
-import { FileSystemCache, getCacheKey, fetchBuilder } from "node-fetch-cache";
-import { useAgent } from "request-filtering-agent";
+import { FileSystemCache, getCacheKey } from "node-fetch-cache";
 
 import * as registry from "./chainstate/registry.mjs";
 import log from "./logger.mjs";
@@ -747,26 +751,6 @@ app.use(loadTheme);
 // NOTE: sendError and sendStatus are duplicated here (compare with
 // /src/api.mjs) because eventually we wanna rip apart the Kiwi News website
 // from the node software.
-
-// Dedicated fetch for the favicon proxy. It is backed by node-fetch (via
-// node-fetch-cache) rather than the global undici fetch so that we can attach
-// request-filtering-agent's `useAgent` — undici silently ignores the `agent`
-// option, which would leave the SSRF guard inert. See parser.mjs for the same
-// pattern.
-const faviconFetchCache = new FileSystemCache({
-  cacheDirectory: path.resolve(env.CACHE_DIR),
-  ttl: 86400000, // 24 hours
-});
-const faviconFetch = fetchBuilder.withCache(faviconFetchCache);
-
-// Hard cap on the favicon body we will buffer. node-fetch-cache reads the whole
-// upstream body itself (to populate the on-disk cache), so a draining loop over
-// response.body would not bound that internal read. node-fetch's own `size`
-// option does: it aborts the stream mid-read and throws FetchError
-// (err.type === "max-size") before the body is fully buffered in memory or on
-// disk. A favicon above this size is not a favicon.
-const MAX_FAVICON_BYTES = 5 * 1024 * 1024; // 5 MiB
-
 export function sendError(reply, code, message, details) {
   log(`http error: "${code}", "${message}", "${details}"`);
   return reply.status(code).json({
@@ -3297,15 +3281,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     try {
-      // useAgent (request-filtering-agent) blocks connections to private,
-      // loopback, link-local and cloud-metadata addresses at the socket level,
-      // which also defeats DNS-rebinding. AbortSignal caps the request time.
-      const response = await faviconFetch(faviconUrl, {
-        headers: { "User-Agent": env.USER_AGENT || "KiwiNews/1.0" },
-        agent: useAgent(faviconUrl),
-        signal: AbortSignal.timeout(10000),
-        redirect: "error",
-        size: MAX_FAVICON_BYTES,
+      // fetchFavicon follows redirects with the SSRF guard on every hop and
+      // caps both request time and body size.
+      const response = await fetchFavicon(faviconUrl, {
+        userAgent: env.USER_AGENT || "KiwiNews/1.0",
       });
 
       if (!response.ok) {
@@ -3316,7 +3295,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
 
       // Fast-reject an honestly-declared oversize body before reading it. A
-      // lying or chunked response is still bounded by the `size` option above.
+      // lying or chunked response is still bounded by fetchFavicon's size cap.
       const declaredLength = Number(response.headers.get("content-length"));
       if (Number.isFinite(declaredLength) && declaredLength > MAX_FAVICON_BYTES) {
         const code = 413;

@@ -13,11 +13,53 @@
 //     (The socket-level guard against private/loopback/link-local/metadata
 //     targets is request-filtering-agent's `useAgent`, applied at fetch time.)
 //
+//   - fetchFavicon performs the outbound request with request-filtering-agent
+//     attached to every hop (including redirects) and a hard body-size cap.
+//
 //   - sniffFaviconContentType derives the served Content-Type from the actual
 //     response bytes instead of trusting the upstream header, so the endpoint
 //     can only ever return a recognized raster image, never attacker HTML/JS.
 
 import net from "net";
+import fetch from "node-fetch";
+import { useAgent } from "request-filtering-agent";
+
+// A favicon above this size is not a favicon.
+export const MAX_FAVICON_BYTES = 5 * 1024 * 1024; // 5 MiB
+const MAX_FAVICON_REDIRECTS = 3;
+
+// Fetch a favicon URL produced by buildSafeFaviconUrl.
+//
+// This deliberately uses node-fetch directly rather than the global undici
+// fetch (which silently ignores `agent`, leaving the SSRF guard inert) or
+// node-fetch-cache (which streams the whole upstream body to disk before
+// node-fetch's `size` limit is ever checked). Responses are cached by the CDN
+// via the Cache-Control header the route sets instead.
+//
+// - `agent` is a function so node-fetch resolves it per hop: redirects are
+//   followed (apex domains like google.com redirect to www.) but every hop is
+//   still checked against private/loopback/link-local/metadata addresses at
+//   the socket level, which also defeats DNS rebinding.
+// - `size` makes response.arrayBuffer() reject with FetchError
+//   (err.type === "max-size") as soon as the body grows past the cap, so an
+//   oversized body is never fully buffered.
+export function fetchFavicon(
+  url,
+  {
+    agent = (parsedURL) => useAgent(parsedURL.href),
+    userAgent = "KiwiNews/1.0",
+    timeout = 10000,
+  } = {},
+) {
+  return fetch(url, {
+    headers: { "User-Agent": userAgent },
+    agent,
+    signal: AbortSignal.timeout(timeout),
+    redirect: "follow",
+    follow: MAX_FAVICON_REDIRECTS,
+    size: MAX_FAVICON_BYTES,
+  });
+}
 
 // Allowed favicon image types, keyed by a magic-byte sniff of the response
 // body. SVG is intentionally excluded: it is an active document format and
@@ -81,9 +123,10 @@ export function buildSafeFaviconUrl(domain) {
   if (net.isIP(host) !== 0) return null;
   // Require a well-formed dotted DNS name: 1-63 char labels that do not start
   // or end with a hyphen, no empty labels (rejects "a..com", ".evil.com"), and
-  // a plausible alphabetic TLD. (Total length is already bounded above.)
+  // a plausible TLD: alphabetic, or a punycode IDN TLD such as "xn--p1ai".
+  // (Total length is already bounded above.)
   const HOSTNAME_RE =
-    /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+    /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+([a-z]{2,}|xn--[a-z0-9-]{1,59})$/i;
   if (!HOSTNAME_RE.test(url.hostname)) return null;
 
   return url.toString();
