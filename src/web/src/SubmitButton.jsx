@@ -326,12 +326,31 @@ const SubmitButton = (props) => {
       return;
     }
 
-    if (canonicalURL.includes("imagedelivery.net")) {
-      embedPreview.innerHTML = `<img src="${DOMPurify.sanitize(
-        canonicalURL.includes("/public")
-          ? canonicalURL
-          : canonicalURL + "/public",
-      )}" style="border: 1px solid var(--text-primary); max-width: 100%; max-height: 500px; display: block; margin: 0 auto;" alt="Uploaded image" />`;
+    let parsed;
+    try {
+      parsed = new URL(canonicalURL);
+    } catch (err) {
+      parsed = null;
+    }
+
+    // NOTE: Only render image previews for our own Cloudflare Images host and
+    // build the element via the DOM to avoid attribute injection.
+    if (
+      parsed &&
+      parsed.protocol === "https:" &&
+      parsed.hostname === "imagedelivery.net"
+    ) {
+      const img = document.createElement("img");
+      img.src = parsed.href.includes("/public")
+        ? parsed.href
+        : parsed.href + "/public";
+      img.alt = "Uploaded image";
+      img.style.border = "1px solid var(--text-primary)";
+      img.style.maxWidth = "100%";
+      img.style.maxHeight = "500px";
+      img.style.display = "block";
+      img.style.margin = "0 auto";
+      embedPreview.replaceChildren(img);
       return;
     }
 

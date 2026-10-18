@@ -2703,9 +2703,26 @@ export async function launch(trie, libp2p, isPrimary = true) {
       url = await getCastByHashAndConstructUrl(DOMPurify.sanitize(castHash));
     }
 
+    // NOTE: Only pass through http(s) links and text posts, everything else
+    // is treated as an empty url.
+    let link = "";
+    if (typeof url === "string" && url.startsWith("data:text/plain,")) {
+      link = url;
+    } else {
+      let parsed;
+      try {
+        parsed = new URL(url);
+      } catch (err) {
+        parsed = null;
+      }
+      if (parsed && ["http:", "https:"].includes(parsed.protocol)) {
+        link = parsed.href;
+      }
+    }
+
     const content = await submit(
       reply.locals.theme,
-      DOMPurify.sanitize(url),
+      DOMPurify.sanitize(link),
       DOMPurify.sanitize(title),
     );
 
