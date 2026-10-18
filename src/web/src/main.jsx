@@ -19,6 +19,12 @@ import { setMiniApp, autoConnectMiniAppWallet } from "./miniapp.mjs";
 // Make SDK available globally for use in other parts of the app
 window.sdk = sdk;
 
+// NOTE: Called from the share button's onclick string in row.mjs.
+window.kiwiTrackShare = (href, channel) =>
+  import("./shares.mjs")
+    .then(({ trackShare }) => trackShare(href, channel))
+    .catch(() => {});
+
 async function initFarcasterFrame() {
   // 1) Tell the host we’re live (no-op if not in a Farcaster client)
   try {

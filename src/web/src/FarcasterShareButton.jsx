@@ -21,14 +21,8 @@ export default function FarcasterShareButton({ title, slug, index, onShared }) {
 
   const handleClick = async (e) => {
     e.preventDefault();
-    try {
-      if (navigator.sendBeacon) {
-        const url = new URL(window.location.origin + "/share");
-        url.searchParams.set("url", window.location.href);
-        url.searchParams.set("type", "farcaster");
-        navigator.sendBeacon(url.toString());
-      }
-    } catch {}
+    // NOTE: No share tracking here: /share needs a signed message for the
+    // story's href, and this button only knows the page's URL.
 
     const kiwiUrl = `https://news.kiwistand.com/stories/${slug}?index=${index}`;
     const composeUrl = `https://farcaster.xyz/~/compose?text=${encodeURIComponent(
