@@ -9,7 +9,6 @@ import htm from "htm";
 import vhtml from "vhtml";
 import { parse as parser } from "node-html-parser";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
-import { useAgent } from "request-filtering-agent";
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import Arweave from "arweave";
@@ -17,6 +16,7 @@ import Arweave from "arweave";
 import cache, { lifetimeCache } from "./cache.mjs";
 import log from "./logger.mjs";
 import { resolve as resolveENS } from "./ens.mjs";
+import { safeFetch, discardBody } from "./safefetch.mjs";
 import { call, encodeFunctionCall, decodeParameters } from "eth-fun";
 
 const fetchCache = new FileSystemCache({
@@ -25,6 +25,45 @@ const fetchCache = new FileSystemCache({
 });
 
 const fetch = fetchBuilder.withCache(fetchCache);
+
+// Links (story hrefs, /api/v1/metadata and /api/v1/parse) are user input, so
+// their pages and images are fetched with safeFetch and not with the cached
+// fetch above: node-fetch-cache writes the whole decompressed body to disk
+// before it returns, which turns a small gzip bomb into gigabytes. The
+// results are cached at the metadata level instead.
+let pageFetch = safeFetch;
+export function setPageFetchForTests(fn) {
+  pageFetch = fn || safeFetch;
+}
+
+const MAX_HTML_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// Reads at most maxBytes of a response, counted after decompression. Larger
+// HTML pages are cut off (the meta tags are in the head), other bodies
+// throw. Mirrors readLimited in lib/listen/extract.mjs.
+async function readLimited(res, { maxBytes, truncate = false }) {
+  const length = parseInt(res.headers.get("content-length"), 10);
+  if (!truncate && length > maxBytes) {
+    discardBody(res);
+    throw new Error(`Response larger than ${maxBytes} bytes`);
+  }
+  if (!res.body) return Buffer.alloc(0);
+  const chunks = [];
+  let size = 0;
+  // Leaving the loop early destroys the stream.
+  for await (const chunk of res.body) {
+    const value = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      if (!truncate) throw new Error(`Response larger than ${maxBytes} bytes`);
+      chunks.push(value.subarray(0, value.byteLength - (size - maxBytes)));
+      break;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
 
 // Initialize Arweave client
 const arweave = Arweave.init({
@@ -352,6 +391,17 @@ export async function generateClaudeTitle(content, model = TITLE_MODEL) {
     console.error("Error extracting title from response:", error);
     return null;
   }
+}
+
+// generateTitle is a parameter of the public metadata endpoint, so a link's
+// title is generated once and then read from the lifetime cache, like
+// compliantTitle.
+async function cachedClaudeTitle(url, content) {
+  const key = `claudeTitle-${normalizeUrl(url, { stripWWW: false })}`;
+  if (lifetimeCache.has(key)) return lifetimeCache.get(key);
+  const title = await generateClaudeTitle(content);
+  if (title) lifetimeCache.set(key, title);
+  return title;
 }
 
 // Story summaries: below the minimum the extraction is usually a landing
@@ -703,20 +753,22 @@ export async function extractParagraphContent(url) {
     
     // Fetch the HTML page
     const signal = AbortSignal.timeout(10000);
-    const response = await fetch(url, {
+    const response = await pageFetch(url, {
       headers: {
         "User-Agent": env.USER_AGENT,
       },
-      agent: useAgent(url),
       signal,
     });
     
     if (!response.ok) {
+      discardBody(response);
       log(`Failed to fetch Paragraph page: ${response.status}`);
       return null;
     }
     
-    const html = await response.text();
+    const html = (
+      await readLimited(response, { maxBytes: MAX_HTML_BYTES, truncate: true })
+    ).toString("utf8");
     const dom = parser(html);
     
     // Try to extract Arweave transaction ID from meta tags or script tags
@@ -920,8 +972,7 @@ async function extractCanonicalLink(html, pageURL) {
   let response;
   try {
     const signal = AbortSignal.timeout(5000);
-    response = await fetch(canonical, {
-      agent: useAgent(canonical),
+    response = await pageFetch(canonical, {
       headers: {
         "User-Agent": env.USER_AGENT,
       },
@@ -930,6 +981,8 @@ async function extractCanonicalLink(html, pageURL) {
   } catch (err) {
     return;
   }
+  // Only the status is needed.
+  discardBody(response);
 
   if (response.status !== 200) {
     return;
@@ -997,8 +1050,7 @@ const checkOgImage = async (url, userAgent = env.USER_AGENT) => {
   // finish inside 5s from the server, and the preview was dropped.
   const signal = AbortSignal.timeout(15000);
   try {
-    const res = await fetch(url, {
-      agent: useAgent(url),
+    const res = await pageFetch(url, {
       signal,
       headers: {
         "User-Agent": userAgent,
@@ -1010,12 +1062,11 @@ const checkOgImage = async (url, userAgent = env.USER_AGENT) => {
         (res.status === 401 || res.status === 403 || res.status === 429) &&
         userAgent !== CRAWLER_UA
       ) {
-        if (res.body && typeof res.body.cancel === "function") {
-          res.body.cancel();
-        }
+        discardBody(res);
         log(`Image ${res.status} for ${url}, retrying with crawler UA`);
         return checkOgImage(url, CRAWLER_UA);
       }
+      discardBody(res);
       log(`Failed to fetch image with status ${res.status}: ${url}`);
       return false;
     }
@@ -1031,14 +1082,15 @@ const checkOgImage = async (url, userAgent = env.USER_AGENT) => {
       // rejected the og:image of e.g. blog.ethereum.org, ethereum.org and
       // dlnews.com (2-4MB) in the preview audit.
       if (sizeInMB > 5) {
+        discardBody(res);
         log(`Rejecting oversized image (${sizeInMB.toFixed(1)}MB): ${url}`);
         return false;
       }
     }
 
     // Buffer the entire image to avoid stream memory leaks
-    const buffer = await res.arrayBuffer();
-    return (await measureImage(Buffer.from(buffer), url)) || false;
+    const buffer = await readLimited(res, { maxBytes: MAX_IMAGE_BYTES });
+    return (await measureImage(buffer, url)) || false;
   } catch (err) {
     log(`Error checking image dimensions for ${url}: ${err.message}`);
     return false;
@@ -1243,18 +1295,15 @@ export const metadata = async (
     // For fxtwitter, wrap the HTML fetch in try-catch so a timeout doesn't
     // abort the whole function — we can still get article data from the JSON API.
     const doHtmlFetch = async (fetchUa = userAgent, timeoutMs = isFxTwitter ? 10000 : 8000) => {
-      const response = await fetch(url, {
+      const response = await pageFetch(url, {
         headers: { "User-Agent": fetchUa },
-        agent: useAgent(url),
         signal: AbortSignal.timeout(timeoutMs),
       });
       lastStatus = response.status;
 
       const contentTypeHeader = response.headers.get("content-type") || "";
       if (contentTypeHeader && !contentTypeHeader.includes("text/html")) {
-        if (response.body && typeof response.body.cancel === "function") {
-          response.body.cancel();
-        }
+        discardBody(response);
         throw new Error(`Unsupported content type for metadata: ${contentTypeHeader}`);
       }
 
@@ -1283,7 +1332,9 @@ export const metadata = async (
         }
       }
 
-      const html = await response.text();
+      const html = (
+        await readLimited(response, { maxBytes: MAX_HTML_BYTES, truncate: true })
+      ).toString("utf8");
 
       try {
         const parsed = await parseWithOGS(html, 5000);
@@ -1535,7 +1586,7 @@ export const metadata = async (
       // Only generate title if requested
       if (generateTitle) {
         const castContent = `Cast by ${cast.author.username}: ${cast.text}`;
-        const claudeTitle = await generateClaudeTitle(castContent);
+        const claudeTitle = await cachedClaudeTitle(url, castContent);
         if (claudeTitle) {
           output.ogTitle = claudeTitle;
         }
@@ -1552,7 +1603,7 @@ export const metadata = async (
       output.blueskyPost = blueskyPost;
       if (generateTitle && blueskyPost.text) {
         const postContent = `Bluesky post by ${blueskyPost.author.displayName}: ${blueskyPost.text}`;
-        const claudeTitle = await generateClaudeTitle(postContent);
+        const claudeTitle = await cachedClaudeTitle(url, postContent);
         if (claudeTitle) output.ogTitle = claudeTitle;
       }
     } else {
@@ -1586,7 +1637,7 @@ export const metadata = async (
       // Generate better title if requested
       if (generateTitle && paragraphPost.content) {
         const postContent = `${paragraphPost.title}: ${paragraphPost.description || paragraphPost.content.substring(0, 500)}`;
-        const claudeTitle = await generateClaudeTitle(postContent);
+        const claudeTitle = await cachedClaudeTitle(url, postContent);
         if (claudeTitle) {
           output.ogTitle = claudeTitle;
         }
@@ -1612,7 +1663,7 @@ export const metadata = async (
       if (generateTitle && interfaceTake.content) {
         const authorName = interfaceTake.author.displayName || interfaceTake.author.truncatedAddress;
         const takeContent = `Take by ${authorName}: ${interfaceTake.content}`;
-        const claudeTitle = await generateClaudeTitle(takeContent);
+        const claudeTitle = await cachedClaudeTitle(url, takeContent);
         if (claudeTitle) {
           output.ogTitle = claudeTitle;
         }
@@ -1629,7 +1680,7 @@ export const metadata = async (
     ) {
       const tweetAuthor = result?.ogTitle || result?.twitterCreator;
       const tweetContent = `Tweet by ${tweetAuthor}: ${ogDescription}`;
-      const claudeTitle = await generateClaudeTitle(tweetContent);
+      const claudeTitle = await cachedClaudeTitle(url, tweetContent);
       if (claudeTitle) {
         output.ogTitle = claudeTitle;
       }
