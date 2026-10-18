@@ -1,6 +1,7 @@
 // Checks whether a story's link still works before we email it out.
 // Only definite "gone" answers count as dead: sites that block bots or
 // time out are treated as alive so we don't drop good stories.
+import { safeFetch, discardBody } from "./safefetch.mjs";
 
 const twitterHosts = new Set([
   "x.com",
@@ -16,7 +17,7 @@ const twitterHosts = new Set([
 
 const timeout = 10000;
 
-export async function isLinkAlive(href, fetchImpl = fetch) {
+export async function isLinkAlive(href, fetchImpl = safeFetch) {
   let url;
   try {
     url = new URL(href);
@@ -40,20 +41,20 @@ export async function isLinkAlive(href, fetchImpl = fetch) {
         `https://api.fxtwitter.com/status/${match[1]}`,
         { headers, signal: AbortSignal.timeout(timeout) },
       );
-      await response.body?.cancel?.();
+      discardBody(response);
       return response.status !== 404 && response.status !== 401;
     }
 
     const response = await fetchImpl(url.toString(), {
       headers,
-      redirect: "follow",
       signal: AbortSignal.timeout(timeout),
     });
-    await response.body?.cancel?.();
+    discardBody(response);
     return response.status !== 404 && response.status !== 410;
   } catch (err) {
     // The domain no longer exists.
-    if (err?.cause?.code === "ENOTFOUND") return false;
+    // (undici puts the code on err.cause, node-fetch on err itself)
+    if ((err?.cause?.code ?? err?.code) === "ENOTFOUND") return false;
     return true;
   }
 }

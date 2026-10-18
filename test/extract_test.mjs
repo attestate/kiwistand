@@ -18,6 +18,7 @@ const {
   parseArxivAbs,
   requiresCaptcha,
   stripBoilerplate,
+  setPageFetchForTests,
 } = await import("../src/lib/listen/extract.mjs");
 const { JSDOM } = await import("jsdom");
 
@@ -32,8 +33,10 @@ function mockFetch(t, routes) {
     if (!route) return new Response("not found", { status: 404 });
     return typeof route === "function" ? route(options) : route.clone();
   };
+  setPageFetchForTests(globalThis.fetch);
   t.teardown(() => {
     globalThis.fetch = original;
+    setPageFetchForTests();
   });
   return calls;
 }
@@ -359,4 +362,17 @@ test("stripBoilerplate is conservative", (t) => {
   t.deepEqual(stripBoilerplate(other, "https://example.com/a"), other);
   const image = { type: "image", src: "https://example.com/a.png", alt: "" };
   t.deepEqual(stripBoilerplate([text("Body."), image], "https://www.coindesk.com/a"), [text("Body."), image]);
+});
+
+test("page fetches refuse loopback and private addresses", async (t) => {
+  const http = await import("http");
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { "content-type": "text/html" });
+    res.end(`<html><body><article><p>${paragraph(10)}</p></article></body></html>`);
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.teardown(() => server.close());
+  const { port } = server.address();
+  await t.throwsAsync(extractArticle(`http://127.0.0.1:${port}/admin`));
+  await t.throwsAsync(extractArticle(`http://localhost:${port}/admin`));
 });
