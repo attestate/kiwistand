@@ -3,6 +3,7 @@ import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 import { LRUCache } from "lru-cache";
 import { extractWarpcastContent, extractBlueskyContent } from "../../parser.mjs";
+import { safeFetch } from "../../safefetch.mjs";
 
 // Minimum characters for a valid article (filters out landing pages)
 const MIN_ARTICLE_LENGTH = 500;
@@ -180,10 +181,16 @@ async function extractBlueskyPost(url) {
   return { title, plainText, wrappedHtml };
 }
 
+// Story hrefs are user input and /stories/context returns the extracted
+// text, so every page fetch goes through the SSRF guard (see safefetch.mjs).
+let pageFetch = safeFetch;
+export function setPageFetchForTests(fn) {
+  pageFetch = fn || safeFetch;
+}
+
 function fetchWithTimeout(url, headers = BROWSER_HEADERS, timeout = FETCH_TIMEOUT) {
-  return fetch(url, {
+  return pageFetch(url, {
     headers,
-    redirect: "follow",
     signal: AbortSignal.timeout(timeout),
   });
 }
@@ -192,15 +199,14 @@ function fetchWithTimeout(url, headers = BROWSER_HEADERS, timeout = FETCH_TIMEOU
 // article is usually near the top), other bodies throw.
 async function readLimited(res, { maxBytes = MAX_PAGE_BYTES, truncate = false } = {}) {
   if (!res.body) return "";
-  const reader = res.body.getReader();
   const chunks = [];
   let size = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  // Works for node-fetch (Node stream) and WHATWG bodies; leaving the loop
+  // early destroys/cancels the stream.
+  for await (const chunk of res.body) {
+    const value = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
     size += value.byteLength;
     if (size > maxBytes) {
-      await reader.cancel().catch(() => {});
       if (!truncate) throw new Error(`Response larger than ${maxBytes} bytes`);
       chunks.push(value.subarray(0, value.byteLength - (size - maxBytes)));
       break;
