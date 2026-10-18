@@ -113,6 +113,7 @@
     "linkifyjs": "4.2.0",
     "lmdb": "2.7.9",
     "morgan": "1.10.0",
+    "node-fetch": "2.7.0",
     "node-fetch-cache": "3.1.2",
     "node-html-parser": "6.1.13",
     "nodemon": "2.0.21",
