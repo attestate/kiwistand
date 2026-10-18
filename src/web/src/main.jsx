@@ -1669,10 +1669,12 @@ function initEndlessScroll() {
         return;
       }
 
-      // Sanitize HTML before inserting into DOM
+      // Sanitize HTML before inserting into DOM. Row() relies on inline
+      // onclick handlers (outbound tracking, share, comments), so only that
+      // event attribute is allowed; don't add other on* attributes here.
       const sanitizedHtml = DOMPurify.sanitize(html, {
         ADD_TAGS: ['iframe'],
-        ADD_ATTR: ['target', 'onclick', 'onmouseover', 'onmouseout', 'onerror', 'loading', 'data-no-instant', 'data-story-link', 'data-external-link', 'data-title', 'data-href', 'data-upvoters', 'data-story-index', 'data-comment-count', 'data-story-title', 'data-story-slug', 'data-story-href', 'data-submitter', 'data-content-id', 'data-content-type', 'data-has-preview', 'data-editorpicks', 'data-isad'],
+        ADD_ATTR: ['target', 'onclick', 'loading', 'data-no-instant', 'data-story-link', 'data-external-link', 'data-title', 'data-href', 'data-upvoters', 'data-story-index', 'data-comment-count', 'data-story-title', 'data-story-slug', 'data-story-href', 'data-submitter', 'data-content-id', 'data-content-type', 'data-has-preview', 'data-editorpicks', 'data-isad'],
       });
 
       // Insert new rows before the sentinel's parent row
