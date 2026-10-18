@@ -21,6 +21,7 @@ import {
   isInIOSApp,
 } from "./client.mjs";
 import { getLocalAccount } from "./session.mjs";
+import { uploadImage } from "./uploadImage.mjs";
 import { openOnboarding } from "./LoginModal.jsx";
 import ShareModal from "./ShareModal.jsx";
 import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
@@ -54,6 +55,8 @@ const UrlInput = (props) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isTextMode, setIsTextMode] = useState(false);
   const [textContent, setTextContent] = useState("");
+  const account = useAccount();
+  const wallet = useSigner();
 
   useEffect(() => {
     if (
@@ -95,31 +98,13 @@ const UrlInput = (props) => {
 
     setIsUploading(true);
 
+    // Signed like the submission: the local Kiwi key or else the wallet.
+    const local = getLocalAccount(account.address);
+    const signer =
+      local && local.privateKey ? new Wallet(local.privateKey) : wallet;
+
     try {
-      // Step 1: Get upload URL from our backend
-      const tokenResponse = await fetch("/api/v1/image-upload-token");
-      if (!tokenResponse.ok) throw new Error("Failed to get upload token");
-
-      const tokenData = await tokenResponse.json();
-      const { uploadURL } = tokenData.data;
-
-      // Step 2: Upload file directly to Cloudflare
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const uploadResponse = await fetch(uploadURL, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) throw new Error("Failed to upload image");
-
-      // Step 3: Generate the final image URL
-      // The URL pattern for Cloudflare Images is:
-      // https://imagedelivery.net/[account hash]/[image id]/[variant]
-      const imageId = tokenData.data.id;
-      const accountHash = uploadURL.split("/").slice(-2)[0];
-      const imageUrl = `https://imagedelivery.net/${accountHash}/${imageId}/public`;
+      const imageUrl = await uploadImage(file, signer);
 
       // Set the URL in the input field
       setURL(imageUrl);

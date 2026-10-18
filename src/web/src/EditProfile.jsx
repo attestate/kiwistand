@@ -182,6 +182,13 @@ export function EditProfileModal(props) {
     };
   }, [name, identity]);
 
+  const profileSigner = () => {
+    if (local && local.identity.toLowerCase() === identity.toLowerCase()) {
+      return new Wallet(local.privateKey);
+    }
+    return wallet;
+  };
+
   const handleFile = async (e) => {
     const file = e.target.files[0];
     e.target.value = "";
@@ -193,7 +200,7 @@ export function EditProfileModal(props) {
     setUploading(true);
     setError("");
     try {
-      setAvatar(await uploadImage(file));
+      setAvatar(await uploadImage(file, profileSigner()));
     } catch (err) {
       setError(`Error uploading image: ${err.message}`);
     } finally {
@@ -209,12 +216,8 @@ export function EditProfileModal(props) {
 
   const save = async () => {
     setError("");
-    let signer;
-    if (local && local.identity.toLowerCase() === identity.toLowerCase()) {
-      signer = new Wallet(local.privateKey);
-    } else if (wallet) {
-      signer = wallet;
-    } else {
+    const signer = profileSigner();
+    if (!signer) {
       setError("Connect your wallet to save your profile");
       return;
     }
