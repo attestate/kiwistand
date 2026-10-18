@@ -1151,6 +1151,32 @@ test("adding message from too far into the future", async (t) => {
   );
 });
 
+test("syncing message from too far into the future", async (t) => {
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+
+  const timestamp =
+    Math.floor(Date.now() / 1000) + store.SYNC_MAX_TIMESTAMP_DELTA_SECS + 1;
+  const message = id.create("hello world", "https://example.com", "amplify", timestamp);
+  const signedMessage = await id.sign(signer, message, EIP712_MESSAGE);
+
+  const trie = {
+    put: (key, value) => {
+      t.fail();
+    },
+    root: () => Buffer.from("abc", "hex"),
+  };
+  const libp2p = null;
+  const delegations = {};
+  const synching = true;
+  await t.throwsAsync(
+    async () =>
+      await store.add(trie, signedMessage, libp2p, delegations, synching),
+    { message: /in the future/ },
+  );
+});
+
 test("adding message from before minimum timestamp", async (t) => {
   const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey =

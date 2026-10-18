@@ -521,6 +521,8 @@ export async function add(
   });
 }
 
+export const SYNC_MAX_TIMESTAMP_DELTA_SECS = 60 * 60;
+
 async function _add({
   trie,
   message,
@@ -539,10 +541,18 @@ async function _add({
     throw new Error(err);
   }
 
+  // NOTE: Synced messages get a much larger tolerance than the HTTP API's,
+  // as a peer's clock may be skewed. But every honest message entered the
+  // network through some node's HTTP API, so one dated further ahead than
+  // this was injected directly into p2p, e.g. to pin a story to the top of
+  // /new. Rejecting it doesn't stall reconciliation: `put` in sync.mjs skips
+  // messages that fail to add.
   const nowSecs = Date.now() / 1000;
-  const toleranceSecs = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10);
+  const toleranceSecs = synching
+    ? SYNC_MAX_TIMESTAMP_DELTA_SECS
+    : parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10);
   const maxTimestampSecs = nowSecs + toleranceSecs;
-  if (!synching && message.timestamp >= maxTimestampSecs) {
+  if (message.timestamp >= maxTimestampSecs) {
     const err = `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`;
     log(err);
     throw new Error(err);
