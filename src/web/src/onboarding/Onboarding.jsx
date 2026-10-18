@@ -580,7 +580,7 @@ export default function Onboarding({ onClose, start }) {
     setError("");
     setBusy(true);
     try {
-      const url = await uploadImage(file);
+      const url = await uploadImage(file, new Wallet(signingKey()));
       const problem = await saveProfile(signingKey(), nickname, url);
       if (problem) {
         setBusy(false);

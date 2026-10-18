@@ -90,6 +90,7 @@ import {
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
+import * as imageuploads from "./imageuploads.mjs";
 import * as profiles from "./profiles.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
@@ -3114,8 +3115,16 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
 
-  app.get("/api/v1/image-upload-token", async (request, reply) => {
-    reply.header("Cache-Control", "no-cache");
+  // Signed and rate limited, see src/imageuploads.mjs.
+  app.post("/api/v1/image-upload-token", async (request, reply) => {
+    reply.header("Cache-Control", "no-store");
+
+    let identity;
+    try {
+      identity = await bookmarks.verify(request.body, [imageuploads.TYPE]);
+    } catch (err) {
+      return sendError(reply, 401, "Unauthorized", err.message);
+    }
 
     // Check if we have the required environment variables
     if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
@@ -3145,6 +3154,15 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return sendError(reply, code, httpMessage, details);
     }
 
+    let upload;
+    try {
+      const points = karma.resolve(utils.getAddress(identity));
+      upload = imageuploads.take(identity, points);
+    } catch (err) {
+      if (err.status !== 429) throw err;
+      return sendError(reply, 429, "Too Many Requests", err.message);
+    }
+
     // Request a direct upload URL
     let directUpload;
     try {
@@ -3154,6 +3172,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       log(`Successfully requested direct upload URL from Cloudflare`);
     } catch (err) {
       log(`Error requesting direct upload URL: ${err.toString()}`);
+      imageuploads.release(upload);
       const code = 500;
       const httpMessage = "Internal Server Error";
       const details = "Failed to request upload URL from Cloudflare";
@@ -3163,6 +3182,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     // Validate the response
     if (!directUpload || !directUpload.uploadURL) {
       log(`Invalid response from Cloudflare - missing uploadURL`);
+      imageuploads.release(upload);
       const code = 500;
       const httpMessage = "Internal Server Error";
       const details = "Received invalid response from Cloudflare";
