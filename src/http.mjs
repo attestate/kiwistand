@@ -759,6 +759,14 @@ const faviconFetchCache = new FileSystemCache({
 });
 const faviconFetch = fetchBuilder.withCache(faviconFetchCache);
 
+// Hard cap on the favicon body we will buffer. node-fetch-cache reads the whole
+// upstream body itself (to populate the on-disk cache), so a draining loop over
+// response.body would not bound that internal read. node-fetch's own `size`
+// option does: it aborts the stream mid-read and throws FetchError
+// (err.type === "max-size") before the body is fully buffered in memory or on
+// disk. A favicon above this size is not a favicon.
+const MAX_FAVICON_BYTES = 5 * 1024 * 1024; // 5 MiB
+
 export function sendError(reply, code, message, details) {
   log(`http error: "${code}", "${message}", "${details}"`);
   return reply.status(code).json({
@@ -3297,12 +3305,23 @@ export async function launch(trie, libp2p, isPrimary = true) {
         agent: useAgent(faviconUrl),
         signal: AbortSignal.timeout(10000),
         redirect: "error",
+        size: MAX_FAVICON_BYTES,
       });
 
       if (!response.ok) {
         const code = 404;
         const httpMessage = "Not Found";
         const details = "Favicon not found for domain";
+        return sendError(reply, code, httpMessage, details);
+      }
+
+      // Fast-reject an honestly-declared oversize body before reading it. A
+      // lying or chunked response is still bounded by the `size` option above.
+      const declaredLength = Number(response.headers.get("content-length"));
+      if (Number.isFinite(declaredLength) && declaredLength > MAX_FAVICON_BYTES) {
+        const code = 413;
+        const httpMessage = "Payload Too Large";
+        const details = "Favicon exceeds the maximum allowed size";
         return sendError(reply, code, httpMessage, details);
       }
 
@@ -3331,6 +3350,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
       return reply.send(Buffer.from(buffer));
     } catch (err) {
       log(`Error fetching favicon for ${domain}: ${err.toString()}`);
+      // node-fetch throws FetchError with type "max-size" once the body grows
+      // past MAX_FAVICON_BYTES; surface that as 413 rather than a generic 502.
+      if (err && err.type === "max-size") {
+        const code = 413;
+        const httpMessage = "Payload Too Large";
+        const details = "Favicon exceeds the maximum allowed size";
+        return sendError(reply, code, httpMessage, details);
+      }
       const code = 502;
       const httpMessage = "Bad Gateway";
       const details = "Failed to fetch favicon";

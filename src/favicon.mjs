@@ -79,8 +79,12 @@ export function buildSafeFaviconUrl(domain) {
       ? url.hostname.slice(1, -1)
       : url.hostname;
   if (net.isIP(host) !== 0) return null;
-  // Require a dotted DNS name with a plausible TLD.
-  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(url.hostname)) return null;
+  // Require a well-formed dotted DNS name: 1-63 char labels that do not start
+  // or end with a hyphen, no empty labels (rejects "a..com", ".evil.com"), and
+  // a plausible alphabetic TLD. (Total length is already bounded above.)
+  const HOSTNAME_RE =
+    /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
+  if (!HOSTNAME_RE.test(url.hostname)) return null;
 
   return url.toString();
 }

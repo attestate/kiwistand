@@ -49,6 +49,19 @@ test("rejects raw IP literals and non-DNS hosts", (t) => {
   t.is(buildSafeFaviconUrl("internal"), null);
 });
 
+test("rejects malformed hostnames with empty or bad labels", (t) => {
+  t.is(buildSafeFaviconUrl("a..com"), null);
+  t.is(buildSafeFaviconUrl(".evil.com"), null);
+  t.is(buildSafeFaviconUrl("evil..com"), null);
+  t.is(buildSafeFaviconUrl("evil.com."), null); // trailing dot
+  t.is(buildSafeFaviconUrl("-evil.com"), null); // label starts with hyphen
+  t.is(buildSafeFaviconUrl("evil-.com"), null); // label ends with hyphen
+  t.is(buildSafeFaviconUrl("example.c"), null); // TLD too short
+  // Well-formed names still pass.
+  t.is(buildSafeFaviconUrl("a.co"), "https://a.co/favicon.ico");
+  t.is(buildSafeFaviconUrl("my-site.io"), "https://my-site.io/favicon.ico");
+});
+
 test("rejects empty, oversized and non-string input", (t) => {
   t.is(buildSafeFaviconUrl(""), null);
   t.is(buildSafeFaviconUrl(undefined), null);
