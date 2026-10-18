@@ -66,7 +66,13 @@ const EmbedDrawer = ({ toast }) => {
       try {
         const urlObj = new URL(url);
         const hostname = urlObj.hostname;
-        
+
+        // Security check: only embed web pages, never e.g. "javascript:" URLs
+        if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
+          console.log("Security: Cannot embed non-http(s) URL");
+          return;
+        }
+
         // Security check: prevent embedding our own domain
         const currentDomain = window.location.hostname;
         // Also check for the root domain (kiwistand.com)
