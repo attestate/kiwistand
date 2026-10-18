@@ -73,8 +73,8 @@ import { parse, metadata, cachedMetadata, warmMetadata } from "./parser.mjs";
 import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
-import * as subscriptions from "./subscriptions.mjs";
 import * as email from "./email.mjs";
+import { triggerUpvoteNotification } from "./subscriptions.mjs";
 import * as moderation from "./views/moderation.mjs";
 import {
   getSubmission,
@@ -1234,61 +1234,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
   });
 
-  app.post("/api/v1/subscriptions/:address", async (request, reply) => {
-    function isValidWebPushSubscription(subscription) {
-      if (!subscription || typeof subscription !== "object") {
-        return false;
-      }
-
-      const { endpoint, keys } = subscription;
-
-      if (!endpoint || typeof endpoint !== "string") {
-        return false;
-      }
-
-      if (!keys || typeof keys !== "object" || !keys.p256dh || !keys.auth) {
-        return false;
-      }
-
-      return true;
-    }
-    reply.header("Cache-Control", "no-cache");
-
-    let address;
-    try {
-      address = utils.getAddress(request.params.address);
-    } catch (err) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      const details =
-        "Please only submit subscription along with a valid Ethereum addresses.";
-      reply.header("Cache-Control", "public, max-age=0,  must-revalidate");
-      return sendError(reply, code, httpMessage, details);
-    }
-
-    if (!isValidWebPushSubscription(request.body)) {
-      const code = 400;
-      const httpMessage = "Bad Request";
-      const details = "Error storing subscription";
-      reply.header("Cache-Control", "public, max-age=0, must-revalidate");
-      return sendError(reply, code, httpMessage, details);
-    }
-
-    try {
-      subscriptions.store(address, request.body);
-    } catch (err) {
-      const code = 500;
-      const httpMessage = "Internal Server Error";
-      const details = "Error storing subscription";
-      reply.header("Cache-Control", "public, max-age=0, must-revalidate");
-      return sendError(reply, code, httpMessage, details);
-    }
-
-    const code = 200;
-    const httpMessage = "OK";
-    const details = "Successfully subscribed via push notifications";
-    return sendStatus(reply, code, httpMessage, details);
-  });
   // Issues the long-lived anonymous PostHog id as a server-set cookie (see
   // src/analytics-id.mjs). Must never be cached: it's per-visitor.
   app.get("/api/v1/analytics-id", (request, reply) => {
@@ -2880,7 +2825,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       
       // Trigger upvote notification for mini app upvotes
       setImmediate(() => {
-        subscriptions.triggerUpvoteNotification({
+        triggerUpvoteNotification({
           type: "amplify",
           href: message.href,
           title: message.title,
