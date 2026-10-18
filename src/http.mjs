@@ -91,6 +91,7 @@ import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
 import * as imageuploads from "./imageuploads.mjs";
+import * as shares from "./shares.mjs";
 import * as profiles from "./profiles.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
@@ -954,21 +955,38 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(204).send();
   });
 
+  // Signed, see src/shares.mjs.
+  // NOTE: Old clients still send the unsigned ?url=&type= beacon, which gets
+  // a 204 without being recorded so they don't error. A signed message that
+  // doesn't verify gets a 401.
   app.post("/share", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
-    const { url, type } = request.query;
-    if (!url) {
-      return reply.status(400).send("URL parameter is required");
-    }
-    if (!type) {
-      return reply.status(400).send("Type parameter is required");
-    }
-    if (!fingerprint) {
+    const message = request.body;
+    if (!message || !message.signature) {
       return reply.status(204).send();
     }
 
-    const hash = fingerprint.generate(request);
-    trackShare(url, hash, type);
+    let identity;
+    try {
+      const karmaOf = (id) => karma.resolve(utils.getAddress(id));
+      identity = await shares.authorize(message, karmaOf);
+    } catch (err) {
+      return sendError(reply, 401, "Unauthorized", err.message);
+    }
+    if (!identity) {
+      return reply.status(204).send();
+    }
+    if (!/^[a-z]{1,32}$/.test(message.title)) {
+      return sendError(reply, 400, "Bad Request", "Invalid share channel");
+    }
+
+    try {
+      getSubmission(null, message.href);
+    } catch (err) {
+      return sendError(reply, 404, "Not Found", "Story not found");
+    }
+
+    trackShare(message.href, identity, message.title);
     return reply.status(204).send();
   });
 
