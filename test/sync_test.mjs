@@ -27,6 +27,8 @@ import {
   send,
   handleLevels,
   receive,
+  read,
+  streamLimits,
 } from "../src/sync.mjs";
 import { bootstrap } from "../src/id.mjs";
 import * as store from "../src/store.mjs";
@@ -270,6 +272,47 @@ test("fromWire returns an empty list for an empty source", async (t) => {
   t.deepEqual(actual, []);
 });
 
+// A peer declares a big frame, sends all but its last byte and stalls.
+async function stalledStream() {
+  const parts = await all(lp.encode()([new Uint8Array(1024 * 1024)]));
+  const frame = Buffer.concat(parts.map((part) => part.subarray()));
+  const stream = { aborted: null, closed: false };
+  stream.abort = (err) => {
+    stream.aborted = err;
+  };
+  stream.close = async () => {
+    stream.closed = true;
+  };
+  stream.source = (async function* () {
+    yield frame.subarray(0, frame.length - 1);
+    await new Promise(() => {});
+  })();
+  return stream;
+}
+
+test("read aborts a stream that stalls inside a frame", async (t) => {
+  const stream = await stalledStream();
+  const timeout = 50;
+  await t.throwsAsync(read(stream, timeout), { message: /no frame within/ });
+  t.truthy(stream.aborted);
+});
+
+test("receive gives up on a stalled stream and resets the sync peer", async (t) => {
+  const stream = await stalledStream();
+  const peerFab = syncPeerFactory();
+  peerFab.set({ equals: () => false });
+  let handled = false;
+  const handler = async () => {
+    handled = true;
+  };
+  const timeout = 50;
+  const connection = { remotePeer: null };
+  await receive(peerFab, null, false, handler, timeout)({ connection, stream });
+  t.false(handled);
+  t.truthy(stream.aborted);
+  t.is(peerFab.get(), undefined);
+});
+
 test("chunkList stays under the byte budget and keeps order", (t) => {
   const items = Array.from({ length: 40 }, (_, i) => ({
     n: i,
@@ -329,6 +372,7 @@ test.serial("two nodes on the new protocol sync a trie bigger than one frame", a
   await nodeB.handle(
     `/${levels.id}/${levels.version}`,
     handleLevels(trieB, peerFabB),
+    streamLimits,
   );
   let leafFrames = 0;
   await nodeB.handle(
@@ -337,6 +381,7 @@ test.serial("two nodes on the new protocol sync a trie bigger than one frame", a
       leafFrames += 1;
       await simplePut(trieB, message);
     }),
+    streamLimits,
   );
 
   const addr = nodeB.getMultiaddrs()[0];
