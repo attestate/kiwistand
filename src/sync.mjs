@@ -2,8 +2,6 @@
 import { setTimeout } from "timers/promises";
 
 import * as lp from "it-length-prefixed";
-import map from "it-map";
-import all from "it-all";
 import { LeafNode, decodeNode } from "@ethereumjs/trie";
 import { encode, decode } from "cbor-x";
 import Ajv from "ajv";
@@ -110,18 +108,17 @@ export function chunkList(items, maxBytes = maxMessageBytes) {
   return chunks;
 }
 
+// Every chunk goes out over its own stream (see send), so a stream carries
+// exactly one frame. Only read that first frame: buffering frames until the
+// remote ends the stream let a peer grow our memory without bound. Returning
+// from the for-await calls return() on the source and stops reading.
 export async function fromWire(source) {
   const decoded = lp.decode({ maxDataLength })(source);
-  const process = async (_source) => {
-    const results = await map(_source, (message) => {
-      if (!message) return;
-      const buf = Buffer.from(message.subarray());
-      const decoded = decode(buf);
-      return decoded;
-    });
-    return await all(results);
-  };
-  return await process(decoded);
+  for await (const message of decoded) {
+    const buf = Buffer.from(message.subarray());
+    return [decode(buf)];
+  }
+  return [];
 }
 
 export function handleDiscovery(evt) {

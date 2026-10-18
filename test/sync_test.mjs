@@ -243,6 +243,33 @@ test("serializing from wire", async (t) => {
   t.deepEqual(actual, [message]);
 });
 
+test("fromWire reads only the first frame of an endless source", async (t) => {
+  const message = { hello: "world" };
+  const frame = await all(lp.encode()([encode(message)]));
+  let yielded = 0;
+  let returned = false;
+  async function* endless() {
+    try {
+      while (true) {
+        yielded++;
+        yield* frame;
+      }
+    } finally {
+      returned = true;
+    }
+  }
+
+  const actual = await fromWire(endless());
+  t.deepEqual(actual, [message]);
+  t.true(yielded < 3);
+  t.true(returned);
+});
+
+test("fromWire returns an empty list for an empty source", async (t) => {
+  const actual = await fromWire([]);
+  t.deepEqual(actual, []);
+});
+
 test("chunkList stays under the byte budget and keeps order", (t) => {
   const items = Array.from({ length: 40 }, (_, i) => ({
     n: i,
