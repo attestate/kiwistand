@@ -911,24 +911,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     fingerprint = await import("./fingerprint_example.mjs");
   }
 
-  app.get("/redirect/:index", async (req, res) => {
-    let sub;
-    try {
-      sub = getSubmission(req.params.index);
-    } catch {
-      return res.status(404).send("Not found");
-    }
-    // Don't send visitors to links the feeds hide (banned or malicious).
-    const policy = await moderation.getLists();
-    if (moderation.isModerated(sub, policy)) {
-      return res.status(404).send("Not found");
-    }
-    // record outbound fingerprint
-    const hash = fingerprint.generate(req);
-    trackOutbound(sub.href, hash);
-    // immediate redirect
-    res.redirect(302, sub.href);
-  });
   app.post("/outbound", async (request, reply) => {
     reply.header("Cache-Control", "no-cache");
     const { url } = request.query;
