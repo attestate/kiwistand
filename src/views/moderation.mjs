@@ -298,3 +298,8 @@ export function moderate(leaves, config, path) {
   });
   return result;
 }
+
+// True when moderate() would hide this leaf from the feeds.
+export function isModerated(leaf, config) {
+  return moderate([leaf], config).length === 0;
+}

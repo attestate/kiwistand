@@ -46,7 +46,6 @@ export const Logo = (className = "") => html`
     aria-label="Kiwi News"
   >
     ${KiwiWordmark()}
-    <span class="anon-mode-label">anon-mode</span>
   </a>
 `;
 

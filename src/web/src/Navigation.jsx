@@ -51,23 +51,6 @@ export const SimpleDisconnectButton = (props) => {
     label = props.label;
   }
   const [stable, setStable] = useState("loading");
-  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-
-  // If in anon mode, show logout button
-  if (isAnonMode) {
-    return (
-      <span
-        className="meta-link"
-        style={{
-          userSelect: "none",
-          cursor: "pointer",
-        }}
-        onClick={logout}
-      >
-        Log out
-      </span>
-    );
-  }
 
   return (
     <ConnectButton.Custom>
@@ -117,23 +100,6 @@ export const SimpleDisconnectButton = (props) => {
 
 const DisconnectButton = () => {
   const staleAuth = hasStaleDelegationKeys();
-
-  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-
-  // If in anon mode, show logout button
-  if (isAnonMode) {
-    return (
-      <button
-              type="button"
-              title="Log out"
-              onClick={logout}
-              className="kn-menu-item kn-menu-logout"
-            >
-              <MS name="sign-out" size={22} />
-              <span>Log out</span>
-            </button>
-    );
-  }
 
   return (
     <ConnectButton.Custom>

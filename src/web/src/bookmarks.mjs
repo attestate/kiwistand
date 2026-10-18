@@ -10,10 +10,8 @@ const CACHE_KEY = "kiwi-saved-stories";
 
 const norm = (index) => String(index || "").replace(/^0x/, "").toLowerCase();
 
-// The account that can save, or null (logged out, or anon mode: its keys
-// aren't linked to an account).
+// The account that can save, or null (logged out).
 export function bookmarkAccount() {
-  if (localStorage.getItem("anon-mode") === "true") return null;
   const account = getLocalAccount(getCookie("identity"));
   return account && account.privateKey ? account : null;
 }

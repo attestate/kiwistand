@@ -21,6 +21,16 @@ export async function triggerUpvoteNotification(message) {
     // Don't notify if the upvoter is the author
     if (message.identity === submission.identity) return;
 
+    // Banned users can neither send nor receive notifications
+    let bannedAddresses = [];
+    try {
+      const policy = await moderation.getLists();
+      bannedAddresses = policy.addresses || [];
+    } catch (err) {
+      log(`Failed to get banned addresses for upvote notification filtering: ${err}`);
+    }
+    if (bannedAddresses.includes(message.identity.toLowerCase())) return;
+
     // Get upvoter's display name and try to determine Neynar score
     const ensData = await resolve(message.identity);
     if (!ensData.displayName) return;
@@ -50,16 +60,9 @@ export async function triggerUpvoteNotification(message) {
     }
 
     // Filter out banned users from receiving notifications
-    let receivers = [submission.identity];
-    try {
-      const policy = await moderation.getLists();
-      const bannedAddresses = policy.addresses || [];
-      receivers = receivers.filter(
-        receiver => !bannedAddresses.includes(receiver.toLowerCase())
-      );
-    } catch (err) {
-      log(`Failed to get banned addresses for upvote notification filtering: ${err}`);
-    }
+    const receivers = [submission.identity].filter(
+      receiver => !bannedAddresses.includes(receiver.toLowerCase())
+    );
 
     if (receivers.length === 0) return;
 
@@ -113,6 +116,18 @@ export async function triggerNotification(message) {
   const [_, index] = message.href.split("kiwi:");
   const submission = getSubmission(index);
 
+  // Banned users can't send notifications and moderated stories don't
+  // produce any. Continue unfiltered if moderation fails.
+  let policy;
+  try {
+    policy = await moderation.getLists();
+  } catch (err) {
+    log(`Failed to get banned addresses for notification filtering: ${err}`);
+  }
+  const bannedAddresses = policy?.addresses || [];
+  if (bannedAddresses.includes(message.identity.toLowerCase())) return;
+  if (policy && moderation.isModerated(submission, policy)) return;
+
   const ensData = await resolve(message.identity);
   if (!ensData.displayName) return;
 
@@ -120,19 +135,11 @@ export async function triggerNotification(message) {
     submission.identity,
     ...submission.comments.map((comment) => comment.identity),
   ].filter((receiver) => receiver !== message.identity);
-  let uniqueReceivers = Array.from(new Set(receivers));
 
   // Filter out banned users from receiving notifications
-  try {
-    const policy = await moderation.getLists();
-    const bannedAddresses = policy.addresses || [];
-    uniqueReceivers = uniqueReceivers.filter(
-      receiver => !bannedAddresses.includes(receiver.toLowerCase())
-    );
-  } catch (err) {
-    log(`Failed to get banned addresses for notification filtering: ${err}`);
-    // Continue with unfiltered list if moderation fails
-  }
+  const uniqueReceivers = Array.from(new Set(receivers)).filter(
+    receiver => !bannedAddresses.includes(receiver.toLowerCase())
+  );
 
   const maxChars = 140;
   const slug = getSlug(submission.title);

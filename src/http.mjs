@@ -912,11 +912,16 @@ export async function launch(trie, libp2p, isPrimary = true) {
     fingerprint = await import("./fingerprint_example.mjs");
   }
 
-  app.get("/redirect/:index", (req, res) => {
+  app.get("/redirect/:index", async (req, res) => {
     let sub;
     try {
       sub = getSubmission(req.params.index);
     } catch {
+      return res.status(404).send("Not found");
+    }
+    // Don't send visitors to links the feeds hide (banned or malicious).
+    const policy = await moderation.getLists();
+    if (moderation.isModerated(sub, policy)) {
       return res.status(404).send("Not found");
     }
     // record outbound fingerprint
@@ -2018,6 +2023,17 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (!message || message.type !== "analytics" || !message.href || !message.signature) {
       return sendError(reply, 400, "Bad Request", "Invalid message format");
     }
+
+    // NOTE: Without a freshness window, one leaked signed request would
+    // unlock the story's analytics forever.
+    const now = Math.floor(Date.now() / 1000);
+    if (
+      !Number.isInteger(message.timestamp) ||
+      message.timestamp < now - bookmarks.MAX_AGE ||
+      message.timestamp > now + 60
+    ) {
+      return sendError(reply, 401, "Unauthorized", "Message expired");
+    }
     
     let requesterAddress;
     try {
@@ -2856,7 +2872,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         href: message.href,
         title: message.title,
         timestamp: message.timestamp,
-        identity: message.walletAddress
+        identity: identityAddress
       });
       
       // Trigger upvote notification for mini app upvotes
@@ -2866,7 +2882,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
           href: message.href,
           title: message.title,
           timestamp: message.timestamp,
-          identity: message.walletAddress
+          identity: identityAddress
         }).catch((err) => {
           log(`Failed to trigger mini app upvote notification: ${err}`);
         });

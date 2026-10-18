@@ -105,9 +105,6 @@ import {
 // main bundle. window.posthog is set when it resolves. All callers use
 // window.posthog?.method?.() optional chaining for safety.
 
-// Check anon mode once at startup
-const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-
 // Tie PostHog's person to the wallet identity (as resolved by delegator2,
 // checksummed, which matches the distinct_ids already in PostHog) so
 // retention is measured per user rather than per browser.
@@ -136,7 +133,7 @@ const isSyntheticVisit =
 
 // Defer PostHog initialization to avoid blocking main thread
 const analyticsConsent = localStorage.getItem("kiwi-analytics-consent");
-if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
+if (!isSyntheticVisit && analyticsConsent !== "false") {
   const loadPostHog = async () => {
     const { default: posthog } = await import("posthog-js");
     // Long-lived anonymous id from a server-set cookie (Safari ITP wipes
@@ -212,7 +209,7 @@ if (!isAnonMode && !isSyntheticVisit && analyticsConsent !== "false") {
   if (document.readyState === "complete") afterLoad();
   else window.addEventListener("load", afterLoad, { once: true });
 } else {
-  // PostHog never loads in anon mode or without consent: don't buffer.
+  // PostHog never loads without consent: don't buffer.
   disableAnalytics();
 }
 
@@ -398,10 +395,6 @@ async function addVotes(delegations, toast) {
 
 
 async function addEmailSubscriptionForm(delegations, toast) {
-  // Skip email subscription form in anon mode
-  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-  if (isAnonMode) return;
-
   const elem = document.querySelector("email-subscription-form");
   if (elem) {
     const { ConnectedEmailSubscriptionForm } = await import("./Bell.jsx");
@@ -448,7 +441,7 @@ async function addConnectedComponents(delegations, toast) {
   // Check if we're on mobile based on the breakpoint in news.css (max-width: 640px)
   const isMobileView = window.innerWidth <= 640;
 
-  if (!isMobileView && !isAnonMode) {
+  if (!isMobileView) {
     const bellButton = document.querySelector("#bell");
     if (bellButton) {
       const Bell = (await import("./Bell.jsx")).default;
@@ -493,7 +486,7 @@ async function addConnectedComponents(delegations, toast) {
     });
   }
 
-  if (isMobileView && !isAnonMode) {
+  if (isMobileView) {
     const mobileBellButton = document.querySelector(".mobile-bell-container");
     if (mobileBellButton) {
       const Bell = (await import("./Bell.jsx")).default;
@@ -848,8 +841,8 @@ async function addNewsletterFeedCard() {
   const hide = shouldHideCard();
   elems.forEach((elem) => {
     if (hide) {
-      // Already subscribed, dismissed, or anon mode: drop the server-rendered
-      // fallback entirely.
+      // Already subscribed or dismissed: drop the server-rendered fallback
+      // entirely.
       (elem.closest("tr") || elem).remove();
       return;
     }
@@ -866,10 +859,6 @@ async function addNewsletterFeedCard() {
 }
 
 async function addNewsletterScrollModal(toast) {
-  // Don't show newsletter modal in anon mode
-  const isAnonMode = localStorage.getItem('anon-mode') === 'true';
-  if (isAnonMode) return;
-
   // A visible sign-up card (hot feed, or the desktop right column) already
   // asks; don't also pop up the modal. Hidden ones (right column on mobile)
   // don't count.
@@ -976,7 +965,7 @@ async function addEditProfile(toast) {
 }
 
 async function addNicknamePrompt(toast) {
-  if (isAnonMode || isIOSApp()) return;
+  if (isIOSApp()) return;
   // Only signed-in people can pick a name; don't load it for readers.
   if (!getCookie("identity")) return;
   const container = document.createElement("div");
@@ -1232,10 +1221,8 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
     try {
       document.body.classList.add("kiwi-logged-in");
     } catch {}
-    if (!isAnonMode) {
-      window.__kiwiIdentity = identity;
-      identifyPostHog(identity);
-    }
+    window.__kiwiIdentity = identity;
+    identifyPostHog(identity);
 
     // Set iOS wallet for push notifications
     if (isInIOSApp && window.setKiwiWallet) {
@@ -1251,7 +1238,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
       );
     };
 
-    if (shouldLoadTracker() && !isAnonMode) {
+    if (shouldLoadTracker()) {
       import("./tracker.mjs")
         .then((tracker) => {
           // Initialize once; afterwards only update signer/identity
@@ -1295,7 +1282,7 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
         p === "/" || p === "/new" || p === "/best" || p.startsWith("/stories")
       );
     };
-    if (shouldLoadTracker() && !isAnonMode) {
+    if (shouldLoadTracker()) {
       import("./tracker.mjs")
         .then((tracker) => {
           if (!window.__kiwiTrackerInit) {
@@ -1613,11 +1600,9 @@ function trackLinkImpressions() {
         }
       }
 
-      if (!isAnonMode) {
-        try {
-          capture("outbound_click", { href, variant, ...storyProps(link) });
-        } catch (_) {}
-      }
+      try {
+        capture("outbound_click", { href, variant, ...storyProps(link) });
+      } catch (_) {}
     });
   });
 }
@@ -1770,9 +1755,9 @@ function shouldReconnectWallet() {
 // (miniapp.mjs) rather than reconnect(): reconnect only picks up a wallet
 // that is already authorized and walks every other connector first, so mini
 // app visitors were left with "Log in" and wallet options that don't work
-// there. In anon mode no wallet connects at all.
+// there.
 async function connectWallet(isMiniApp) {
-  if (isMiniApp && !isAnonMode) {
+  if (isMiniApp) {
     setMiniApp({ isMiniApp: true });
     return autoConnectMiniAppWallet();
   }
@@ -1876,20 +1861,15 @@ async function start() {
     sdk.actions.addFrame();
   }
 
-  // Initialize link impression tracking (skip in anon mode)
-  if (!isAnonMode) {
-    trackLinkImpressions();
-  }
+  // Initialize link impression tracking
+  trackLinkImpressions();
 
   // Initialize terminal ad animations
   initTerminalAds();
 
   // One feed_page_view per feed page load (queued until PostHog loads)
   const feedPath = window.location.pathname;
-  if (
-    !isAnonMode &&
-    (feedPath === "/" || feedPath === "/new" || feedPath === "/best")
-  ) {
+  if (feedPath === "/" || feedPath === "/new" || feedPath === "/best") {
     capture("feed_page_view", {
       feed: feedName(feedPath),
       page: parseInt(urlParams.get("page"), 10) || 0,
@@ -2059,10 +2039,8 @@ async function start() {
       addDynamicComments(delegations, toast),
       addFarcasterShareButtons(),
     ]);
-    // Re-track impressions for new links (skip in anon mode)
-    if (!isAnonMode) {
-      trackLinkImpressions();
-    }
+    // Re-track impressions for new links
+    trackLinkImpressions();
     addAiButtonHandlers();
     bindHapticsToElements(".bottom-nav a", "selection");
     bindHapticsToElements(".kn-banner-desk a, .mobile-center", "selection");

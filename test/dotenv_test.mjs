@@ -69,6 +69,7 @@ test("that repo contains a .env-copy file with all possible configuration option
     "SOCIAL_MIN_UPVOTES",
     "ONESIGNAL_API_KEY",
     "DAILY_PUSH",
+    "IMAGE_UPLOAD_DAILY_LIMIT",
   ];
   try {
     await access(envPath, constants.F_OK);

@@ -125,7 +125,6 @@ const Prompt = ({ toast, t }) => {
 // non-blocking toast below the "Thanks for your like" one.
 export function maybeShowUpvoteNewsletterPrompt(toast) {
   try {
-    if (localStorage.getItem("anon-mode") === "true") return;
     if (SKIP_KEYS.some((key) => localStorage.getItem(key))) return;
     localStorage.setItem(SHOWN_KEY, "true");
   } catch (err) {

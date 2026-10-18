@@ -55,8 +55,7 @@ const SidebarDrawer = ({ delegations, toast }) => {
 
   const isHome =
     path === "/" || path === "/new" || path === "/best" || path === "/stories";
-  const isAnonMode = localStorage.getItem("anon-mode") === "true";
-  const loggedIn = isAnonMode || Boolean(getCookie("identity"));
+  const loggedIn = Boolean(getCookie("identity"));
   const close = () => setOpen(false);
 
   return (
@@ -85,7 +84,7 @@ const SidebarDrawer = ({ delegations, toast }) => {
               onClick={close}
             />
             <ConnectedProfile toast={toast} delegations={delegations} />
-            {loggedIn && !isAnonMode && (
+            {loggedIn && (
               <Item
                 href="/saved"
                 icon="bookmark-simple"

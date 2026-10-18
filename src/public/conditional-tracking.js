@@ -1,10 +1,5 @@
-// Conditionally load tracking scripts only if not in anon mode
+// Conditionally load tracking scripts
 (function() {
-  if (typeof localStorage !== 'undefined' && localStorage.getItem('anon-mode') === 'true') {
-    // Skip all tracking in anon mode
-    return;
-  }
-
   // Our own page speed checks (scripts/pagespeed) and Lighthouse aren't
   // visitors.
   // NOTE: Lighthouse's emulated user agent is a plain Chrome one (no
