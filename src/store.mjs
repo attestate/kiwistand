@@ -298,16 +298,15 @@ export async function descend(trie, level, exclude = []) {
 
 // NOTE: We use `utils.getAddress` from ethers here to make sure we hash a
 // canonical key into the database.
-export function upvoteID(identity, link, type, message = null) {
+//
+// NOTE: Text posts (data:text/plain,) are keyed by their raw href. They must
+// not be keyed by the incoming message's index as it includes the timestamp
+// and signature, so a re-signed amplify would yield a new marker every time
+// and as `cache` has no message, startup and runtime markers would disagree.
+export function upvoteID(identity, link, type) {
   // Handle kiwi: references (upvotes of text posts)
   if (link.startsWith('kiwi:0x')) {
     return `${utils.getAddress(identity)}|${link}|${type}`;
-  }
-
-  // Handle original text submissions - use their computed index
-  if (link.startsWith('data:text/plain,') && message) {
-    const { index } = toDigest(message);
-    return `${utils.getAddress(identity)}|kiwi:0x${index}|${type}`;
   }
 
   // Regular URLs
@@ -317,7 +316,7 @@ export function upvoteID(identity, link, type, message = null) {
 
 let messagesAdded = 0;
 async function atomicPut(trie, message, identity, delegations) {
-  const marker = upvoteID(identity, message.href, message.type, message);
+  const marker = upvoteID(identity, message.href, message.type);
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${JSON.stringify(
