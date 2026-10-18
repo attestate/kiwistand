@@ -12,8 +12,13 @@
 //   dimensions and roughly its byte sizes into ASSET_DIR, and referenced at
 //   ASSET_ORIGIN: another origin, like the third-party hosts in production.
 //
+// - Posts (text and maybe a picture) from posts.json become stories like
+//   the composer makes them (src/web/src/post.mjs), with their picture's
+//   measured size in the lifetime cache (src/postimage.mjs).
+//
 // Env: DATA_DIR, CACHE_DIR, ASSET_DIR, ASSET_ORIGIN (all required),
-// FIXTURE (default test/fixtures/pagespeed/fixture.json).
+// FIXTURE (default test/fixtures/pagespeed/fixture.json), FIXTURE_POSTS
+// (default test/fixtures/pagespeed/posts.json).
 import fs from "fs";
 import path from "path";
 import { env } from "process";
@@ -35,6 +40,29 @@ const fixture = JSON.parse(
     path.resolve(root, env.FIXTURE || "test/fixtures/pagespeed/fixture.json"),
     "utf8",
   ),
+);
+
+const { buildPostHref, deriveTitle } = await import(
+  "../../src/web/src/post.mjs"
+);
+const postsFile = path.resolve(
+  root,
+  env.FIXTURE_POSTS || "test/fixtures/pagespeed/posts.json",
+);
+const posts = fs.existsSync(postsFile)
+  ? JSON.parse(fs.readFileSync(postsFile, "utf8")).posts || []
+  : [];
+fixture.stories.push(
+  ...posts.map((post) => ({
+    title: deriveTitle(post.text),
+    href: buildPostHref(post.text, post.image),
+    age: post.age,
+    by: post.by,
+    upvotes: post.upvotes || [],
+    comments: post.comments || [],
+    imageSize: post.imageSize,
+    image: post.image,
+  })),
 );
 
 // NOTE: Imported after the env checks, these open databases in CACHE_DIR.
@@ -229,6 +257,11 @@ for (const [i, story] of fixture.stories.entries()) {
 // production the server finds it filled (it only builds it from the trie
 // when it's missing, and then other startup work races the build).
 cache.initializeLtCache();
+for (const story of fixture.stories) {
+  if (story.image && story.imageSize) {
+    cache.lifetimeCache.set(`post-image-size:${story.image}`, story.imageSize);
+  }
+}
 cache.initializeImpressions();
 cache.initializeShares();
 cache.initializeReactions();

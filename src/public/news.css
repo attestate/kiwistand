@@ -3312,6 +3312,196 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   display: none;
 }
 
+/* -- Posts (row.mjs PostCard, web/src/post.mjs) ---------------------------
+   Like a Farcaster cast: a 40px avatar column, then the name (semibold) and
+   age, the text (15px phones / 16px desktop, up to 10 lines in the feeds)
+   and the picture (12px corners, 1px border, at most 320px / 400px high in
+   the feeds). The picture's box has its real ratio once the server measured
+   it (--kn-post-ar, postimage.mjs) and a fixed 16:10 box, cropped, before
+   that, so nothing moves when it loads. The usual actions, comment strip and
+   inline comments sit in the text column. */
+#hnmain .content-row.kn-story.kn-post,
+.content-row.kn-story.kn-post {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+.kn-post {
+  --kn-post-max-h: 320px;
+}
+.kn-post-avatar,
+.kn-post-avatar:link,
+.kn-post-avatar:visited {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--kn-button-bg);
+  color: var(--kn-text-muted);
+}
+.kn-post-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kn-post-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.kn-post-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+  min-width: 0;
+  line-height: 20px;
+}
+.kn-post-name,
+.kn-post-name:link,
+.kn-post-name:visited {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kn-text-primary);
+  text-decoration: none;
+}
+.kn-post-age,
+.kn-post-age:link,
+.kn-post-age:visited {
+  flex-shrink: 0;
+  font-family: var(--kn-font-mono);
+  font-size: 12px;
+  color: var(--kn-text-secondary);
+  text-decoration: none;
+}
+.kn-post-rank {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+}
+.kn-post-text-wrap {
+  display: block;
+}
+.kn-post-text,
+.kn-post-text:link,
+.kn-post-text:visited {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 10;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--kn-text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.kn-post-link,
+a.kn-post-link:link,
+a.kn-post-link:visited {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--kn-accent-strong);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+.kn-post-media {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  max-height: var(--kn-post-max-h);
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid var(--kn-card-border);
+  border-radius: 12px;
+  background: var(--kn-placeholder);
+}
+/* The measured ratio: as wide as the column allows, no wider than the
+   picture or than the max height at that ratio. */
+.kn-post-media-sized {
+  aspect-ratio: var(--kn-post-ar);
+  width: min(100%, var(--kn-post-w), calc(var(--kn-post-max-h) * var(--kn-post-ratio)));
+  max-height: none;
+}
+.kn-post-media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kn-post-time {
+  margin-top: 10px;
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  color: var(--kn-text-secondary);
+}
+.kn-post .kn-actions {
+  height: 44px;
+  padding: 4px 0 0 !important;
+}
+.kn-post .kn-comment-preview {
+  margin-top: 4px !important;
+}
+/* The story page: bigger text, the whole text and a bigger picture. */
+.kn-post.kn-story-detail {
+  --kn-post-max-h: 480px;
+}
+.kn-story-detail .kn-post-text {
+  display: block;
+  -webkit-line-clamp: none;
+  margin-top: 10px;
+  font-size: 17px;
+  line-height: 1.45;
+}
+.kn-story-detail .kn-post-head {
+  min-height: 40px;
+}
+@media (min-width: 641px) {
+  .kn-post {
+    --kn-post-max-h: 400px;
+  }
+  .kn-post.kn-story-detail {
+    --kn-post-max-h: 560px;
+  }
+  .kn-post-text,
+  .kn-post-text:link,
+  .kn-post-text:visited {
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .kn-story-detail .kn-post-text {
+    font-size: 18px;
+  }
+  .kn-post-name,
+  .kn-post-name:link,
+  .kn-post-name:visited {
+    font-size: 14px;
+  }
+  .kn-post-rank {
+    font-size: 11px;
+  }
+  .kn-post .kn-actions {
+    height: auto;
+    padding: 8px 0 0 !important;
+  }
+}
+
 /* Pictures keep main's box: 2:1, cropped to fill (uploaded pictures are
    shown whole on a calm background). Only the frame is NEU 2. */
 .kn-media {

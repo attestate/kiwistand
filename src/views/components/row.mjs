@@ -20,6 +20,8 @@ import {
 } from "../utils/imageLoading.mjs";
 import { splitQuote, isDeletedTweet, tweetHandle } from "../../quote.mjs";
 import { ms } from "./icons.mjs";
+import { getPost, splitLinks } from "../../web/src/post.mjs";
+import { postImageSize, mediaStyle } from "../../postimage.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -325,6 +327,180 @@ const knownBadOgImages = [
   "https://s.turbifycdn.com/aah/paulgraham/essays-5.gif",
 ];
 
+const postDateFormat = new Intl.DateTimeFormat("en-US", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+function postDate(timestamp) {
+  const parts = Object.fromEntries(
+    postDateFormat
+      .formatToParts(new Date(timestamp * 1000))
+      .map(({ type, value }) => [type, value]),
+  );
+  return `${parts.hour}:${parts.minute} UTC · ${parts.month} ${parts.day}, ${parts.year}`;
+}
+
+// NOTE: A post (web/src/post.mjs) as a Farcaster-like cast: the author's
+// avatar in a left column; name, age and the text (its title stays hidden,
+// only <title>, og:title, slugs and notifications use it); the picture;
+// then the story's usual actions, comment strip and inline comments. In the
+// feeds the text and picture open the story page; on the story page links
+// in the text are real links and the picture opens the image viewer.
+export function PostCard({
+  story,
+  post,
+  path,
+  interactive,
+  invert,
+  style = "",
+  submissionId,
+  position,
+  showRank,
+  storyPath,
+  profileHref,
+  age,
+  isStoryNew,
+  isAboveFold,
+  actions,
+  commentPreview,
+  commentCount,
+}) {
+  const isDetail = path === "/stories";
+  const linked = Boolean(story.index) && path !== "/submit" && path !== "/demonstration";
+  const avatarSrc = story.submitter && story.submitter.safeAvatar;
+  const avatar = avatarSrc
+    ? html`<img
+        src="${DOMPurify.sanitize(sizedImageUrl(avatarSrc, 96))}"
+        alt=""
+        width="40"
+        height="40"
+        loading="${getImageLoading(isAboveFold, avatarSrc)}"
+      />`
+    : ms("user", 20);
+  const name = story.displayName || "";
+  const person = (content, className) =>
+    story.identity && profileHref
+      ? html`<a class="${className}" href="${profileHref}" onclick="${spinnerOnclick}"
+          >${content}</a
+        >`
+      : html`<span class="${className}">${content}</span>`;
+
+  const text = splitLinks(post.text).map((part) =>
+    !part.href
+      ? part.text
+      : isDetail
+        ? html`<a
+            class="kn-post-link"
+            href="${part.href}"
+            target="_blank"
+            rel="noopener noreferrer ugc nofollow"
+            >${part.display}</a
+          >`
+        : html`<span class="kn-post-link">${part.display}</span>`,
+  );
+  const textBlock =
+    linked && !isDetail
+      ? html`<span class="story-link-container kn-post-text-wrap"
+          ><a
+            class="kn-post-text"
+            href="${storyPath}"
+            data-story-link="${storyPath}"
+            onclick="${spinnerOnclick}"
+            >${text}</a
+          ></span
+        >`
+      : html`<div class="kn-post-text">${text}</div>`;
+
+  let media = null;
+  if (post.image) {
+    const size = postImageSize(post.image);
+    const cls = `kn-post-media${size ? " kn-post-media-sized" : ""}`;
+    const img = html`<img
+      src="${sizedImageUrl(post.image, isDetail ? 1200 : 800)}"
+      alt=""
+      decoding="async"
+      loading="${getImageLoading(isAboveFold, post.image)}"
+    />`;
+    media = isDetail
+      ? html`<a
+          class="${cls} kn-media-zoom"
+          style="${mediaStyle(size)}"
+          href="${post.image}"
+          data-href="${post.image}"
+          data-no-instant
+          onclick="event.preventDefault(); if(window.openImageViewer) { window.openImageViewer(this.dataset.href); }"
+          >${img}</a
+        >`
+      : linked
+        ? html`<a
+            class="${cls}"
+            style="${mediaStyle(size)}"
+            href="${storyPath}"
+            onclick="${spinnerOnclick}"
+            tabindex="-1"
+            aria-hidden="true"
+            >${img}</a
+          >`
+        : html`<div class="${cls}" style="${mediaStyle(size)}">${img}</div>`;
+  }
+
+  return html`<div
+    class="${interactive ? "" : "content-row"} kn-story kn-post ${invert
+      ? "inverted-row"
+      : ""} ${isDetail ? "kn-story-detail" : ""}"
+    style="${invert ? "display:none;" : ""} ${style}"
+    data-content-id="${submissionId}"
+    data-content-type="submission"
+    data-position="${position}"
+  >
+    ${person(avatar, "kn-post-avatar")}
+    <div class="kn-post-body">
+      <div class="kn-post-head">
+        ${person(name, "kn-post-name")}
+        <span class="kn-dot" aria-hidden="true"></span>
+        ${linked
+          ? html`<a
+              class="kn-post-age${isStoryNew ? " kn-age-new" : ""}"
+              href="${storyPath}"
+              onclick="${spinnerOnclick}"
+              >${age}</a
+            >`
+          : html`<span class="kn-post-age">${age}</span>`}
+        ${showRank
+          ? html`<span class="kn-rank kn-post-rank"
+              >${String(position).padStart(2, "0")}</span
+            >`
+          : null}
+      </div>
+      ${textBlock} ${media}
+      ${isDetail && story.timestamp
+        ? html`<time
+            class="kn-post-time"
+            datetime="${new Date(story.timestamp * 1000).toISOString()}"
+            >${postDate(story.timestamp)}</time
+          >`
+        : null}
+      ${!interactive
+        ? html`<div class="interaction-bar kn-actions">${actions}</div>`
+        : ""}
+      ${commentPreview}
+      ${!isDetail
+        ? html`<div
+            class="comment-section"
+            data-comment-count="${commentCount}"
+            data-story-index="0x${story.index}"
+            data-has-preview="false"
+          ></div>`
+        : null}
+    </div>
+  </div>`;
+}
+
 const row = (
   start = 0,
   path,
@@ -408,6 +584,10 @@ const row = (
 
     // Check if this is a text post (data: or kiwi: URL)
     const isTextPost = story.href && (story.href.startsWith('data:') || story.href.startsWith('kiwi:'));
+
+    // A post (web/src/post.mjs): text and maybe one picture, shown like a
+    // cast (PostCard). Old text posts (title + body) keep their rendering.
+    const post = getPost(story);
 
     // Condition for displaying mobile image:
     // - Must have image data (metadata or cloudflare)
@@ -498,6 +678,7 @@ const row = (
     // Only show on story page, not on feeds
     let textPostContent = null;
     const canRenderTextPostPreview =
+      !post &&
       isTextPost &&
       story.href &&
       story.href.startsWith('data:text/plain,') &&
@@ -1301,6 +1482,35 @@ const row = (
                   </div>
                 </div>`
       : null;
+
+    if (post) {
+      return html`
+        <tr style="${invert ? "background-color: var(--bg-inverted);" : ""}">
+          <td>
+            ${PostCard({
+              story,
+              post,
+              path,
+              interactive,
+              invert,
+              style,
+              submissionId,
+              position,
+              showRank,
+              storyPath,
+              profileHref,
+              age,
+              isStoryNew,
+              isAboveFold,
+              actions: html`${likeButton} ${commentButton} ${shareButton}
+              ${saveButton}`,
+              commentPreview,
+              commentCount,
+            })}
+          </td>
+        </tr>
+      `;
+    }
 
     return html`
       <tr style="${invert ? "background-color: var(--bg-inverted);" : ""}">
