@@ -38,6 +38,7 @@ import NewsletterCard from "./components/newsletter-card.mjs";
 
 // Import twitterFrontends for checking Twitter/X links
 import { twitterFrontends } from "../parser.mjs";
+import { hasName, showInHot } from "../hotnames.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -555,15 +556,11 @@ export async function index(
   } else {
     stories = await resolveIds(pageStories); // Process the current page
 
-    // 7. Filter based on resolved submitter name
-    stories = stories.filter((story) => {
-      const hasProperName =
-        story.submitter &&
-        (story.submitter.ens ||
-          story.submitter.lens ||
-          story.submitter.farcaster);
-      return hasProperName;
-    });
+    // 7. Only people with a name, or enough named upvoters (hotnames.mjs)
+    const shown = await Promise.all(
+      stories.map((story) => showInHot(story, (address) => ens.resolve(address))),
+    );
+    stories = stories.filter((_, i) => shown[i]);
   }
 
   // 8. FINAL SORT before prediction injection - always by score
@@ -644,10 +641,7 @@ export async function index(
               r.status === "fulfilled" &&
               r.value.prediction &&
               !r.value.prediction.predictionError &&
-              r.value.story.submitter && // Ensure submitter was resolved
-              (r.value.story.submitter.ens ||
-                r.value.story.submitter.lens ||
-                r.value.story.submitter.farcaster), // Ensure submitter has a proper name
+              hasName(r.value.story.submitter), // Submitter resolved and has a name
           )
           .map((r) => {
             const { story, prediction } = r.value;
