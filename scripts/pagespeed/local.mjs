@@ -116,10 +116,6 @@ const serverEnv = {
   CF_IMAGES_SECRET: "pagespeed",
   SOCIAL_AUTOPOST: "false",
   DAILY_PUSH: "false",
-  // NOTE: web-push needs a well-formed pair in production; a throwaway one.
-  VAPID_PUBLIC_KEY:
-    "BHwRB5FBv42mCK15q2w1Dj8_GuGIzOE-q7qDHF_zyA1leskjRxjT2mmsUPKhh8N7XhgYIZKDb9E8fPB-Xoksn_8",
-  VAPID_PRIVATE_KEY: "znmmSCLQd5Vh8-0Pya84Rw95kKBahCKB2prG_kjgqM0",
   DEBUG: "@attestate/kiwistand",
   NODE_OPTIONS: [
     process.env.NODE_OPTIONS,
