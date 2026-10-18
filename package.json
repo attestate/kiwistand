@@ -86,6 +86,7 @@
     "cache-sqlite-lru-ttl": "1.2.2",
     "canonicalize": "2.0.0",
     "cbor-x": "1.5.1",
+    "cheerio": "1.0.0",
     "cloudflare": "4.2.0",
     "compression": "^1.8.2",
     "cookie-parser": "1.4.6",

@@ -7,7 +7,6 @@ import { fileURLToPath } from "url";
 import DOMPurify from "isomorphic-dompurify";
 import htm from "htm";
 import vhtml from "vhtml";
-import { parse as parser } from "node-html-parser";
 import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
@@ -162,10 +161,12 @@ const html = htm.bind(vhtml);
 const METADATA_SUCCESS_TTL = 1000 * 60 * 60 * 6; // 6 hours
 const METADATA_FAILURE_TTL = 1000 * 60 * 5; // 5 minutes
 
-// Helper to run OGS in a worker thread with timeout
-async function parseWithOGS(htmlContent, timeout = 1000) {
+// Helper to parse remote HTML in a worker thread with timeout. Remote HTML must
+// never be parsed on the main thread, as it shares the event loop with p2p
+// sync and message ingestion.
+async function parseInWorker(file, htmlContent, timeout = 1000) {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const workerPath = path.join(__dirname, 'ogsWorker.mjs');
+  const workerPath = path.join(__dirname, file);
   
   return new Promise((resolve, reject) => {
     const worker = new Worker(workerPath);
@@ -174,7 +175,7 @@ async function parseWithOGS(htmlContent, timeout = 1000) {
     const timer = setTimeout(() => {
       timedOut = true;
       worker.terminate();
-      reject(new Error('OGS parsing timeout'));
+      reject(new Error('HTML parsing timeout'));
     }, timeout);
     
     worker.on('message', (message) => {
@@ -182,7 +183,7 @@ async function parseWithOGS(htmlContent, timeout = 1000) {
       worker.terminate();
       
       if (message.success) {
-        resolve({ result: message.result });
+        resolve({ result: message.result, canonical: message.canonical });
       } else {
         reject(new Error(message.error));
       }
@@ -769,87 +770,9 @@ export async function extractParagraphContent(url) {
     const html = (
       await readLimited(response, { maxBytes: MAX_HTML_BYTES, truncate: true })
     ).toString("utf8");
-    const dom = parser(html);
-    
-    // Try to extract Arweave transaction ID from meta tags or script tags
-    let arweaveId = null;
-    const metaTags = dom.querySelectorAll('meta');
-    for (const meta of metaTags) {
-      const property = meta.getAttribute('property') || meta.getAttribute('name');
-      if (property && property.includes('arweave')) {
-        arweaveId = meta.getAttribute('content');
-        break;
-      }
-    }
-    
-    // If no Arweave ID in meta tags, look in script tags
-    if (!arweaveId) {
-      const scriptTags = dom.querySelectorAll('script');
-      for (const script of scriptTags) {
-        const content = script.innerHTML;
-        // Look for Arweave transaction ID patterns (43 character base64url strings)
-        const arweaveMatch = content.match(/["']([a-zA-Z0-9_-]{43})["']/);
-        if (arweaveMatch && content.includes('arweave')) {
-          arweaveId = arweaveMatch[1];
-          break;
-        }
-      }
-    }
-    
-    // Extract basic metadata from the page
-    const title = dom.querySelector('meta[property="og:title"]')?.getAttribute('content') || 
-                  dom.querySelector('title')?.text || '';
-    const description = dom.querySelector('meta[property="og:description"]')?.getAttribute('content') || 
-                        dom.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-    
-    // Try to extract article content
-    let content = '';
-    // Common selectors for article content in blog platforms
-    const contentSelectors = [
-      // Paragraph.xyz specific selectors
-      'div.prose.prose-lg',
-      'div[class*="prose"]',
-      '#__next main div.prose',
-      '#main-post-body',
-      // Generic selectors
-      'article[class*="prose"]',
-      'article',
-      '[class*="article-content"]',
-      '[class*="post-content"]',
-      'main article',
-      'main',
-      '.content'
-    ];
-    
-    log(`Attempting to extract content from page...`);
-    for (const selector of contentSelectors) {
-      const contentElement = dom.querySelector(selector);
-      if (contentElement) {
-        content = contentElement.innerHTML;
-        log(`Found content using selector: "${selector}", content length: ${content.length}, first 200 chars: ${content.substring(0, 200).replace(/\n/g, '\\n')}`);
-        
-        // If content looks like it's just plain text without HTML tags, check if we need to look deeper
-        if (content.length < 500 && !content.includes('<p>') && !content.includes('<br>')) {
-          log(`Content seems too short or lacks HTML, continuing search...`);
-          continue;
-        }
-        break;
-      }
-    }
-    
-    if (!content) {
-      log(`No content found with selectors, trying to find any div with substantial text...`);
-      // Last resort: find any div with substantial text content
-      const allDivs = dom.querySelectorAll('div');
-      for (const div of allDivs) {
-        const text = div.textContent || '';
-        if (text.length > 1000 && div.innerHTML.includes('<p>')) {
-          content = div.innerHTML;
-          log(`Found content in generic div, length: ${content.length}`);
-          break;
-        }
-      }
-    }
+    const { arweaveId, title, description, content } = (
+      await parseInWorker("paragraphWorker.mjs", html, 5000)
+    ).result;
     
     // If we have an Arweave ID, try to fetch from Arweave
     if (arweaveId) {
@@ -946,10 +869,9 @@ export async function extractParagraphContent(url) {
 // URLs (e.g. blog.ethereum.org/en/… and blog.ethereum.org/…) counts as one
 // story. Ignored when it points at the site's front page from a deeper page
 // (a common CMS misconfiguration) or isn't reachable.
-export function canonicalFromHTML(html, pageURL) {
-  const node = parser(html).querySelector('link[rel="canonical"]');
-  // NOTE: node-html-parser has no `.href` property; read the attribute.
-  const href = node?.getAttribute("href")?.trim();
+// NOTE: The href is read in ogsWorker.mjs, off the main thread.
+export function canonicalFromHref(value, pageURL) {
+  const href = value?.trim();
   if (!href) return;
 
   let canonical, page;
@@ -965,8 +887,8 @@ export function canonicalFromHTML(html, pageURL) {
   return canonical.href;
 }
 
-async function extractCanonicalLink(html, pageURL) {
-  const canonical = canonicalFromHTML(html, pageURL);
+async function extractCanonicalLink(href, pageURL) {
+  const canonical = canonicalFromHref(href, pageURL);
   if (!canonical) return;
 
   let response;
@@ -1336,12 +1258,13 @@ export const metadata = async (
         await readLimited(response, { maxBytes: MAX_HTML_BYTES, truncate: true })
       ).toString("utf8");
 
+      let parsed;
       try {
-        const parsed = await parseWithOGS(html, 5000);
+        parsed = await parseInWorker("ogsWorker.mjs", html, 5000);
         result = parsed.result;
         log(`[metadata] OGS parsing successful. ogImage: ${JSON.stringify(result.ogImage)}, twitterImage: ${JSON.stringify(result.twitterImage)}`);
       } catch (err) {
-        if (err.message === 'OGS parsing timeout') {
+        if (err.message === 'HTML parsing timeout') {
           log(`OGS parsing timed out for URL: ${url}`);
           throw new Error("Metadata parsing timeout - likely binary or malformed content");
         }
@@ -1352,7 +1275,7 @@ export const metadata = async (
       const domain = safeExtractDomain(url);
       if (domain !== "hey.xyz" && domain !== "rekt.news") {
         try {
-          canonicalLink = await extractCanonicalLink(html, url);
+          canonicalLink = await extractCanonicalLink(parsed.canonical, url);
         } catch (err) {
           log(`Failed to extract canonical link ${err.stack}`);
         }
