@@ -313,6 +313,19 @@ export async function fetchENSData(address, forceFetch) {
   }
 }
 
+// NOTE: Avatars come from ENS, Farcaster and Lens profiles, which anyone can
+// set to any string, e.g. a "javascript:" URL. We link and embed them, so we
+// only keep https URLs.
+export function httpsURL(value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch (err) {
+    return null;
+  }
+  return url.protocol === "https:" ? value : null;
+}
+
 // Create a prefix for ENS cache entries to ensure uniqueness
 export const ENS_CACHE_PREFIX = "ens-profile-";
 
@@ -326,8 +339,7 @@ export async function workingAvatar(profile, fetchFn = fetch) {
   if (
     !small ||
     profile.safeAvatar !== small ||
-    typeof original !== "string" ||
-    !original.startsWith("https")
+    !httpsURL(original)
   ) {
     return profile.safeAvatar;
   }
@@ -365,9 +377,11 @@ export function overlay(address, profile) {
   } catch (err) {
     log(`Couldn't read Kiwi profile of ${address}: ${err.message}`);
   }
-  if (!kiwi) return profile;
+  // NOTE: Profiles cached before we checked avatars may still hold bad URLs.
+  const safe = { ...profile, safeAvatar: httpsURL(profile.safeAvatar) };
+  if (!kiwi) return safe;
   return {
-    ...profile,
+    ...safe,
     ...(kiwi.name && { displayName: kiwi.name }),
     ...(kiwi.avatar && { safeAvatar: kiwi.avatar }),
     bio: kiwi.bio,
@@ -424,7 +438,7 @@ export async function _resolve(normalizedAddress, forceFetch) {
   }
 
   const completeProfile = {
-    safeAvatar: DOMPurify.sanitize(safeAvatar),
+    safeAvatar: httpsURL(DOMPurify.sanitize(safeAvatar)),
     ...ensProfile,
     ...(neynarProfile && { neynar: neynarProfile }),
     lens: lensProfile,
