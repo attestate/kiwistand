@@ -121,6 +121,35 @@ export async function fromWire(source) {
   return [];
 }
 
+// fromWire alone waits forever: a peer could declare a near-maxDataLength
+// frame, send all but the last byte and stall, pinning that buffer for as
+// long as it keeps the stream open. read bounds the wait and aborts the stream
+// on expiry so the muxer drops what it buffered. Responses get a longer
+// budget because they include the remote's time to handle our frame.
+export const readTimeout = 30_000;
+export const responseTimeout = 120_000;
+
+// Sync sends one frame at a time and awaits its answer (see initiate), so a
+// legitimate peer needs one stream per protocol. libp2p's default of 32
+// inbound streams per connection let one peer pin 32 partial frames.
+export const streamLimits = { maxInboundStreams: 4, maxOutboundStreams: 4 };
+
+export async function read(stream, timeout = readTimeout) {
+  let timer;
+  const expiry = new Promise((_, reject) => {
+    timer = globalThis.setTimeout(() => {
+      const err = new Error(`read: no frame within ${timeout}ms`);
+      stream.abort(err);
+      reject(err);
+    }, timeout);
+  });
+  try {
+    return await Promise.race([fromWire(stream.source), expiry]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function handleDiscovery(evt) {
   log(`discovered ${evt.detail.id.toString()}`);
 }
@@ -181,11 +210,11 @@ export function deserialize(nodes) {
   return nodes;
 }
 
-export function send(libp2p) {
+export function send(libp2p, timeout = responseTimeout) {
   return async (peerId, protocol, message) => {
-    const { sink, source } = await libp2p.dialProtocol(peerId, protocol);
-    await toWire(message, sink);
-    const [results] = await fromWire(source);
+    const stream = await libp2p.dialProtocol(peerId, protocol);
+    await toWire(message, stream.sink);
+    const [results] = await read(stream, timeout);
     return results;
   };
 }
@@ -425,11 +454,17 @@ export async function compare(trie, message) {
   };
 }
 
-export function receive(peerFab, trie, expectResponse, handler) {
+export function receive(
+  peerFab,
+  trie,
+  expectResponse,
+  handler,
+  timeout = readTimeout,
+) {
   return async ({ connection, stream }) => {
     let message;
     try {
-      [message] = await fromWire(stream.source);
+      [message] = await read(stream, timeout);
     } catch (err) {
       elog(err, "receive: error in fromWire");
       peerFab.set();

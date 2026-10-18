@@ -66,7 +66,7 @@ export async function subscribe(
   }
   for await (const [key, value] of Object.entries(protocolHandlerCopy)) {
     log(`Adding "${key}" protocol handler`);
-    await node.handle(key, value);
+    await node.handle(key, value, sync.streamLimits);
   }
 
   for await (const { name, handlers } of topics) {
