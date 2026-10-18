@@ -2000,6 +2000,17 @@ export async function launch(trie, libp2p, isPrimary = true) {
     if (!message || message.type !== "analytics" || !message.href || !message.signature) {
       return sendError(reply, 400, "Bad Request", "Invalid message format");
     }
+
+    // NOTE: Without a freshness window, one leaked signed request would
+    // unlock the story's analytics forever.
+    const now = Math.floor(Date.now() / 1000);
+    if (
+      !Number.isInteger(message.timestamp) ||
+      message.timestamp < now - bookmarks.MAX_AGE ||
+      message.timestamp > now + 60
+    ) {
+      return sendError(reply, 401, "Unauthorized", "Message expired");
+    }
     
     let requesterAddress;
     try {
