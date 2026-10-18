@@ -206,6 +206,47 @@ test("if message passes constraint", async (t) => {
   t.false(result2);
 });
 
+test.serial("if a re-signed text post amplify is rejected", async (t) => {
+  store.upvotes.clear();
+  const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
+  const privateKey =
+    "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";
+  const signer = new Wallet(privateKey);
+
+  env.DATA_DIR = "dbtestText";
+  const trie = await store.create();
+  const libp2p = null;
+  const delegations = {};
+
+  const title = "hello world";
+  const href = `data:text/plain,${randomBytes(8).toString("hex")}`;
+  const type = "amplify";
+  const first = id.create(title, href, type, 1676559616);
+  const second = id.create(title, href, type, 1676559617);
+  await store.add(
+    trie,
+    await id.sign(signer, first, EIP712_MESSAGE),
+    libp2p,
+    delegations,
+  );
+  await t.throwsAsync(
+    store.add(
+      trie,
+      await id.sign(signer, second, EIP712_MESSAGE),
+      libp2p,
+      delegations,
+    ),
+    { message: /duplicate/ },
+  );
+
+  // NOTE: The marker that startup's `cache` computes must match runtime's.
+  store.upvotes.clear();
+  await store.cache([{ identity: address, href, type }], []);
+  t.false(store.passes(store.upvoteID(address, href, type)));
+
+  await rm("dbtestText", { recursive: true });
+});
+
 test("returns an empty array when the trie is empty", async (t) => {
   env.DATA_DIR = "dbtestA";
   const trieA = await store.create();
