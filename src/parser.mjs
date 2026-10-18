@@ -164,7 +164,7 @@ const METADATA_FAILURE_TTL = 1000 * 60 * 5; // 5 minutes
 // Helper to parse remote HTML in a worker thread with timeout. Remote HTML must
 // never be parsed on the main thread, as it shares the event loop with p2p
 // sync and message ingestion.
-async function parseInWorker(file, htmlContent, timeout = 1000) {
+export async function parseInWorker(file, htmlContent, timeout = 1000, data = {}) {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const workerPath = path.join(__dirname, file);
   
@@ -196,7 +196,7 @@ async function parseInWorker(file, htmlContent, timeout = 1000) {
       }
     });
     
-    worker.postMessage({ html: htmlContent });
+    worker.postMessage({ html: htmlContent, ...data });
   });
 }
 
