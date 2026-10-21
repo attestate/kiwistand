@@ -1,6 +1,4 @@
 //@format
-// First: distrust leaked CA roots before any TLS connection (catrust.mjs).
-import "./catrust.mjs";
 import { env } from "process";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
