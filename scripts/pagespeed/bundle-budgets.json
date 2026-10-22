@@ -1,9 +1,9 @@
 {
   "eager": {
-    "react-vendor": 48800,
-    "src/main.jsx": 183600,
-    "ui-vendor": 40000,
-    "wallet-vendor": 257200
+    "src/main.jsx": 172400,
+    "wallet-vendor": 305800,
+    "inherits_browser": 11900,
+    "index": 100
   },
   "lazy": {
     "Onboarding": 12700,
@@ -44,8 +44,9 @@
     "src/Vote.jsx": 4200,
     "src/anon-transport.mjs": 19200,
     "src/bookmarks.mjs": 1100,
-    "src/onboarding/Delegate.jsx": 1300,
-    "src/reactionBurst.mjs": 1100
+    "src/onboarding/Delegate.jsx": 1400,
+    "src/reactionBurst.mjs": 1100,
+    "ui-vendor": 39400
   },
   "css": {
     "fonts/inter.css": 1200,
@@ -54,9 +55,9 @@
     "src/onboarding/onboarding.css": 3500
   },
   "totals": {
-    "eager": 529300,
+    "eager": 490100,
     "lazyOther": 267700,
-    "lazy": 1286800
+    "lazy": 1326200
   },
   "pages": {
     "home": {
