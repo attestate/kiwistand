@@ -23,6 +23,7 @@ import "express-async-errors";
 import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
+import { checkAdminKey } from "./securityheaders.mjs";
 import Row, { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
@@ -813,6 +814,9 @@ export function handleClusterMessage(trie, recompute) {
 }
 
 export async function launch(trie, libp2p, isPrimary = true) {
+  // NOTE: Warns (doesn't exit) when ADMIN_KEY is set but short; once, from
+  // the primary rather than from every worker.
+  if (isPrimary) checkAdminKey(process.env.ADMIN_KEY);
   // Store the original HTTP_PORT value to use as the base for all port calculations
   const originalPort = parseInt(env.HTTP_PORT);
 

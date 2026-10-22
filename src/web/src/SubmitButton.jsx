@@ -64,7 +64,10 @@ const UrlInput = (props) => {
       (url.includes("http") || url.includes("https")) &&
       !isTextMode
     ) {
-      fetchMetadata(url);
+      // NOTE: Wait until typing pauses: every keystroke changes `url`, and
+      // /api/v1/metadata is rate limited per IP (src/ratelimit.mjs).
+      const timer = setTimeout(() => fetchMetadata(url), 500);
+      return () => clearTimeout(timer);
     }
   }, [url, isTextMode]);
 
@@ -340,65 +343,70 @@ const SubmitButton = (props) => {
     }
 
     if (canonicalURL) {
-      fetch(`/api/v1/parse?url=${encodeURIComponent(canonicalURL)}`)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.text();
-        })
-        .then((data) => {
-          embedPreview.innerHTML = DOMPurify.sanitize(data);
-        })
-        .catch((error) => {
-          console.log("Fetch error: ", error);
-        });
-      setIsGeneratingTitle(true);
-      fetch(
-        `/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}&generateTitle=true`,
-      )
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          // Check if it's a Cloudflare challenge page
-          if (data.data.isCloudflareChallenge) {
-            setIsCloudflareChallenge(true);
-            setIsGeneratingTitle(false);
-            // Keep the message visible for 3 seconds
-            setTimeout(() => {
-              setIsCloudflareChallenge(false);
-            }, 3000);
-            return;
-          }
-          
-          if (data.data.ogTitle) {
-            const titleInputElem = document.getElementById("titleInput");
-            const isTitleBlank = titleInputElem.innerText.length === 0;
-            // NOTE: We don't want to overwrite the title in case the user has
-            // already typed something in the title box.
-            if (!isTitleBlank) {
+      // NOTE: Same as above: fetch the preview and title once typing pauses,
+      // not on every keystroke (parse and metadata are rate limited).
+      const timer = setTimeout(() => {
+        fetch(`/api/v1/parse?url=${encodeURIComponent(canonicalURL)}`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+          })
+          .then((data) => {
+            embedPreview.innerHTML = DOMPurify.sanitize(data);
+          })
+          .catch((error) => {
+            console.log("Fetch error: ", error);
+          });
+        setIsGeneratingTitle(true);
+        fetch(
+          `/api/v1/metadata?url=${encodeURIComponent(canonicalURL)}&generateTitle=true`,
+        )
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            // Check if it's a Cloudflare challenge page
+            if (data.data.isCloudflareChallenge) {
+              setIsCloudflareChallenge(true);
               setIsGeneratingTitle(false);
+              // Keep the message visible for 3 seconds
+              setTimeout(() => {
+                setIsCloudflareChallenge(false);
+              }, 3000);
               return;
             }
+          
+            if (data.data.ogTitle) {
+              const titleInputElem = document.getElementById("titleInput");
+              const isTitleBlank = titleInputElem.innerText.length === 0;
+              // NOTE: We don't want to overwrite the title in case the user has
+              // already typed something in the title box.
+              if (!isTitleBlank) {
+                setIsGeneratingTitle(false);
+                return;
+              }
 
-            const title = data.data.ogTitle;
-            titleInputElem.innerText = title;
-            const remaining = 80 - title.length;
-            document.querySelector(".remaining").textContent = remaining;
-            document.querySelector(".remaining").style.color =
-              remaining > 0 ? "var(--text-secondary)" : "var(--color-error)";
-            setTitle(title);
-          }
-          setIsGeneratingTitle(false);
-        })
-        .catch((error) => {
-          console.log("Fetch error: ", error);
-          setIsGeneratingTitle(false);
-        });
+              const title = data.data.ogTitle;
+              titleInputElem.innerText = title;
+              const remaining = 80 - title.length;
+              document.querySelector(".remaining").textContent = remaining;
+              document.querySelector(".remaining").style.color =
+                remaining > 0 ? "var(--text-secondary)" : "var(--color-error)";
+              setTitle(title);
+            }
+            setIsGeneratingTitle(false);
+          })
+          .catch((error) => {
+            console.log("Fetch error: ", error);
+            setIsGeneratingTitle(false);
+          });
+      }, 500);
+      return () => clearTimeout(timer);
     } else {
       embedPreview.innerHTML = "";
       setIsCloudflareChallenge(false);
