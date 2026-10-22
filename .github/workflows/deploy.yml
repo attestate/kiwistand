@@ -1,9 +1,15 @@
 name: Deploy
 
 # Tests every push to main and, if they pass, does what `npm run deploy`
-# does by hand: build the web bundle and rsync it to the server. If the
-# DEPLOY_RESTART_CMD variable is set, it then runs that on the server
-# (e.g. `cd kiwistand && npm ci --omit=dev && pm2 restart all`).
+# does by hand, with the same npm scripts:
+#   1. build the web bundle (npm run build)
+#   2. ship tracked files + build outputs (npm run rsync, which runs
+#      scripts/deploy-files.mjs: no untracked files, no --delete)
+#   3. on the server, `npm ci` if package-lock.json changed since the last
+#      install (npm run deploy:install -> scripts/server-install.sh)
+#   4. restart: DEPLOY_RESTART_CMD if set, else `pm2 restart all`
+#      (npm run deploy:restart)
+# A failure in any step stops the job before the restart.
 #
 # Needs these repository secrets:
 #   DEPLOY_SSH_KEY      private key whose public key is in the server's
@@ -11,8 +17,10 @@ name: Deploy
 #   DEPLOY_KNOWN_HOSTS  output of `ssh-keyscan 91.107.210.214`
 # and these repository variables:
 #   DEPLOY_ENABLED      "true" turns deploys on (until then only tests run)
-#   DEPLOY_RESTART_CMD  optional: what runs on the server after the rsync
-#                       (unset: nothing, like `npm run deploy`)
+#   DEPLOY_RESTART_CMD  optional: replaces step 4's `pm2 restart all` (e.g.
+#                       `cd kiwistand && pm2 restart all`). Runs after step 3,
+#                       so it must not run `npm ci`/`npm install` itself; the
+#                       job refuses to start if it does.
 
 on:
   push:
@@ -47,6 +55,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
+      - name: Check DEPLOY_RESTART_CMD
+        env:
+          RESTART_CMD: ${{ vars.DEPLOY_RESTART_CMD }}
+        run: |
+          if printf '%s' "$RESTART_CMD" | grep -Eq 'npm +(ci|install|i)( |$)'; then
+            echo "::error::DEPLOY_RESTART_CMD runs npm ci/install, but the deploy already runs npm ci when package-lock.json changed. Remove it from the variable, e.g. set it to: cd kiwistand && pm2 restart all"
+            exit 1
+          fi
       # The web client has its own lockfile. Use it verbatim so production
       # builds are reproducible instead of letting `npm install` update it.
       - name: Install web dependencies
@@ -54,22 +70,31 @@ jobs:
       - name: Build web bundle
         run: npm run build
 
+      # The ssh config makes plain `ssh`/`rsync` use the deploy key, so the
+      # npm scripts below are the same ones `npm run deploy` runs locally.
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf 'Host 91.107.210.214\n  IdentityFile ~/.ssh/id_deploy\n  IdentitiesOnly yes\n' >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
 
-      # Same excludes as `npm run rsync`.
       - name: Rsync to server
-        run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_deploy" . root@91.107.210.214:./kiwistand \
-            --exclude=.claude --exclude=src/iOS --exclude=certificates \
-            --exclude=anonlocal --exclude=cache --exclude=docs --exclude=anon \
-            --exclude=node_modules --exclude=.git --exclude=bootstrap --exclude=data
+        run: npm run rsync
+
+      # npm ci on the server, only when package-lock.json changed. Fails the
+      # job (and so skips the restart) when npm ci fails.
+      - name: Install server dependencies
+        run: npm run deploy:install
 
       - name: Restart on server
-        if: vars.DEPLOY_RESTART_CMD != ''
+        env:
+          RESTART_CMD: ${{ vars.DEPLOY_RESTART_CMD }}
         run: |
-          ssh -i ~/.ssh/id_deploy root@91.107.210.214 "${{ vars.DEPLOY_RESTART_CMD }}"
+          if [ -n "$RESTART_CMD" ]; then
+            ssh root@91.107.210.214 "$RESTART_CMD"
+          else
+            npm run deploy:restart
+          fi

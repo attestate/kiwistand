@@ -50,3 +50,5 @@ test-cache
 test-data
 eval-titles.md
 scripts/pagespeed/lh-*.json
+.deployed-lock.sha256
+node_modules.prev
