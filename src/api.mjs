@@ -25,6 +25,8 @@ let summarizeNewStory = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
 import { triggerUpvoteNotification } from "./subscriptions.mjs";
 import * as indexnow from "./indexnow.mjs";
+import { securityHeaders } from "./securityheaders.mjs";
+import { rateLimit, API_RULES } from "./ratelimit.mjs";
 
 // Global error handlers to catch crashes and log them properly
 process.on("uncaughtException", (err) => {
@@ -416,6 +418,11 @@ export async function launch(trie, libp2p) {
   );
 
   const app = express();
+  app.use(securityHeaders);
+  // NOTE: This server isn't behind the load balancer (clients call port 8443
+  // directly), so it limits message submissions itself. Cloudflare connects
+  // to it from its edge addresses, so CF-Connecting-IP is trusted from those.
+  app.use(rateLimit(API_RULES, { trustCloudflare: true }));
   app.use("/api/v1", api);
   const sslOptions = getSSLOptions();
 

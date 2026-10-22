@@ -7,6 +7,8 @@ import log from "./logger.mjs";
 import https from "https";
 import fs from "fs";
 import { createServer as createHttpServer } from "http";
+import { securityHeaders } from "./securityheaders.mjs";
+import { rateLimit, LOAD_BALANCER_RULES } from "./ratelimit.mjs";
 
 // Exit early in reconcile mode - only API and sync should run
 if (env.NODE_ENV === "reconcile") {
@@ -52,16 +54,21 @@ const workerRoutes = [
   "/submit",
 ];
 
-async function startLoadBalancer() {
+// NOTE: Builds the express app; startLoadBalancer() listens with it, tests
+// call it with their own upstream ports and clock.
+function createLoadBalancerApp({
+  primaryPort,
+  workerBasePort,
+  workerCount,
+  now = Date.now,
+}) {
   const app = express();
 
-  // Configure the number of workers
-  const workerCount = Number(env.WORKER_COUNT) || os.cpus().length;
-
-  // Set up ports for the primary and worker processes
-  const originalPort = parseInt(env.HTTP_PORT);
-  const primaryPort = originalPort + 1;
-  const workerBasePort = primaryPort + 1;
+  // Every response, including this process's own proxy errors, gets the
+  // security headers (see securityheaders.mjs).
+  app.use(securityHeaders);
+  // Per-IP limits for the admin and expensive routes (see ratelimit.mjs).
+  app.use(rateLimit(LOAD_BALANCER_RULES, { now }));
 
   // Pre-create proxy instances once (not per-request)
   const workerProxies = [];
@@ -122,6 +129,24 @@ async function startLoadBalancer() {
 
     // If not a worker route, proxy to the primary process
     return primaryProxy(req, res, next);
+  });
+
+  return app;
+}
+
+async function startLoadBalancer() {
+  // Configure the number of workers
+  const workerCount = Number(env.WORKER_COUNT) || os.cpus().length;
+
+  // Set up ports for the primary and worker processes
+  const originalPort = parseInt(env.HTTP_PORT);
+  const primaryPort = originalPort + 1;
+  const workerBasePort = primaryPort + 1;
+
+  const app = createLoadBalancerApp({
+    primaryPort,
+    workerBasePort,
+    workerCount,
   });
 
   // Start the load balancer with SSL if configured
@@ -194,4 +219,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   });
 }
 
-export { startLoadBalancer };
+export { startLoadBalancer, createLoadBalancerApp };
