@@ -705,23 +705,36 @@ const frameName = {
 };
 
 // Serve Farcaster Mini App manifest
+// NOTE: Farcaster's mini app search only indexes manifests with a
+// description (plus subtitle, tags and og fields for the store listing).
+// "miniapp" is the current key; "frame" stays for older clients.
 app.get("/.well-known/farcaster.json", (req, res) => {
   res.setHeader("Content-Type", "application/json");
+  const miniapp = {
+    version: "1",
+    name: frameName[domain],
+    iconUrl: `${domain}/pwa_icon.png`,
+    homeUrl: `${domain}/?miniapp=true`,
+    imageUrl: `${domain}/kiwi_top_feed_page.png`,
+    buttonTitle: "🥝 Start",
+    splashImageUrl: `${domain}/fc-splash.png`,
+    splashBackgroundColor: "#0F3106",
+    webhookUrl: env.NEYNAR_NOTIFICATIONS_WEBHOOK,
+    primaryCategory: "news-media",
+    castShareUrl: `${domain}/submit`,
+    subtitle: "Crypto news, curated by people",
+    description:
+      "Kiwi News is an open-source, community-curated news feed for crypto, Ethereum and the open web. Read the top links of the day, upvote, comment and submit stories.",
+    tagline: "The best links in crypto",
+    tags: ["news", "crypto", "ethereum", "links", "community"],
+    ogTitle: "Kiwi News",
+    ogDescription:
+      "Community-curated news for crypto, Ethereum and the open web.",
+  };
   res.json({
     accountAssociation: accountAssociation[domain],
-    frame: {
-      version: "1",
-      name: frameName[domain],
-      iconUrl: `${domain}/pwa_icon.png`,
-      homeUrl: `${domain}/?miniapp=true`,
-      imageUrl: `${domain}/kiwi_top_feed_page.png`,
-      buttonTitle: "🥝 Start",
-      splashImageUrl: `${domain}/fc-splash.png`,
-      splashBackgroundColor: "#0F3106",
-      webhookUrl: env.NEYNAR_NOTIFICATIONS_WEBHOOK,
-      primaryCategory: "news-media",
-      castShareUrl: `${domain}/submit`,
-    },
+    miniapp,
+    frame: miniapp,
     baseBuilder: {
       allowedAddresses: ["0xbDA59D8e48ca664e82559a42DDE0Aef8C23ffd10"],
     },
