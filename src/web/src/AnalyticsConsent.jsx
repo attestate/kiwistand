@@ -91,7 +91,29 @@ export default function AnalyticsConsent() {
     disableAnalytics();
   };
 
+  // NOTE: While the banner shows on a phone, it and the tab bar cover the
+  // bottom ~140-200px of the viewport. scroll-padding-bottom (news.css) keeps a
+  // focused field, e.g. the story page's newsletter form, scrolled above them.
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-consent-banner', visible);
+  }, [visible]);
+
   if (!visible) return null;
+
+  // NOTE: On phones the banner is one compact row (short text, small
+  // buttons, ~56px tall). The old stacked layout was ~130px and, with the tab
+  // bar, covered the newsletter form below a story's summary for first-time
+  // visitors.
+  const buttonStyle = {
+    height: isDesktop ? '36px' : '32px',
+    padding: '0 10px',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    fontSize: '14px',
+    borderRadius: '6px',
+    flex: 'none',
+    whiteSpace: 'nowrap'
+  };
 
   return (
     <div style={{
@@ -107,7 +129,7 @@ export default function AnalyticsConsent() {
       backgroundColor: 'var(--background-color0)',
       border: 'var(--border)',
       borderRadius: '8px',
-      padding: isDesktop ? '14px 16px' : '14px 16px 16px 16px',
+      padding: isDesktop ? '14px 16px' : '10px 10px 10px 12px',
       zIndex: 1000,
       fontFamily: 'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, sans-serif',
       boxShadow: '0 4px 20px rgba(54, 67, 32, 0.08)'
@@ -116,38 +138,36 @@ export default function AnalyticsConsent() {
         maxWidth: '1200px',
         margin: '0 auto',
         display: 'flex',
-        flexDirection: isDesktop ? 'row' : 'column',
-        alignItems: isDesktop ? 'center' : 'flex-start',
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        gap: isDesktop ? '16px' : '12px'
+        gap: isDesktop ? '16px' : '10px'
       }}>
-        <div>
-          <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)' }}>
-            We use analytics cookies to improve our site. You can opt out if you prefer.
-            See our <a href="/privacy-policy">Privacy Policy</a>.
+        <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+          <p style={{
+            margin: 0,
+            fontSize: isDesktop ? '14px' : '13px',
+            lineHeight: 1.35,
+            color: 'var(--text-primary)'
+          }}>
+            We use analytics cookies.{' '}
+            <a href="/privacy-policy">Privacy Policy</a>.
           </p>
         </div>
         <div style={{
           display: 'flex',
-          gap: '10px',
-          width: isDesktop ? 'auto' : '100%',
-          justifyContent: isDesktop ? 'flex-end' : 'space-between'
+          gap: '8px',
+          flex: 'none'
         }}>
           <button
             onClick={declineAnalytics}
             className="analytics-consent-decline"
             style={{
+              ...buttonStyle,
               backgroundColor: 'transparent',
               color: 'var(--text-primary)',
               border: 'var(--border)',
-              height: '36px',
-              padding: '0 14px',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              fontWeight: 500,
-              borderRadius: '6px',
-              flex: isDesktop ? 'none' : 1
+              fontWeight: 500
             }}
           >
             Opt Out
@@ -156,17 +176,11 @@ export default function AnalyticsConsent() {
             onClick={acceptAnalytics}
             className="analytics-consent-accept"
             style={{
+              ...buttonStyle,
               backgroundColor: 'var(--button-primary-bg)',
               color: 'var(--button-primary-text)',
               border: '1px solid var(--button-primary-bg)',
-              height: '36px',
-              padding: '0 14px',
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              fontWeight: 600,
-              borderRadius: '6px',
-              flex: isDesktop ? 'none' : 1
+              fontWeight: 600
             }}
           >
             Continue

@@ -1701,6 +1701,15 @@ td:has(.clicked-content):hover {
   font-size: 11px;
 }
 
+/* While the analytics consent banner shows on a phone (AnalyticsConsent.jsx
+   sets data-consent-banner), it and the tab bar cover the bottom of the
+   viewport: keep focused fields (the newsletter form) scrolled above them. */
+@media (max-width: 640px) {
+  html[data-consent-banner] {
+    scroll-padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Analytics Consent Button Styles */
 .analytics-consent-decline:hover {
   background-color: var(--button-bg) !important;
@@ -2078,6 +2087,30 @@ newsletter-card {
   color: var(--text-primary);
   text-decoration: underline;
   white-space: nowrap;
+}
+/* Last week's top stories on the story page's cards (a concrete sample of the
+   email). One line per title, so the card's height is the same for any
+   titles and the client card replaces the server one without a shift. */
+.newsletter-card-sample {
+  margin: -8px 0 12px;
+  padding: 0;
+  list-style: decimal inside;
+  font-size: 10pt;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.newsletter-card-sample li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.newsletter-card-sample a {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.newsletter-card-sample a:hover {
+  text-decoration: underline;
 }
 .newsletter-card-success {
   margin-bottom: 0;
@@ -3235,6 +3268,14 @@ html:not([data-signed-out]) .kn-tab-ph-out {
 }
 .kn-right .newsletter-card-more {
   color: var(--kn-text-tertiary);
+}
+.kn-right .newsletter-card-sample {
+  margin: -6px 0 0;
+  font-size: 14px;
+  color: var(--kn-text-tertiary);
+}
+.kn-right .newsletter-card-sample a {
+  color: var(--kn-text-primary);
 }
 .kn-right .newsletter-card-form {
   display: flex;
