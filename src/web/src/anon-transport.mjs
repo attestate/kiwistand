@@ -11,7 +11,11 @@
 import { AnonRpcWorker } from "@anon-rpc/browser-harness";
 
 import { RPC_URLS } from "./rpc.mjs";
-import { ANON_RPC_URLS, fetchWithFailover } from "./anon-endpoints.mjs";
+import {
+  ANON_RPC_URLS,
+  fetchWithFailover,
+  rpcResult,
+} from "./anon-endpoints.mjs";
 
 // From anon-rpc's adopters.json5.
 export const ANON_NETWORKS = {
@@ -67,9 +71,7 @@ const bootstrapProvider = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
     });
-    const body = await res.json();
-    if (body.error) throw new Error(body.error.message ?? "bootstrap rpc error");
-    return body.result;
+    return rpcResult(await res.json());
   },
 };
 
@@ -143,15 +145,7 @@ export function anonRequest(chainId) {
       state,
     );
     if (!res.ok) throw new Error(`anon-rpc: endpoint answered HTTP ${res.status}`);
-    const body = await res.json();
-    if (body.error) {
-      throw Object.assign(new Error(body.error.message ?? "rpc error"), {
-        code: body.error.code,
-        data: body.error.data,
-        rpcResponse: true,
-      });
-    }
-    return body.result;
+    return rpcResult(await res.json());
   };
 }
 

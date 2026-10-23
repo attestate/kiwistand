@@ -38,6 +38,19 @@ test("capture buffers until the client is loaded, then flushes in order", (t) =>
   t.is(client.events.length, 3);
 });
 
+test("capture passes options through, also for buffered events", (t) => {
+  let client = null;
+  const a = createAnalytics(() => client);
+  a.capture("story_submitted", { href: "https://a" }, { send_instantly: true });
+  client = fakeClient();
+  a.flush();
+  t.true(client.options[0].send_instantly);
+  t.true(client.options[0].timestamp instanceof Date);
+
+  a.capture("story_submitted", { href: "https://b" }, { send_instantly: true });
+  t.deepEqual(client.options[1], { send_instantly: true });
+});
+
 test("capture keeps buffering while window.posthog exists but is not initialized", (t) => {
   const client = { __loaded: false, capture: () => t.fail() };
   const a = createAnalytics(() => client);

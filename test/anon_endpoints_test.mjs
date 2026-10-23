@@ -4,6 +4,7 @@ import {
   ANON_RPC_URLS,
   isRefusal,
   fetchWithFailover,
+  rpcResult,
 } from "../src/web/src/anon-endpoints.mjs";
 
 const respond = (map) => {
@@ -63,4 +64,27 @@ test("throws with every endpoint's reason when all refuse", async (t) => {
     fetchWithFailover(fetchFn, ["https://a.example", "https://b.example"], {}),
   );
   t.regex(err.message, /a\.example: HTTP 403.*b\.example: HTTP 429/);
+});
+
+test("rpcResult returns the result, including a null one", (t) => {
+  t.is(rpcResult({ jsonrpc: "2.0", id: 1, result: "0x1" }), "0x1");
+  t.is(rpcResult({ jsonrpc: "2.0", id: 1, result: null }), null);
+});
+
+test("rpcResult turns an RPC error into a response error", (t) => {
+  const err = t.throws(() =>
+    rpcResult({ error: { code: 3, message: "execution reverted", data: "0x" } }),
+  );
+  t.is(err.message, "execution reverted");
+  t.is(err.code, 3);
+  t.is(err.data, "0x");
+  t.true(err.rpcResponse);
+});
+
+test("rpcResult throws a plain error, not a TypeError, for a non-answer", (t) => {
+  for (const body of [undefined, null, "ok", [], {}, { jsonrpc: "2.0", id: 1 }]) {
+    const err = t.throws(() => rpcResult(body), undefined, JSON.stringify(body));
+    t.false(err instanceof TypeError);
+    t.falsy(err.rpcResponse);
+  }
 });

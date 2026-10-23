@@ -21,6 +21,7 @@ import {
   isInIOSApp,
 } from "./client.mjs";
 import { getLocalAccount } from "./session.mjs";
+import { capture } from "./analytics.mjs";
 import { uploadImage } from "./uploadImage.mjs";
 import { openOnboarding } from "./LoginModal.jsx";
 import ShareModal from "./ShareModal.jsx";
@@ -578,6 +579,15 @@ const SubmitButton = (props) => {
       setIsLoading(false);
       return;
     }
+
+    // NOTE: Same event as the iOS app sends after an accepted submission (text
+    // posts included, as data: URLs). It's sent right away because the page
+    // navigates to the story next.
+    capture(
+      "story_submitted",
+      { href: canonicalURL, platform: "web" },
+      { send_instantly: true, transport: "sendBeacon" },
+    );
 
     // Show share modal only in Farcaster frames, otherwise redirect
     const storyUrl = new URL(

@@ -48,3 +48,26 @@ export async function fetchWithFailover(fetchFn, urls, init, state = {}) {
   }
   throw new Error(`anon-rpc: every endpoint refused (${failures.join(", ")})`);
 }
+
+// NOTE: Reads the answer out of a JSON-RPC response body. Over Tor, a gateway
+// or exit can hand back something that isn't a JSON-RPC response at all (null,
+// an array, an object without "result"); that is a broken endpoint, not an
+// answer, so it throws a plain error and the read falls back or fails like any
+// other RPC error instead of a TypeError somewhere downstream. A null result
+// is a real answer (e.g. a receipt that doesn't exist yet).
+export function rpcResult(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw new Error("anon-rpc: endpoint answered with no JSON-RPC response");
+  }
+  if (body.error) {
+    throw Object.assign(new Error(body.error.message ?? "rpc error"), {
+      code: body.error.code,
+      data: body.error.data,
+      rpcResponse: true,
+    });
+  }
+  if (!("result" in body)) {
+    throw new Error("anon-rpc: endpoint answered without a result");
+  }
+  return body.result;
+}

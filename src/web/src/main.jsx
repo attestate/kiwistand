@@ -154,6 +154,9 @@ if (!isSyntheticVisit && analyticsConsent !== "false") {
       person_profiles: "identified_only",
       persistence: "localStorage+cookie",
       get_device_id: (uuid) => did || uuid,
+      // NOTE: Overrides the project's remote setting, which is off; this
+      // posthog-js version loads exception autocapture when it's true.
+      capture_exceptions: true,
     });
     // The wallet may have resolved before posthog-js finished loading.
     if (window.__kiwiIdentity) identifyPostHog(window.__kiwiIdentity);
