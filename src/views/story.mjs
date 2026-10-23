@@ -119,6 +119,10 @@ export async function generatePreview(index, commentIndex = null) {
     throw new Error("Index wasn't found");
   }
   
+  const forceFetch = true;
+  const hexIndex = index.substring(2);
+  const submitter = await ens.resolve(submission.identity, forceFetch);
+
   // If commentIndex is provided, generate comment preview instead
   if (commentIndex) {
     const comment = submission.comments?.find(c => 
@@ -127,34 +131,15 @@ export async function generatePreview(index, commentIndex = null) {
     
     if (comment) {
       try {
-        const forceFetch = true;
-        const commentEnsData = await ens.resolve(comment.identity, forceFetch);
-        const absoluteTime = format(new Date(comment.timestamp * 1000), "PPpp");
-        
-        const hexIndex = index.substring(2);
-        const fileName = `${hexIndex}-comment-${commentIndex}`;
-        
-        // Generate comment preview
-        const body = preview.comment(
-          comment.title,
-          commentEnsData.displayName || comment.identity.slice(0, 6) + "...",
-          commentEnsData.safeAvatar,
-          submission.title,
-          absoluteTime,
-          comment.reactions
+        const commenter = await ens.resolve(comment.identity, forceFetch);
+        await generateCommentPreviews(
+          `${hexIndex}-comment-${commentIndex}`,
+          comment,
+          comment.identity,
+          commenter,
+          submission,
+          submitter,
         );
-        await preview.generate(fileName, body); // Generate OG image
-        
-        const frameBody = preview.commentFrame(
-          comment.title,
-          commentEnsData.displayName || comment.identity.slice(0, 6) + "...",
-          commentEnsData.safeAvatar,
-          submission.title,
-          absoluteTime,
-          comment.reactions
-        );
-        await preview.generate(fileName, frameBody, true); // Generate frame image
-        
         return; // Exit after generating comment preview
       } catch (err) {
         log(`Failed to generate comment preview: ${err.stack}`);
@@ -163,33 +148,75 @@ export async function generatePreview(index, commentIndex = null) {
     }
   }
   
-  // Default story preview generation
-  const forceFetch = true;
-  const ensData = await ens.resolve(submission.identity, forceFetch);
-  const value = {
-    ...submission,
-    displayName: ensData.displayName,
-    submitter: ensData,
-  };
-  const hexIndex = index.substring(2);
-  const domain = extractDomain(submission.href);
-  try {
-    const body = preview.story(
-      value.title,
-      value.submitter.displayName,
-      value.submitter.safeAvatar,
-      domain,
-    );
-    await preview.generate(hexIndex, body); // Generate OG image (1200x630)
-    await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
-  } catch (err) {
-    log(`Failed to generate preview with avatar for story ${hexIndex}: ${err.stack}`);
+  await generateStoryPreviews(hexIndex, submission, submitter);
+}
+
+function previewStory(submission, submitter, withAvatar) {
+  return preview.story(
+    submission.title,
+    submitter?.displayName,
+    withAvatar ? submitter?.safeAvatar : null,
+    extractDomain(submission.href),
+    {
+      address: submission.identity,
+      isTextPost: submission.href?.startsWith("data:"),
+    },
+  );
+}
+
+// Writes the 1200×630 and 1200×800 story cards that are missing. A failing
+// avatar download shouldn't cost the card, so it's retried without one.
+async function generateStoryPreviews(hexIndex, submission, submitter) {
+  for (const isFrame of [false, true]) {
     try {
-      const body = preview.story(value.title, value.submitter.displayName, null, domain);
-      await preview.generate(hexIndex, body); // Generate OG image (1200x630)
-      await preview.generate(hexIndex, body, true); // Generate frame image (1200x800)
-    } catch (err2) {
-      log(`Failed to generate preview without avatar for story ${hexIndex}: ${err2.stack}`);
+      await preview.generate(hexIndex, previewStory(submission, submitter, true), isFrame);
+    } catch (err) {
+      log(`Failed to generate preview with avatar for story ${hexIndex}: ${err.stack}`);
+      try {
+        await preview.generate(hexIndex, previewStory(submission, submitter, false), isFrame);
+      } catch (err2) {
+        log(`Failed to generate preview without avatar for story ${hexIndex}: ${err2.stack}`);
+      }
+    }
+  }
+}
+
+function previewComment(comment, address, commenter, submission, submitter, withAvatars) {
+  return preview.comment(
+    {
+      text: comment.title,
+      name: commenter?.displayName,
+      avatar: withAvatars ? commenter?.safeAvatar : null,
+      address,
+      timestamp: comment.timestamp,
+      reactions: comment.reactions,
+    },
+    {
+      title: submission.title,
+      domain: extractDomain(submission.href),
+      isTextPost: submission.href?.startsWith("data:"),
+      name: submitter?.displayName,
+      avatar: withAvatars ? submitter?.safeAvatar : null,
+      address: submission.identity,
+    },
+  );
+}
+
+async function generateCommentPreviews(fileName, comment, address, commenter, submission, submitter) {
+  for (const isFrame of [false, true]) {
+    try {
+      await preview.generate(
+        fileName,
+        previewComment(comment, address, commenter, submission, submitter, true),
+        isFrame,
+      );
+    } catch (err) {
+      log(`Failed to generate comment preview with avatars: ${err.message}`);
+      await preview.generate(
+        fileName,
+        previewComment(comment, address, commenter, submission, submitter, false),
+        isFrame,
+      );
     }
   }
 }
@@ -365,23 +392,11 @@ export default async function (trie, theme, index, value, referral, commentIndex
   // Sort by neynarScore descending
   upvoterProfiles.sort((a, b) => b.neynarScore - a.neynarScore);
 
-  // Ensure frame preview exists for Farcaster embeds (after ENS resolution)
+  // NOTE: Both cards are made here when missing, not only on submission:
+  // older stories (and every story after a preview VERSION bump) get theirs
+  // on the first visit.
   if (!isCloudflareImage(value.href)) {
-    const hexIndex = index.substring(2);
-    const domain = extractDomain(value.href);
-    try {
-      const body = preview.story(
-        value.title,
-        story.submitter.displayName,
-        story.submitter.safeAvatar,
-        domain,
-      );
-      await preview.generate(hexIndex, body, true); // Generate frame version if missing
-    } catch (err) {
-      // Fallback without avatar if there's an error
-      const body = preview.story(value.title, story.submitter.displayName, null, domain);
-      await preview.generate(hexIndex, body, true);
-    }
+    await generateStoryPreviews(index, story, story.submitter);
   }
 
   // Never wait for Claude here: without a stored summary the page renders
@@ -415,39 +430,19 @@ export default async function (trie, theme, index, value, referral, commentIndex
       try {
         // comment.identity is already resolved and is an object with address property
         const commentEnsData = comment.identity;
-        const absoluteTime = format(new Date(comment.timestamp * 1000), "PPpp");
         
-        const hexIndex = index;
-        const fileName = `${hexIndex}-comment-${commentIndex}`;
-        
-        // Check if preview files already exist to avoid regeneration
-        const ogPath = `src/public/previews/${fileName}.jpg`;
-        const framePath = `src/public/previews/${fileName}-frame.jpg`;
-        
-        // Generate OG preview only if it doesn't exist
-        if (!existsSync(ogPath)) {
-          const body = preview.comment(
-            comment.title,
-            commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
-            commentEnsData.safeAvatar,
-            value.title,
-            absoluteTime,
-            comment.reactions
+        const fileName = `${index}-comment-${commentIndex}`;
+        const ogPath = `src/public/previews/${preview.fileName(fileName)}`;
+        const framePath = `src/public/previews/${preview.fileName(fileName, true)}`;
+        if (!existsSync(ogPath) || !existsSync(framePath)) {
+          await generateCommentPreviews(
+            fileName,
+            comment,
+            commentEnsData.address,
+            commentEnsData,
+            story,
+            story.submitter,
           );
-          await preview.generate(fileName, body); // Generate OG image
-        }
-        
-        // Generate frame preview only if it doesn't exist
-        if (!existsSync(framePath)) {
-          const frameBody = preview.commentFrame(
-            comment.title,
-            commentEnsData.displayName || commentEnsData.address.slice(0, 6) + "...",
-            commentEnsData.safeAvatar,
-            value.title,
-            absoluteTime,
-            comment.reactions
-          );
-          await preview.generate(fileName, frameBody, true); // Generate frame image
         }
       } catch (err) {
         log(`Failed to generate comment preview: ${err.message}`);
@@ -455,8 +450,8 @@ export default async function (trie, theme, index, value, referral, commentIndex
       }
       
       const fileName = `${index}-comment-${commentIndex}`;
-      ogImage = `${baseUrl}/previews/${fileName}.jpg`;
-      frameImage = `${baseUrl}/previews/${fileName}-frame.jpg`;
+      ogImage = `${baseUrl}/previews/${preview.fileName(fileName)}`;
+      frameImage = `${baseUrl}/previews/${preview.fileName(fileName, true)}`;
       
       // Use comment text as description, truncated
       const maxLength = 160;
@@ -482,8 +477,8 @@ export default async function (trie, theme, index, value, referral, commentIndex
       frameImage = ogImage; // Use same for Cloudflare images
     } else {
       // Fall back to the generated preview (index already has 0x prefix removed in http.mjs)
-      ogImage = `${baseUrl}/previews/${index}.jpg`;
-      frameImage = `${baseUrl}/previews/${index}-frame.jpg`;
+      ogImage = `${baseUrl}/previews/${preview.fileName(index)}`;
+      frameImage = `${baseUrl}/previews/${preview.fileName(index, true)}`;
     }
     
     ogDescription = storyDescription({

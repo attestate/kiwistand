@@ -210,7 +210,7 @@ export async function getStories(page, period, domain, options = {}) {
 export default async function index(theme, page, period, domain, options) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
   const stories = await getStories(page, period, domain || "", options);
-  const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png";
+  const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png?v=2";
   const prefetch = [
     "/",
     "/new?cached=true",

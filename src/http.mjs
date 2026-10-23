@@ -716,7 +716,7 @@ app.get("/.well-known/farcaster.json", (req, res) => {
     name: frameName[domain],
     iconUrl: `${domain}/pwa_icon.png`,
     homeUrl: `${domain}/?miniapp=true`,
-    imageUrl: `${domain}/kiwi_top_feed_page.png`,
+    imageUrl: `${domain}/kiwi_top_feed_page.png?v=2`,
     buttonTitle: "🥝 Start",
     splashImageUrl: `${domain}/fc-splash.png`,
     splashBackgroundColor: "#0F3106",

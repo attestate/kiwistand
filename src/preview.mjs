@@ -1,720 +1,641 @@
-import { readFile, access } from "fs/promises";
-import { readFileSync } from "fs";
+// NOTE: Link previews (og:image and the Farcaster frame image) for stories
+// and comments, after the designer's templates (kiwinews-design,
+// "kiwi-previews"): a story card and a comment card, each 1200×630 (X,
+// LinkedIn, iMessage, WhatsApp …) and 1200×800 (Farcaster). Rendered with
+// satori, so only flexbox layout; the templates' grid and pseudo-elements are
+// rebuilt with nested boxes.
+import { readFile, writeFile, access } from "fs/promises";
+import { createHash } from "crypto";
 import { resolve } from "path";
-import { env } from "process";
 
-import emojiRegex from "emoji-regex";
 import satori from "satori";
 import sharp from "sharp";
 import htm from "htm";
+import { format } from "date-fns";
 
 const html = htm.bind(h);
 
+// NOTE: satori counts a children array as several children, which only a
+// flex box may have, so a lone child is passed on its own.
 function h(type, props, ...children) {
-  if (props) {
-    return { type, props: { ...props, children } };
-  } else {
-    return { type, props: { children } };
-  }
+  const kids =
+    children.length === 0 ? undefined : children.length === 1 ? children[0] : children;
+  return { type, props: { ...props, children: kids } };
 }
 
-export function cfTransform(url, size) {
-  if (env.CF_IMAGES_SECRET) {
-    const newurl = `https://images.kiwistand.com/?secret=${env.CF_IMAGES_SECRET}&avatarURL=${url}&width=${size}`;
-    return newurl;
-  }
-  return url;
+// NOTE: Bump when the cards change, so new images get new URLs and X,
+// Farcaster etc. don't keep showing their cached copy of the old one.
+export const VERSION = "v2";
+
+export function fileName(name, isFrame = false) {
+  return `${name}-${VERSION}${isFrame ? "-frame" : ""}.jpg`;
 }
 
-const emojiMatcher = emojiRegex();
+const PAGE = "#F8F9F4";
+const INK = "#10131D";
+const KIWI = "#D4EC37";
+const BODY = "#5F6770";
+const LABEL = "#78818A";
+const HAIR = "#E3E5DD";
+const MONO = "JetBrains Mono";
 
-let _kiwiIconSrc = null;
-function getKiwiIconSrc() {
-  if (!_kiwiIconSrc) {
-    const buf = readFileSync(resolve("./kiwi-icon.png"));
-    _kiwiIconSrc = `data:image/png;base64,${buf.toString("base64")}`;
-  }
-  return _kiwiIconSrc;
+const SIZES = {
+  og: { width: 1200, height: 630 },
+  frame: { width: 1200, height: 800 },
+};
+
+// Title size and line limit by length, for 630 and 800 high cards.
+export function titleStyle(title, isFrame) {
+  const length = title.length;
+  if (length <= 40) return isFrame ? [96, 4] : [84, 3];
+  if (length <= 80) return isFrame ? [80, 4] : [68, 3];
+  return isFrame ? [66, 5] : [56, 4];
 }
 
-export function story(title, displayName, avatar, domain) {
-  title = title.replace(emojiMatcher, "");
-  const kiwiIconSrc = getKiwiIconSrc();
+export function commentStyle(text, isFrame) {
+  const length = text.length;
+  if (length <= 40) return isFrame ? [72, 3] : [60, 2];
+  if (length <= 90) return isFrame ? [52, 4] : [44, 3];
+  if (length <= 180) return isFrame ? [44, 6] : [38, 4];
+  return isFrame ? [38, 7] : [34, 4];
+}
 
-  // Adaptive font size based on title length
-  let titleFontSize = "54px";
-  let titleLineHeight = 1.2;
-  if (title.length > 120) {
-    titleFontSize = "36px";
-    titleLineHeight = 1.3;
-  } else if (title.length > 80) {
-    titleFontSize = "42px";
-    titleLineHeight = 1.25;
-  } else if (title.length < 30) {
-    titleFontSize = "60px";
-    titleLineHeight = 1.15;
+const addressPattern = /^0x[0-9a-fA-F]{40}$/;
+
+export function shortAddress(address) {
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
+// The name shown for a person: their ENS/Farcaster/Lens name, else the
+// shortened address. Long names end in "…".
+export function displayName(name, address) {
+  let value = (name || "").trim();
+  if (!value || addressPattern.test(value) || /^0x[0-9a-fA-F]{4,}\.{3}/.test(value)) {
+    value = address && addressPattern.test(address) ? shortAddress(address) : value;
   }
+  if (value.length >= 24) value = value.slice(0, 22) + "…";
+  return value;
+}
 
+export function cleanDomain(domain) {
+  let value = (domain || "").toLowerCase().replace(/^www\./, "");
+  if (value.length >= 28) value = value.slice(0, 26) + "…";
+  return value;
+}
+
+// "Show Kiwi: https://github.com/attestate/x" -> "Show Kiwi: github.com/…"
+export function cleanTitle(title) {
+  return (title || "").replace(/https?:\/\/([^\s/]+)(\/\S*)?/gi, (_, host, path) => {
+    const domain = host.toLowerCase().replace(/^www\./, "");
+    return path && path !== "/" ? `${domain}/…` : domain;
+  });
+}
+
+// One line of plain text: no line breaks, runs of spaces or Markdown.
+export function cleanComment(text) {
+  return (text || "")
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/^\s*>+\s?/gm, "")
+    .replace(/^\s*#+\s+/gm, "")
+    .replace(/(\*\*|__|`)/g, "")
+    .replace(/(^|\s)[_*]([^_*\s][^_*]*?)[_*](?=\s|$|[.,!?;:])/g, "$1$2")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Top four reactions, most used first.
+export function topReactions(reactions) {
+  return (reactions || [])
+    .filter((reaction) => reaction?.emoji && reaction.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 4);
+}
+
+// Someone without an avatar gets a gradient from their address, so they
+// always get the same colors.
+export function gradient(address) {
+  const hash = createHash("sha256")
+    .update((address || "").toLowerCase())
+    .digest("hex");
+  const value = parseInt(hash.slice(0, 8), 16);
+  const hue1 = value % 360;
+  const hue2 = (hue1 + 40 + (value % 61)) % 360;
+  return `linear-gradient(135deg, ${hsl(hue1, 70, 62)}, ${hsl(hue2, 65, 45)})`;
+}
+
+// satori can't parse hsl() inside a gradient, so it gets hex.
+function hsl(hue, saturation, lightness) {
+  const s = saturation / 100;
+  const l = lightness / 100;
+  const k = (n) => (n + hue / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const channel = (n) => {
+    const value = l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+    return Math.round(value * 255).toString(16).padStart(2, "0");
+  };
+  return `#${channel(0)}${channel(8)}${channel(4)}`;
+}
+
+// NOTE: The wordmark is an SVG, but the renderer drops SVG pictures inside
+// satori's output, so it's turned into a PNG once (at twice the size).
+let wordmark;
+async function loadWordmark() {
+  if (!wordmark) {
+    const svg = await readFile(resolve("./fonts/preview/wordmark.svg"));
+    const png = await sharp(svg, { density: 144 }).resize({ height: 80 }).png().toBuffer();
+    wordmark = `data:image/png;base64,${png.toString("base64")}`;
+  }
+  return wordmark;
+}
+
+const fill = { position: "absolute", left: 0, top: 0, right: 0, bottom: 0 };
+
+function frame(label, isFrame, children) {
+  const { width, height } = isFrame ? SIZES.frame : SIZES.og;
   return html`
     <div
       style=${{
-        height: "100%",
-        width: "100%",
         display: "flex",
-        backgroundColor: "#fafaf7",
+        position: "relative",
+        width: `${width}px`,
+        height: `${height}px`,
+        backgroundColor: PAGE,
+        backgroundImage: `radial-gradient(circle, rgba(16,19,29,0.07) 1.2px, transparent 1.5px)`,
+        backgroundSize: "24px 24px",
+        color: INK,
+        fontFamily: "Inter",
       }}
     >
       <div
         style=${{
-          width: "10px",
-          height: "100%",
-          backgroundColor: "#AFC046",
+          position: "absolute",
+          left: "72px",
+          right: "72px",
+          top: "60px",
+          height: "40px",
           display: "flex",
-          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
-      ></div>
+      >
+        <img src=${wordmark} height="40" width="227" />
+        <span
+          style=${{
+            fontFamily: MONO,
+            fontSize: "19px",
+            letterSpacing: "3px",
+            textTransform: "uppercase",
+            color: LABEL,
+          }}
+        >
+          ${label}
+        </span>
+      </div>
+      ${children}
+    </div>
+  `;
+}
+
+// An avatar with the templates' ring (page color, then ink).
+function avatar(url, address, size) {
+  const ring = size >= 64 ? [3, 2] : [2, 2];
+  const outer = size + 2 * (ring[0] + ring[1]);
+  const picture = url
+    ? html`<img
+        src=${url}
+        width=${size}
+        height=${size}
+        style=${{ borderRadius: "50%", objectFit: "cover" }}
+      />`
+    : html`<div
+        style=${{
+          width: `${size}px`,
+          height: `${size}px`,
+          borderRadius: "50%",
+          backgroundImage: gradient(address),
+        }}
+      />`;
+  return html`
+    <div
+      style=${{
+        display: "flex",
+        flexShrink: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        width: `${outer}px`,
+        height: `${outer}px`,
+        margin: `-${ring[0] + ring[1]}px`,
+        borderRadius: "50%",
+        backgroundColor: INK,
+      }}
+    >
       <div
         style=${{
           display: "flex",
-          flexDirection: "column",
-          flex: 1,
-          padding: "40px 56px 40px 48px",
+          alignItems: "center",
+          justifyContent: "center",
+          width: `${size + 2 * ring[0]}px`,
+          height: `${size + 2 * ring[0]}px`,
+          borderRadius: "50%",
+          backgroundColor: PAGE,
         }}
       >
+        ${picture}
+      </div>
+    </div>
+  `;
+}
+
+function dot(style = {}) {
+  return html`<div
+    style=${{
+      width: "18px",
+      height: "18px",
+      borderRadius: "50%",
+      backgroundColor: INK,
+      flexShrink: 0,
+      ...style,
+    }}
+  />`;
+}
+
+// story(title, name, avatarUrl, domain, { address, isTextPost }) returns a
+// function of isFrame, as the two sizes lay out the title differently.
+export function story(title, name, avatarUrl, domain, options = {}) {
+  const { address, isTextPost = false } = options;
+  return (isFrame = false) => {
+    const text = cleanTitle(title);
+    const [size, lines] = titleStyle(text, isFrame);
+    const chip = isTextPost
+      ? { backgroundColor: "transparent", color: INK, border: `3px solid ${INK}`, padding: "9px 17px" }
+      : { backgroundColor: INK, color: "#F4F6EF", padding: "12px 20px" };
+    return frame(
+      "news.kiwistand.com",
+      isFrame,
+      html`
         <div
           style=${{
+            position: "absolute",
+            left: "72px",
+            right: "72px",
+            top: "130px",
+            bottom: "170px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "8px",
+          }}
+        >
+          <div
+            style=${{
+              display: "block",
+              width: "100%",
+              fontWeight: 700,
+              fontSize: `${size}px`,
+              letterSpacing: `${-0.035 * size}px`,
+              lineHeight: 1.06,
+              lineClamp: lines,
+              wordBreak: "break-word",
+              // Short titles break evenly, as in the templates; for long
+              // ones satori's balancing leaves the lines too short.
+              ...(text.length <= 40 ? { textWrap: "balance" } : {}),
+            }}
+          >
+            ${text}
+          </div>
+        </div>
+        <div
+          style=${{
+            position: "absolute",
+            left: "72px",
+            right: "72px",
+            bottom: "60px",
+            display: "flex",
+            alignItems: "center",
           }}
         >
           <div
             style=${{
               display: "flex",
               alignItems: "center",
-              gap: "12px",
+              flexShrink: 0,
+              maxWidth: "460px",
             }}
           >
-            <img
+            ${avatar(avatarUrl, address, 64)}
+            <span
               style=${{
-                width: "36px",
-                height: "36px",
-                borderRadius: "6px",
-              }}
-              src="${kiwiIconSrc}"
-            />
-            <div
-              style=${{
-                fontSize: "24px",
-                fontFamily: "InterSemiBold",
-                color: "#333",
-                display: "flex",
+                marginLeft: "18px",
+                fontWeight: 600,
+                fontSize: "28px",
+                letterSpacing: "-0.28px",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              Kiwi News
-            </div>
+              ${displayName(name, address)}
+            </span>
           </div>
-          ${domain
-            ? html`
-                <div
-                  style=${{
-                    fontSize: "20px",
-                    color: "#aaa",
-                    display: "flex",
-                  }}
-                >
-                  ${domain}
-                </div>
-              `
-            : null}
-        </div>
-        <div
-          style=${{
-            display: "flex",
-            alignItems: "center",
-            flex: 1,
-          }}
-        >
           <div
             style=${{
-              fontFamily: "InterSemiBold",
-              fontSize: titleFontSize,
-              color: "#111",
-              lineHeight: titleLineHeight,
               display: "flex",
+              flexGrow: 1,
+              minWidth: "80px",
+              height: "10px",
+              margin: "0 22px",
+              borderRadius: "4px",
+              backgroundColor: KIWI,
+              position: "relative",
+            }}
+          >
+            ${dot({ position: "absolute", left: "-9px", top: "-4px" })}
+            ${dot({ position: "absolute", right: "-9px", top: "-4px" })}
+          </div>
+          <div
+            style=${{
+              display: "block",
+              flexShrink: 0,
+              maxWidth: "440px",
+              fontFamily: MONO,
+              fontWeight: 500,
+              fontSize: "26px",
+              borderRadius: "14px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              ...chip,
+            }}
+          >
+            ${isTextPost ? "Text post" : cleanDomain(domain)}
+          </div>
+        </div>
+      `,
+    );
+  };
+}
+
+// comment({ text, name, avatar, address, timestamp, reactions },
+//         { title, domain, name, avatar, address, isTextPost })
+// returns a function of isFrame. Without the story's submitter the rail
+// starts with a dot instead of their avatar.
+export function comment(commentData, storyData) {
+  return (isFrame = false) => {
+    const text = cleanComment(commentData.text);
+    const [size, lines] = commentStyle(text, isFrame);
+    const storyName = storyData.address
+      ? displayName(storyData.name, storyData.address)
+      : null;
+    const storyDomain = storyData.isTextPost
+      ? "text post"
+      : cleanDomain(storyData.domain);
+    const date = commentData.timestamp
+      ? format(new Date(commentData.timestamp * 1000), "MMM d, yyyy")
+      : "";
+    const reactions = topReactions(commentData.reactions);
+    const indent = "88px";
+
+    return frame(
+      "Comment",
+      isFrame,
+      html`
+        <div
+          style=${{
+            position: "absolute",
+            left: "72px",
+            right: "72px",
+            top: "130px",
+            bottom: "56px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          <div style=${{ display: "flex" }}>
+            <div
+              style=${{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                width: "64px",
+                flexShrink: 0,
+              }}
+            >
+              ${storyName
+                ? html`<div style=${{ display: "flex", marginTop: "2px" }}>
+                    ${avatar(storyData.avatar, storyData.address, 40)}
+                  </div>`
+                : dot({ marginTop: "9px" })}
+              <div
+                style=${{
+                  display: "flex",
+                  flexGrow: 1,
+                  width: "10px",
+                  minHeight: "24px",
+                  margin: "-4px 0",
+                  borderRadius: "5px",
+                  backgroundColor: KIWI,
+                }}
+              />
+              ${avatar(commentData.avatar, commentData.address, 64)}
+            </div>
+            <div
+              style=${{
+                display: "flex",
+                flexDirection: "column",
+                width: "968px",
+                marginLeft: "24px",
+              }}
+            >
+              <div
+                style=${{
+                  display: "flex",
+                  flexDirection: "column",
+                  paddingBottom: "30px",
+                }}
+              >
+                <div
+                  style=${{
+                    display: "flex",
+                    fontFamily: MONO,
+                    fontSize: "20px",
+                    color: LABEL,
+                    marginBottom: "6px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ${storyName
+                    ? html`<span style=${{ fontWeight: 500, color: INK }}
+                          >${storyName}</span
+                        ><span style=${{ marginLeft: "10px" }}>${`· ${storyDomain}`}</span>`
+                    : html`<span>${storyDomain}</span>`}
+                </div>
+                <div
+                  style=${{
+                    display: "block",
+                    fontWeight: 600,
+                    fontSize: "27px",
+                    lineHeight: 1.25,
+                    letterSpacing: "-0.27px",
+                    color: BODY,
+                    lineClamp: isFrame ? 2 : 1,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  ${cleanTitle(storyData.title)}
+                </div>
+              </div>
+              <div
+                style=${{
+                  display: "flex",
+                  alignItems: "center",
+                  height: "64px",
+                }}
+              >
+                <span
+                  style=${{
+                    fontWeight: 600,
+                    fontSize: "28px",
+                    letterSpacing: "-0.28px",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  ${displayName(commentData.name, commentData.address)}
+                </span>
+                <span
+                  style=${{
+                    marginLeft: "16px",
+                    fontFamily: MONO,
+                    fontSize: "20px",
+                    color: LABEL,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  ${date}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div
+            style=${{
+              display: "block",
+              marginLeft: indent,
+              marginTop: "6px",
+              fontWeight: 500,
+              fontSize: `${size}px`,
+              letterSpacing: `${-0.02 * size}px`,
+              lineHeight: 1.22,
+              lineClamp: lines,
               wordBreak: "break-word",
             }}
           >
-            ${title}
+            ${text}
           </div>
-        </div>
-        <div
-          style=${{
-            display: "flex",
-            alignItems: "center",
-            gap: "14px",
-            borderTop: "2px solid #e8e5dc",
-            paddingTop: "20px",
-            marginTop: "8px",
-          }}
-        >
-          ${avatar
-            ? html`
-                <img
-                  style=${{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "20px",
-                    border: "2px solid #ddd",
-                  }}
-                  src="${cfTransform(avatar, 500)}"
-                />
-              `
-            : html`
-                <div
-                  style=${{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "20px",
-                    backgroundColor: "#AFC046",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <div
+          ${reactions.length > 0
+            ? html`<div
+                style=${{ display: "flex", marginLeft: indent, marginTop: "26px" }}
+              >
+                ${reactions.map(
+                  (reaction, i) => html`<div
                     style=${{
-                      color: "white",
-                      fontSize: "18px",
-                      fontFamily: "InterSemiBold",
                       display: "flex",
+                      alignItems: "center",
+                      marginLeft: i === 0 ? 0 : "12px",
+                      padding: "8px 16px",
+                      borderRadius: "999px",
+                      backgroundColor: "#FFFFFF",
+                      border: `2px solid ${HAIR}`,
+                      fontWeight: 600,
+                      fontSize: "24px",
                     }}
                   >
-                    ${displayName.charAt(0).toUpperCase()}
-                  </div>
-                </div>
-              `}
-          <div
-            style=${{
-              fontFamily: "InterSemiBold",
-              fontSize: "22px",
-              color: "#555",
-              display: "flex",
-            }}
-          >
-            ${displayName}
-          </div>
+                    <span style=${{ marginRight: "8px" }}>${reaction.emoji}</span>
+                    <span>${String(reaction.count)}</span>
+                  </div>`,
+                )}
+              </div>`
+            : null}
         </div>
-      </div>
-    </div>
-  `;
+      `,
+    );
+  };
 }
 
-export function comment(commentText, authorName, authorAvatar, storyTitle, timestamp, reactions) {
-  // Remove emojis from text for better rendering in Satori
-  // Satori doesn't handle emojis well without an emoji font
-  const emojiMatcher = emojiRegex();
-  let processedText = commentText.replace(emojiMatcher, '').trim();
-  
-  // Truncate long URLs to prevent overflow
-  processedText = processedText.replace(/(https?:\/\/[^\s]+)/g, (url) => {
-    if (url.length > 60) {
-      return url.substring(0, 57) + '...';
-    }
-    return url;
-  });
-  
-  // Handle quoted text (lines starting with ">")
-  const lines = processedText.split('\n');
-  const processedLines = [];
-  let totalLength = 0;
-  const maxLength = 280;
-  
-  for (const line of lines) {
-    if (totalLength >= maxLength) break;
-    
-    const trimmedLine = line.trim();
-    const remaining = maxLength - totalLength;
-    
-    if (trimmedLine.startsWith('>')) {
-      // This is a quoted line
-      const quotedText = trimmedLine.substring(1).trim();
-      const truncatedQuote = quotedText.length > remaining 
-        ? quotedText.substring(0, remaining) + '...'
-        : quotedText;
-      processedLines.push({ type: 'quote', text: truncatedQuote });
-      totalLength += truncatedQuote.length;
-    } else if (trimmedLine) {
-      // Regular text
-      const truncatedText = trimmedLine.length > remaining
-        ? trimmedLine.substring(0, remaining) + '...'
-        : trimmedLine;
-      processedLines.push({ type: 'normal', text: truncatedText });
-      totalLength += truncatedText.length;
-    }
-  }
-  
-  // If no lines processed but we have text, just use the raw text
-  if (processedLines.length === 0 && processedText) {
-    const displayText = processedText.length > maxLength 
-      ? processedText.substring(0, maxLength) + "..." 
-      : processedText;
-    processedLines.push({ type: 'normal', text: displayText });
-  }
-  
-  return html`
-    <div
-      style=${{
-        height: "100%",
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        backgroundColor: "#F6F6EF",
-        color: "#333",
-        padding: "3rem",
-      }}
-    >
-      <div
-        style=${{
-          backgroundColor: "white",
-          padding: "2rem",
-          borderRadius: "8px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          border: "2px solid rgba(166, 110, 78, 0.2)",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style=${{
-            fontSize: "1.2rem",
-            color: "#828282",
-            marginBottom: "1.5rem",
-            borderBottom: "1px solid #e0e0e0",
-            paddingBottom: "1rem",
-            display: "flex",
-          }}
-        >
-          <span style=${{ display: "flex" }}>Comment on:</span>
-          <span style=${{ color: "#000", fontWeight: "bold", marginLeft: "0.5rem", display: "flex" }}>${storyTitle}</span>
-        </div>
-        
-        <div
-          style=${{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "1rem",
-          }}
-        >
-          ${authorAvatar
-            ? html`
-                <img
-                  style=${{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "4px",
-                    border: "2px solid #828282",
-                    flexShrink: 0,
-                  }}
-                  src="${cfTransform(authorAvatar, 500)}"
-                />
-              `
-            : html`
-                <div style=${{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "4px",
-                  border: "2px solid #828282",
-                  backgroundColor: "#f0f0f0",
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                  <span style=${{ fontSize: "24px", color: "#828282" }}>?</span>
-                </div>
-              `}
-          <div style=${{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <div
-              style=${{
-                fontFamily: "InterSemiBold",
-                fontSize: "1.4rem",
-                color: "black",
-                marginBottom: "0.8rem",
-                display: "flex",
-              }}
-            >
-              ${authorName}
-            </div>
-            <div
-              style=${{
-                fontSize: "0.9rem",
-                color: "#828282",
-                marginBottom: "0.8rem",
-                display: "flex",
-              }}
-            >
-              ${timestamp}
-            </div>
-            <div
-              style=${{
-                fontSize: "1.6rem",
-                lineHeight: 1.4,
-                color: "black",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-          ${processedLines.length === 1 && processedLines[0].type === 'normal'
-            ? html`<span style=${{ display: "flex" }}>${processedLines[0].text}</span>`
-            : processedLines.map((line, i) => {
-                if (line.type === 'quote') {
-                  return html`
-                    <div style=${{
-                      display: "flex",
-                      borderLeft: "3px solid #ccc",
-                      paddingLeft: "12px",
-                      marginTop: i > 0 ? "8px" : 0,
-                      marginBottom: "8px",
-                      color: "#666",
-                      fontStyle: "italic",
-                    }}>
-                      ${line.text}
-                    </div>
-                  `;
-                } else if (line.type === 'more') {
-                  return html`
-                    <div style=${{
-                      display: "flex",
-                      marginTop: "12px",
-                      color: "#828282",
-                      fontStyle: "italic",
-                      fontSize: "1.4rem",
-                    }}>
-                      ${line.text}
-                    </div>
-                  `;
-                } else {
-                  return html`
-                    <div style=${{
-                      display: "flex",
-                      marginTop: i > 0 && processedLines[i-1] && processedLines[i-1].type === 'quote' ? "8px" : (i > 0 ? "4px" : 0),
-                    }}>
-                      ${line.text}
-                    </div>
-                  `;
-                }
-              })
-          }
-            </div>
-            ${reactions && reactions.length > 0
-              ? html`
-                  <div
-                    style=${{
-                      display: "flex",
-                      gap: "0.5rem",
-                      fontSize: "1.2rem",
-                      marginTop: "1rem",
-                    }}
-                  >
-                    ${reactions.slice(0, 5).map(r => html`
-                      <span
-                        style=${{
-                          padding: "0.3rem 0.6rem",
-                          backgroundColor: "#f0f0f0",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        ${r.emoji} ${r.count}
-                      </span>
-                    `)}
-                  </div>
-                `
-              : null}
-          </div>
-        </div>
-      </div>
-      
-      <div
-        style=${{
-          marginTop: "2rem",
-          textAlign: "center",
-          fontSize: "1.2rem",
-          color: "#828282",
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <span style=${{ fontWeight: "bold", color: "#ff6600", display: "flex" }}>Kiwi News</span>
-        <span style=${{ margin: "0 0.5rem", display: "flex" }}>•</span>
-        <span style=${{ display: "flex" }}>news.kiwistand.com</span>
-      </div>
-    </div>
-  `;
+let fonts;
+async function loadFonts() {
+  if (fonts) return fonts;
+  const file = (path) => readFile(resolve(path));
+  const [regular, semibold, medium, mediumExt, bold, boldExt, mono, monoMedium] =
+    await Promise.all([
+      file("./Inter-Regular.ttf"),
+      file("./Inter-SemiBold.ttf"),
+      file("./fonts/preview/inter-latin-500-normal.woff"),
+      file("./fonts/preview/inter-latin-ext-500-normal.woff"),
+      file("./fonts/preview/inter-latin-700-normal.woff"),
+      file("./fonts/preview/inter-latin-ext-700-normal.woff"),
+      file("./fonts/preview/jetbrains-mono-latin-400-normal.woff"),
+      file("./fonts/preview/jetbrains-mono-latin-500-normal.woff"),
+    ]);
+  fonts = [
+    { name: "Inter", data: regular, weight: 400, style: "normal" },
+    { name: "Inter", data: medium, weight: 500, style: "normal" },
+    { name: "Inter", data: mediumExt, weight: 500, style: "normal" },
+    { name: "Inter", data: semibold, weight: 600, style: "normal" },
+    { name: "Inter", data: bold, weight: 700, style: "normal" },
+    { name: "Inter", data: boldExt, weight: 700, style: "normal" },
+    { name: MONO, data: mono, weight: 400, style: "normal" },
+    { name: MONO, data: monoMedium, weight: 500, style: "normal" },
+  ];
+  return fonts;
 }
 
-export function commentFrame(commentText, authorName, authorAvatar, storyTitle, timestamp, reactions) {
-  // Remove emojis from text for better rendering in Satori
-  const emojiMatcher = emojiRegex();
-  let processedText = commentText.replace(emojiMatcher, '').trim();
-  
-  // Truncate long URLs to prevent overflow
-  processedText = processedText.replace(/(https?:\/\/[^\s]+)/g, (url) => {
-    if (url.length > 50) {
-      return url.substring(0, 47) + '...';
-    }
-    return url;
+// NOTE: satori draws emoji from pictures (Twemoji, fetched once each and
+// kept in memory). Twemoji names its files by code
+// point, without the FE0F variation selector unless the emoji has a ZWJ.
+export function twemojiName(segment) {
+  const points = [...segment].map((char) => char.codePointAt(0));
+  const filtered = points.includes(0x200d)
+    ? points
+    : points.filter((point) => point !== 0xfe0f);
+  return filtered.map((point) => point.toString(16)).join("-");
+}
+
+const emojiCache = new Map();
+async function loadEmoji(segment) {
+  const name = twemojiName(segment);
+  if (emojiCache.has(name)) return emojiCache.get(name);
+  const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${name}.svg`;
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) throw new Error(`status ${response.status}`);
+    // As PNG: like the wordmark, an SVG picture wouldn't show.
+    const svg = Buffer.from(await response.arrayBuffer());
+    const png = await sharp(svg, { density: 288 }).resize(96, 96).png().toBuffer();
+    const src = `data:image/png;base64,${png.toString("base64")}`;
+    if (emojiCache.size > 500) emojiCache.clear();
+    emojiCache.set(name, src);
+    return src;
+  } catch (err) {
+    return undefined;
+  }
+}
+
+export async function render(body, isFrame = false) {
+  await loadWordmark();
+  const element = typeof body === "function" ? body(isFrame) : body;
+  const svg = await satori(element, {
+    ...(isFrame ? SIZES.frame : SIZES.og),
+    fonts: await loadFonts(),
+    loadAdditionalAsset: async (code, segment) =>
+      code === "emoji" ? loadEmoji(segment) : undefined,
   });
-  
-  // Handle quoted text for frames
-  const lines = processedText.split('\n');
-  const processedLines = [];
-  let totalLength = 0;
-  const maxLength = 200;
-  let wasTruncated = false;
-  
-  for (let i = 0; i < lines.length; i++) {
-    if (totalLength >= maxLength) {
-      wasTruncated = true;
-      break;
-    }
-    
-    const line = lines[i];
-    const trimmedLine = line.trim();
-    const remaining = maxLength - totalLength;
-    
-    if (trimmedLine.startsWith('>')) {
-      const quotedText = trimmedLine.substring(1).trim();
-      if (quotedText.length > remaining) {
-        processedLines.push({ type: 'quote', text: quotedText.substring(0, remaining) + '...' });
-        wasTruncated = true;
-        break;
-      }
-      processedLines.push({ type: 'quote', text: quotedText });
-      totalLength += quotedText.length;
-    } else if (trimmedLine) {
-      if (trimmedLine.length > remaining) {
-        processedLines.push({ type: 'normal', text: trimmedLine.substring(0, remaining) + '...' });
-        wasTruncated = true;
-        break;
-      }
-      processedLines.push({ type: 'normal', text: trimmedLine });
-      totalLength += trimmedLine.length;
-    }
-  }
-  
-  // If we truncated, add a "Read more" indicator
-  if (wasTruncated) {
-    processedLines.push({ type: 'more', text: '[Read more...]' });
-  }
-  
-  if (processedLines.length === 0 && processedText) {
-    const displayText = processedText.length > maxLength 
-      ? processedText.substring(0, maxLength) + "..." 
-      : processedText;
-    processedLines.push({ type: 'normal', text: displayText });
-    if (processedText.length > maxLength) {
-      processedLines.push({ type: 'more', text: '[Read more...]' });
-    }
-  }
-  
-  const truncatedTitle = storyTitle.length > 60 
-    ? storyTitle.substring(0, 60) + "..."
-    : storyTitle;
-  
-  return html`
-    <div
-      style=${{
-        height: "100%",
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        backgroundColor: "#F6F6EF",
-        color: "#333",
-        padding: "2rem",
-      }}
-    >
-      <div
-        style=${{
-          backgroundColor: "white",
-          padding: "1.5rem",
-          borderRadius: "6px",
-          border: "2px solid rgba(166, 110, 78, 0.2)",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style=${{
-            fontSize: "1rem",
-            color: "#828282",
-            marginBottom: "1rem",
-            display: "flex",
-          }}
-        >
-          <span style=${{ display: "flex" }}>Comment on:</span>
-          <span style=${{ fontWeight: "bold", marginLeft: "0.4rem", display: "flex" }}>${truncatedTitle}</span>
-        </div>
-        
-        <div
-          style=${{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "0.8rem",
-          }}
-        >
-          ${authorAvatar
-            ? html`
-                <img
-                  style=${{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "3px",
-                    border: "1px solid #828282",
-                    flexShrink: 0,
-                  }}
-                  src="${cfTransform(authorAvatar, 300)}"
-                />
-              `
-            : html`
-                <div style=${{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "3px",
-                  border: "1px solid #828282",
-                  backgroundColor: "#f0f0f0",
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                  <span style=${{ fontSize: "18px", color: "#828282" }}>?</span>
-                </div>
-              `}
-          <div style=${{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <div
-              style=${{
-                fontFamily: "InterSemiBold",
-                fontSize: "1.2rem",
-                color: "black",
-                marginBottom: "0.6rem",
-                display: "flex",
-              }}
-            >
-              ${authorName}
-            </div>
-            <div
-              style=${{
-                fontSize: "0.8rem",
-                color: "#828282",
-                marginBottom: "0.6rem",
-                display: "flex",
-              }}
-            >
-              ${timestamp}
-            </div>
-            <div
-              style=${{
-                fontSize: "1.3rem",
-                lineHeight: 1.3,
-                color: "black",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-          ${processedLines.length === 1 && processedLines[0].type === 'normal'
-            ? html`<span style=${{ display: "flex" }}>${processedLines[0].text}</span>`
-            : processedLines.map((line, i) => {
-                if (line.type === 'quote') {
-                  return html`
-                    <div style=${{
-                      display: "flex",
-                      borderLeft: "2px solid #ccc",
-                      paddingLeft: "8px",
-                      marginTop: i > 0 ? "6px" : 0,
-                      marginBottom: "6px",
-                      color: "#666",
-                      fontStyle: "italic",
-                      fontSize: "1.3rem",
-                    }}>
-                      ${line.text}
-                    </div>
-                  `;
-                } else if (line.type === 'more') {
-                  return html`
-                    <div style=${{
-                      display: "flex",
-                      marginTop: "10px",
-                      color: "#828282",
-                      fontStyle: "italic",
-                      fontSize: "1.1rem",
-                    }}>
-                      ${line.text}
-                    </div>
-                  `;
-                } else {
-                  return html`
-                    <div style=${{
-                      display: "flex",
-                      marginTop: i > 0 && processedLines[i-1] && processedLines[i-1].type === 'quote' ? "6px" : (i > 0 ? "3px" : 0),
-                    }}>
-                      ${line.text}
-                    </div>
-                  `;
-                }
-              })
-          }
-            </div>
-            ${reactions && reactions.length > 0
-              ? html`
-                  <div
-                    style=${{
-                      display: "flex",
-                      gap: "0.4rem",
-                      fontSize: "1rem",
-                      marginTop: "0.8rem",
-                    }}
-                  >
-                    ${reactions.slice(0, 3).map(r => html`
-                      <span
-                        style=${{
-                          padding: "0.2rem 0.4rem",
-                          backgroundColor: "#f0f0f0",
-                          borderRadius: "3px",
-                        }}
-                      >
-                        ${r.emoji} ${r.count}
-                      </span>
-                    `)}
-                  </div>
-                `
-              : null}
-          </div>
-        </div>
-      </div>
-      
-      <div
-        style=${{
-          marginTop: "1rem",
-          textAlign: "center",
-          fontSize: "1rem",
-          color: "#828282",
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        🥝 Kiwi News
-      </div>
-    </div>
-  `;
+  return sharp(Buffer.from(svg))
+    .jpeg({ quality: 92, chromaSubsampling: "4:4:4" })
+    .toBuffer();
 }
 
 export async function generate(name, body, isFrame = false) {
-  const suffix = isFrame ? "-frame" : "";
-  const filePath = resolve(`./src/public/previews/${name}${suffix}.jpg`);
+  const filePath = resolve(`./src/public/previews/${fileName(name, isFrame)}`);
 
   try {
     await access(filePath);
@@ -723,32 +644,5 @@ export async function generate(name, body, isFrame = false) {
     // File doesn't exist, we continue with the generation
   }
 
-  const fontData = await readFile("./Inter-Regular.ttf");
-  const fontDataBold = await readFile("./Inter-SemiBold.ttf");
-  const interSemiBold = {
-    name: "InterSemiBold",
-    data: fontDataBold,
-    weight: 600,
-    style: "normal",
-  };
-  const inter = {
-    name: "Inter",
-    data: fontData,
-    weight: 400,
-    style: "normal",
-  };
-
-  // Farcaster frames must be 3:2 aspect ratio per docs, OG images use 1.91:1
-  const dimensions = isFrame ? { width: 1200, height: 800 } : { width: 1200, height: 630 };
-
-  const svgData = await satori(body, {
-    ...dimensions,
-    fonts: [inter, interSemiBold],
-  });
-  await sharp(Buffer.from(svgData))
-    .jpeg({
-      quality: 100,
-      chromaSubsampling: "4:4:4",
-    })
-    .toFile(filePath);
+  await writeFile(filePath, await render(body, isFrame));
 }
