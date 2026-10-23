@@ -729,7 +729,7 @@ const row = (
                           const { quote } = splitQuote(splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim())).text);
                           if (!quote) return "";
                           return html`<div
-                            style="margin-top: 10px; padding: 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 2px;"
+                            style="margin-top: 10px; padding: 10px; border: 1px solid color-mix(in srgb, var(--embed-twitter-text) 28%, transparent); background: color-mix(in srgb, var(--embed-twitter-text) 5%, transparent); border-radius: 4px;"
                           >
                             <div style="font-weight: 600; font-size: 13px; color: var(--embed-twitter-text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                               ${DOMPurify.sanitize(quote.author)}
