@@ -199,7 +199,7 @@ export async function recompute() {
 async function renderPage(theme) {
   let items = stories;
   const path = "/new";
-  const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png";
+  const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png?v=2";
   const prefetch = ["/", "/submit", "/best"];
   const query = "?cached=true";
   return "<!DOCTYPE html>" + html`

@@ -887,7 +887,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
   const showNewsletterCard =
     page === 0 && !domain && stories.length >= NEWSLETTER_CARD_AFTER;
 
-  const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png";
+  const ogImage = "https://news.kiwistand.com/kiwi_hot_feed_page.png?v=2";
   const title = "Kiwi News - handpicked crypto news for builders";
   const description = "The best crypto links, curated by the Kiwi community. Web3, Ethereum, DeFi and more.";
   const twitterCard = undefined;

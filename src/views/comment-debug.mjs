@@ -7,6 +7,7 @@ import Header from "./components/header.mjs";
 import Head from "./components/head.mjs";
 import * as ens from "../ens.mjs";
 import { getSlug } from "../utils.mjs";
+import { fileName as previewFile } from "../preview.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -351,7 +352,7 @@ export default async function commentDebug(theme) {
                         <div style="margin-top: 20px;">
                           <h4>OG Preview (1200x630):</h4>
                           <img 
-                            src="/previews/${comment.story_index}-comment-${comment.index}.jpg"
+                            src="/previews/${previewFile(`${comment.story_index}-comment-${comment.index}`)}"
                             alt="OG Preview"
                             style="max-width: 100%; border: 1px solid var(--border-subtle);"
                             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22630%22%3E%3Crect width=%221200%22 height=%22630%22 fill=%22%23f6f6ef%22/%3E%3Ctext x=%22600%22 y=%22315%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3EGenerating preview...%3C/text%3E%3C/svg%3E'"
@@ -359,7 +360,7 @@ export default async function commentDebug(theme) {
                           <br/><br/>
                           <h4>Farcaster Frame Preview (1200x800):</h4>
                           <img
-                            src="/previews/${comment.story_index}-comment-${comment.index}-frame.jpg"
+                            src="/previews/${previewFile(`${comment.story_index}-comment-${comment.index}`, true)}"
                             alt="Frame Preview"
                             style="max-width: 100%; border: 1px solid var(--border-subtle);"
                             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22800%22%3E%3Crect width=%221200%22 height=%22800%22 fill=%22%23f6f6ef%22/%3E%3Ctext x=%22600%22 y=%22400%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%23999%22%3EGenerating preview...%3C/text%3E%3C/svg%3E'"

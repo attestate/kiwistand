@@ -18,7 +18,7 @@ const html = htm.bind(vhtml);
 
 const BASE_URL = "https://news.kiwistand.com";
 const INDEX_URL = `${BASE_URL}/weekly`;
-const OG_IMAGE = `${BASE_URL}/kiwi_top_feed_page.png`;
+const OG_IMAGE = `${BASE_URL}/kiwi_top_feed_page.png?v=2`;
 
 const styles = `
   .wk-page { padding: 1.5rem 1rem 2rem 1rem; max-width: 640px; color: var(--text-primary); line-height: 1.5; }

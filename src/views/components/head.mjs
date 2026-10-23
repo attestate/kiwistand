@@ -81,7 +81,7 @@ if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
 }
 
 export function custom(
-  ogImage = `${domain}/preview.jpeg`,
+  ogImage = `${domain}/preview.jpeg?v=2`,
   ogTitle = "Kiwi News - handpicked web3 alpha",
   ogDescription = "",
   twitterCard = "summary_large_image",
