@@ -18,7 +18,12 @@ import {
   getImageLoading,
   sizedImageUrl,
 } from "../utils/imageLoading.mjs";
-import { splitQuote, isDeletedTweet, tweetHandle } from "../../quote.mjs";
+import {
+  splitQuote,
+  splitReply,
+  isDeletedTweet,
+  tweetHandle,
+} from "../../quote.mjs";
 import { ms } from "./icons.mjs";
 
 let domain = "https://news.kiwistand.com";
@@ -693,6 +698,13 @@ const row = (
                         </span>
                       </div>
                       <div class="tweet-embed-body">
+                        ${(() => {
+                          const { replyTo } = splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()));
+                          if (!replyTo) return "";
+                          return html`<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">
+                            Replying to ${DOMPurify.sanitize(replyTo.join(" "))}
+                          </div>`;
+                        })()}
                         <p style="white-space: pre-wrap;">
                           ${(() => {
                             const linkifyNodes = (text) => {
@@ -705,7 +717,7 @@ const row = (
                                 return DOMPurify.sanitize(part);
                               });
                             };
-                            const desc = splitQuote(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim())).text;
+                            const desc = splitQuote(splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim())).text).text;
                             if (/^https?:\/\/\S+$/i.test(desc)) {
                               return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
                             }
@@ -714,7 +726,7 @@ const row = (
                           })()}
                         </p>
                         ${(() => {
-                          const { quote } = splitQuote(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()));
+                          const { quote } = splitQuote(splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim())).text);
                           if (!quote) return "";
                           return html`<div
                             style="margin-top: 10px; padding: 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 2px;"

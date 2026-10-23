@@ -1,6 +1,23 @@
 const statusLink =
   /\n?https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/\S+\/status\/\d+\S*\s*$/i;
 
+const handle = "@[A-Za-z0-9_]{1,15}";
+const replyHeader = new RegExp(
+  `^\\s*\u21A9\uFE0E?[ \\t]*((?:${handle}[ \\t]*)+)\\n`,
+);
+const leadingMentions = new RegExp(`^(?:${handle}(?:\\s+|$))+`);
+
+// fxtwitter starts a reply with "↩ @handle" on its own line, and the text
+// itself starts with the mentions X hides. Returns who it replies to and the
+// text without both, so clients can show "Replying to @handle" like X does.
+export function splitReply(description) {
+  const match = replyHeader.exec(description);
+  if (!match) return { replyTo: null, text: description };
+  const replyTo = match[1].trim().split(/\s+/);
+  const text = description.slice(match[0].length).replace(leadingMentions, "");
+  return { replyTo, text };
+}
+
 // fxtwitter writes a quote tweet as "text\n\n<quoted tweet URL>\n\n
 // Quoting Name (@handle) \n\nquoted text". Returns the tweet's own text
 // without the bare URL, plus the quoted tweet.
