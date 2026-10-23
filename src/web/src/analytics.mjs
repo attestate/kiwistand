@@ -14,19 +14,20 @@ export function createAnalytics(getClient, max = MAX_QUEUE) {
     return client && client.__loaded ? client : null;
   };
 
-  // Returns true when the event was sent or buffered.
-  function capture(event, props) {
+  // Returns true when the event was sent or buffered. options are passed to
+  // posthog.capture (e.g. send_instantly before a navigation).
+  function capture(event, props, options) {
     if (disabled) return false;
     const client = ready();
     if (client) {
       try {
-        client.capture(event, props);
+        client.capture(event, props, options);
       } catch (_) {}
       return true;
     }
     if (queue.length >= max) return false;
     // Keep the time the event happened, not the time it was flushed.
-    queue.push([event, props, { timestamp: new Date() }]);
+    queue.push([event, props, { ...options, timestamp: new Date() }]);
     return true;
   }
 
