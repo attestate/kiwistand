@@ -55,17 +55,21 @@ test("isIndexableStory: one comment is enough", (t) => {
   t.false(isIndexableStory({ upvotes: 1, comments: [] }));
 });
 
-test("isIndexableStory: a summary of reasonable length", (t) => {
-  const weak = { upvotes: 1, comments: 0 };
-  t.true(isIndexableStory(weak, { summary: SUMMARY }));
-  t.false(isIndexableStory(weak, { summary: "Too short." }));
+test("isIndexableStory: a summary counts with one upvote besides the submitter's", (t) => {
+  const upvoted = { upvotes: 2, comments: 0 };
+  t.true(isIndexableStory(upvoted, { summary: SUMMARY }));
+  t.false(isIndexableStory(upvoted, { summary: "Too short." }));
   t.false(
-    isIndexableStory(weak, { summary: ` ${"x".repeat(MIN_SUMMARY_LENGTH - 1)} ` }),
+    isIndexableStory(upvoted, {
+      summary: ` ${"x".repeat(MIN_SUMMARY_LENGTH - 1)} `,
+    }),
   );
-  t.true(isIndexableStory(weak, { summary: "x".repeat(MIN_SUMMARY_LENGTH) }));
-  t.false(isIndexableStory(weak, { summary: null }));
-  t.false(isIndexableStory(weak, {}));
-  t.false(isIndexableStory(weak));
+  t.true(isIndexableStory(upvoted, { summary: "x".repeat(MIN_SUMMARY_LENGTH) }));
+  t.false(isIndexableStory(upvoted, { summary: null }));
+  t.false(isIndexableStory(upvoted, {}));
+  t.false(isIndexableStory(upvoted));
+  // Only the submitter's own upvote: a summary alone isn't enough.
+  t.false(isIndexableStory({ upvotes: 1, comments: 0 }, { summary: SUMMARY }));
 });
 
 test("isIndexableStory: moderated stories are never indexable", (t) => {
@@ -113,7 +117,8 @@ test("robotsMeta: weak story pages get noindex, strong ones don't", (t) => {
 
   const strong = render({ upvotes: 5, comments: [] });
   t.false(strong.includes("robots"));
-  t.false(render({ upvotes: 1, comments: [] }, SUMMARY).includes("robots"));
+  t.false(render({ upvotes: 2, comments: [] }, SUMMARY).includes("robots"));
+  t.true(render({ upvotes: 1, comments: [] }, SUMMARY).includes(NOINDEX));
 
   // A comment permalink duplicates its story, so it's always noindex.
   t.true(render({ upvotes: 5, comments: [] }, null, "0xabc").includes(NOINDEX));
@@ -131,8 +136,15 @@ test("story pages: isIndexable checks engagement, summary and moderation", async
   const lists = (extra) => async () => policy(extra);
 
   t.false(await isIndexable("ab", value, { summary: null, getLists: lists() }));
-  t.true(
+  t.false(
     await isIndexable("ab", value, { summary: SUMMARY, getLists: lists() }),
+  );
+  t.true(
+    await isIndexable(
+      "ab",
+      { ...value, upvotes: 2 },
+      { summary: SUMMARY, getLists: lists() },
+    ),
   );
   t.true(
     await isIndexable(
@@ -166,7 +178,7 @@ test("story pages: isIndexable checks engagement, summary and moderation", async
 test("indexnow only pings indexable stories", (t) => {
   const data = {
     "01": { upvotes: 1, comments: [], summary: null },
-    "02": { upvotes: 1, comments: [], summary: SUMMARY },
+    "02": { upvotes: 2, comments: [], summary: SUMMARY },
     "03": { upvotes: 4, comments: [], summary: null },
   };
   const stories = ["01", "02", "03", "04"].map((index) => ({ index }));
@@ -190,7 +202,7 @@ const seeds = [
   ["ix1", "https://ix.example/weak", ALICE, 0, []],
   ["ix2", "https://ix.example/upvoted", ALICE, 2, []],
   ["ix3", "https://ix.example/discussed", ALICE, 0, [ALICE]],
-  ["ix4", "https://ix.example/summarized", ALICE, 0, []],
+  ["ix4", "https://ix.example/summarized", ALICE, 1, []],
   ["ix5", "https://ix.example/banned-author", BANNED, 9, [ALICE]],
   ["ix6", "https://ix.example/banned-link", ALICE, 9, []],
   // Its only comment is by a banned profile, which story pages hide.
