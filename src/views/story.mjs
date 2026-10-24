@@ -38,7 +38,9 @@ import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
 import { storyDescription, storyDocumentTitle } from "../seo.mjs";
 import * as isoweek from "../isoweek.mjs";
+import { peakRank, badgeSnippets, badgeUrl } from "../featured.mjs";
 import { isIndexableStory, robotsMeta } from "../indexable.mjs";
+import { indexableSourcePath } from "../sources.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -278,12 +280,64 @@ export async function moreFromSite(href, index, limit = 5) {
   }
 }
 
+// "More from <site>" links to the site's "Best of" page (/source/<key>) when
+// that page is indexable: as the heading's link when the page is the site's
+// own, or as a last item for one author on a platform (x.com/<handle>).
+// `source` comes from indexableSourcePath(), which never waits.
+function SourceHeading(related, source) {
+  if (!source || source.key !== related.site) return related.site;
+  return html`<a href="${source.path}" style="color: inherit;"
+    >${related.site}</a
+  >`;
+}
+
+function SourceItem(related, source, style = "") {
+  if (!source || source.key === related.site) return null;
+  return html`<li style="${style}">
+    <a class="meta-link" href="${source.path}">Best of ${source.key} →</a>
+  </li>`;
+}
+
+// The "Featured on Kiwi News" badge and the snippets to paste it, for
+// stories that reached the top 3. Selecting the text is enough to copy it,
+// so there's no script.
+export function FeaturedBadgeRow(story, rank) {
+  const snippets = badgeSnippets(story);
+  const box =
+    "width: 100%; box-sizing: border-box; font-family: monospace; font-size: 9pt; resize: none; margin: 4px 0 8px 0;";
+  return html`<tr class="kn-featured-row">
+    <td style="padding: 0 0 12px 0;">
+      <div id="badge" style="margin: 0 11px;">
+        <h2
+          style="font-size: 10pt; font-weight: 500; margin: 0 0 8px 0; color: var(--text-secondary);"
+        >
+          Featured on Kiwi News: this story reached #${rank}
+        </h2>
+        <img
+          src="${badgeUrl(story.index)}"
+          alt="Featured on Kiwi News"
+          height="20"
+        />
+        <p style="font-size: 9pt; margin: 8px 0 0 0; color: var(--text-secondary);">
+          Wrote it? Add the badge to your post or README:
+        </p>
+        <textarea readonly rows="2" aria-label="Badge HTML" style="${box}">
+${snippets.html}</textarea
+        >
+        <textarea readonly rows="2" aria-label="Badge Markdown" style="${box}">
+${snippets.markdown}</textarea
+        >
+      </div>
+    </td>
+  </tr>`;
+}
+
 // "More from <site>" as a box of the desktop right column (the design's
 // "More from Hot" box). Phones and tablets show the same list below the
 // comments (.kn-related-row).
-function RelatedBox(related) {
+export function RelatedBox(related, source) {
   return html`<div class="kn-side-box kn-related-box">
-    <span class="kn-eyebrow">More from ${related.site}</span>
+    <span class="kn-eyebrow">More from ${SourceHeading(related, source)}</span>
     <ul class="kn-related-list">
       ${related.stories.map(
         (item) => html`<li>
@@ -292,6 +346,7 @@ function RelatedBox(related) {
           >
         </li>`,
       )}
+      ${SourceItem(related, source)}
     </ul>
   </div>`;
 }
@@ -530,6 +585,10 @@ export default async function (
   }
   
   const related = await moreFromSite(value.href, index);
+  const source = indexableSourcePath(value.href);
+  // NOTE: Only stories that reached the hot feed's top 3 (recorded by the
+  // Farcaster author pings, src/featured.mjs) offer writers a badge.
+  const featuredRank = peakRank(index);
 
   const slug = getSlug(value.title);
   const storyUrl = `${baseUrl}/stories/${slug}?index=0x${index}`;
@@ -630,7 +689,7 @@ export default async function (
                 storyCopy,
                 newsletterSample,
               ),
-              related.stories.length > 0 ? RelatedBox(related) : null,
+              related.stories.length > 0 ? RelatedBox(related, source) : null,
             ],
           })}
           <main id="hnmain" class="scaled-hnmain" role="main">
@@ -941,6 +1000,7 @@ export default async function (
                   </div>
                 </td>
               </tr>
+              ${featuredRank ? FeaturedBadgeRow({ ...value, index }, featuredRank) : null}
               ${related.stories.length > 0
                 ? html`<tr class="kn-related-row">
                     <td style="padding: 0 0 12px 0;">
@@ -948,7 +1008,8 @@ export default async function (
                         <h2
                           style="font-size: 10pt; font-weight: 500; margin: 0 0 8px 0; color: var(--text-secondary);"
                         >
-                          More from ${related.site} on Kiwi News
+                          More from ${SourceHeading(related, source)} on Kiwi
+                          News
                         </h2>
                         <ul style="list-style: none; margin: 0; padding: 0; font-size: 10pt; line-height: 1.4;">
                           ${related.stories.map(
@@ -960,6 +1021,11 @@ export default async function (
                                 >${item.title}</a
                               >
                             </li>`,
+                          )}
+                          ${SourceItem(
+                            related,
+                            source,
+                            "margin-bottom: 6px;",
                           )}
                         </ul>
                       </div>

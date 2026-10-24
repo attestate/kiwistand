@@ -55,12 +55,18 @@ import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
+import writersPage from "./views/writers.mjs";
+import * as writers from "./writers.mjs";
+import * as featured from "./featured.mjs";
 import saved from "./views/saved.mjs";
 import settings from "./views/settings.mjs";
 import newsletterPage from "./views/newsletter.mjs";
 import * as weeklyViews from "./views/weekly.mjs";
 import * as weekly from "./weekly.mjs";
 import * as isoweek from "./isoweek.mjs";
+import * as sourceViews from "./views/source.mjs";
+import * as sources from "./sources.mjs";
+import { resolveRequest as resolveSource } from "./sourcekey.mjs";
 import upvotes, * as upvotesAPI from "./views/upvotes.mjs";
 
 import search from "./views/search.mjs";
@@ -284,7 +290,7 @@ app.use(
 // indexes src/public once at startup (including each file's Content-Length),
 // so it would serve stale lengths for rewritten sitemaps and 404 for new
 // months. Read them from disk on every request instead.
-app.get(/^\/sitemap(-static|-weekly|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
+app.get(/^\/sitemap(-static|-weekly|-sources|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
   let xml;
   try {
     xml = await readFile(path.join("src/public", req.path));
@@ -2690,6 +2696,103 @@ export async function launch(trie, libp2p, isPrimary = true) {
         : "public, s-maxage=604800, max-age=0, stale-while-revalidate=31536000",
     );
     return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  app.get("/sources", async (request, reply) => {
+    const { list } = await sources.getSources();
+    const content = await sourceViews.indexPage(
+      reply.locals.theme,
+      sources.listedSources(list),
+    );
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // NOTE: Keys contain slashes (x.com/<handle>), so the route takes the rest
+  // of the raw path; src/sourcekey.mjs resolves it and picks the canonical
+  // URL, so variants (www., twitter.com, upper case) redirect.
+  app.get("/source/*", async (request, reply) => {
+    const resolved = resolveSource(request.path.slice("/source/".length));
+    if (resolved.status === 308) {
+      return reply.redirect(308, resolved.location);
+    }
+    const data =
+      resolved.status === 200
+        ? await sources.getSourcePage(resolved.key)
+        : null;
+    if (!data) {
+      return reply.status(404).type("text/plain").send("Source not found");
+    }
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    if (resolved.context) {
+      reply.header("X-Robots-Tag", "noindex");
+      return reply
+        .status(200)
+        .type("text/plain; charset=utf-8")
+        .send(sources.sourceMarkdown(data));
+    }
+    const content = await sourceViews.sourcePage(reply.locals.theme, data);
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // Monthly writer leaderboard (src/writers.mjs), ?month=YYYY-MM.
+  app.get("/writers", async (request, reply) => {
+    const range = writers.monthRange(request.query.month);
+    if (!range) {
+      return reply.status(404).type("text/plain").send("Month not found");
+    }
+    let entries;
+    try {
+      entries = await writers.getLeaderboard(range);
+    } catch (err) {
+      log(`Error rendering /writers ${err.stack}`);
+      return reply.status(500).send("Internal Server Error");
+    }
+    const startOfMonth = new Date(range.start * 1000);
+    const before = new Date(
+      Date.UTC(startOfMonth.getUTCFullYear(), startOfMonth.getUTCMonth() - 1, 1),
+    );
+    const previous = writers.monthRange(
+      `${before.getUTCFullYear()}-${String(before.getUTCMonth() + 1).padStart(2, "0")}`,
+    );
+    if (entries.length < writers.MIN_INDEXABLE) {
+      reply.header("X-Robots-Tag", "noindex");
+    }
+    const content = writersPage(reply.locals.theme, { range, entries, previous });
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // "Featured on Kiwi News" badge for writers' sites (src/featured.mjs).
+  app.get("/badge/:file", async (request, reply) => {
+    const index = featured.parseBadgeParam(request.params.file);
+    if (!index) {
+      return reply.status(404).type("text/plain").send("Badge not found");
+    }
+    let submission;
+    try {
+      submission = await generateStory(index);
+    } catch (err) {
+      return reply.status(404).type("text/plain").send("Badge not found");
+    }
+    const svg = featured.badgeSvg({
+      rank: featured.peakRank(index),
+      upvotes: submission.upvotes,
+    });
+    reply.header("X-Robots-Tag", "noindex");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=600, stale-while-revalidate=86400",
+    );
+    return reply
+      .status(200)
+      .type("image/svg+xml; charset=utf-8")
+      .send(svg);
   });
   app.get("/privacy-policy", async (request, reply) => {
     const content = await privacy(reply.locals.theme);

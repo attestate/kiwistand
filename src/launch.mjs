@@ -28,6 +28,7 @@ import { purgeCache, purgeEverything } from "./cloudflarePurge.mjs";
 import { generateSitemaps } from "./sitemap.mjs";
 import { getLists } from "./views/moderation.mjs";
 import * as social from "./social-posting.mjs";
+import * as farcasterReach from "./farcaster-reach.mjs";
 import { isLinkAlive } from "./linkcheck.mjs";
 
 // Monitor event loop blocking - grep logs for "Event loop blocked" to find offenders
@@ -125,6 +126,27 @@ if (cluster.isPrimary) {
     social.startScheduler({
       getStories: () =>
         best.getStories(0, "day", "", { createStoryLink: true, amount: 10 }),
+      isAlive: isLinkAlive,
+    });
+    // NOTE: Author pings (FC_AUTHOR_PINGS) and rising casts (FC_RISING_CASTS)
+    // from the Kiwi Farcaster account. Both off unless set to "true". They
+    // read the hot feed as the homepage ranks it (no pagination, so no
+    // prediction slots), only when one of them is on.
+    farcasterReach.startFarcasterReach({
+      getHotStories: async () => {
+        const { index } = await import("./views/feed.mjs");
+        const { stories } = await index(trie, 0, undefined, undefined, false);
+        return stories;
+      },
+      resolveProfile: async (address) =>
+        (await import("./ens.mjs")).resolve(address),
+      // NOTE: A tagged writer's row on this month's /writers, if they're on it.
+      writerEntryUrl: async (story) => {
+        const writers = await import("./writers.mjs");
+        const range = writers.monthRange();
+        const entries = await writers.getLeaderboard(range);
+        return writers.entryUrl(entries, story.href, range.id);
+      },
       isAlive: isLinkAlive,
     });
     // Purge homepage cache on server restart in production
