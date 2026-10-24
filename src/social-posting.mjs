@@ -110,7 +110,7 @@ const TELEGRAM_API = "https://api.telegram.org";
 const X_MAX_CHARS = 280;
 const X_URL_CHARS = 23;
 // NOTE: Farcaster casts are limited to 320 bytes of text.
-const FC_MAX_BYTES = 320;
+export const FC_MAX_BYTES = 320;
 
 export function missingEnv(channel, vars = env) {
   if (channel === "farcaster") {
@@ -203,7 +203,7 @@ export function storyUrl({ title, index }) {
   return `https://news.kiwistand.com/stories/${getSlug(title)}?index=0x${hex}`;
 }
 
-function truncate(text, fits) {
+export function truncate(text, fits) {
   if (fits(text)) return text;
   const chars = [...text];
   while (chars.length > 0 && !fits(`${chars.join("").trimEnd()}…`)) {
@@ -212,7 +212,7 @@ function truncate(text, fits) {
   return `${chars.join("").trimEnd()}…`;
 }
 
-function capitalize(text) {
+export function capitalize(text) {
   return text ? text[0].toUpperCase() + text.slice(1) : text;
 }
 
@@ -376,11 +376,19 @@ function hexToBytes(hex) {
 }
 
 // Signs the cast with our own registered key and submits it to a hub's HTTP
-// API, so posting doesn't depend on a paid Neynar plan.
+// API, so posting doesn't depend on a paid Neynar plan. mentions (fids) and
+// mentionsPositions (UTF-8 byte offsets into text) tag people; parentUrl
+// posts into a channel (src/farcaster-reach.mjs).
 export async function sendCastViaHub(
   text,
   embeds = [],
-  { fetch = globalThis.fetch, vars = env } = {},
+  {
+    fetch = globalThis.fetch,
+    vars = env,
+    mentions = [],
+    mentionsPositions = [],
+    parentUrl,
+  } = {},
 ) {
   const fid = parseInt(vars.FC_FID, 10);
   const key = hexToBytes(vars.FC_SIGNER_PRIVATE_KEY);
@@ -392,8 +400,9 @@ export async function sendCastViaHub(
         text,
         embeds: embeds.map((url) => ({ url })),
         embedsDeprecated: [],
-        mentions: [],
-        mentionsPositions: [],
+        mentions,
+        mentionsPositions,
+        ...(parentUrl ? { parentUrl } : {}),
       },
       { fid, network: FarcasterNetwork.MAINNET },
       new NobleEd25519Signer(key),
