@@ -137,9 +137,21 @@ export function indexJsonLd(weeks, description) {
 
 // custom() links news.css, scripts and icons with relative paths. The
 // <base href="/"> keeps them from resolving under /weekly/ (404, unstyled
-// page), like on story pages.
-async function Page(
-  { title, documentTitle, description, canonical, jsonLd, alternate, body },
+// page), like on story pages. Also used by the source pages
+// (src/views/source.mjs), which pass their own `path` and `robots`.
+export async function Page(
+  {
+    title,
+    documentTitle,
+    description,
+    canonical,
+    jsonLd,
+    alternate,
+    alternateTitle = "LLM-friendly week summary",
+    robots = null,
+    path = "/weekly",
+    body,
+  },
   theme,
 ) {
   return (
@@ -149,6 +161,7 @@ async function Page(
         <head>
           ${expectTopbar}
           <base href="/" />
+          ${robots}
           ${custom(
             OG_IMAGE,
             title,
@@ -170,7 +183,7 @@ async function Page(
             ? html`<link
                 rel="alternate"
                 type="text/plain"
-                title="LLM-friendly week summary"
+                title="${alternateTitle}"
                 href="${alternate}"
               />`
             : null}
@@ -178,7 +191,7 @@ async function Page(
         </head>
         <body>
           <div class="container">
-            ${Sidebar("/weekly")} ${RightColumn()}
+            ${Sidebar(path)} ${RightColumn()}
             <div id="hnmain" class="scaled-hnmain">
               <table
                 border="0"
@@ -195,7 +208,7 @@ async function Page(
                   </td>
                 </tr>
               </table>
-              ${Footer(theme, "/weekly")}
+              ${Footer(theme, path)}
             </div>
           </div>
         </body>

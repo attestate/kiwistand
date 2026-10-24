@@ -80,12 +80,25 @@ export async function flush(filter = visible) {
   timer = undefined;
   const stories = pending;
   pending = [];
+  if (!key() || stories.length === 0) return;
+
+  let urlList;
+  try {
+    urlList = (await filter(stories)).map(storyUrl);
+  } catch (err) {
+    log(`indexnow: submission failed: ${err.message}`);
+    return;
+  }
+  await submit(urlList);
+}
+
+// Submits URLs right away (e.g. source pages that just became indexable,
+// src/sitemap.mjs). Only in production; never throws.
+export async function submit(urlList) {
   const indexNowKey = key();
-  if (!indexNowKey || stories.length === 0) return;
+  if (!indexNowKey || urlList.length === 0) return;
 
   try {
-    const urlList = (await filter(stories)).map(storyUrl);
-    if (urlList.length === 0) return;
     const response = await fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },

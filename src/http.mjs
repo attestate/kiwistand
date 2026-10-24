@@ -61,6 +61,9 @@ import newsletterPage from "./views/newsletter.mjs";
 import * as weeklyViews from "./views/weekly.mjs";
 import * as weekly from "./weekly.mjs";
 import * as isoweek from "./isoweek.mjs";
+import * as sourceViews from "./views/source.mjs";
+import * as sources from "./sources.mjs";
+import { resolveRequest as resolveSource } from "./sourcekey.mjs";
 import upvotes, * as upvotesAPI from "./views/upvotes.mjs";
 
 import search from "./views/search.mjs";
@@ -284,7 +287,7 @@ app.use(
 // indexes src/public once at startup (including each file's Content-Length),
 // so it would serve stale lengths for rewritten sitemaps and 404 for new
 // months. Read them from disk on every request instead.
-app.get(/^\/sitemap(-static|-weekly|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
+app.get(/^\/sitemap(-static|-weekly|-sources|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
   let xml;
   try {
     xml = await readFile(path.join("src/public", req.path));
@@ -2689,6 +2692,47 @@ export async function launch(trie, libp2p, isPrimary = true) {
         ? "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400"
         : "public, s-maxage=604800, max-age=0, stale-while-revalidate=31536000",
     );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  app.get("/sources", async (request, reply) => {
+    const { list } = await sources.getSources();
+    const content = await sourceViews.indexPage(
+      reply.locals.theme,
+      sources.listedSources(list),
+    );
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // NOTE: Keys contain slashes (x.com/<handle>), so the route takes the rest
+  // of the raw path; src/sourcekey.mjs resolves it and picks the canonical
+  // URL, so variants (www., twitter.com, upper case) redirect.
+  app.get("/source/*", async (request, reply) => {
+    const resolved = resolveSource(request.path.slice("/source/".length));
+    if (resolved.status === 308) {
+      return reply.redirect(308, resolved.location);
+    }
+    const data =
+      resolved.status === 200
+        ? await sources.getSourcePage(resolved.key)
+        : null;
+    if (!data) {
+      return reply.status(404).type("text/plain").send("Source not found");
+    }
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    if (resolved.context) {
+      reply.header("X-Robots-Tag", "noindex");
+      return reply
+        .status(200)
+        .type("text/plain; charset=utf-8")
+        .send(sources.sourceMarkdown(data));
+    }
+    const content = await sourceViews.sourcePage(reply.locals.theme, data);
     return reply.status(200).type("text/html").send(content.valueOf());
   });
   app.get("/privacy-policy", async (request, reply) => {
