@@ -318,6 +318,27 @@ for (const name of ["news", "pages"]) {
   } catch (err) {}
 }
 
+// NOTE: Link preview cards (src/preview.mjs) are written while the server
+// runs, on submission and on a story page's first visit. sirv indexes
+// src/public once at startup, so a card made since the last restart was a
+// 404 for every crawler until the next one. Serve them from disk instead.
+const previewFile = /^[0-9a-f]+(-comment-[0-9a-f]+)?(-v\d+)?(-frame)?\.jpg$/;
+app.get("/previews/:file", (req, res, next) => {
+  if (!previewFile.test(req.params.file)) return next();
+  const headers = {};
+  if (env.NODE_ENV === "production") {
+    headers["Cache-Control"] =
+      "public, max-age=86400, s-maxage=604800, immutable, stale-while-revalidate=2592000";
+  }
+  res.sendFile(
+    req.params.file,
+    { root: path.resolve("src/public/previews"), cacheControl: false, headers },
+    (err) => {
+      if (err && !res.headersSent) next();
+    },
+  );
+});
+
 app.use(
   sirv("src/public", {
     setHeaders: (res, pathName) => {
