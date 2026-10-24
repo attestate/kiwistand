@@ -142,7 +142,7 @@ export async function generatePreview(index, commentIndex = null) {
         );
         return; // Exit after generating comment preview
       } catch (err) {
-        log(`Failed to generate comment preview: ${err.stack}`);
+        console.error(`Failed to generate comment preview: ${err.stack}`);
         // Fall back to story preview if comment preview fails
       }
     }
@@ -164,6 +164,9 @@ function previewStory(submission, submitter, withAvatar) {
   );
 }
 
+// NOTE: Preview failures go to console.error, not log(): log() only prints
+// when DEBUG matches, so in production a card that couldn't be made left no
+// trace, and shared links went out without a picture.
 // Writes the 1200×630 and 1200×800 story cards that are missing. A failing
 // avatar download shouldn't cost the card, so it's retried without one.
 async function generateStoryPreviews(hexIndex, submission, submitter) {
@@ -171,11 +174,11 @@ async function generateStoryPreviews(hexIndex, submission, submitter) {
     try {
       await preview.generate(hexIndex, previewStory(submission, submitter, true), isFrame);
     } catch (err) {
-      log(`Failed to generate preview with avatar for story ${hexIndex}: ${err.stack}`);
+      console.error(`Failed to generate preview with avatar for story ${hexIndex}: ${err.stack}`);
       try {
         await preview.generate(hexIndex, previewStory(submission, submitter, false), isFrame);
       } catch (err2) {
-        log(`Failed to generate preview without avatar for story ${hexIndex}: ${err2.stack}`);
+        console.error(`Failed to generate preview without avatar for story ${hexIndex}: ${err2.stack}`);
       }
     }
   }
@@ -211,7 +214,7 @@ async function generateCommentPreviews(fileName, comment, address, commenter, su
         isFrame,
       );
     } catch (err) {
-      log(`Failed to generate comment preview with avatars: ${err.message}`);
+      console.error(`Failed to generate comment preview with avatars: ${err.message}`);
       await preview.generate(
         fileName,
         previewComment(comment, address, commenter, submission, submitter, false),
@@ -445,7 +448,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
           );
         }
       } catch (err) {
-        log(`Failed to generate comment preview: ${err.message}`);
+        console.error(`Failed to generate comment preview: ${err.message}`);
         log(`Error stack: ${err.stack}`);
       }
       
