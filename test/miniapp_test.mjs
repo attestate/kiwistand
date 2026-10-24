@@ -4,6 +4,7 @@ import test from "ava";
 import {
   FARCASTER_CONNECTOR_ID,
   loginOptions,
+  promptDelegationOnConnect,
   autoConnectMiniAppWallet,
   getMiniApp,
   setMiniApp,
@@ -24,6 +25,11 @@ test.serial("the mini app only offers the Farcaster wallet", (t) => {
     passkey: false,
     walletPicker: false,
   });
+});
+
+test.serial("the mini app asks for one-tap actions only on an action", (t) => {
+  t.false(promptDelegationOnConnect({ isMiniApp: true }));
+  t.true(promptDelegationOnConnect({ isMiniApp: false }));
 });
 
 test.serial("outside the mini app nothing changes", (t) => {
