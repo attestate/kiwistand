@@ -1,0 +1,29 @@
+{
+  "name": "op-gossip",
+  "version": "1.0.0",
+  "description": "Read Kiwi's delegations from OP mainnet sequencer gossip instead of an RPC (experiment)",
+  "scripts": {
+    "test": "node --test op.test.mjs",
+    "start": "node listen.mjs",
+    "verify": "node verify.mjs"
+  },
+  "dependencies": {
+    "@chainsafe/discv5": "^10.0.1",
+    "@chainsafe/enr": "^4.0.1",
+    "@chainsafe/libp2p-gossipsub": "^14.1.2",
+    "@chainsafe/libp2p-noise": "^16.1.5",
+    "@chainsafe/libp2p-yamux": "^7.0.4",
+    "@libp2p/identify": "^3.0.39",
+    "@libp2p/ping": "^2.0.37",
+    "@libp2p/tcp": "^10.1.19",
+    "@multiformats/multiaddr": "^12.5.1",
+    "libp2p": "^2.10.0",
+    "snappyjs": "^0.7.0",
+    "viem": "^2.57.11"
+  },
+  "type": "module",
+  "private": "true",
+  "engines": {
+    "node": ">=20"
+  }
+}
