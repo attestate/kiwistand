@@ -240,6 +240,21 @@ export function flag(leaves, config) {
   });
 }
 
+// Like isModerated() (banned submitter or link in getLists()'s config), but
+// without asking ChainPatrol (isBlocked), which would check every link: cheap
+// enough to run over every story, e.g. for the sitemaps.
+export function isBanned({ identity, href }, config) {
+  if (!config) return false;
+  if ((config.addresses || []).includes(String(identity).toLowerCase())) {
+    return true;
+  }
+  const normalized =
+    href.startsWith("data:") || href.startsWith("kiwi:")
+      ? href
+      : normalizeUrl(href);
+  return (config.links || []).includes(normalized);
+}
+
 export function moderate(leaves, config, path) {
   let result = leaves
     .map((leaf) => {

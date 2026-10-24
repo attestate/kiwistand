@@ -11,6 +11,9 @@ import log from "./logger.mjs";
 import { getSlug } from "./utils.mjs";
 import { isBlocked } from "./linksafety.mjs";
 import { getLists, moderate } from "./views/moderation.mjs";
+import { getSubmission } from "./cache.mjs";
+import { getSummary } from "./summaries.mjs";
+import { isIndexableStory } from "./indexable.mjs";
 
 const HOST = "news.kiwistand.com";
 const ENDPOINT = "https://api.indexnow.org/indexnow";
@@ -44,10 +47,32 @@ export function queue(story) {
   }
 }
 
-// Drops stories that moderation or ChainPatrol hides from the feeds.
+// A story's current upvotes, comments and summary, for isIndexableStory.
+function lookup(index) {
+  const { upvotes, comments } = getSubmission(`0x${index}`);
+  return { upvotes, comments, summary: getSummary(index) };
+}
+
+// Drops stories whose pages say noindex (src/indexable.mjs): at flush time
+// that's usually every story without an AI summary yet, as new stories have
+// only their submitter's upvote. They're listed in the sitemaps once they
+// become indexable.
+export function indexable(stories, get = lookup) {
+  return stories.filter(({ index }) => {
+    try {
+      const { summary, ...counts } = get(index);
+      return isIndexableStory(counts, { summary });
+    } catch (err) {
+      return false;
+    }
+  });
+}
+
+// Drops stories that moderation or ChainPatrol hides from the feeds, and
+// stories that aren't indexable.
 async function visible(stories) {
   const kept = new Set(moderate(stories, await getLists()).map((s) => s.index));
-  return stories.filter(({ index }) => kept.has(index));
+  return indexable(stories.filter(({ index }) => kept.has(index)));
 }
 
 export async function flush(filter = visible) {

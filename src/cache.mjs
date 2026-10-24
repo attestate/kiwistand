@@ -952,15 +952,33 @@ export function listSubmissionTitles() {
     .all();
 }
 
-export function listSitemapEntries(month) {
+// A month's stories with what src/indexable.mjs needs: upvotes (including the
+// submitter's, like getSubmission) and comments, without those of
+// `bannedAddresses` (lowercase), which story pages hide too.
+export function listSitemapEntries(month, bannedAddresses = []) {
   const rows = db.prepare(`
-    SELECT id, title, timestamp FROM submissions
-    WHERE strftime('%Y-%m', timestamp, 'unixepoch') = ?
-    ORDER BY timestamp DESC
-  `).all(month);
+    SELECT
+      s.id, s.title, s.href, s.identity, s.timestamp,
+      (SELECT COUNT(*) FROM upvotes u WHERE u.href = s.href) + 1 AS upvotes,
+      (SELECT COUNT(*) FROM comments c
+        WHERE c.submission_id = s.id
+          AND lower(c.identity) NOT IN (SELECT value FROM json_each(?))
+      ) AS comments
+    FROM submissions s
+    WHERE strftime('%Y-%m', s.timestamp, 'unixepoch') = ?
+    ORDER BY s.timestamp DESC
+  `).all(JSON.stringify(bannedAddresses), month);
   return rows.map((row) => {
     const [, index] = row.id.split("0x");
-    return { index, title: row.title, timestamp: row.timestamp };
+    return {
+      index,
+      title: row.title,
+      href: row.href,
+      identity: row.identity,
+      timestamp: row.timestamp,
+      upvotes: row.upvotes,
+      comments: row.comments,
+    };
   });
 }
 

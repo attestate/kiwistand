@@ -6,6 +6,9 @@ import Database from "better-sqlite3";
 
 import { listSitemapMonths, listSitemapEntries, listWeeks } from "./cache.mjs";
 import { getSlug } from "./utils.mjs";
+import { isIndexableStory } from "./indexable.mjs";
+import { isBanned } from "./views/moderation.mjs";
+import { listSafeSummaries } from "./summaries.mjs";
 import * as isoweek from "./isoweek.mjs";
 import log from "./logger.mjs";
 
@@ -36,6 +39,30 @@ export function latestCommentTimestamps() {
     log(`Sitemap: couldn't read comment timestamps: ${err.toString()}`);
     return new Map();
   }
+}
+
+// Only stories whose pages are indexable (src/indexable.mjs): listing pages
+// that say noindex would waste crawl budget and mix signals. `policy` is
+// moderation.getLists()'s config (null skips moderation) and `summaries` maps
+// a story index to its safe summary (summaries.listSafeSummaries()).
+export function indexableEntries(
+  entries,
+  { policy = null, summaries = new Map() } = {},
+) {
+  return entries.filter((entry) => {
+    let hidden = false;
+    try {
+      hidden = isBanned(entry, policy);
+    } catch (err) {
+      // NOTE: A malformed href can't be normalized; those stories are hidden
+      // from the feeds anyway.
+      hidden = true;
+    }
+    return isIndexableStory(
+      { ...entry, hidden },
+      { summary: summaries.get(String(entry.index).toLowerCase()) },
+    );
+  });
 }
 
 export function buildMonthlySitemap(entries, lastComments = new Map()) {
@@ -123,14 +150,29 @@ function writeAtomic(name, content) {
   renameSync(tmp, path);
 }
 
-export function generateSitemaps() {
+// `policy` is moderation.getLists()'s config; without it (the config sheet
+// was unreachable) nothing is treated as moderated.
+export function generateSitemaps(policy = null) {
   const months = listSitemapMonths();
   const lastComments = latestCommentTimestamps();
+  const summaries = listSafeSummaries();
+  const bannedAddresses = policy?.addresses || [];
 
   const lastmods = {};
+  const listed = [];
+  let total = 0;
+  let indexable = 0;
   for (const month of months) {
-    const xml = buildMonthlySitemap(listSitemapEntries(month), lastComments);
+    const entries = listSitemapEntries(month, bannedAddresses);
+    const kept = indexableEntries(entries, { policy, summaries });
+    total += entries.length;
+    indexable += kept.length;
+    // NOTE: Months without an indexable story are still written (so an old
+    // file doesn't linger with noindex URLs) but left out of the index.
+    const xml = buildMonthlySitemap(kept, lastComments);
     writeAtomic(`sitemap-${month}.xml`, xml);
+    if (kept.length === 0) continue;
+    listed.push(month);
     lastmods[`sitemap-${month}.xml`] = newestLastmod(xml);
   }
 
@@ -138,7 +180,9 @@ export function generateSitemaps() {
   const weekly = buildWeeklySitemap(listWeeks({ activity: true }));
   writeAtomic("sitemap-weekly.xml", weekly);
   lastmods["sitemap-weekly.xml"] = newestLastmod(weekly);
-  writeAtomic("sitemap.xml", buildSitemapIndex(months, lastmods));
+  writeAtomic("sitemap.xml", buildSitemapIndex(listed, lastmods));
 
-  log(`Generated sitemaps for ${months.length} months`);
+  log(
+    `Generated sitemaps for ${listed.length} months (${indexable} of ${total} stories indexable)`,
+  );
 }
