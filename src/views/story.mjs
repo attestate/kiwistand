@@ -30,9 +30,9 @@ import Summary from "./components/summary.mjs";
 import {
   StoryNewsletterCard,
   NewsletterCardElement,
-  storyHeadline,
   storyCopy,
 } from "./components/newsletter-card.mjs";
+import { lastWeekPitch } from "../weekly.mjs";
 import { ms } from "./components/icons.mjs";
 import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
@@ -407,6 +407,10 @@ export default async function (trie, theme, index, value, referral, commentIndex
   const summary = getSummary(index);
   if (!summary) summarizeStory(index, value);
 
+  // Last week's top stories, the newsletter card's concrete sample (cached,
+  // null falls back to the generic copy).
+  const newsletterSample = await lastWeekPitch();
+
   const start = 0;
   // Only add margin-bottom when neither the summary nor the curator section
   // will be shown
@@ -592,7 +596,11 @@ export default async function (trie, theme, index, value, referral, commentIndex
           ${RightColumn({
             newsletter: false,
             children: [
-              NewsletterCardElement("story_sidebar", storyHeadline, storyCopy),
+              NewsletterCardElement(
+                "story_sidebar",
+                storyCopy,
+                newsletterSample,
+              ),
               related.stories.length > 0 ? RelatedBox(related) : null,
             ],
           })}
@@ -618,7 +626,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
                   true, // isAboveFold: the story's own picture is at the top
                 )({ ...story, index }, 0)}
               </tbody>
-              ${Summary(summary)} ${StoryNewsletterCard()}
+              ${Summary(summary)} ${StoryNewsletterCard(newsletterSample)}
               ${upvoterProfiles.length > 0
                 ? html`<tr class="kn-curators-row">
                     <td>

@@ -838,7 +838,11 @@ async function addNewsletterFeedCard() {
   const elems = document.querySelectorAll("newsletter-card");
   if (!elems.length) return;
 
-  const { default: NewsletterFeedCard, shouldHideCard } = await import(
+  const {
+    default: NewsletterFeedCard,
+    shouldHideCard,
+    parseSample,
+  } = await import(
     "./NewsletterFeedCard.jsx"
   );
   const hide = shouldHideCard();
@@ -853,8 +857,8 @@ async function addNewsletterFeedCard() {
       <StrictMode>
         <NewsletterFeedCard
           source={elem.dataset.source || "feed_card"}
-          headline={elem.dataset.headline}
           copy={elem.dataset.copy}
+          sample={parseSample(elem.dataset.sample)}
         />
       </StrictMode>,
     );

@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { EMAIL_RE, SUBSCRIBED_KEY, subscribe } from "./newsletter.mjs";
 import { capture } from "./analytics.mjs";
 
-const HEADLINE = "Get the best of Kiwi News weekly";
+// NOTE: Keep in sync with src/views/components/newsletter-card.mjs, which
+// renders the same card on the server (same markup, so no layout shift).
+const HEADLINE = "The week's 5 most-upvoted stories, every Sunday";
 const COPY =
-  "Five stories the community upvoted most, every Sunday. No spam, unsubscribe anytime.";
+  "Picked by the Kiwi community's upvotes. No spam, unsubscribe anytime.";
 const DISMISSED_KEY = "newsletter-card-dismissed";
 
 function readFlag(key) {
@@ -32,7 +34,27 @@ export function shouldHideCard() {
   return !!readFlag(SUBSCRIBED_KEY) || !!readFlag(DISMISSED_KEY);
 }
 
-const NewsletterFeedCard = ({ source = "feed_card", headline, copy }) => {
+// data-sample on <newsletter-card>: last week's top stories as JSON
+// ([{ title, href }]), or nothing.
+export function parseSample(value) {
+  if (!value) return null;
+  try {
+    const sample = JSON.parse(value);
+    if (!Array.isArray(sample)) return null;
+    const valid = sample.filter(
+      (item) =>
+        item &&
+        typeof item.title === "string" &&
+        typeof item.href === "string" &&
+        item.href.startsWith("/"),
+    );
+    return valid.length ? valid : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+const NewsletterFeedCard = ({ source = "feed_card", copy, sample }) => {
   const [hidden, setHidden] = useState(false);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle | sending | success
@@ -101,19 +123,32 @@ const NewsletterFeedCard = ({ source = "feed_card", headline, copy }) => {
         </button>
       )}
       <div className="newsletter-card-eyebrow">Kiwi weekly</div>
-      <div className="newsletter-card-title">{headline || HEADLINE}</div>
+      <div className="newsletter-card-title">{HEADLINE}</div>
       {status === "success" ? (
         <p className="newsletter-card-copy newsletter-card-success">
           You're in. See you Sunday.
         </p>
       ) : (
         <>
-          <p className="newsletter-card-copy">
-            {copy || COPY}{" "}
-            <a className="newsletter-card-more" href="/newsletter">
-              What's in it?
-            </a>
-          </p>
+          {sample ? (
+            <>
+              <p className="newsletter-card-copy">{copy}</p>
+              <ol className="newsletter-card-sample">
+                {sample.map(({ title, href }) => (
+                  <li key={href}>
+                    <a href={href}>{title}</a>
+                  </li>
+                ))}
+              </ol>
+            </>
+          ) : (
+            <p className="newsletter-card-copy">
+              {copy || COPY}{" "}
+              <a className="newsletter-card-more" href="/newsletter">
+                What's in it?
+              </a>
+            </p>
+          )}
           <form
             className="newsletter-card-form"
             method="post"

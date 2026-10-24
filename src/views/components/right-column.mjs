@@ -7,7 +7,6 @@ import { ms } from "./icons.mjs";
 
 const html = htm.bind(vhtml);
 
-export const sidebarHeadline = "The week's five, every Sunday.";
 export const sidebarCopy =
   "The stories the Kiwi community liked most, in one short email.";
 
@@ -104,7 +103,7 @@ export default function RightColumn({ newsletter = true, children = null } = {})
   return html`
     <aside class="right-column kn-right">
       ${newsletter
-        ? NewsletterCardElement("sidebar", sidebarHeadline, sidebarCopy)
+        ? NewsletterCardElement("sidebar", sidebarCopy)
         : null}
       ${children}
       ${AppBox()}

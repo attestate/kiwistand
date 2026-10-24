@@ -171,3 +171,60 @@ export function getWeeks(now = Date.now()) {
     .map((row) => ({ ...row, week: isoweek.weekOf(row.start) }))
     .filter(({ week }) => isoweek.compare(week, current) <= 0);
 }
+
+// A concrete sample for the newsletter sign-up on story pages: the titles of
+// the previous ISO week's top stories, picked like getWeek() (and so like the
+// Sunday email). Cached for an hour; a stale value for the same week is
+// returned while it refreshes in the background, so a story render only waits
+// on the first call of a week. null when there's nothing to show (the card
+// then falls back to its generic copy).
+export const PITCH_STORIES = 3;
+const PITCH_TTL = 60 * 60 * 1000;
+let pitchCache = null; // { key, at, stories }
+let pitchRefresh = null;
+
+export function previousWeek(now = Date.now()) {
+  return isoweek.weekOf(Math.floor(now / 1000) - 7 * 24 * 60 * 60);
+}
+
+export function pitchStories(stories, amount = PITCH_STORIES) {
+  const picked = (stories || [])
+    .filter((story) => story && story.title && story.index)
+    .slice(0, amount)
+    .map((story) => ({
+      title: story.title,
+      href: `/stories/${getSlug(story.title)}?index=0x${story.index}`,
+    }));
+  return picked.length === amount ? picked : null;
+}
+
+async function loadPitch(week) {
+  const { start, end } = isoweek.range(week);
+  const candidates = getWeekStories(start, end, CANDIDATES);
+  if (candidates.length === 0) return null;
+  const policy = await moderation.getLists();
+  return pitchStories(selectStories(candidates, policy, PITCH_STORIES));
+}
+
+export async function lastWeekPitch(now = Date.now()) {
+  const week = previousWeek(now);
+  const key = isoweek.format(week);
+  const cached = pitchCache && pitchCache.key === key;
+  if (cached && now - pitchCache.at < PITCH_TTL) return pitchCache.stories;
+
+  if (!pitchRefresh) {
+    pitchRefresh = loadPitch(week)
+      .then((stories) => {
+        pitchCache = { key, at: Date.now(), stories };
+        return stories;
+      })
+      .catch((err) => {
+        log(`weekly: couldn't load the newsletter pitch: ${err}`);
+        return pitchCache && pitchCache.key === key ? pitchCache.stories : null;
+      })
+      .finally(() => {
+        pitchRefresh = null;
+      });
+  }
+  return cached ? pitchCache.stories : pitchRefresh;
+}
