@@ -66,7 +66,10 @@ import * as weekly from "./weekly.mjs";
 import * as isoweek from "./isoweek.mjs";
 import * as sourceViews from "./views/source.mjs";
 import * as sources from "./sources.mjs";
-import { resolveRequest as resolveSource } from "./sourcekey.mjs";
+import {
+  resolveRequest as resolveSource,
+  sourcePath,
+} from "./sourcekey.mjs";
 import upvotes, * as upvotesAPI from "./views/upvotes.mjs";
 
 import search from "./views/search.mjs";
@@ -2723,6 +2726,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
         : null;
     if (!data) {
       return reply.status(404).type("text/plain").send("Source not found");
+    }
+    // An alias (farcaster.xyz/name.eth merged into farcaster.xyz/name).
+    if (data.key !== resolved.key) {
+      return reply.redirect(
+        308,
+        `${sourcePath(data.key)}${resolved.context ? "/context" : ""}`,
+      );
     }
     reply.header(
       "Cache-Control",

@@ -49,6 +49,60 @@ test("leaderboard ranks writers by upvotes on their links", (t) => {
   t.is(writers.leaderboard(rows, { limit: 1 }).length, 1);
 });
 
+test("writerOf uses source keys: X mirrors, file hosts, Substack app links", (t) => {
+  t.is(writers.writerOf("https://xcancel.com/Alice/status/1").key, "x.com/alice");
+  t.is(writers.writerOf("https://xcancel.com/alice/status/1").url, "https://x.com/alice");
+  t.is(writers.writerOf("https://open.substack.com/pub/kiwi/p/x").key, "kiwi.substack.com");
+  t.is(writers.writerOf("https://files.catbox.moe/a.png"), null);
+  t.is(writers.writerOf("https://docs.google.com/document/d/1"), null);
+  t.is(writers.writerOf("https://imagedelivery.net/a/b/public"), null);
+  t.is(writers.writerOf("https://firefly.social/post/farcaster/0xabc"), null);
+});
+
+test("leaderboard counts a writer's resubmissions once, the most upvoted", (t) => {
+  const rows = [
+    { index: "1", title: "Same story", href: "https://a.com/1", upvotes: 2 },
+    { index: "2", title: "Same  Story ", href: "https://a.com/1?ref=x", upvotes: 9 },
+    { index: "3", title: "Other title", href: "https://a.com/2", upvotes: 4 },
+    { index: "4", title: "Other title, same link", href: "https://a.com/2", upvotes: 1 },
+    { index: "5", title: "Unique", href: "https://a.com/3", upvotes: 1 },
+    // The same title by another writer isn't a duplicate.
+    { index: "6", title: "Same story", href: "https://b.com/1", upvotes: 3 },
+  ];
+  const board = writers.leaderboard(rows);
+  t.deepEqual(
+    board.map((e) => [e.key, e.upvotes, e.count]),
+    [
+      ["a.com", 14, 3],
+      ["b.com", 3, 1],
+    ],
+  );
+  t.deepEqual(
+    board[0].stories.map((s) => [s.index, s.upvotes]),
+    [
+      ["2", 9],
+      ["3", 4],
+      ["5", 1],
+    ],
+  );
+});
+
+test("leaderboard merges Farcaster name and name.eth, and entryUrl finds both", (t) => {
+  const board = writers.leaderboard([
+    { index: "1", title: "A", href: "https://farcaster.xyz/al/0x1", upvotes: 2 },
+    { index: "2", title: "B", href: "https://farcaster.xyz/al.eth/0x2", upvotes: 3 },
+    { index: "3", title: "C", href: "https://warpcast.com/al.eth/0x3", upvotes: 1 },
+  ]);
+  t.deepEqual(
+    board.map((e) => [e.key, e.upvotes, e.count, e.aliases]),
+    [["farcaster.xyz/al.eth", 6, 3, ["farcaster.xyz/al"]]],
+  );
+  t.is(
+    writers.entryUrl(board, "https://farcaster.xyz/al/0x9", "2026-10"),
+    "https://news.kiwistand.com/writers?month=2026-10#w-farcaster-xyz-al-eth",
+  );
+});
+
 test("leaderboard caps at 25 writers", (t) => {
   const rows = Array.from({ length: 40 }, (_, i) => ({
     index: String(i),
@@ -113,6 +167,13 @@ test("writers page lists entries and says noindex below 10 entries", (t) => {
   t.true(page.includes("Hello &lt;b&gt;"));
   t.true(page.includes('content="noindex, follow"'));
   t.false(page.includes("<script>"));
+  // Spaces around the meta, and between numbers and words.
+  t.true(page.includes("</a> <span"));
+  t.true(page.includes("3 upvotes · 1 story"));
+  const list = page.match(/<ol class="n2-writers">.*?<\/ol>/s)[0];
+  t.false(/\d(stories|story|upvotes?)\b/.test(list));
+  t.false(/\S·|·\S/.test(list));
+  t.false(list.includes("style="));
   const many = writers.leaderboard(
     Array.from({ length: 12 }, (_, i) => ({ index: String(i), title: `T${i}`, href: `https://s${i}.com/`, upvotes: 2 })),
   );

@@ -8,29 +8,84 @@
 // (paragraph.xyz/@name, x.com/handle). Aliases of a platform map to one host
 // (twitter.com -> x.com) so one author has one page. A link to a platform
 // without an author (x.com/i/..., youtube.com/watch) has no source.
+//
+// src/writers.mjs (/writers) uses the same keys, so both agree on who a
+// writer is.
+
+// X/Twitter and its frontends and mirrors (nitter, xcancel, fxtwitter). Links
+// to them have the same paths as x.com. src/parser.mjs uses this list for
+// tweet previews too.
+export const twitterFrontends = [
+  "xcancel.com",
+  "nitter.net",
+  "nitter.privacydev.net",
+  "nitter.poast.org",
+  "nitter.lucabased.xyz",
+  "nitter.kavin.rocks",
+  "nitter.tiekoetter.com",
+  "nitter.qwik.space",
+  "bird.habedieeh.re",
+  "nitter.lunar.icu",
+  "nitter.moomoo.me",
+  "nitter.kylrth.com",
+  "nitter.io.lol",
+  "nitter.rawbit.ninja",
+  "nitter.holo-mix.com",
+  "twitter.com",
+  "x.com",
+  "fxtwitter.com",
+  "vxtwitter.com",
+];
 
 const ALIASES = {
-  "twitter.com": "x.com",
+  ...Object.fromEntries(twitterFrontends.map((host) => [host, "x.com"])),
   "mobile.twitter.com": "x.com",
   "mobile.x.com": "x.com",
-  "fxtwitter.com": "x.com",
-  "vxtwitter.com": "x.com",
   "fixupx.com": "x.com",
   "warpcast.com": "farcaster.xyz",
   "paragraph.com": "paragraph.xyz",
   "m.youtube.com": "youtube.com",
   "youtu.be": "youtube.com",
   "gist.github.com": "github.com",
+  "t2.world": "app.t2.world",
 };
 
-// Link hosts that aren't a source: image uploads, Kiwi itself, shorteners.
-const EXCLUDED = new Set([
+// Link hosts that aren't a writer or publication: image and file uploads,
+// IPFS and Arweave gateways, Google Docs/Drive, link shorteners and Kiwi
+// itself. A host is excluded with all its subdomains (i.imgur.com,
+// <cid>.ipfs.dweb.link, files.catbox.moe).
+const EXCLUDED = [
   "imagedelivery.net",
   "news.kiwistand.com",
   "kiwistand.com",
   "t.co",
   "bit.ly",
-]);
+  "tinyurl.com",
+  "buff.ly",
+  "ow.ly",
+  "goo.gl",
+  "dub.sh",
+  "lnkd.in",
+  "catbox.moe",
+  "imgur.com",
+  "ibb.co",
+  "postimg.cc",
+  "ipfs.io",
+  "dweb.link",
+  "w3s.link",
+  "nftstorage.link",
+  "cloudflare-ipfs.com",
+  "gateway.pinata.cloud",
+  "mypinata.cloud",
+  "ipfs.tech",
+  "arweave.net",
+  "docs.google.com",
+  "drive.google.com",
+];
+
+function excluded(host) {
+  return EXCLUDED.some((name) => host === name || host.endsWith(`.${name}`));
+}
 
 const reserved = (words) => {
   const set = new Set(words);
@@ -86,6 +141,8 @@ const PLATFORMS = {
     "users",
   ]),
   "mirror.xyz": reserved(["dashboard"]),
+  // T2 articles (app.t2.world/article/<id>) don't name the author.
+  "app.t2.world": handle,
 };
 
 const NAMES = {
@@ -98,13 +155,14 @@ const NAMES = {
   "farcaster.xyz": "Farcaster",
   "github.com": "GitHub",
   "mirror.xyz": "Mirror",
+  "app.t2.world": "T2",
 };
 
 const HOST = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 const SEGMENT = /^@?[a-z0-9_][a-z0-9._-]{0,99}$/;
 
-function segmentOf(pathname) {
-  const first = pathname.split("/").find(Boolean);
+function segmentOf(pathname, position = 0) {
+  const first = pathname.split("/").filter(Boolean)[position];
   if (!first) return null;
   let segment;
   try {
@@ -127,12 +185,55 @@ export function sourceKey(href) {
     .toLowerCase()
     .replace(/\.$/, "")
     .replace(/^www\./, "");
-  if (!HOST.test(host) || EXCLUDED.has(host)) return null;
+  if (!HOST.test(host) || excluded(host)) return null;
+  if (host === "open.substack.com") return substackApp(url.pathname);
+  if (host === "firefly.social") return firefly(url.pathname);
   host = ALIASES[host] || host;
   const isAuthor = PLATFORMS[host];
   if (!isAuthor) return host;
   const segment = segmentOf(url.pathname);
   return segment && isAuthor(segment) ? `${host}/${segment}` : null;
+}
+
+// Substack app links: open.substack.com/pub/<name>/p/<slug> is
+// <name>.substack.com/p/<slug>.
+function substackApp(pathname) {
+  if (segmentOf(pathname) !== "pub") return null;
+  const name = segmentOf(pathname, 1);
+  return name && /^[a-z0-9-]+$/.test(name) ? `${name}.substack.com` : null;
+}
+
+// firefly.social is a client for Farcaster, Lens and X. Profile links name
+// the author (/profile/farcaster/<name>, /profile/x/<handle>); post links
+// (/post/farcaster/<hash>, /post/x/<id>) and Lens profiles don't map to a
+// key we have, so they have no source.
+const FIREFLY = { farcaster: "farcaster.xyz", x: "x.com", twitter: "x.com" };
+function firefly(pathname) {
+  if (segmentOf(pathname) !== "profile") return null;
+  const host = FIREFLY[segmentOf(pathname, 1)];
+  const name = segmentOf(pathname, 2);
+  if (!host || !name || !PLATFORMS[host](name)) return null;
+  return `${host}/${name}`;
+}
+
+// One person often has two Farcaster usernames, "name" and the ENS name
+// "name.eth". Without an FID lookup we can't be sure they're the same
+// account, so this merges only when both keys exist: the one with fewer
+// stories becomes an alias of the other. `counts` maps keys to their story
+// counts; returns a Map of alias -> key.
+// TODO: Merge by FID once the build has the usernames' FIDs.
+export function farcasterAliases(counts) {
+  const aliases = new Map();
+  for (const [key, count] of counts) {
+    const match = key.match(/^farcaster\.xyz\/(.+)\.eth$/);
+    if (!match) continue;
+    const plain = `farcaster.xyz/${match[1]}`;
+    if (!counts.has(plain)) continue;
+    const other = counts.get(plain);
+    if (count > other) aliases.set(plain, key);
+    else aliases.set(key, plain);
+  }
+  return aliases;
 }
 
 // The page's path. Keys only contain [a-z0-9._-@/], so this keeps them

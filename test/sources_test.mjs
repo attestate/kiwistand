@@ -11,7 +11,10 @@ import {
   sourcePath,
   resolveRequest,
   sourceName,
+  farcasterAliases,
+  twitterFrontends,
 } from "../src/sourcekey.mjs";
+import { twitterFrontends as parserFrontends } from "../src/parser.mjs";
 import * as sources from "../src/sources.mjs";
 import * as summaries from "../src/summaries.mjs";
 import {
@@ -24,6 +27,7 @@ import {
   indexPage,
   sourceDescription,
   sourceJsonLd,
+  indexMeta,
 } from "../src/views/source.mjs";
 import { DESC_MAX } from "../src/seo.mjs";
 
@@ -105,6 +109,113 @@ test("sourceKey: no source without an author on a platform, or no link", (t) => 
   ]) {
     t.is(sourceKey(href), null, String(href));
   }
+});
+
+test("sourceKey: X frontends and mirrors map to x.com/<handle>", (t) => {
+  t.is(parserFrontends, twitterFrontends);
+  const cases = {
+    "https://xcancel.com/VitalikButerin/status/1": "x.com/vitalikbuterin",
+    "https://xcancel.com/alice/status/123/photo/1": "x.com/alice",
+    "https://nitter.net/Bob/status/2": "x.com/bob",
+    "https://nitter.poast.org/bob": "x.com/bob",
+    "https://vxtwitter.com/carol/status/3": "x.com/carol",
+    "https://fixupx.com/carol/status/3": "x.com/carol",
+    "https://xcancel.com/i/status/1": null,
+    "https://xcancel.com/": null,
+    "https://nitter.net/search?q=eth": null,
+  };
+  for (const [href, key] of Object.entries(cases)) {
+    t.is(sourceKey(href), key, href);
+  }
+  for (const host of twitterFrontends) {
+    t.is(sourceKey(`https://${host}/alice/status/1`), "x.com/alice", host);
+  }
+});
+
+test("sourceKey: Substack app links, Firefly and T2", (t) => {
+  const cases = {
+    "https://open.substack.com/pub/kiwinews/p/issue-1": "kiwinews.substack.com",
+    "https://open.substack.com/pub/Kiwi-News/p/issue-1?r=abc":
+      "kiwi-news.substack.com",
+    "https://open.substack.com/pub/": null,
+    "https://open.substack.com/home": null,
+    "https://open.substack.com/pub/a.b/p/x": null,
+    "https://firefly.social/profile/farcaster/dwr.eth": "farcaster.xyz/dwr.eth",
+    "https://firefly.social/profile/x/VitalikButerin": "x.com/vitalikbuterin",
+    "https://firefly.social/post/farcaster/0xabc": null,
+    "https://firefly.social/post/x/2107837081313505768": null,
+    "https://firefly.social/post/lens/0x01-0x02": null,
+    "https://firefly.social/profile/lens/stani": null,
+    "https://firefly.social/profile/farcaster/~": null,
+    "https://firefly.social/": null,
+    "https://app.t2.world/@alice/some-post": "app.t2.world/@alice",
+    "https://t2.world/@alice": "app.t2.world/@alice",
+    "https://app.t2.world/article/clx123abc": null,
+    "https://app.t2.world/t/territory": null,
+  };
+  for (const [href, key] of Object.entries(cases)) {
+    t.is(sourceKey(href), key, href);
+  }
+  t.is(sourceName("app.t2.world/@alice"), "@alice on T2");
+});
+
+test("sourceKey: file hosts, gateways, Google Docs and shorteners aren't sources", (t) => {
+  for (const href of [
+    "https://files.catbox.moe/abc.png",
+    "https://catbox.moe/c/abc",
+    "https://litter.catbox.moe/abc.pdf",
+    "https://imgur.com/a/abc",
+    "https://i.imgur.com/abc.png",
+    "https://ipfs.io/ipfs/bafy",
+    "https://bafybeigdyrzt.ipfs.dweb.link/",
+    "https://bafy.ipfs.w3s.link/x.pdf",
+    "https://cloudflare-ipfs.com/ipfs/bafy",
+    "https://gateway.pinata.cloud/ipfs/bafy",
+    "https://kiwi.mypinata.cloud/ipfs/bafy",
+    "https://arweave.net/abc",
+    "https://docs.google.com/document/d/1abc/edit",
+    "https://drive.google.com/file/d/1abc/view",
+    "https://tinyurl.com/abc",
+    "https://bit.ly/abc",
+  ]) {
+    t.is(sourceKey(href), null, href);
+  }
+  // Only the hosts and their subdomains, not lookalikes.
+  t.is(sourceKey("https://notimgur.com/x"), "notimgur.com");
+  t.is(sourceKey("https://google.com/x"), "google.com");
+});
+
+test("resolveRequest redirects mirror and app keys to the canonical key", (t) => {
+  t.deepEqual(resolveRequest("xcancel.com/alice"), {
+    status: 308,
+    location: "/source/x.com/alice",
+  });
+  t.deepEqual(resolveRequest("open.substack.com/pub/kiwi"), {
+    status: 308,
+    location: "/source/kiwi.substack.com",
+  });
+  t.deepEqual(resolveRequest("files.catbox.moe"), { status: 404 });
+});
+
+test("farcasterAliases merges name and name.eth into the larger one", (t) => {
+  const aliases = farcasterAliases(
+    new Map([
+      ["farcaster.xyz/alice", 3],
+      ["farcaster.xyz/alice.eth", 7],
+      ["farcaster.xyz/bob", 4],
+      ["farcaster.xyz/bob.eth", 4],
+      ["farcaster.xyz/carol.eth", 9],
+      ["x.com/dave", 1],
+      ["x.com/dave.eth", 1],
+    ]),
+  );
+  t.deepEqual(
+    [...aliases],
+    [
+      ["farcaster.xyz/alice", "farcaster.xyz/alice.eth"],
+      ["farcaster.xyz/bob.eth", "farcaster.xyz/bob"],
+    ],
+  );
 });
 
 test("sourcePath and sourceName", (t) => {
@@ -548,4 +659,108 @@ test("story pages link More from <site> to an indexable source page", async (t) 
   const none = RelatedBox({ site: "thin.example", stories }, null);
   t.false(none.includes("/source/"));
   t.true(none.includes("More from thin.example"));
+});
+
+test("buildSources merges Farcaster name and name.eth into the larger one", async (t) => {
+  n = 0;
+  const entries = [
+    ...[1, 2, 3, 4].map(() =>
+      entry("https://farcaster.xyz/alice.eth/0x1", { upvotes: 3 }),
+    ),
+    ...[1, 2].map(() =>
+      entry("https://warpcast.com/alice/0x2", { upvotes: 3 }),
+    ),
+    entry("https://farcaster.xyz/bob.eth/0x3", { upvotes: 1 }),
+  ];
+  const list = sources.buildSources(entries);
+  t.deepEqual(
+    list.map(({ key, stories, upvotes, aliases }) => [key, stories, upvotes, aliases]),
+    [
+      ["farcaster.xyz/alice.eth", 6, 18, ["farcaster.xyz/alice"]],
+      ["farcaster.xyz/bob.eth", 1, 1, undefined],
+    ],
+  );
+  t.true(sources.isIndexableSource(list[0]));
+
+  // The alias finds the merged source, so its page and story links use the
+  // canonical key.
+  const byKey = sources.byKeyOf(list);
+  t.is(byKey.get("farcaster.xyz/alice").key, "farcaster.xyz/alice.eth");
+  const data = await sources.getSourcePage("farcaster.xyz/alice", {
+    sources: { byKey },
+    policy,
+  });
+  t.is(data.key, "farcaster.xyz/alice.eth");
+
+  const dir = mkdtempSync(join(tmpdir(), "kiwi-sources-"));
+  const path = join(dir, "sources.json");
+  sources.reset();
+  sources.write(list, path);
+  await sources.getSources(path);
+  t.deepEqual(
+    sources.indexableSourcePath("https://farcaster.xyz/alice/0x9", path),
+    {
+      key: "farcaster.xyz/alice.eth",
+      path: "/source/farcaster.xyz/alice.eth",
+    },
+  );
+  sources.reset();
+});
+
+test("buildSources ranks by upvotes in the last 90 days, then all-time", (t) => {
+  n = 0;
+  const now = T0 + 1000 * DAY;
+  const at = (days) => now - days * DAY;
+  const entries = [
+    // Big all-time, quiet lately.
+    entry("https://old.example/1", { upvotes: 100, timestamp: at(400) }),
+    entry("https://old.example/2", { upvotes: 2, timestamp: at(30) }),
+    // Smaller, active lately.
+    entry("https://new.example/1", { upvotes: 10, timestamp: at(10) }),
+    entry("https://new.example/2", { upvotes: 5, timestamp: at(89) }),
+    entry("https://new.example/3", { upvotes: 50, timestamp: at(91) }),
+    // Nothing recent: all-time breaks the tie.
+    entry("https://a.example/1", { upvotes: 7, timestamp: at(200) }),
+    entry("https://b.example/1", { upvotes: 8, timestamp: at(300) }),
+  ];
+  const list = sources.buildSources(entries, { now });
+  t.deepEqual(
+    list.map(({ key, recentUpvotes, recentStories }) => [
+      key,
+      recentUpvotes,
+      recentStories,
+    ]),
+    [
+      ["new.example", 15, 2],
+      ["old.example", 2, 1],
+      ["b.example", 0, 0],
+      ["a.example", 0, 0],
+    ],
+  );
+  t.is(list[0].upvotes, 65);
+});
+
+test("indexPage rows: space before the dot, stories, upvotes and last story", async (t) => {
+  n = 0;
+  const list = sources.listedSources(
+    sources.buildSources(fixture(), { policy }),
+  );
+  const page = await indexPage(null, list);
+  const blog = list[0];
+  t.is(
+    indexMeta(blog),
+    `6 stories · 20 upvotes · last story ${new Date(
+      blog.latest * 1000,
+    ).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}`,
+  );
+  t.regex(page, /last story March 2025/);
+  t.regex(
+    page,
+    /<a href="\/source\/blog\.example">blog\.example<\/a> <span class="wk-meta">· 6 stories · 20 upvotes · last story/,
+  );
+  const rows = page.match(/<ol class="wk-list">.*?<\/ol>/s)[0];
+  t.notRegex(rows, /<\/a><span/);
+  t.notRegex(rows, /[^\s>]·/);
+  t.notRegex(rows, /·\S/);
+  t.notRegex(rows, /\d(stories|upvotes)/);
 });

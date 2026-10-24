@@ -9,6 +9,17 @@ import { MIN_INDEXABLE } from "../writers.mjs";
 
 const html = htm.bind(vhtml);
 
+function plural(count, word) {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}
+
+// "12 upvotes · 5 stories"
+export function writerMeta(entry) {
+  return `${plural(entry.upvotes, "upvote")} · ${
+    entry.count === 1 ? "1 story" : `${entry.count} stories`
+  }`;
+}
+
 // The monthly writer leaderboard (src/writers.mjs). Server-rendered only.
 export default function writersPage(theme, { range, entries, previous }) {
   const canonical = `https://news.kiwistand.com/writers?month=${range.id}`;
@@ -33,21 +44,22 @@ export default function writersPage(theme, { range, entries, previous }) {
       <p>${description}</p>
       ${entries.length === 0
         ? html`<p>No stories yet this month.</p>`
-        : html`<ol style="padding-left: 1.6em;">
+        : html`<ol class="n2-writers">
             ${entries.map(
-              (entry) => html`<li id="${entry.anchor}" style="margin-bottom: 14px;">
-                <a href="${entry.url}" rel="nofollow noopener" target="_blank"
-                  ><strong>${entry.label}</strong></a
-                >${" "}<span style="color: var(--text-secondary);"
-                  >${entry.upvotes} upvotes · ${entry.count}
-                  ${entry.count === 1 ? "story" : "stories"}</span
-                >
-                <ul style="margin: 4px 0 0 0;">
+              (entry) => html`<li id="${entry.anchor}">
+                <a
+                  class="n2-writers-name"
+                  href="${entry.url}"
+                  rel="nofollow noopener"
+                  target="_blank"
+                  >${entry.label}</a
+                >${" "}<span class="n2-writers-meta">${writerMeta(entry)}</span>
+                <ul class="n2-writers-stories">
                   ${entry.stories.map(
                     (story) => html`<li>
                       <a href="${story.path}">${story.title}</a>${" "}<span
-                        style="color: var(--text-secondary);"
-                        >(${story.upvotes})</span
+                        class="n2-writers-meta"
+                        >${plural(story.upvotes, "upvote")}</span
                       >
                     </li>`,
                   )}

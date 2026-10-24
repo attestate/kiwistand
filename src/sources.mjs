@@ -13,7 +13,13 @@ import { env } from "process";
 import { readFile, stat } from "fs/promises";
 import { readFileSync, writeFileSync, renameSync } from "fs";
 
-import { sourceKey, sourcePath, sourceName, describe } from "./sourcekey.mjs";
+import {
+  sourceKey,
+  sourcePath,
+  sourceName,
+  describe,
+  farcasterAliases,
+} from "./sourcekey.mjs";
 import { isIndexableStory } from "./indexable.mjs";
 import * as moderation from "./views/moderation.mjs";
 import { getSummary } from "./summaries.mjs";
@@ -26,6 +32,8 @@ export const MIN_INDEXABLE_STORIES = 5;
 export const MAX_STORIES = 50;
 export const MAX_DISCUSSED = 5;
 export const MAX_LISTED = 300;
+// /sources ranks by upvotes on stories shared in this window.
+export const RECENT_DAYS = 90;
 const CHECK_EVERY = 60 * 1000;
 
 export function file() {
@@ -59,9 +67,19 @@ function byComments(a, b) {
 // story index to its safe summary and `lastComments` a "kiwi:0x<index>" to
 // its latest comment's timestamp. Moderated stories are left out entirely, so
 // a source with only moderated stories doesn't exist.
+//
+// Farcaster "name" and "name.eth" become one source (farcasterAliases in
+// src/sourcekey.mjs); the merged-away key is in the source's `aliases`.
+// Sources are ordered by upvotes on stories shared in the last RECENT_DAYS
+// before `now` (unix seconds), then by all-time upvotes.
 export function buildSources(
   entries,
-  { policy = null, summaries = new Map(), lastComments = new Map() } = {},
+  {
+    policy = null,
+    summaries = new Map(),
+    lastComments = new Map(),
+    now = Math.floor(Date.now() / 1000),
+  } = {},
 ) {
   const groups = new Map();
   for (const entry of entries) {
@@ -82,6 +100,15 @@ export function buildSources(
     groups.get(key).push(story);
   }
 
+  const counts = new Map([...groups].map(([key, list]) => [key, list.length]));
+  const aliasesOf = new Map();
+  for (const [alias, key] of farcasterAliases(counts)) {
+    groups.get(key).push(...groups.get(alias));
+    groups.delete(alias);
+    aliasesOf.set(key, [...(aliasesOf.get(key) || []), alias]);
+  }
+
+  const since = now - RECENT_DAYS * 24 * 60 * 60;
   const sources = [];
   for (const [key, stories] of groups) {
     stories.sort(byUpvotes);
@@ -91,12 +118,16 @@ export function buildSources(
       const comment = lastComments.get(`kiwi:0x${story.index}`) || 0;
       lastmod = Math.max(lastmod, story.timestamp, comment);
     }
+    const recent = stories.filter((story) => story.timestamp >= since);
     sources.push({
       key,
+      ...(aliasesOf.has(key) ? { aliases: aliasesOf.get(key) } : {}),
       stories: stories.length,
       indexable: stories.filter((story) => story.indexable).length,
       upvotes: stories.reduce((sum, story) => sum + story.upvotes, 0),
       comments: stories.reduce((sum, story) => sum + story.comments, 0),
+      recentStories: recent.length,
+      recentUpvotes: recent.reduce((sum, story) => sum + story.upvotes, 0),
       first: Math.min(...stories.map((story) => story.timestamp)),
       latest: Math.max(...stories.map((story) => story.timestamp)),
       lastmod,
@@ -110,6 +141,7 @@ export function buildSources(
   }
   return sources.sort(
     (a, b) =>
+      b.recentUpvotes - a.recentUpvotes ||
       b.upvotes - a.upvotes ||
       b.stories - a.stories ||
       (a.key < b.key ? -1 : 1),
@@ -120,8 +152,9 @@ export function isIndexableSource(source) {
   return !!source && source.indexable >= MIN_INDEXABLE_STORIES;
 }
 
-// The sources /sources lists, most upvoted first: only indexable ones, so the
-// index doesn't send crawlers to noindex pages.
+// The sources /sources lists, most upvoted in the last RECENT_DAYS first
+// (buildSources' order): only indexable ones, so the index doesn't send
+// crawlers to noindex pages.
 export function listedSources(sources, amount = MAX_LISTED) {
   return sources.filter(isIndexableSource).slice(0, amount);
 }
@@ -155,8 +188,18 @@ async function load(path) {
   state = {
     mtime: mtimeMs,
     list: sources,
-    byKey: new Map(sources.map((source) => [source.key, source])),
+    byKey: byKeyOf(sources),
   };
+}
+
+// Sources by key and by their aliases, so an alias's page can redirect.
+export function byKeyOf(sources) {
+  const byKey = new Map();
+  for (const source of sources) {
+    for (const alias of source.aliases || []) byKey.set(alias, source);
+  }
+  for (const source of sources) byKey.set(source.key, source);
+  return byKey;
 }
 
 // Re-reads sources.json when it changed, at most once per CHECK_EVERY.
@@ -197,10 +240,14 @@ export function indexableSourcePath(href, path = file()) {
   const key = sourceKey(href);
   if (!key) return null;
   const source = state.byKey.get(key);
-  return isIndexableSource(source) ? { key, path: sourcePath(key) } : null;
+  return isIndexableSource(source)
+    ? { key: source.key, path: sourcePath(source.key) }
+    : null;
 }
 
-// One source page's data, or null when the source has no stories. Applies
+// One source page's data, or null when the source has no stories. For an
+// alias (farcaster.xyz/name.eth merged into farcaster.xyz/name), `key` in the
+// result is the canonical key; the caller redirects. Applies
 // the feeds' current moderation (title and link overrides, ChainPatrol) to
 // the listed stories and adds their safe summaries (never generates any).
 export async function getSourcePage(key, { sources, policy } = {}) {
