@@ -505,6 +505,10 @@ export default async function (
 
   // Generate appropriate preview URLs based on whether this is a comment or story
   let ogImage, frameImage, ogDescription, ogTitle;
+  // NOTE: The generated previews are 1200×630 (src/preview.mjs), wide enough
+  // for Google Discover's large image cards (max-image-preview:large).
+  let ogImageWidth = preview.SIZES.og.width;
+  let ogImageHeight = preview.SIZES.og.height;
   let baseUrl = "https://news.kiwistand.com";
   if (env.CUSTOM_HOST_NAME && env.CUSTOM_PROTOCOL) {
     // Remove port for public URLs like meta tags
@@ -567,7 +571,13 @@ export default async function (
       ogImage = value.href.endsWith("/public")
         ? value.href.replace("/public", "/w=1200,q=80,fit=cover,f=auto")
         : value.href + "/w=1200,q=80,fit=cover,f=auto";
-      frameImage = ogImage; // Use same for Cloudflare images
+      // NOTE: The Farcaster mini app embed wants 3:2 (1200×800).
+      const base = value.href.endsWith("/public")
+        ? value.href.slice(0, -"/public".length)
+        : value.href;
+      frameImage = `${base}/w=1200,h=800,fit=cover,f=auto`;
+      // Resized to 1200 wide; the height depends on the upload.
+      ogImageHeight = null;
     } else {
       // Fall back to the generated preview (index already has 0x prefix removed in http.mjs)
       ogImage = `${baseUrl}/previews/${preview.fileName(index)}`;
@@ -663,6 +673,8 @@ export default async function (
             author: `${baseUrl}/upvotes?address=${story.identity}`,
             authorName: story.submitter.displayName,
             rss: true,
+            ogImageWidth,
+            ogImageHeight,
           },
         )}
         ${robotsMeta({ indexable: storyIsIndexable, commentIndex })}

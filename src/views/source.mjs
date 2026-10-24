@@ -15,13 +15,13 @@ import {
 import { hostname } from "../weekly.mjs";
 import { getSlug } from "../utils.mjs";
 import { cutWords, DESC_MAX } from "../seo.mjs";
+import { robotsMeta } from "../indexable.mjs";
 
 const html = htm.bind(vhtml);
 
 const BASE_URL = "https://news.kiwistand.com";
 const INDEX_URL = `${BASE_URL}/sources`;
 
-const NOINDEX = html`<meta name="robots" content="noindex, follow" />`;
 
 function storyPath(story) {
   return `/stories/${getSlug(story.title)}?index=0x${story.index}`;
@@ -227,7 +227,7 @@ export async function sourcePage(theme, data) {
       jsonLd: sourceJsonLd(data, description),
       alternate: `${canonical}/context`,
       alternateTitle: "LLM-friendly list of this source's stories",
-      robots: data.indexable ? null : NOINDEX,
+      robots: robotsMeta({ indexable: data.indexable }),
       path: "/sources",
       body,
     },
@@ -274,7 +274,7 @@ export async function indexPage(theme, sources) {
       description,
       canonical: INDEX_URL,
       jsonLd: indexJsonLd(sources, description),
-      robots: sources.length > 0 ? null : NOINDEX,
+      robots: robotsMeta({ indexable: sources.length > 0 }),
       path: "/sources",
       body,
     },

@@ -9,6 +9,7 @@ import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { NewsletterCardElement } from "./components/newsletter-card.mjs";
 import { custom, expectTopbar } from "./components/head.mjs";
+import { robotsMeta } from "../indexable.mjs";
 import * as isoweek from "../isoweek.mjs";
 import { autoIntro, hostname } from "../weekly.mjs";
 import { getSlug } from "../utils.mjs";
@@ -138,7 +139,8 @@ export function indexJsonLd(weeks, description) {
 // custom() links news.css, scripts and icons with relative paths. The
 // <base href="/"> keeps them from resolving under /weekly/ (404, unstyled
 // page), like on story pages. Also used by the source pages
-// (src/views/source.mjs), which pass their own `path` and `robots`.
+// (src/views/source.mjs), which pass their own `path` and `robots` (one
+// robots meta tag, src/indexable.mjs robotsMeta).
 export async function Page(
   {
     title,
@@ -148,7 +150,7 @@ export async function Page(
     jsonLd,
     alternate,
     alternateTitle = "LLM-friendly week summary",
-    robots = null,
+    robots = robotsMeta({ indexable: true }),
     path = "/weekly",
     body,
   },
