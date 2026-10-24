@@ -836,6 +836,12 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
   if (!submission && index) {
     throw new Error(`Couldn't find submission with index: ${index}`);
   }
+  // NOTE: The feeds hide a banned profile's stories (moderation.moderate), so
+  // the story pages, link preview cards and the app's story API, which pass
+  // bannedAddresses, mustn't show them either.
+  if (bannedAddresses.includes(submission.identity.toLowerCase())) {
+    throw new Error(`Submission was moderated: ${index || href}`);
+  }
 
 
   let upvotesCount =
