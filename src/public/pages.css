@@ -1949,3 +1949,36 @@ html:not([data-own-profile])
   }
 }
 
+
+/* --------------------------------------------------------------- writers */
+
+.n2-doc ol.n2-writers {
+  padding-left: 26px;
+}
+.n2-doc ol.n2-writers > li {
+  margin: 0 0 18px 0;
+}
+.n2-doc ol.n2-writers > li::marker {
+  color: var(--n2-text-2);
+}
+.n2-doc .n2-writers a {
+  text-decoration: none;
+}
+.n2-doc .n2-writers a:hover {
+  text-decoration: underline;
+}
+.n2-doc .n2-writers-name {
+  font-weight: 600;
+}
+.n2-doc .n2-writers-meta {
+  font-size: 13px;
+  color: var(--n2-text-2);
+}
+.n2-doc ul.n2-writers-stories {
+  margin: 6px 0 0 0;
+  padding-left: 18px;
+  font-size: 15px;
+}
+.n2-doc ul.n2-writers-stories li {
+  margin: 0 0 4px 0;
+}

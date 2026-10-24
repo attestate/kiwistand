@@ -2,11 +2,12 @@
 //
 // The monthly writer leaderboard (/writers): the sites and authors whose
 // links got the most upvotes on Kiwi News in a calendar month (UTC). A
-// "writer" is the link's site, except on platforms where many people publish
-// (X, Farcaster, Mirror, Paragraph, Medium, GitHub, Substack-style
-// subdomains stay as they are): there the author's handle in the path is the
-// writer, e.g. x.com/alice.
+// writer is the link's source (src/sourcekey.mjs), the same key as the
+// "Best of" pages at /source/<key>: the site, or on platforms where many
+// people publish (X and its frontends, Farcaster, Mirror, Paragraph, Medium,
+// GitHub, ...) the author's handle, e.g. x.com/alice.
 import { getSlug, isCloudflareImage } from "./utils.mjs";
+import { sourceKey, farcasterAliases } from "./sourcekey.mjs";
 
 export const LIMIT = 25;
 export const STORIES_PER_WRITER = 3;
@@ -14,45 +15,13 @@ export const STORIES_PER_WRITER = 3;
 // them (early in a month, or old months with little activity).
 export const MIN_INDEXABLE = 10;
 
-const PLATFORMS = new Map([
-  ["x.com", "x.com"],
-  ["twitter.com", "x.com"],
-  ["mobile.twitter.com", "x.com"],
-  ["farcaster.xyz", "farcaster.xyz"],
-  ["warpcast.com", "farcaster.xyz"],
-  ["mirror.xyz", "mirror.xyz"],
-  ["paragraph.xyz", "paragraph.xyz"],
-  ["paragraph.com", "paragraph.com"],
-  ["medium.com", "medium.com"],
-  ["github.com", "github.com"],
-  ["youtube.com", "youtube.com"],
-]);
-const NOT_HANDLES = new Set(["i", "~", "home", "search", "explore", "watch", "channel", "p", "status"]);
-
 // { key, label, url } of a link's writer, or null for text posts, Kiwi
-// references, image uploads and links we can't parse.
+// references, image and file uploads and links we can't parse.
 export function writerOf(href) {
-  if (typeof href !== "string" || !/^https?:\/\//.test(href)) return null;
   if (isCloudflareImage(href)) return null;
-  let url;
-  try {
-    url = new URL(href);
-  } catch (err) {
-    return null;
-  }
-  const host = url.hostname.toLowerCase().replace(/^www\./, "");
-  if (!host) return null;
-  const platform = PLATFORMS.get(host);
-  if (platform) {
-    const handle = decodeURIComponent(url.pathname.split("/").filter(Boolean)[0] || "");
-    if (!handle || NOT_HANDLES.has(handle.toLowerCase()) || !/^@?[\w.-]{1,64}$/.test(handle)) {
-      return null;
-    }
-    const name = handle.toLowerCase();
-    const key = `${platform}/${name}`;
-    return { key, label: key, url: `https://${platform}/${handle}` };
-  }
-  return { key: host, label: host, url: `https://${host}` };
+  const key = sourceKey(href);
+  if (!key) return null;
+  return { key, label: key, url: `https://${key}` };
 }
 
 // The HTML id of a writer's row, so casts and badges can link to it.
@@ -85,32 +54,65 @@ export function monthRange(month, now = Date.now()) {
   return { id, label, start: start / 1000, end: end / 1000 };
 }
 
+// A story's title for de-duplication: case and spacing don't matter.
+function titleKey(title) {
+  return String(title).toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+// Keeps one story per title and per link, the most upvoted.
+export function dedupe(stories) {
+  const seen = new Set();
+  const kept = [];
+  for (const story of [...stories].sort((a, b) => b.upvotes - a.upvotes)) {
+    const keys = [`t:${titleKey(story.title)}`];
+    if (story.href) keys.push(`h:${story.href}`);
+    if (keys.some((key) => seen.has(key))) continue;
+    keys.forEach((key) => seen.add(key));
+    kept.push(story);
+  }
+  return kept;
+}
+
 // Groups submissions (getBest() rows: href, title, index, upvotes,
-// timestamp) by writer and ranks writers by their links' upvotes. Ties go to
-// the writer with more stories, then alphabetically, so the order is stable.
+// timestamp) by writer and ranks writers by their links' upvotes. A writer's
+// stories with the same title or link (resubmissions) count once, with the
+// most upvoted one. Farcaster "name" and "name.eth" are one writer, like on
+// /sources (the other key is in `aliases`). Ties go to the writer with more
+// stories, then alphabetically, so the order is stable.
 export function leaderboard(submissions, { limit = LIMIT, storiesPer = STORIES_PER_WRITER } = {}) {
   const writers = new Map();
   for (const story of submissions || []) {
     if (!story?.index || !story?.title) continue;
     const writer = writerOf(story.href);
     if (!writer) continue;
-    const entry = writers.get(writer.key) || { ...writer, upvotes: 0, stories: [] };
-    entry.upvotes += story.upvotes || 0;
+    const entry = writers.get(writer.key) || { ...writer, stories: [] };
     entry.stories.push({
       title: story.title,
+      href: story.href,
       index: story.index,
       upvotes: story.upvotes || 0,
       path: `/stories/${getSlug(story.title)}?index=0x${story.index}`,
     });
     writers.set(writer.key, entry);
   }
+  const counts = new Map([...writers].map(([key, e]) => [key, e.stories.length]));
+  for (const [alias, key] of farcasterAliases(counts)) {
+    const entry = writers.get(key);
+    entry.stories.push(...writers.get(alias).stories);
+    entry.aliases = [...(entry.aliases || []), alias];
+    writers.delete(alias);
+  }
   return [...writers.values()]
-    .map((entry) => ({
-      ...entry,
-      count: entry.stories.length,
-      anchor: anchorOf(entry.key),
-      stories: entry.stories.sort((a, b) => b.upvotes - a.upvotes).slice(0, storiesPer),
-    }))
+    .map((entry) => {
+      const stories = dedupe(entry.stories);
+      return {
+        ...entry,
+        upvotes: stories.reduce((sum, story) => sum + story.upvotes, 0),
+        count: stories.length,
+        anchor: anchorOf(entry.key),
+        stories: stories.slice(0, storiesPer),
+      };
+    })
     .sort(
       (a, b) =>
         b.upvotes - a.upvotes || b.count - a.count || a.key.localeCompare(b.key),
@@ -142,6 +144,8 @@ export async function getLeaderboard(range, deps = {}) {
 export function entryUrl(entries, href, monthId, origin = "https://news.kiwistand.com") {
   const writer = writerOf(href);
   if (!writer) return null;
-  const entry = entries.find((e) => e.key === writer.key);
+  const entry = entries.find(
+    (e) => e.key === writer.key || e.aliases?.includes(writer.key),
+  );
   return entry ? `${origin}/writers?month=${monthId}#${entry.anchor}` : null;
 }
