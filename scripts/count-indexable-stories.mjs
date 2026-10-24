@@ -17,6 +17,7 @@ import {
   MIN_UPVOTES,
   MIN_COMMENTS,
   MIN_SUMMARY_LENGTH,
+  MIN_UPVOTES_WITH_SUMMARY,
 } from "../src/indexable.mjs";
 import { getLists } from "../src/views/moderation.mjs";
 
@@ -67,7 +68,7 @@ const pct = (n) =>
   totals.stories ? `${((n / totals.stories) * 100).toFixed(1)}%` : "0%";
 console.log(
   `Rule: upvotes >= ${MIN_UPVOTES} (incl. submitter) OR comments >= ${MIN_COMMENTS} ` +
-    `OR safe summary >= ${MIN_SUMMARY_LENGTH} chars; moderated stories never` +
+    `OR (upvotes >= ${MIN_UPVOTES_WITH_SUMMARY} AND safe summary >= ${MIN_SUMMARY_LENGTH} chars); moderated stories never` +
     (skipModeration || !policy ? " (moderation skipped)" : ""),
 );
 console.log(`Stories:              ${totals.stories}`);
