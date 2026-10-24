@@ -43,11 +43,12 @@ const BRAND_ASSETS =
 const TELEGRAM = "https://t.me/+QGAviVT67m00Njc8";
 
 // NOTE: The design's "Side footer" ("Web 2 · Desktop · Home · Hot" →
-// Sidebar → Side footer): three plain rows of links (About Guidelines
-// Privacy API Newsletter / Weekly archive, RSS Hot · New, LLMs / Source
-// code, MCP client, Brand assets), then "Made for the open web." and
-// "Hosted by attestate.com (Kontakt).". Telegram (Tim's ask) follows
-// Newsletter in the first row. "Docs" was the same page as "About".
+// Sidebar → Side footer): rows of plain links, then "Made for the open
+// web." and "Hosted by attestate.com (Kontakt).". Telegram (Tim's ask)
+// follows Newsletter. The links are grouped so the rows set ragged right:
+// at 280px they run 217, 244, 188, 211px, so the right edge flutters
+// gently instead of bulging or leaving a hole after a short row. "Docs"
+// was the same page as "About".
 export const SideFooter = () => html`
   <div class="kn-side-footer">
     <nav class="kn-side-links" aria-label="Footer">
@@ -58,24 +59,26 @@ export const SideFooter = () => html`
         <a href="/guidelines">Guidelines</a>
         <a href="/privacy-policy">Privacy</a>
         <a href="https://attestate.com/kiwistand/main/" target="_blank">API</a>
+      </div>
+      <div class="kn-side-row">
         <a href="/newsletter">Newsletter</a>
         <a href="${TELEGRAM}" target="_blank" rel="noopener noreferrer"
           >Telegram</a
         >
-      </div>
-      <div class="kn-side-row">
-        <a href="/weekly">Weekly archive</a>
         <span class="kn-side-pair"
           ><a href="/feed.xml">RSS Hot</a
           ><span aria-hidden="true">${" "}·${" "}</span
           ><a href="/new.xml" aria-label="RSS New">New</a></span
         >
-        <a href="/llms.txt">LLMs</a>
       </div>
       <div class="kn-side-row">
+        <a href="/weekly">Weekly archive</a>
         <a href="https://github.com/attestate/kiwistand" target="_blank"
           >Source code</a
         >
+      </div>
+      <div class="kn-side-row">
+        <a href="/llms.txt">LLMs</a>
         <a
           href="https://github.com/attestate/kiwistand/tree/main/kiwimcp-client"
           target="_blank"
