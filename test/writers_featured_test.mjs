@@ -165,7 +165,7 @@ test("writers page lists entries and says noindex below 10 entries", (t) => {
   t.true(page.includes("Top writers of September 2026"));
   t.true(page.includes('id="w-a-com"'));
   t.true(page.includes("Hello &lt;b&gt;"));
-  t.true(page.includes('content="noindex, follow"'));
+  t.true(page.includes('content="noindex, follow, max-image-preview:large"'));
   t.false(page.includes("<script>"));
   // Spaces around the meta, and between numbers and words.
   t.true(page.includes("</a> <span"));

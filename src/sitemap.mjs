@@ -86,6 +86,63 @@ ${urls.join("\n")}
 </urlset>`;
 }
 
+// Google News sitemaps list articles from the last two days only, at most
+// 1,000 URLs (https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap).
+export const NEWS_WINDOW_SECS = 48 * 60 * 60;
+export const NEWS_MAX_URLS = 1000;
+export const NEWS_PUBLICATION = "Kiwi News";
+export const NEWS_LANGUAGE = "en";
+
+export function escapeXml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+// The stories of the last 48 hours as a Google News sitemap, newest first.
+// `entries` must already be the indexable ones (indexableEntries()).
+export function buildNewsSitemap(entries, now = Date.now()) {
+  const since = Math.floor(now / 1000) - NEWS_WINDOW_SECS;
+  const recent = entries
+    .filter((entry) => entry.timestamp >= since)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, NEWS_MAX_URLS);
+  const urls = recent.map((entry) => {
+    const loc = `${BASE_URL}/stories/${getSlug(entry.title)}?index=0x${entry.index}`;
+    const published = new Date(entry.timestamp * 1000).toISOString();
+    return `  <url>
+    <loc>${escapeXml(loc)}</loc>
+    <news:news>
+      <news:publication>
+        <news:name>${NEWS_PUBLICATION}</news:name>
+        <news:language>${NEWS_LANGUAGE}</news:language>
+      </news:publication>
+      <news:publication_date>${published}</news:publication_date>
+      <news:title>${escapeXml(entry.title)}</news:title>
+    </news:news>
+  </url>`;
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+${urls.join("\n")}
+</urlset>`;
+}
+
+// The newest <news:publication_date> as YYYY-MM-DD, for the sitemap index.
+export function newestNewsDate(xml) {
+  let newest = null;
+  for (const [, date] of xml.matchAll(
+    /<news:publication_date>([^<]+)<\/news:publication_date>/g,
+  )) {
+    if (!newest || date > newest) newest = date;
+  }
+  return newest ? newest.split("T")[0] : null;
+}
+
 // The /weekly/<YYYY>-W<ww> pages, from listWeeks({ activity: true }). A
 // week's lastmod is the latest submission, upvote or comment on its stories.
 export function buildWeeklySitemap(weeks, now = Date.now()) {
@@ -157,6 +214,7 @@ export function buildSitemapIndex(months, lastmods = {}) {
   };
   const entries = [
     entry("sitemap-static.xml"),
+    entry("sitemap-news.xml"),
     entry("sitemap-weekly.xml"),
     entry("sitemap-sources.xml"),
     ...months.map((month) => entry(`sitemap-${month}.xml`)),
@@ -215,12 +273,14 @@ export function generateSitemaps(policy = null) {
   const lastmods = {};
   const listed = [];
   const all = [];
+  const allIndexable = [];
   let total = 0;
   let indexable = 0;
   for (const month of months) {
     const entries = listSitemapEntries(month, bannedAddresses);
     const kept = indexableEntries(entries, { policy, summaries });
     all.push(...entries);
+    allIndexable.push(...kept);
     total += entries.length;
     indexable += kept.length;
     // NOTE: Months without an indexable story are still written (so an old
@@ -233,6 +293,10 @@ export function generateSitemaps(policy = null) {
   }
 
   writeAtomic("sitemap-static.xml", STATIC_SITEMAP);
+  // NOTE: Rebuilt with the others every hour, so the 48h window moves along.
+  const news = buildNewsSitemap(allIndexable);
+  writeAtomic("sitemap-news.xml", news);
+  lastmods["sitemap-news.xml"] = newestNewsDate(news);
   const weekly = buildWeeklySitemap(listWeeks({ activity: true }));
   writeAtomic("sitemap-weekly.xml", weekly);
   lastmods["sitemap-weekly.xml"] = newestLastmod(weekly);

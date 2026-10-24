@@ -293,7 +293,7 @@ app.use(
 // indexes src/public once at startup (including each file's Content-Length),
 // so it would serve stale lengths for rewritten sitemaps and 404 for new
 // months. Read them from disk on every request instead.
-app.get(/^\/sitemap(-static|-weekly|-sources|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
+app.get(/^\/sitemap(-static|-news|-weekly|-sources|-\d{4}-\d{2})?\.xml$/, async (req, res, next) => {
   let xml;
   try {
     xml = await readFile(path.join("src/public", req.path));

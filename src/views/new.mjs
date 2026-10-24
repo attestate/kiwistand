@@ -11,6 +11,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
+import { robotsMeta } from "../indexable.mjs";
 import * as moderation from "./moderation.mjs";
 import { getLastComment, listNewest, countImpressions, lifetimeCache } from "../cache.mjs";
 import Row from "./components/row.mjs";
@@ -206,6 +207,7 @@ async function renderPage(theme) {
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, "New | Kiwi News - latest crypto submissions", "Freshly submitted crypto links and web3 stories, updated in real time.", undefined, prefetch, "https://news.kiwistand.com/new?cached=true", null, null, { rss: true })}
+        ${robotsMeta({ indexable: true })}
       </head>
       <body
         data-instant-allow-query-string

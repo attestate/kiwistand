@@ -14,6 +14,7 @@ import TestFlightCard from "./components/testflight-card.mjs";
 import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import { custom } from "./components/head.mjs";
+import { robotsMeta } from "../indexable.mjs";
 import * as moderation from "./moderation.mjs";
 import {
   countImpressions,
@@ -920,6 +921,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, title, description, twitterCard, prefetch, "https://news.kiwistand.com/", null, variant, { rss: true })}
+        ${robotsMeta({ indexable: true })}
         <script type="application/ld+json" dangerouslySetInnerHTML=${{ __html: jsonLd }}></script>
       </head>
       <body

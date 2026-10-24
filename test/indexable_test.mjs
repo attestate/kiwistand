@@ -110,14 +110,20 @@ test("robotsMeta: weak story pages get noindex, strong ones don't", (t) => {
         commentIndex,
       })}
     </head>`.toString();
-  const NOINDEX = `<meta name="robots" content="noindex, follow">`;
+  // NOTE: One robots tag per page: noindex and Discover's large image
+  // previews are merged, never two tags.
+  const NOINDEX = `<meta name="robots" content="noindex, follow, max-image-preview:large">`;
+  const INDEX = `<meta name="robots" content="max-image-preview:large">`;
+  const tags = (page) => page.match(/name="robots"/g)?.length || 0;
 
   const weak = render({ upvotes: 1, comments: [] });
   t.true(weak.includes(NOINDEX));
+  t.is(tags(weak), 1);
 
   const strong = render({ upvotes: 5, comments: [] });
-  t.false(strong.includes("robots"));
-  t.false(render({ upvotes: 2, comments: [] }, SUMMARY).includes("robots"));
+  t.true(strong.includes(INDEX));
+  t.is(tags(strong), 1);
+  t.true(render({ upvotes: 2, comments: [] }, SUMMARY).includes(INDEX));
   t.true(render({ upvotes: 1, comments: [] }, SUMMARY).includes(NOINDEX));
 
   // A comment permalink duplicates its story, so it's always noindex.

@@ -80,6 +80,36 @@ if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
   domain = `${env.CUSTOM_PROTOCOL}${hostname}`;
 }
 
+// The Farcaster mini app embed (https://miniapps.farcaster.xyz/docs/guides/sharing):
+// every Kiwi link shared on Farcaster or in the Base App renders as a card
+// with a button that opens the page in the Kiwi mini app. Clients read
+// fc:miniapp (current, action type "launch_miniapp") and fc:frame (legacy,
+// "launch_frame"); both carry the same JSON otherwise. The image should be
+// 3:2 (story pages pass their 1200×800 frame preview, src/preview.mjs) and the
+// button title at most 32 characters.
+export const MINIAPP_BUTTON_TITLE = "Open Kiwi News";
+export const MINIAPP_NAME = "Kiwi News";
+// NOTE: Same splash as the manifest (/.well-known/farcaster.json in http.mjs).
+export const MINIAPP_SPLASH_IMAGE = `${domain}/fc-splash.png`;
+export const MINIAPP_SPLASH_BACKGROUND = "#0F3106";
+
+export function miniAppEmbed(imageUrl, url, type = "launch_miniapp") {
+  return JSON.stringify({
+    version: "1",
+    imageUrl,
+    button: {
+      title: MINIAPP_BUTTON_TITLE,
+      action: {
+        type,
+        name: MINIAPP_NAME,
+        url,
+        splashImageUrl: MINIAPP_SPLASH_IMAGE,
+        splashBackgroundColor: MINIAPP_SPLASH_BACKGROUND,
+      },
+    },
+  });
+}
+
 export function custom(
   ogImage = `${domain}/preview.jpeg?v=2`,
   ogTitle = "Kiwi News - handpicked web3 alpha",
@@ -97,6 +127,7 @@ export function custom(
   // - author: URL of the author's profile for article:author
   // - authorName: display name for <meta name="author">
   // - rss: adds <link rel="alternate" type="application/rss+xml">
+  // - ogImageWidth/ogImageHeight: og:image:width/height, when known
   {
     documentTitle = null,
     ogType = null,
@@ -104,20 +135,12 @@ export function custom(
     author = null,
     authorName = null,
     rss = false,
+    ogImageWidth = null,
+    ogImageHeight = null,
   } = {},
 ) {
-  const embedMetaContent = JSON.stringify({
-    version: "next",
-    imageUrl: frameImage || ogImage,
-    button: {
-      title: "Open Kiwi News",
-      action: {
-        name: "Kiwi News",
-        type: "launch_frame",
-        url: canonicalUrl || `${domain}/?miniapp=true`,
-      },
-    },
-  });
+  const embedImage = frameImage || ogImage;
+  const embedUrl = canonicalUrl || `${domain}/?miniapp=true`;
   // Removed delegation API prefetch - was causing 503 errors
   // if (process.env.NODE_ENV === "production") {
   //   prefetch = [
@@ -237,7 +260,14 @@ export function custom(
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="fc:frame" content="${embedMetaContent}" />
+    <meta
+      name="fc:miniapp"
+      content="${miniAppEmbed(embedImage, embedUrl, "launch_miniapp")}"
+    />
+    <meta
+      name="fc:frame"
+      content="${miniAppEmbed(embedImage, embedUrl, "launch_frame")}"
+    />
     <meta name="msvalidate.01" content="CD33CB0E87D31D0A7DB7B55D65C9F024" />
     ${variant ? html`<meta name="kiwi-variant" content="${variant}" />` : ""}
     ${ogDescription
@@ -254,6 +284,12 @@ export function custom(
       : ""}
     <meta property="og:site_name" content="Kiwi News" />
     ${ogImage ? html`<meta property="og:image" content="${ogImage}" />` : null}
+    ${ogImage && ogImageWidth
+      ? html`<meta property="og:image:width" content="${ogImageWidth}" />`
+      : null}
+    ${ogImage && ogImageHeight
+      ? html`<meta property="og:image:height" content="${ogImageHeight}" />`
+      : null}
     ${ogImage
       ? html`<meta property="twitter:image" content="${ogImage}" />`
       : null}

@@ -39,7 +39,7 @@ const LABEL = "#78818A";
 const HAIR = "#E3E5DD";
 const MONO = "JetBrains Mono";
 
-const SIZES = {
+export const SIZES = {
   og: { width: 1200, height: 630 },
   frame: { width: 1200, height: 800 },
 };
