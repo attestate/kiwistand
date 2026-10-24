@@ -9,6 +9,9 @@ import { getSlug } from "./utils.mjs";
 import { isIndexableStory } from "./indexable.mjs";
 import { isBanned } from "./views/moderation.mjs";
 import { listSafeSummaries } from "./summaries.mjs";
+import * as sources from "./sources.mjs";
+import { sourcePath } from "./sourcekey.mjs";
+import * as indexnow from "./indexnow.mjs";
 import * as isoweek from "./isoweek.mjs";
 import log from "./logger.mjs";
 
@@ -101,6 +104,39 @@ ${urls.join("\n")}
 </urlset>`;
 }
 
+// The indexable source pages (src/sources.mjs) and their index, /sources.
+// A source's lastmod is its latest story or comment.
+export function buildSourcesSitemap(list) {
+  const day = (timestamp) =>
+    new Date(timestamp * 1000).toISOString().split("T")[0];
+  const listed = sources.listedSources(list, Infinity);
+  const urls = listed.map(
+    ({ key, lastmod }) =>
+      `  <url><loc>${BASE_URL}${sourcePath(key)}</loc><lastmod>${day(lastmod)}</lastmod></url>`,
+  );
+  if (listed.length > 0) {
+    const newest = Math.max(...listed.map(({ lastmod }) => lastmod));
+    urls.unshift(
+      `  <url><loc>${BASE_URL}/sources</loc><lastmod>${day(newest)}</lastmod></url>`,
+    );
+  }
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join("\n")}
+</urlset>`;
+}
+
+// Source pages that became indexable since the last run, for IndexNow. None
+// on the first run (no earlier sources.json): the sitemap lists them all.
+export function newSourceUrls(before, list) {
+  if (!before) return [];
+  return sources
+    .listedSources(list, Infinity)
+    .filter(({ key }) => !before.has(key))
+    .map(({ key }) => `${BASE_URL}${sourcePath(key)}`);
+}
+
 // The newest <lastmod> in a urlset (YYYY-MM-DD strings sort by date), so the
 // index can tell crawlers which child sitemaps changed since their last visit.
 export function newestLastmod(xml) {
@@ -122,6 +158,7 @@ export function buildSitemapIndex(months, lastmods = {}) {
   const entries = [
     entry("sitemap-static.xml"),
     entry("sitemap-weekly.xml"),
+    entry("sitemap-sources.xml"),
     ...months.map((month) => entry(`sitemap-${month}.xml`)),
   ];
 
@@ -150,6 +187,23 @@ function writeAtomic(name, content) {
   renameSync(tmp, path);
 }
 
+// Writes CACHE_DIR/sources.json (read by the HTTP workers, src/sources.mjs)
+// and sitemap-sources.xml from all months' entries, and tells IndexNow about
+// source pages that just became indexable. Returns the sitemap's newest
+// lastmod.
+function generateSources(entries, options) {
+  const list = sources.buildSources(entries, options);
+  const before = sources.readIndexableKeys();
+  sources.write(list);
+  const xml = buildSourcesSitemap(list);
+  writeAtomic("sitemap-sources.xml", xml);
+  indexnow.submit(newSourceUrls(before, list));
+  log(
+    `Generated source pages: ${sources.listedSources(list, Infinity).length} of ${list.length} indexable`,
+  );
+  return newestLastmod(xml);
+}
+
 // `policy` is moderation.getLists()'s config; without it (the config sheet
 // was unreachable) nothing is treated as moderated.
 export function generateSitemaps(policy = null) {
@@ -160,11 +214,13 @@ export function generateSitemaps(policy = null) {
 
   const lastmods = {};
   const listed = [];
+  const all = [];
   let total = 0;
   let indexable = 0;
   for (const month of months) {
     const entries = listSitemapEntries(month, bannedAddresses);
     const kept = indexableEntries(entries, { policy, summaries });
+    all.push(...entries);
     total += entries.length;
     indexable += kept.length;
     // NOTE: Months without an indexable story are still written (so an old
@@ -180,6 +236,16 @@ export function generateSitemaps(policy = null) {
   const weekly = buildWeeklySitemap(listWeeks({ activity: true }));
   writeAtomic("sitemap-weekly.xml", weekly);
   lastmods["sitemap-weekly.xml"] = newestLastmod(weekly);
+  try {
+    lastmods["sitemap-sources.xml"] = generateSources(all, {
+      policy,
+      summaries,
+      lastComments,
+    });
+  } catch (err) {
+    log(`Sitemap: source pages failed: ${err.stack || err}`);
+  }
+
   writeAtomic("sitemap.xml", buildSitemapIndex(listed, lastmods));
 
   log(

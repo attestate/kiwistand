@@ -18,6 +18,8 @@ Allow: /llms.txt
 Allow: /stories/context
 Allow: /feed.xml
 Allow: /new.xml
+# NOTE: Source pages like /source/vitalik.eth.limo would match "/*.eth".
+Allow: /source/
 Disallow: /outbound
 Disallow: /redirect/
 Disallow: /best?*domain=
