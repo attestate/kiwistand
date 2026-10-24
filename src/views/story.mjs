@@ -38,6 +38,7 @@ import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
 import { storyDescription, storyDocumentTitle } from "../seo.mjs";
 import * as isoweek from "../isoweek.mjs";
+import { peakRank, badgeSnippets, badgeUrl } from "../featured.mjs";
 import { isIndexableStory, robotsMeta } from "../indexable.mjs";
 
 const html = htm.bind(vhtml);
@@ -276,6 +277,40 @@ export async function moreFromSite(href, index, limit = 5) {
     log(`moreFromSite failed for ${site}: ${err.toString()}`);
     return { site, stories: [] };
   }
+}
+
+// The "Featured on Kiwi News" badge and the snippets to paste it, for
+// stories that reached the top 3. Selecting the text is enough to copy it,
+// so there's no script.
+export function FeaturedBadgeRow(story, rank) {
+  const snippets = badgeSnippets(story);
+  const box =
+    "width: 100%; box-sizing: border-box; font-family: monospace; font-size: 9pt; resize: none; margin: 4px 0 8px 0;";
+  return html`<tr class="kn-featured-row">
+    <td style="padding: 0 0 12px 0;">
+      <div id="badge" style="margin: 0 11px;">
+        <h2
+          style="font-size: 10pt; font-weight: 500; margin: 0 0 8px 0; color: var(--text-secondary);"
+        >
+          Featured on Kiwi News: this story reached #${rank}
+        </h2>
+        <img
+          src="${badgeUrl(story.index)}"
+          alt="Featured on Kiwi News"
+          height="20"
+        />
+        <p style="font-size: 9pt; margin: 8px 0 0 0; color: var(--text-secondary);">
+          Wrote it? Add the badge to your post or README:
+        </p>
+        <textarea readonly rows="2" aria-label="Badge HTML" style="${box}">
+${snippets.html}</textarea
+        >
+        <textarea readonly rows="2" aria-label="Badge Markdown" style="${box}">
+${snippets.markdown}</textarea
+        >
+      </div>
+    </td>
+  </tr>`;
 }
 
 // "More from <site>" as a box of the desktop right column (the design's
@@ -530,6 +565,9 @@ export default async function (
   }
   
   const related = await moreFromSite(value.href, index);
+  // NOTE: Only stories that reached the hot feed's top 3 (recorded by the
+  // Farcaster author pings, src/featured.mjs) offer writers a badge.
+  const featuredRank = peakRank(index);
 
   const slug = getSlug(value.title);
   const storyUrl = `${baseUrl}/stories/${slug}?index=0x${index}`;
@@ -941,6 +979,7 @@ export default async function (
                   </div>
                 </td>
               </tr>
+              ${featuredRank ? FeaturedBadgeRow({ ...value, index }, featuredRank) : null}
               ${related.stories.length > 0
                 ? html`<tr class="kn-related-row">
                     <td style="padding: 0 0 12px 0;">

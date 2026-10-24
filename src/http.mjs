@@ -55,6 +55,9 @@ import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
 import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
+import writersPage from "./views/writers.mjs";
+import * as writers from "./writers.mjs";
+import * as featured from "./featured.mjs";
 import saved from "./views/saved.mjs";
 import settings from "./views/settings.mjs";
 import newsletterPage from "./views/newsletter.mjs";
@@ -2690,6 +2693,62 @@ export async function launch(trie, libp2p, isPrimary = true) {
         : "public, s-maxage=604800, max-age=0, stale-while-revalidate=31536000",
     );
     return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // Monthly writer leaderboard (src/writers.mjs), ?month=YYYY-MM.
+  app.get("/writers", async (request, reply) => {
+    const range = writers.monthRange(request.query.month);
+    if (!range) {
+      return reply.status(404).type("text/plain").send("Month not found");
+    }
+    let entries;
+    try {
+      entries = await writers.getLeaderboard(range);
+    } catch (err) {
+      log(`Error rendering /writers ${err.stack}`);
+      return reply.status(500).send("Internal Server Error");
+    }
+    const startOfMonth = new Date(range.start * 1000);
+    const before = new Date(
+      Date.UTC(startOfMonth.getUTCFullYear(), startOfMonth.getUTCMonth() - 1, 1),
+    );
+    const previous = writers.monthRange(
+      `${before.getUTCFullYear()}-${String(before.getUTCMonth() + 1).padStart(2, "0")}`,
+    );
+    if (entries.length < writers.MIN_INDEXABLE) {
+      reply.header("X-Robots-Tag", "noindex");
+    }
+    const content = writersPage(reply.locals.theme, { range, entries, previous });
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
+    );
+    return reply.status(200).type("text/html").send(content.valueOf());
+  });
+  // "Featured on Kiwi News" badge for writers' sites (src/featured.mjs).
+  app.get("/badge/:file", async (request, reply) => {
+    const index = featured.parseBadgeParam(request.params.file);
+    if (!index) {
+      return reply.status(404).type("text/plain").send("Badge not found");
+    }
+    let submission;
+    try {
+      submission = await generateStory(index);
+    } catch (err) {
+      return reply.status(404).type("text/plain").send("Badge not found");
+    }
+    const svg = featured.badgeSvg({
+      rank: featured.peakRank(index),
+      upvotes: submission.upvotes,
+    });
+    reply.header("X-Robots-Tag", "noindex");
+    reply.header(
+      "Cache-Control",
+      "public, s-maxage=3600, max-age=600, stale-while-revalidate=86400",
+    );
+    return reply
+      .status(200)
+      .type("image/svg+xml; charset=utf-8")
+      .send(svg);
   });
   app.get("/privacy-policy", async (request, reply) => {
     const content = await privacy(reply.locals.theme);
