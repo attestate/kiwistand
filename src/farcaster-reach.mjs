@@ -389,10 +389,6 @@ async function fidForXHandle(handle, reader) {
   return proof.fid;
 }
 
-function hostOf(href) {
-  return parse(href)?.host || "";
-}
-
 // Who wrote what a story links to, as { fid, source }, or null when we
 // aren't sure. In order:
 // 1. The link is a Farcaster cast or profile: its author.
@@ -692,10 +688,11 @@ export async function pickRising(stories, state, socialState, options = {}) {
     if ((story.upvotes || 0) < min) continue;
     if (alreadyCast(story, state, socialState)) continue;
     if (isAlive && /^https?:/.test(story.href || "")) {
-      let alive = true;
+      let alive;
       try {
         alive = await isAlive(story.href);
       } catch (err) {
+        // A failed liveness check shouldn't hold back the cast.
         alive = true;
       }
       if (!alive) continue;
