@@ -14,6 +14,7 @@ import Arweave from "arweave";
 
 import cache, { lifetimeCache } from "./cache.mjs";
 import log from "./logger.mjs";
+import { twitterFrontends } from "./sourcekey.mjs";
 import { resolve as resolveENS } from "./ens.mjs";
 import { safeFetch, discardBody } from "./safefetch.mjs";
 import { call, encodeFunctionCall, decodeParameters } from "eth-fun";
@@ -268,28 +269,10 @@ const anthropic = new Anthropic({
 // tasks.
 export const TITLE_MODEL = "claude-haiku-5-5";
 
+// The X frontends list lives in src/sourcekey.mjs (pure, no I/O) so source
+// keys use it too.
+export { twitterFrontends };
 // Added fxtwitter.com here so Claude title‐gen runs on fxtwitter links too
-export const twitterFrontends = [
-  "xcancel.com",
-  "nitter.net",
-  "nitter.privacydev.net",
-  "nitter.poast.org",
-  "nitter.lucabased.xyz",
-  "nitter.kavin.rocks",
-  "nitter.tiekoetter.com",
-  "nitter.qwik.space",
-  "bird.habedieeh.re",
-  "nitter.lunar.icu",
-  "nitter.moomoo.me",
-  "nitter.kylrth.com",
-  "nitter.io.lol",
-  "nitter.rawbit.ninja",
-  "nitter.holo-mix.com",
-  "twitter.com",
-  "x.com",
-  "fxtwitter.com",
-  "vxtwitter.com",
-];
 const CLAUDE_DOMAINS = ["farcaster.xyz", "warpcast.com", "fxtwitter.com", ...twitterFrontends];
 
 const TITLE_COMPLIANCE = `

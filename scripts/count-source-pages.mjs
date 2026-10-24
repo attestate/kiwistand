@@ -18,6 +18,7 @@ import {
   buildSources,
   isIndexableSource,
   MIN_INDEXABLE_STORIES,
+  RECENT_DAYS,
 } from "../src/sources.mjs";
 import { sourcePath } from "../src/sourcekey.mjs";
 import { getLists } from "../src/views/moderation.mjs";
@@ -58,11 +59,18 @@ console.log(
     list.filter((s) => !isIndexableSource(s) && s.indexable >= 2).length
   }`,
 );
-console.log(`\nTop ${top} sources by upvotes (indexable stories / stories, upvotes, comments):`);
+const merged = list.filter((source) => source.aliases);
+console.log(`Merged Farcaster name/name.eth: ${merged.length}`);
+for (const source of merged) {
+  console.log(`  ${source.aliases.join(", ")} -> ${source.key}`);
+}
+console.log(
+  `\nTop ${top} sources by upvotes in the last ${RECENT_DAYS} days, as /sources ranks them (indexable stories / stories, recent upvotes, all-time upvotes, comments):`,
+);
 for (const source of list.slice(0, top)) {
   const gate = isIndexableSource(source) ? "✓" : "✗";
   console.log(
-    `  ${gate} ${source.key.padEnd(40)} ${String(source.indexable).padStart(4)} / ${String(source.stories).padEnd(5)} ${String(source.upvotes).padStart(6)} upvotes ${String(source.comments).padStart(5)} comments  https://news.kiwistand.com${sourcePath(source.key)}`,
+    `  ${gate} ${source.key.padEnd(40)} ${String(source.indexable).padStart(4)} / ${String(source.stories).padEnd(5)} ${String(source.recentUpvotes).padStart(6)} recent ${String(source.upvotes).padStart(6)} upvotes ${String(source.comments).padStart(5)} comments  https://news.kiwistand.com${sourcePath(source.key)}`,
   );
 }
 exit(0);

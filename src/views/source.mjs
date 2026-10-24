@@ -6,7 +6,12 @@ import vhtml from "vhtml";
 
 import { Page } from "./weekly.mjs";
 import { sourcePath, sourceName, describe } from "../sourcekey.mjs";
-import { autoIntro, date, MIN_INDEXABLE_STORIES } from "../sources.mjs";
+import {
+  autoIntro,
+  date,
+  MIN_INDEXABLE_STORIES,
+  RECENT_DAYS,
+} from "../sources.mjs";
 import { hostname } from "../weekly.mjs";
 import { getSlug } from "../utils.mjs";
 import { cutWords, DESC_MAX } from "../seo.mjs";
@@ -28,6 +33,23 @@ function plural(count, word) {
 
 function stories(count) {
   return count === 1 ? "1 story" : `${count} stories`;
+}
+
+function month(timestamp) {
+  return new Date(timestamp * 1000).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+// "368 stories · 1,204 upvotes · last story October 2026"
+export function indexMeta(source) {
+  return [
+    stories(source.stories),
+    plural(source.upvotes, "upvote"),
+    `last story ${month(source.latest)}`,
+  ].join(" · ");
 }
 
 function year(timestamp) {
@@ -229,16 +251,16 @@ export async function indexPage(theme, sources) {
         Each source's page lists the most upvoted Kiwi News stories that link
         to it, with comments and a short summary of each article. Sources are
         listed when at least ${MIN_INDEXABLE_STORIES} of their stories got
-        upvotes or comments from readers.
+        upvotes or comments from readers, and ranked by the upvotes their
+        stories got in the last ${RECENT_DAYS} days.
       </p>
     </div>
     <ol class="wk-list">
       ${sources.map(
         (source) => html`<li>
-          <a href="${sourcePath(source.key)}">${source.key}</a>
-          <span class="wk-meta">
-            · ${stories(source.stories)} ·${" "}
-            ${plural(source.upvotes, "upvote")}</span
+          <a href="${sourcePath(source.key)}">${source.key}</a>${" "}<span
+            class="wk-meta"
+            >· ${indexMeta(source)}</span
           >
         </li>`,
       )}
