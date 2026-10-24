@@ -537,7 +537,8 @@ test("sourcePage renders JSON-LD, canonical and the stories", async (t) => {
   t.true(
     page.includes('href="https://news.kiwistand.com/source/blog.example/context"'),
   );
-  t.false(page.includes('name="robots"'));
+  t.is(page.match(/name="robots"/g).length, 1);
+  t.true(page.includes('<meta name="robots" content="max-image-preview:large"'));
   t.true(page.includes('<base href="/"'));
   t.true(page.includes("Blobs &amp; &quot;fees&quot; &lt;explained&gt;"));
   t.true(page.includes(SUMMARY));
@@ -576,7 +577,7 @@ test("sourcePage says noindex, follow for a thin source", async (t) => {
   );
   t.false(data.indexable);
   const page = await sourcePage(null, data);
-  t.true(page.includes('<meta name="robots" content="noindex, follow"'));
+  t.true(page.includes('<meta name="robots" content="noindex, follow, max-image-preview:large"'));
   t.true(page.includes("<h1>Best of x.com/alice on Kiwi News</h1>"));
   t.true(page.includes("2 stories by @alice on X have been shared"));
   t.true(page.includes('<script type="application/ld+json">'));
@@ -607,14 +608,15 @@ test("indexPage lists sources", async (t) => {
   );
   t.true(page.includes('href="/source/blog.example"'));
   t.false(page.includes("thin.example"));
-  t.false(page.includes('name="robots"'));
+  t.is(page.match(/name="robots"/g).length, 1);
+  t.true(page.includes('<meta name="robots" content="max-image-preview:large"'));
   const ld = page.match(
     /<script type="application\/ld\+json"[^>]*>(.*?)<\/script>/s,
   );
   t.is(JSON.parse(ld[1]).mainEntity.numberOfItems, 1);
 
   const empty = await indexPage(null, []);
-  t.true(empty.includes('<meta name="robots" content="noindex, follow"'));
+  t.true(empty.includes('<meta name="robots" content="noindex, follow, max-image-preview:large"'));
 });
 
 test("sourceMarkdown lists the stories as plain text", async (t) => {

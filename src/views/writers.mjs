@@ -6,6 +6,7 @@ import vhtml from "vhtml";
 import { custom } from "./components/head.mjs";
 import { Page, BackBar } from "./components/n2.mjs";
 import { MIN_INDEXABLE } from "../writers.mjs";
+import { robotsMeta } from "../indexable.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -36,9 +37,7 @@ export default function writersPage(theme, { range, entries, previous }) {
         undefined,
         [],
         canonical,
-      )}${indexable
-        ? null
-        : html`<meta name="robots" content="noindex, follow" />`}`,
+      )}${robotsMeta({ indexable })}`,
     body: html`<article class="n2-doc">
       <h1 class="n2-doc-title">Top writers of ${range.label}</h1>
       <p>${description}</p>

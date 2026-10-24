@@ -52,9 +52,40 @@ export function isIndexableStory(story, { summary } = {}) {
   );
 }
 
-// The robots meta tag for a story page's <head>. Comment permalinks
-// (?commentIndex=) duplicate their story page, so they're never indexed.
-export function robotsMeta({ indexable, commentIndex = null }) {
-  if (indexable && !commentIndex) return null;
-  return html`<meta name="robots" content="noindex, follow" />`;
+// Google Discover only shows large image cards for pages that allow them
+// (https://developers.google.com/search/docs/appearance/google-discover).
+export const MAX_IMAGE_PREVIEW = "max-image-preview:large";
+export const NOINDEX_FOLLOW = "noindex, follow";
+
+// Merges robots directives ("noindex, follow", "max-image-preview:large", …)
+// into the content of a single tag, without duplicates. Two robots tags on
+// one page would make crawlers combine them, so we always emit one.
+export function mergeRobots(...lists) {
+  const seen = new Set();
+  const out = [];
+  for (const list of lists) {
+    for (const directive of String(list || "").split(",")) {
+      const clean = directive.trim();
+      if (!clean || seen.has(clean.toLowerCase())) continue;
+      seen.add(clean.toLowerCase());
+      out.push(clean);
+    }
+  }
+  return out.join(", ");
+}
+
+// The robots directives for a page: indexable pages allow large image
+// previews (Discover), weak ones get noindex, follow as well. Comment
+// permalinks (?commentIndex=) duplicate their story page, so they're never
+// indexed.
+export function robotsContent({ indexable, commentIndex = null }) {
+  return indexable && !commentIndex
+    ? MAX_IMAGE_PREVIEW
+    : mergeRobots(NOINDEX_FOLLOW, MAX_IMAGE_PREVIEW);
+}
+
+// The one robots meta tag for a page's <head> (story, source, writers and
+// feed pages).
+export function robotsMeta(options) {
+  return html`<meta name="robots" content="${robotsContent(options)}" />`;
 }

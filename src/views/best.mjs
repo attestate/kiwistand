@@ -16,6 +16,7 @@ import Sidebar from "./components/sidebar.mjs";
 import Footer from "./components/footer.mjs";
 import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
+import { robotsMeta } from "../indexable.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import Row from "./components/row.mjs";
@@ -225,6 +226,7 @@ export default async function index(theme, page, period, domain, options) {
     <html lang="en" op="news">
       <head>
         ${custom(ogImage, "Best | Kiwi News - top crypto stories", "The highest-voted crypto and web3 stories on Kiwi News.", undefined, prefetch, "https://news.kiwistand.com/best")}
+        ${robotsMeta({ indexable: true })}
       </head>
       <body
         data-instant-allow-query-string
