@@ -49,7 +49,7 @@ process.on("unhandledRejection", (reason, promise) => {
     console.error(reason.stack);
   }
 });
-import story, { generateStory } from "./views/story.mjs";
+import story, { generateStory, isIndexable } from "./views/story.mjs";
 import { storyRedirect } from "./storyslug.mjs";
 import newest, * as newAPI from "./views/new.mjs";
 import best, * as bestAPI from "./views/best.mjs";
@@ -2373,6 +2373,16 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const commentIndex = request.query.commentIndex ? 
       DOMPurify.sanitize(request.query.commentIndex) : null;
     
+    // NOTE: Weak stories (src/indexable.mjs) get a noindex meta tag and
+    // header so Google spends its attention on the stories worth reading.
+    const indexable = await isIndexable(
+      DOMPurify.sanitize(hexIndex),
+      submission,
+    );
+    if (!indexable || commentIndex) {
+      reply.header("X-Robots-Tag", "noindex");
+    }
+
     const content = await story(
       trie,
       reply.locals.theme,
@@ -2380,6 +2390,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       submission,
       referral,
       commentIndex,
+      indexable,
     );
     reply.header(
       "Cache-Control",

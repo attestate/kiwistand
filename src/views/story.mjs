@@ -38,6 +38,7 @@ import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
 import { storyDescription, storyDocumentTitle } from "../seo.mjs";
 import * as isoweek from "../isoweek.mjs";
+import { isIndexableStory, robotsMeta } from "../indexable.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -295,7 +296,35 @@ function RelatedBox(related) {
   </div>`;
 }
 
-export default async function (trie, theme, index, value, referral, commentIndex = null) {
+// Whether search engines should index this story's page (src/indexable.mjs).
+// `value` is generateStory()'s submission. The moderation lists are cached
+// (stale-while-revalidate), and if they can't be read the story counts as not
+// moderated, like in the feeds.
+export async function isIndexable(
+  index,
+  value,
+  { summary = getSummary(index), getLists = moderation.getLists } = {},
+) {
+  let hidden = false;
+  try {
+    hidden = moderation.isModerated(value, await getLists());
+  } catch (err) {
+    log(`isIndexable: moderation check failed for ${index}: ${err}`);
+  }
+  return isIndexableStory({ ...value, hidden }, { summary });
+}
+
+// `indexable` is isIndexable()'s result, passed by http.mjs, which also sends
+// it as an X-Robots-Tag header.
+export default async function (
+  trie,
+  theme,
+  index,
+  value,
+  referral,
+  commentIndex = null,
+  indexable,
+) {
   const path = "/stories";
 
   // Handle text posts (data:text/plain URLs)
@@ -406,6 +435,8 @@ export default async function (trie, theme, index, value, referral, commentIndex
   // without one and the next render (after the day-long CDN cache) has it.
   const summary = getSummary(index);
   if (!summary) summarizeStory(index, value);
+  const storyIsIndexable =
+    indexable ?? (await isIndexable(index, value, { summary }));
 
   // Last week's top stories, the newsletter card's concrete sample (cached,
   // null falls back to the generic copy).
@@ -575,9 +606,7 @@ export default async function (trie, theme, index, value, referral, commentIndex
             rss: true,
           },
         )}
-        ${commentIndex
-          ? html`<meta name="robots" content="noindex, follow" />`
-          : null}
+        ${robotsMeta({ indexable: storyIsIndexable, commentIndex })}
         <script type="application/ld+json" dangerouslySetInnerHTML=${{ __html: jsonLd }}></script>
         <link
           rel="alternate"

@@ -26,6 +26,7 @@ import * as email from "./email.mjs";
 import diskcheck from "./diskcheck.mjs";
 import { purgeCache, purgeEverything } from "./cloudflarePurge.mjs";
 import { generateSitemaps } from "./sitemap.mjs";
+import { getLists } from "./views/moderation.mjs";
 import * as social from "./social-posting.mjs";
 import { isLinkAlive } from "./linkcheck.mjs";
 
@@ -89,17 +90,24 @@ if (cluster.isPrimary) {
 
   if (!reconcileMode) {
     // Regenerate sitemaps hourly so new stories and comments show up without
-    // a restart. generateSitemaps() is synchronous, so two runs can't
-    // overlap; errors are logged, not thrown, so a failed run can't crash the
+    // a restart. generateSitemaps() is synchronous (only fetching the
+    // moderation lists before it is async), so two runs can't overlap;
+    // errors are logged, not thrown, so a failed run can't crash the
     // primary process. http.mjs serves the sitemap files from disk on each
     // request (not via sirv's startup index), so the files from the previous
     // run keep being served until the first run here. That first run waits
     // a minute: rebuilding every month's sitemap blocks the event loop, and
     // doing it before the HTTP server and workers start made every deploy's
     // 504 window longer.
-    const refreshSitemaps = () => {
+    const refreshSitemaps = async () => {
+      let policy = null;
       try {
-        generateSitemaps();
+        policy = await getLists();
+      } catch (err) {
+        log(`Sitemap: couldn't get moderation lists: ${err}`);
+      }
+      try {
+        generateSitemaps(policy);
       } catch (err) {
         log(`Sitemap generation failed: ${err.stack || err}`);
       }

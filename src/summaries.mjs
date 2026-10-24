@@ -83,6 +83,27 @@ export function getSummary(index) {
   }
 }
 
+// Every stored summary that getSummary() would show, keyed by story index
+// (without 0x), for checking many stories at once (src/sitemap.mjs). Returns
+// an empty map when the store can't be read.
+export function listSafeSummaries() {
+  try {
+    const rows = open()
+      .prepare(
+        `SELECT story_index AS storyIndex, summary FROM summaries WHERE summary IS NOT NULL`,
+      )
+      .all();
+    return new Map(
+      rows
+        .filter(({ summary }) => isSafeSummary(summary))
+        .map(({ storyIndex, summary }) => [storyIndex, summary]),
+    );
+  } catch (err) {
+    log(`Listing story summaries failed: ${err}`);
+    return new Map();
+  }
+}
+
 export function needsSummary(index, now = Date.now()) {
   const row = read(index);
   if (!row) return true;
