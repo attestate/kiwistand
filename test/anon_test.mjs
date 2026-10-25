@@ -218,8 +218,14 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
   }
   t.is(countAnonJoins(), 3);
   await t.throwsAsync(() => joinGroup(members[0], identityOf(members[0]).commitment, base + 100), {
-    message: /already exists/,
+    message: /already joined/,
   });
+  // Swapping the commitment would mint a fresh nullifier, so it's rejected.
+  const swapped = new Identity(new Uint8Array(32).fill(9)).commitment;
+  await t.throwsAsync(() => joinGroup(members[0], swapped, base + 200), {
+    message: /already joined/,
+  });
+  t.is(countAnonJoins(), 3);
 
   // Every node builds the same group from the joins.
   const voteTime = base + 102 + ANON_ROOT_SETTLE_SECS + 10;
