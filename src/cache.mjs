@@ -329,7 +329,7 @@ export function getAnonMember(identity) {
     db
       .prepare(
         `SELECT id, identity, commitment, timestamp FROM anon_members
-         WHERE identity = ? ORDER BY timestamp DESC, id DESC LIMIT 1`,
+         WHERE identity = ? ORDER BY timestamp ASC, id ASC LIMIT 1`,
       )
       .get(identity) || null
   );

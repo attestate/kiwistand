@@ -73,7 +73,7 @@ export function messageOf(href, timestamp) {
   return keccakBigInt(`${href}|${timestamp}`).toString();
 }
 
-// Replays the joins (sorted by timestamp, id) into a group. Returns the group
+// Replays the joins (sorted by timestamp, id) into a group, one per identity. Returns the group
 // after the last join and one state per join that changed the root.
 export function replay(joins) {
   const group = new Group();
@@ -81,15 +81,12 @@ export function replay(joins) {
   const states = [];
   for (const join of joins) {
     const commitment = BigInt(join.commitment);
-    const position = positions.get(join.identity);
-    if (position === undefined) {
-      group.addMember(commitment);
-      positions.set(join.identity, group.size - 1);
-    } else if (group.members[position] !== commitment) {
-      group.updateMember(position, commitment);
-    } else {
-      continue;
-    }
+    // NOTE: The first join of an identity wins. Letting an identity swap its
+    // commitment would hand it a fresh nullifier, and with it another vote on
+    // the same story, every time.
+    if (positions.has(join.identity)) continue;
+    group.addMember(commitment);
+    positions.set(join.identity, group.size - 1);
     states.push({
       id: join.id,
       timestamp: join.timestamp,
@@ -149,6 +146,9 @@ export function checkJoin(message, identity) {
   const commitment = BigInt(message.commitment);
   if (commitment === 0n || commitment >= SNARK_FIELD) {
     throw new Error("anon-join: commitment isn't in the SNARK field");
+  }
+  if (getAnonMember(identity)) {
+    throw new Error(`anon-join: identity "${identity}" has already joined`);
   }
   const karma = karmaAt(identity, message.timestamp);
   if (karma < ANON_MIN_KARMA) {

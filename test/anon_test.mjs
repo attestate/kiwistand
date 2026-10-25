@@ -81,11 +81,12 @@ test("the group is built deterministically from the joins", (t) => {
   // Replaying again gives the same roots.
   t.deepEqual(anon.replay(joins).states, states);
 
-  // A newer join of an identity replaces its commitment in place.
+  // A later join of an identity is ignored: swapping commitments would mint a
+  // fresh nullifier, and with it another vote on the same story.
   const d = new Identity(new Uint8Array(32).fill(4)).commitment;
   const replaced = anon.replay([...joins, join_("0xA", d, 103)]);
-  t.deepEqual(replaced.group.members, [d, b, c]);
-  t.is(replaced.states.length, 4);
+  t.deepEqual(replaced.group.members, [a, b, c]);
+  t.is(replaced.states.length, 3);
   t.is(replaced.group.size, 3);
   // Registering the same commitment again changes nothing.
   const same = anon.replay([...joins, join_("0xB", b, 104)]);
