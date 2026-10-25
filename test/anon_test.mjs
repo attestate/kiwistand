@@ -81,11 +81,12 @@ test("the group is built deterministically from the joins", (t) => {
   // Replaying again gives the same roots.
   t.deepEqual(anon.replay(joins).states, states);
 
-  // A newer join of an identity replaces its commitment in place.
+  // A later join of an identity is ignored: swapping commitments would mint a
+  // fresh nullifier, and with it another vote on the same story.
   const d = new Identity(new Uint8Array(32).fill(4)).commitment;
   const replaced = anon.replay([...joins, join_("0xA", d, 103)]);
-  t.deepEqual(replaced.group.members, [d, b, c]);
-  t.is(replaced.states.length, 4);
+  t.deepEqual(replaced.group.members, [a, b, c]);
+  t.is(replaced.states.length, 3);
   t.is(replaced.group.size, 3);
   // Registering the same commitment again changes nothing.
   const same = anon.replay([...joins, join_("0xB", b, 104)]);
@@ -217,8 +218,14 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
   }
   t.is(countAnonJoins(), 3);
   await t.throwsAsync(() => joinGroup(members[0], identityOf(members[0]).commitment, base + 100), {
-    message: /already exists/,
+    message: /already joined/,
   });
+  // Swapping the commitment would mint a fresh nullifier, so it's rejected.
+  const swapped = new Identity(new Uint8Array(32).fill(9)).commitment;
+  await t.throwsAsync(() => joinGroup(members[0], swapped, base + 200), {
+    message: /already joined/,
+  });
+  t.is(countAnonJoins(), 3);
 
   // Every node builds the same group from the joins.
   const voteTime = base + 102 + ANON_ROOT_SETTLE_SECS + 10;
