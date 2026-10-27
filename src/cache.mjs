@@ -380,9 +380,13 @@ function applyDeletion(targetId, identity, timestamp) {
       db.prepare(`DELETE FROM submissions WHERE id = ?`).run(targetId);
       // Upvotes of the link signed before the deletion that sync in later
       // mustn't bring the story back; a new submission after it may.
+      // NOTE: The timestamp is clamped to now because the future-timestamp
+      // check in store.mjs is skipped while synching. Otherwise a story's
+      // author could sign a deletion dated far ahead and permanently
+      // censor every later upvote and resubmission of the link.
       db.prepare(
         `INSERT OR REPLACE INTO deleted_stories (href, timestamp) VALUES (?, ?)`,
-      ).run(target.href, timestamp);
+      ).run(target.href, Math.min(timestamp, Math.floor(Date.now() / 1000)));
     }
   })();
   return target;
