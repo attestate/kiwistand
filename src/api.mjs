@@ -278,7 +278,7 @@ export function handleMessage(
 
       // Trigger upvote notification for the story author
       setImmediate(() => {
-        triggerUpvoteNotification(message).catch((err) => {
+        triggerUpvoteNotification(message, delegations).catch((err) => {
           log(`Failed to trigger upvote notification: ${err}`);
         });
       });
