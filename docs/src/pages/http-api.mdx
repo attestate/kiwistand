@@ -282,7 +282,7 @@ Also `/c/:owner/:key/new` and `/c/:owner/:key/best`. The community's web pages: 
 
 ### GET /communities
 
-Also `/communities?tab=joined` and `/communities/new`. The website's list of communities, most active first (`q` searches them like `GET /api/v1/communities`), the ones you joined, and the form to start a community or to edit yours (`?edit=<name key>`). The website still keeps the communities you joined in the browser; since protocol 14.0.0 clients sign a join or leave instead and read `GET /api/v1/communities?member=<address>`.
+Also `/communities?tab=joined` and `/communities/new`. The website's list of communities, most active first (`q` searches them like `GET /api/v1/communities`), the ones you joined, and the form to start a community or to edit yours (`?edit=<name key>`). Joining and leaving sign a join or leave (protocol 14.0.0), and the joined list comes from `GET /api/v1/communities?member=<address>`.
 
 ### Who joined: GET /api/v1/activity
 
