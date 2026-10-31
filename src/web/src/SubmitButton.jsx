@@ -811,7 +811,12 @@ const Form = (props) => {
         <RainbowKitProvider chains={chains}>
           {hasCommunities(postTo) && (
             <React.Suspense fallback={null}>
-              <PostTo root={postTo} target={target} setTarget={setTarget} />
+              <PostTo
+                root={postTo}
+                url={url}
+                target={target}
+                setTarget={setTarget}
+              />
             </React.Suspense>
           )}
           <UrlInput url={url} setURL={setURL} toast={toast} />
