@@ -244,6 +244,35 @@ async function addSubmitButton(delegations, toast) {
   }
 }
 
+// Communities (Communities.jsx): Join buttons, the Home tabs and side box
+// with the communities you joined, a community's actions and invites. On
+// the feeds they only list joined communities, so readers who joined none
+// (theme-init.js marks the others) don't load them.
+async function addCommunities() {
+  const elements = [...document.querySelectorAll("[data-cm]")];
+  const lists = elements.every(
+    (element) => element.dataset.cm === "tabs" || element.dataset.cm === "side",
+  );
+  const joined = document.documentElement.hasAttribute("data-cm-joined");
+  if (elements.length === 0 || (lists && !joined)) return;
+  const { mount } = await import("./Communities.jsx");
+  mount(elements);
+}
+
+// /communities/new: the form to start or edit a community.
+async function addNewCommunity(toast) {
+  const element = document.getElementById("cm-new");
+  if (!element) return;
+  const NewCommunity = (await import("./NewCommunity.jsx")).default;
+  createRoot(element).render(
+    <StrictMode>
+      <Providers>
+        <NewCommunity toast={toast} editKey={element.dataset.edit} />
+      </Providers>
+    </StrictMode>,
+  );
+}
+
 async function addAnalytics() {
   // Run on feed pages, profile pages, and story pages
   const path = window.location.pathname;
@@ -1620,10 +1649,14 @@ function initEndlessScroll() {
 
   // Determine API endpoint based on current page
   let apiBase;
+  // A community's Hot and New (/c/<owner>/<key>, /c/<owner>/<key>/new).
+  const community = path.match(/^\/c\/(0x[0-9a-fA-F]{40}\/[a-z0-9-]+)(\/new)?\/?$/);
   if (path === '/') {
     apiBase = '/api/v1/feed/rows';
   } else if (path === '/new') {
     apiBase = '/api/v1/new/rows';
+  } else if (community) {
+    apiBase = `/api/v1/communities/${community[1]}/${community[2] ? 'new' : 'feed'}/rows`;
   } else {
     return;
   }
@@ -1929,6 +1962,12 @@ async function start() {
   // submit is a plain form post that PostHog never sees.
   addNewsletterFeedCard().catch((err) =>
     console.error("Newsletter card failed to mount", err),
+  );
+  addCommunities().catch((err) =>
+    console.error("Communities failed to mount", err),
+  );
+  addNewCommunity(toast).catch((err) =>
+    console.error("The community form failed to mount", err),
   );
 
 

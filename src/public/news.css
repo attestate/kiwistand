@@ -5105,3 +5105,213 @@ body.kn-has-dock .bottom-nav::before {
     min-height: 0;
   }
 }
+
+/* -- Communities ---------------------------------------------------------
+   What the feeds show of communities: a story's tag, the tabs above the
+   feed and the side box. A community's colour comes as custom properties
+   (colorStyle in src/web/src/communities.mjs): --c, --c-soft, --c-tint and
+   --c-text, and their dark values with -d. .cm-c picks light or dark. The
+   community pages' own styles are in pages.css. */
+.cm-c {
+  --cm: var(--c);
+  --cm-soft: var(--c-soft);
+  --cm-tint: var(--c-tint);
+  --cm-text: var(--c-text);
+}
+@media (prefers-color-scheme: dark) {
+  .cm-c {
+    --cm: var(--c-d);
+    --cm-soft: var(--c-soft-d);
+    --cm-tint: var(--c-tint-d);
+    --cm-text: var(--c-text-d);
+  }
+}
+.cm-icon {
+  flex: 0 0 auto;
+  display: block;
+}
+.cm-tag,
+.cm-tag:link,
+.cm-tag:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--kn-radius-sm);
+  background: var(--cm-soft);
+  color: var(--cm-text);
+  font-family: var(--kn-font);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cm-tag .cm-icon {
+  color: var(--cm);
+}
+.cm-tag span {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cm-tile {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-radius: var(--kn-radius);
+  color: var(--cm);
+}
+.cm-tile-soft {
+  background: var(--cm-soft);
+  border: 1px solid var(--cm);
+}
+.cm-tile-plain {
+  background: var(--kn-surface);
+}
+/* "All stories", the communities you joined and "Browse". */
+.cm-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 28px;
+  margin: 0 0 4px;
+  border-bottom: 1px solid var(--kn-separator);
+  overflow-x: auto;
+  scrollbar-width: none;
+  font-family: var(--kn-font);
+}
+.cm-tabs::-webkit-scrollbar {
+  display: none;
+}
+.cm-tabs-joined {
+  display: contents;
+}
+.cm-tab,
+.cm-tab:link,
+.cm-tab:visited {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0 10px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--kn-text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cm-tab:hover {
+  color: var(--kn-text-primary);
+}
+.cm-tab-active,
+.cm-tab-active:link,
+.cm-tab-active:visited {
+  border-bottom-color: var(--kn-text-primary);
+  color: var(--kn-text-primary);
+  font-weight: 600;
+}
+.cm-tab .cm-icon-c {
+  display: flex;
+  color: var(--cm);
+}
+/* The side box of the feeds and the community pages. */
+.cm-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--kn-text-primary);
+}
+.cm-side-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* NOTE: Room for the joined communities Communities.jsx lists (32px rows,
+   12px apart), counted by theme-init.js, so the boxes below don't move. */
+html[data-cm-joined] .cm-side-list {
+  min-height: calc(var(--cm-rows, 0) * 44px - 12px);
+}
+html[data-cm-joined] .cm-side-empty {
+  display: none;
+}
+.cm-side-empty {
+  margin: 0;
+  color: var(--kn-text-tertiary);
+  line-height: 1.4;
+}
+.cm-side-row,
+.cm-side-row:link,
+.cm-side-row:visited {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--kn-text-primary);
+  text-decoration: none;
+}
+.cm-side-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.cm-side-row-name {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cm-side-row-by {
+  overflow: hidden;
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  color: var(--kn-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cm-side-row-state {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kn-text-secondary);
+}
+.cm-side-links {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+.cm-side-links a,
+.cm-side-links a:link,
+.cm-side-links a:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  color: var(--kn-text-secondary);
+  text-decoration: none;
+}
+.cm-side-links a.cm-side-all {
+  font-weight: 600;
+  color: var(--kn-text-primary);
+}
+.cm-side-links a:hover {
+  text-decoration: underline;
+}
+@media (min-width: 641px) {
+  .cm-tabs {
+    margin: 0 0 20px;
+  }
+}
+@media (max-width: 640px) {
+  .cm-tabs {
+    gap: 22px;
+    margin: 4px 16px 12px;
+  }
+}

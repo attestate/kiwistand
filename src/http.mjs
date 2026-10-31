@@ -100,6 +100,7 @@ import {
 } from "./cache.mjs";
 import * as communitiesAPI from "./communities-api.mjs";
 import * as communityView from "./views/community.mjs";
+import * as communitiesView from "./views/communities.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
@@ -853,6 +854,17 @@ export function handleClusterMessage(trie, recompute) {
   };
 }
 
+// The communities that tag the home feed's stories (feed.mjs); none when
+// they can't be read, so the feed still renders.
+async function communityRefs() {
+  try {
+    return await communitiesAPI.communityRefs();
+  } catch (err) {
+    log(`Couldn't read the communities for the feed: ${err.message}`);
+    return {};
+  }
+}
+
 export async function launch(trie, libp2p, isPrimary = true) {
   // NOTE: Warns (doesn't exit) when ADMIN_KEY is set but short; once, from
   // the primary rather than from every worker.
@@ -897,7 +909,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
       console.time("initial-feed-computation");
       // Start with control variant
       currentVariant = 'control';
-      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant });
+      cachedFeed = await feedPiscina.run({
+        theme,
+        variant: currentVariant,
+        communities: await communityRefs(),
+      });
       console.timeEnd("initial-feed-computation");
       log(`Initial cached feed ready (variant: ${currentVariant})`);
     } catch (err) {
@@ -913,7 +929,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
         // Alternate between variants for 50/50 split
         variantCounter++;
         currentVariant = variants[variantCounter % 2];
-        const newFeed = await feedPiscina.run({ theme, variant: currentVariant });
+        const newFeed = await feedPiscina.run({
+          theme,
+          variant: currentVariant,
+          communities: await communityRefs(),
+        });
         cachedFeed = newFeed;
         
         const elapsed = Date.now() - startTime;
@@ -1804,7 +1824,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       });
     }
 
-    const rowsHtml = stories.map((story, i) =>
+    // NOTE: Kiwi News' rows show a community story's tag (row.mjs), a
+    // community's own rows don't.
+    const tagged = community
+      ? stories
+      : await communitiesAPI.withCommunities(stories);
+    const rowsHtml = tagged.map((story, i) =>
       Row(
         start,
         "/",
@@ -1970,7 +1995,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
       });
     }
 
-    const rowsHtml = stories.map((story, i) =>
+    // NOTE: Kiwi News' rows show a community story's tag (row.mjs), a
+    // community's own rows don't.
+    const tagged = community
+      ? stories
+      : await communitiesAPI.withCommunities(stories);
+    const rowsHtml = tagged.map((story, i) =>
       Row(
         start,
         "/new",
@@ -2293,6 +2323,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         content = await feedPiscina.run({
           theme: reply.locals.theme,
           variant: currentVariant,
+          communities: await communityRefs(),
           page,
           domain: DOMPurify.sanitize(request.query.domain),
           identity,
@@ -3005,13 +3036,24 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
     }
 
+    // NOTE: /submit?community=<id> ("Post the first story") picks the
+    // community in "Post to".
+    let community = null;
+    try {
+      const id = communitiesAPI.parseCommunity(request.query.community);
+      if (id) community = await communitiesAPI.findCommunity(...id.split("/"));
+    } catch (err) {
+      community = null;
+    }
+
     const content = await submit(
       reply.locals.theme,
       DOMPurify.sanitize(link),
       DOMPurify.sanitize(title),
+      community,
     );
 
-    if (url || title) {
+    if (url || title || community) {
       reply.header(
         "Cache-Control",
         "public, s-maxage=18000, max-age=0, must-revalidate",
@@ -3026,29 +3068,38 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     return reply.status(200).type("text/html").send(content.valueOf());
   });
-  // A community's page, where its invite links land. Its stories are the
-  // community's Hot.
-  app.get(
-    "/c/:owner/:key",
-    communityView.handler({
-      getStories: async (community) => {
-        const variant = variantConfigs[currentVariant] || variantConfigs.control;
-        const { stories } = await index(
-          trie,
-          0,
-          undefined,
-          undefined,
-          false, // paginate
-          false, // appCuration
-          variant.algorithm,
-          false, // skipAgeFilter
-          false, // skipResolve
-          { community },
-        );
-        return stories;
-      },
-    }),
-  );
+  // Communities: browse them, start one and a community's pages, its Hot,
+  // New and Best (views/community.mjs, views/communities.mjs). Its Hot is
+  // computed like Kiwi News' (feed.mjs), New and Best like /new and /best.
+  app.get("/communities", communitiesView.browseHandler());
+  app.get("/communities/new", communitiesView.newHandler());
+  const communityPage = communityView.handler({
+    getStories: async (feed, community, { page, period }) => {
+      if (feed === "new") {
+        return { stories: await newAPI.getCommunityStories(community), start: 0 };
+      }
+      if (feed === "best") {
+        const stories = await bestAPI.getStories(page, period, "", { community });
+        return { stories, start: page * parseInt(env.TOTAL_STORIES, 10) };
+      }
+      const variant = variantConfigs[currentVariant] || variantConfigs.control;
+      const { stories, start } = await index(
+        trie,
+        0,
+        undefined,
+        sub(new Date(), { days: 3 }),
+        true, // paginate
+        false, // appCuration
+        variant.algorithm,
+        false, // skipAgeFilter
+        false, // skipResolve
+        { community },
+      );
+      return { stories, start };
+    },
+  });
+  app.get("/c/:owner/:key", communityPage);
+  app.get("/c/:owner/:key/:feed", communityPage);
 
   app.get("/*", async (request, reply, next) => {
     const name = request.params[0];

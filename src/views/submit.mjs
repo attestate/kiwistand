@@ -4,10 +4,12 @@ import vhtml from "vhtml";
 import { custom } from "./components/head.mjs";
 import * as parser from "../parser.mjs";
 import { Page, Icon } from "./components/n2.mjs";
+import { communityData } from "./community.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function submit(theme, url = "", title = "") {
+// `community`: the one "Post to" starts on (/submit?community=<id>).
+export default async function submit(theme, url = "", title = "", community = null) {
   if (url && !title) {
     let data;
     try {
@@ -56,6 +58,11 @@ export default async function submit(theme, url = "", title = "") {
                           >
                         </p>
                       </header>
+                      <div
+                        id="n2-post-to"
+                        class="n2-field n2-post-to"
+                        data-community="${community ? communityData(community) : null}"
+                      ></div>
                       <div class="n2-field n2-field-title">
                         <label for="titleInput" class="n2-label"
                           >Title<span class="n2-m">:</span></label

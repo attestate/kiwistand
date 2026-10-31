@@ -25,6 +25,7 @@ import {
   tweetHandle,
 } from "../../quote.mjs";
 import { ms } from "./icons.mjs";
+import { Tag } from "./communities.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -1333,6 +1334,11 @@ const row = (
               ${showRank
                 ? html`<span class="kn-rank">${String(position).padStart(2, "0")}</span>`
                 : null}
+              ${
+                // NOTE: A community's story ({id, name, icon, color}, see
+                // withCommunities in communities-api.mjs) shows its tag.
+                story.community?.name ? Tag(story.community) : null
+              }
               ${sourceLabel
                 ? html`<span class="kn-domain">${sourceLabel}</span>`
                 : null}

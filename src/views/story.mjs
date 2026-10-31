@@ -40,6 +40,7 @@ import { storyDescription, storyDocumentTitle } from "../seo.mjs";
 import * as isoweek from "../isoweek.mjs";
 import { isIndexableStory, robotsMeta } from "../indexable.mjs";
 import { indexableSourcePath } from "../sources.mjs";
+import { withCommunities } from "../communities-api.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -365,8 +366,15 @@ export default async function (
     });
   }
 
+  // NOTE: A community's story shows its community's tag (row.mjs).
+  let tagged = value;
+  try {
+    [tagged] = await withCommunities([value]);
+  } catch (err) {
+    log(`Couldn't tag the story's community: ${err.message}`);
+  }
   const story = {
-    ...value,
+    ...tagged,
     metadata: data,
     textContent,
   };

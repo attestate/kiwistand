@@ -504,12 +504,10 @@ test.serial("a community's page shows it, its rules, its creator and its stories
   const post = story({ community: id, title: "A community story", upvotes: 2 });
   const handler = page.handler({
     ...deps,
-    getStories: async (community) =>
-      (
-        await index(null, 0, undefined, undefined, false, false, "control", false, true, {
-          community,
-        })
-      ).stories,
+    getStories: async (feed, community) =>
+      await index(null, 0, undefined, undefined, false, false, "control", false, true, {
+        community,
+      }),
   });
 
   const r = reply();
@@ -523,13 +521,16 @@ test.serial("a community's page shows it, its rules, its creator and its stories
   t.true(r.body.includes("Be kind."));
   t.true(r.body.includes("Link sources."));
   t.true(r.body.includes("pagecreator.eth"));
-  t.true(r.body.includes(page.TESTFLIGHT));
+  t.true(r.body.includes(`href="/c/${id}/new"`), "its New");
   t.true(r.body.includes(post.title));
   t.true(r.body.includes(`https://news.kiwistand.com/c/${id}`), "canonical");
 });
 
 test.serial("a community's page is 404 when the community isn't known", async (t) => {
-  const handler = page.handler({ ...deps, getStories: async () => [] });
+  const handler = page.handler({
+    ...deps,
+    getStories: async () => ({ stories: [], start: 0 }),
+  });
   for (const params of [
     { owner: address(), key: "nope" },
     { owner: "not-an-address", key: "nope" },

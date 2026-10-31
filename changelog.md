@@ -20,8 +20,22 @@
 - Stories in the feeds and from `GET /api/v1/stories` have `community`:
   `null` or `{id, name, icon, color}`. The cache hands the column on as
   `communityId`, so the bare ID no longer goes out as `community` anywhere.
-- `/c/<owner>/<key>`: a minimal page for a community's invite links, and
-  `/c/*` in the universal links.
+- `/c/*` in the universal links.
+
+### Communities: web UI (no protocol change)
+
+- A community's pages: `/c/<owner>/<key>` (Hot), `/c/<owner>/<key>/new` and
+  `/c/<owner>/<key>/best`, with its header card and house rules; with
+  `?via=<address>`, the page an invite link opens.
+- `/communities` lists them (Discover, most active first, with search, and
+  Joined) and `/communities/new` starts one, or edits yours, with a live
+  preview, icon suggestions from its name and a picker of Phosphor's icons.
+- Joining keeps a community in the browser (it isn't on the protocol): the
+  feeds show the communities you joined as tabs and in the side box.
+- Stories show their community's tag before the domain.
+- Submit: "Post to" picks Kiwi News or one of your communities; a post to a
+  community is signed as the 5-field `Message`.
+- "Communities" in the navigation.
 
 ### Fixes (communities, no protocol change)
 

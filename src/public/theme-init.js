@@ -35,6 +35,34 @@
     }
   } catch (err) {}
 
+  // NOTE: The communities you joined live in this browser (Communities.jsx,
+  // same key). Pages are cached for everyone, so this marks what depends on
+  // them before the first paint: how many there are (the home's side box
+  // keeps room for them) and, on a community's page, whether you joined it
+  // or run it (the header card shows Joined or Invite people right away).
+  try {
+    const root = document.documentElement;
+    let joined = JSON.parse(localStorage.getItem('kiwi-communities') || '[]');
+    if (!Array.isArray(joined)) joined = [];
+    if (joined.length > 0) {
+      root.setAttribute('data-cm-joined', '');
+      root.style.setProperty('--cm-rows', String(Math.min(joined.length, 5)));
+    }
+    const page = location.pathname.match(/^\/c\/(0x[a-fA-F0-9]{40})\/([a-z0-9-]+)/);
+    if (page) {
+      const owner = page[1].toLowerCase();
+      const id = owner + '/' + page[2];
+      if (joined.some(function (c) { return c && c.id === id; })) {
+        root.setAttribute('data-cm-member', '');
+      }
+      const mine = Object.keys(localStorage).some(function (key) {
+        const match = key.match(/^-kiwi-news-(0x[a-fA-F0-9]{40})-key$/);
+        return match && match[1].toLowerCase() === owner;
+      });
+      if (mine) root.setAttribute('data-cm-owner', '');
+    }
+  } catch (err) {}
+
   // NOTE: The newsletter sign-up cards (newsletter-card.mjs) are server
   // rendered for everyone; NewsletterFeedCard.jsx removes them once the
   // bundle loads for readers who subscribed or dismissed them (same keys as shouldHideCard there). Marking that here, before the

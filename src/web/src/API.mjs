@@ -21,6 +21,12 @@ export const EIP712_TYPES = {
   ],
 };
 
+// A post to a community: the Message with the community it goes to
+// (EIP712_COMMUNITY_MESSAGE in src/constants.mjs).
+export const EIP712_COMMUNITY_TYPES = {
+  Message: [...EIP712_TYPES.Message, { name: "community", type: "string" }],
+};
+
 export function messageFab(title, href, type = "amplify") {
   return {
     title,
