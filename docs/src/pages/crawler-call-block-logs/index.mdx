@@ -1,0 +1,29 @@
+---
+showAskAi: false
+title: crawler-call-block-logs
+description: A @attestate/crawler strategy to extract, transform and load Ethereum block event logs into an LMDB store.
+---
+
+# @attestate/crawler-call-block-logs
+
+A `@attestate/crawler` strategy to extract, transform and load Ethereum block
+event logs from the JSON-RPC API into an LMDB store.
+
+## Context
+
+A key concept of Ethereum are the event logs emitted from smart contracts. They
+are used to signal historic calls to specific smart contract functions and can
+hence be used to keep a local application synchronized to the latest state of a
+smart contract on the Ethereum mainnet.
+
+- Source code: [github.com/attestate/crawler-call-block-logs](https://github.com/attestate/crawler-call-block-logs).
+
+## Installation
+
+Assuming you already have the [crawler](/crawler) set up, install the strategy via npm:
+
+```bash
+npm i @attestate/crawler-call-block-logs
+```
+
+Then see [Usage](/crawler-call-block-logs/usage) and [Reference](/crawler-call-block-logs/reference).

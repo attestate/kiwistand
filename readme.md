@@ -37,7 +37,7 @@ Example:
 curl https://news.kiwistand.com/api/v1/feeds/hot
 ```
 
-There is also an HTTP API reference at https://attestate.com/kiwistand/main/.
+There is also an [HTTP API reference](https://news.kiwistand.com/docs/http-api) for the node's message API.
 
 ### MCP client
 
@@ -121,8 +121,10 @@ npm test               # all tests, including the MCP client and compression tes
 
 More detail:
 
-- [Protocol guide](docs/source/protocol-guide.rst): how set reconciliation with a Merkle Patricia trie works, step by step
-- [Delegation](docs/source/delegation.rst): how application keys are authorized
+- [Protocol guide](https://news.kiwistand.com/docs/guide): how set reconciliation with a Merkle Patricia trie works, step by step
+- [Protocol](https://news.kiwistand.com/docs/protocol): message IDs, message types and communities
+- [Delegation](https://news.kiwistand.com/docs/delegation): how application keys are authorized
+- The docs site's source is in [docs/](docs/), see [docs/README.md](docs/README.md)
 - Talk: [Building decentralized social networks](https://www.youtube.com/watch?v=Rys5UEi2SWg) (Tim Daubenschütz at zusocial, Istanbul)
 - Demos: [set reconciliation (40 s)](https://www.loom.com/share/abf43323b00547689bf11520f565f4bc), [algorithm explained (9 min)](https://www.loom.com/share/2a68f5e22d9843ab99edad2deaed9281)
 

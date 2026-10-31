@@ -1,0 +1,94 @@
+---
+showAskAi: false
+description: Reference for the extractor, transformer, loader and state modules of crawler-call-block-logs.
+---
+
+# Reference
+
+## Extractor module
+
+```javascript
+// NOTE: address and topics can be used to filter events at the Ethereum node
+//  level.
+function init({ args: {start = 0, end, address, topics, blockspan = 1}})
+```
+
+- `start` Start block as a natural number in decimal-base (default: 0).
+- `end` End block as a natural number in decimal-base.
+- `address` "0x"- prefixed Ethereum address of where an event log originates
+  from.
+- `topics` Array containing up to three 32 byte long "0x"-prefixed topic
+  hashes related to the event or an array of arrays containing such values.
+- `blockspan` The distance between `fromBlock` and `toBlock` in decimal-base (default: 1).
+- `includeTimestamp` Flag to include the block timestamp as `block.timestamp` in
+  the result object.
+- `includeValue` Flag to include the transaction's value as
+  `transaction.value` in the result object.
+
+## Transformer module
+
+```javascript
+function onLine({args: {topics = [], address, inputs}, state: {line}})
+```
+
+- `line` Is an argument defined by `@attestate/crawler` internally. It is a
+  line within the strategy's `input.path` file.
+- `address` "0x"- prefixed Ethereum address of where an event log originates
+  from.
+- `topics` Array containing up to three 32 byte long "0x"-prefixed topic
+  hashes related to the event or an array of arrays containing such values.
+- `inputs` When defined, it replaces the event log's "data" property with a
+  parsed event log using [web3-eth-abi@1.4.0's decodeLog](https://web3js.readthedocs.io/en/v1.4.0/web3-eth-abi.html#decodelog).
+
+## Loader module
+
+```javascript
+function* order({state: {line}})
+```
+
+- `line` Is an argument defined by `@attestate/crawler` internally. It is a
+  line within the strategy's `input.path` file.
+
+`order` is a JavaScript [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*).
+As the `key`, it concatenates serialized `blockNumber` and `transactionIndex` to
+generate an identifier which defines a total order among `transactionHash`es.
+`value` is the `transactionHash`.
+
+```javascript
+function* direct({state: {line}})
+```
+
+- `line` Is an argument defined by `@attestate/crawler` internally. It is a
+  line within the strategy's `input.path` file.
+
+`direct` is a JavaScript [generator function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*).
+As the `key`, it defines the `transactionHash` to generate an identifier
+which lets us directly access the log through `value`.
+
+## State module
+
+The state module provides coordinator functionality for continuous blockchain
+monitoring by polling `eth_blockNumber` over HTTP.
+
+```javascript
+function watch({ environment, onNewBlock })
+```
+
+- `environment` Object containing environment variables (`rpcHttpHost`,
+  `pollingInterval`) passed from the crawler configuration.
+- `onNewBlock` Callback function invoked with the latest block number on
+  every poll that sees a new block.
+
+The `watch()` function polls `eth_blockNumber` on
+`environment.rpcHttpHost` every `environment.pollingInterval` milliseconds
+and returns an `unwatch()` function to stop polling.
+
+`environment.rpcHttpHost` can be a single URL or a list of URLs. With a list,
+each crawl sends its `eth_getLogs` requests to the next URL in turn, which
+spreads the load across providers (e.g. to stay within several free tiers).
+
+:::note
+Versions 0.6.x subscribed to `newHeads` via WebSocket
+(`environment.rpcWsHost`). Since 0.7.0, `watch()` polls over HTTP
+instead, because many providers bill every `newHeads` event.
+:::

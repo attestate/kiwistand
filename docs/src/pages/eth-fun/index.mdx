@@ -1,0 +1,141 @@
+---
+showAskAi: false
+title: eth-fun
+description: A collection of independent utility functions for Ethereum, built with a functional approach in mind.
+---
+
+# eth-fun
+
+A collection of independent utility functions for Ethereum. Build with functional approach in mind.
+
+[API Documentation](/eth-fun/api) | [Changelog](https://github.com/attestate/eth-fun/blob/main/CHANGELOG.md) | [Contributing](#contributing) | [Source code](https://github.com/attestate/eth-fun)
+
+## Why Use eth-fun?
+
+You should use eth-fun when you want to have _fun_. We try to build our
+code according to the properties below.
+
+- **Functional** in nature
+- **Modular** and as **loosely** coupled as possible.
+- **Stateless**; such that we come as close as possible towards atomic,
+  safely-failable (and catchable) actions.
+- Built with a modern front end's needs in mind. Ideally, the whole lib is
+  **tree-shakeable** and produces the **smallest footprint** possible when being sent
+  to a client's browser.
+
+eth-fun is an attempt at developing Ethereum in a one-way-dataflow fashion
+(similar to react.js). Today, eth-fun can't sign payloads. It works best in on-chain
+data extractors like [https://rugpullindex.com](https://rugpullindex.com) and [https://neume.network](https://neume.network). eth-fun is a
+**work-in-progress**.
+
+## Installation
+
+```bash
+$ npm i eth-fun
+```
+
+## Example
+
+### Get the latest block number and fetch information about it
+
+```js
+import { blockNumber, getBlockByNumber } from "eth-fun";
+
+// URL of an Ethereum node
+const options = {
+  url: "https://cloudflare-eth.com",
+};
+
+(async () => {
+  const currentNumber = await blockNumber(options); // latest block
+  const includeTxBodies = false;
+  const block = await getBlockByNumber(options, currentNumber, includeTxBodies);
+  console.log(block); // information about the block
+})();
+```
+
+### Using with caching (node-fetch-cache)
+
+eth-fun supports custom fetch implementations, which allows you to add caching:
+
+```js
+import { blockNumber, getBlockByNumber } from "eth-fun";
+import { fetchBuilder, FileSystemCache } from "node-fetch-cache";
+
+// Create a cached fetch implementation
+const fetch = fetchBuilder.withCache(
+  new FileSystemCache({
+    cacheDirectory: "./cache",
+    ttl: 3600000, // 1 hour
+  })
+);
+
+const options = {
+  url: "https://cloudflare-eth.com",
+  fetch: fetch, // Use the cached fetch
+};
+
+(async () => {
+  // This call will be cached
+  const currentNumber = await blockNumber(options);
+
+  // Subsequent calls will use the cache
+  const block = await getBlockByNumber(options, currentNumber, false);
+})();
+```
+
+Similar to the above used functions i.e. `blockNumber` and `getBlockByNumber`
+eth-fun implements more utility functions to talk with an Ethereum node using
+[JSON RPC](https://ethereum.org/en/developers/docs/apis/json-rpc/).
+
+## API
+
+Visit [API documentation](/eth-fun/api) for a complete list of functions and their examples.
+
+- [`options object`](/eth-fun/api#options-object)
+- [`await getBlockByNumber(options, blockNumber, includeTxBodies)`](/eth-fun/api#await-getblockbynumberoptions-blocknumber-includetxbodies)
+- [`await getTransactionReceipt(options, txId)`](/eth-fun/api#await-gettransactionreceiptoptions-txid)
+- [`await getTransactionByHash(options, txId)`](/eth-fun/api#await-gettransactionbyhashoptions-txid)
+- [`toHex(number)`](/eth-fun/api#tohexnumber)
+- [`fromHex(number)`](/eth-fun/api#fromhexnumber)
+- [`encodeFunctionSignature(selector)`](/eth-fun/api#web3-eth-abi-functions)
+- [`encodeEventSignature(selector)`](/eth-fun/api#web3-eth-abi-functions)
+- [`encodeParameters(typesArray, parameters)`](/eth-fun/api#web3-eth-abi-functions)
+- [`encodeFunctionCall(jsonInterface, parameters)`](/eth-fun/api#web3-eth-abi-functions)
+- [`decodeLog(inputs, data, topics)`](/eth-fun/api#web3-eth-abi-functions)
+- [`decodeParameters(typesArray, parameters)`](/eth-fun/api#decodeparameters)
+- [`async call(options, from, to, data, blockNumber)`](/eth-fun/api#async-calloptions-from-to-data-blocknumber)
+- [`errors object`](/eth-fun/api#errors-object)
+- [`nodes object`](/eth-fun/api#nodes-object)
+- [`async blockNumber(options)`](/eth-fun/api#async-blocknumberoptions)
+- [`async getStorageAt(options, addr, index, blockNumber)`](/eth-fun/api#async-getstorageatoptions-addr-index-blocknumber)
+- [`async getLogs(options, {fromBlock, toBlock, address, topics, limit })`](/eth-fun/api#async-getlogsoptions-fromblock-toblock-address-topics-limit-)
+
+## Examples
+
+- [limit-requests](https://github.com/attestate/eth-fun/tree/main/examples/limit-requests) - An example to demonstrate concurrency so that the RPC endpoint doesn't get choked
+
+## Changelog
+
+Visit [CHANGELOG.md](https://github.com/attestate/eth-fun/blob/main/CHANGELOG.md)
+
+## Tests
+
+You can run the library's tests with `npm run test`, however, do make sure that
+you're on node v14 as this is what the esmock setup sadly still depends on.
+Otherwise, for anything but testing, we're using this library in production
+with node v18.
+
+## Contributing
+
+We love contributions from the community. Find a [good first issue](https://github.com/attestate/eth-fun/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+
+Want to suggest a feature or even better raise a PR for it? Head over to the [issues](https://github.com/attestate/eth-fun/issues).
+
+## References
+
+- [Ethereum JSON-RPC Specification](https://ethereum.github.io/execution-apis/)
+
+## License
+
+See [LICENSE file](https://github.com/attestate/eth-fun/blob/main/LICENSE).
