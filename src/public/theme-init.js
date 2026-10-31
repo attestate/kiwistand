@@ -35,11 +35,12 @@
     }
   } catch (err) {}
 
-  // NOTE: The communities you joined live in this browser (Communities.jsx,
-  // same key). Pages are cached for everyone, so this marks what depends on
-  // them before the first paint: how many there are (the home's side box
-  // keeps room for them) and, on a community's page, whether you joined it
-  // or run it (the header card shows Joined or Invite people right away).
+  // NOTE: Your communities as you last saw them (Communities.jsx, same key:
+  // the node's list with the joins and leaves it doesn't show yet). Pages
+  // are cached for everyone, so this marks what depends on them before the
+  // first paint: how many there are (the home's side box keeps room for
+  // them) and, on a community's page, whether you joined it or run it (the
+  // header card shows Joined or Invite people right away).
   try {
     const root = document.documentElement;
     let joined = JSON.parse(localStorage.getItem('kiwi-communities') || '[]');

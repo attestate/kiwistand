@@ -118,16 +118,86 @@ export function isOwner(community, identity) {
   );
 }
 
-// Your communities: the ones you joined (newest first), then the ones your
-// account runs that aren't among them. A community you run always counts as
-// joined, on every device, even if this browser never joined it.
-export function yourCommunities(joined, owned) {
-  const ids = new Set(joined.map(({ id }) => id));
-  return [...joined, ...owned.filter(({ id }) => !ids.has(id))];
+// Protocol 14.0.0 (src/memberships.mjs): joining and leaving are signed
+// Membership messages (EIP712_MEMBERSHIP in src/constants.mjs), and the node
+// lists your communities, the ones you run included
+// (GET /api/v1/communities?member=). Communities.jsx shows that list with
+// what this browser did since: the joins and leaves it signed that the list
+// doesn't show yet, and the joins it kept before 14.0.0 until it signs them.
+export const MEMBERSHIP_TYPES = {
+  Membership: [
+    { name: "type", type: "string" },
+    { name: "community", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+// A node takes a join or leave only after the community's newest version.
+export function membership(type, community, now = Date.now()) {
+  const version = Number(community.timestamp ?? community.created ?? 0);
+  return {
+    type,
+    community: community.id,
+    timestamp: Math.max(Math.floor(now / 1000), version + 1),
+  };
 }
 
-export function isMember(id, joined, owned) {
-  return yourCommunities(joined, owned).some((c) => c.id === id);
+// How long a signed join or leave waits for the node's list to show it.
+export const PENDING_MS = 10 * 60 * 1000;
+
+// A join or leave this browser did (`signed`, `at` in ms), or a join it kept
+// before 14.0.0 (`signed: false`). Only the newest per community counts.
+export function record(pending, change) {
+  const id = change.community.id;
+  return [...pending.filter(({ community }) => community.id !== id), change];
+}
+
+// Your communities: the node's list, then what this browser did since,
+// oldest first, so the newest join comes first.
+export function withPending(list, pending) {
+  let out = [...list];
+  for (const { type, community } of pending) {
+    out = out.filter(({ id }) => id !== community.id);
+    if (type === "join") out.unshift(community);
+  }
+  return out;
+}
+
+// What's still pending once the node's list is read: not what it shows
+// now, and no signed change it hasn't shown for PENDING_MS. Joins kept from
+// before 14.0.0 wait until they're signed.
+export function settle(list, pending, now = Date.now()) {
+  const ids = new Set(list.map(({ id }) => id));
+  return pending.filter(({ type, community, signed, at }) => {
+    const shown =
+      type === "join" ? ids.has(community.id) : !ids.has(community.id);
+    if (shown) return false;
+    return !signed || now - at < PENDING_MS;
+  });
+}
+
+// The joins this browser kept before 14.0.0 (newest first), as joins to
+// sign (oldest first).
+export function legacyJoins(list) {
+  return [...list]
+    .reverse()
+    .map((community) => ({ type: "join", community, signed: false, at: 0 }));
+}
+
+// Which of the kept joins `identity` signs. The communities it runs need
+// none: their owner is always a member.
+export function toSign(pending, identity) {
+  const kept = pending.filter(({ signed }) => !signed);
+  return {
+    sign: kept.filter(({ community }) => !isOwner(community, identity)),
+    drop: kept.filter(({ community }) => isOwner(community, identity)),
+  };
+}
+
+// "1 member", "1,204 members".
+export function memberCount(members) {
+  const n = Math.max(1, Number(members) || 1);
+  return n === 1 ? "1 member" : `${n.toLocaleString("en-US")} members`;
 }
 
 // Nobody leaves the community they run.

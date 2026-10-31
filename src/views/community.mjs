@@ -34,6 +34,7 @@ import { hasName } from "../hotnames.mjs";
 import {
   colorStyle,
   isAddress,
+  memberCount,
   shortAddress,
   shortName,
 } from "../web/src/communities.mjs";
@@ -71,8 +72,20 @@ export function creatorName(community) {
 // What Communities.jsx needs to draw and remember a community, the icon's
 // path included (the client doesn't have Phosphor's 1,512 icons).
 export function communityData(community) {
-  const { id, name, about, rules, icon, color, owner, ownerName, created } =
-    community;
+  const {
+    id,
+    name,
+    about,
+    rules,
+    icon,
+    color,
+    owner,
+    ownerName,
+    created,
+    timestamp,
+    members,
+    stories,
+  } = community;
   return JSON.stringify({
     id,
     name,
@@ -84,6 +97,9 @@ export function communityData(community) {
     owner,
     ownerName,
     created,
+    timestamp,
+    members,
+    stories,
   });
 }
 
@@ -133,7 +149,8 @@ function HeaderCard(community) {
     </div>
     <div class="cm-card-bottom">
       <span class="cm-meta"
-        >created by${" "}<a href="/upvotes?address=${community.owner}"
+        >${memberCount(community.members)} · created by${" "}<a
+          href="/upvotes?address=${community.owner}"
           >${creatorName(community)}</a
         >${" "}· ${storyCount(community.stories)}</span
       >
@@ -402,7 +419,9 @@ export function renderInvite(theme, community, inviter) {
               ? html`<p class="cm-about">${community.about}</p>`
               : null}
             <span class="cm-meta"
-              >created by ${creatorName(community)}${" "}·${" "}${storyCount(
+              >${memberCount(community.members)} · created by${" "}${creatorName(
+                community,
+              )}${" "}·${" "}${storyCount(
                 community.stories,
               )}</span
             >

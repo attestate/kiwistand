@@ -33,7 +33,6 @@ import {
   Svg,
   UI,
   currentIdentity,
-  join,
 } from "./Communities.jsx";
 import { useSigner } from "./client.mjs";
 import { getLocalAccount } from "./session.mjs";
@@ -330,18 +329,9 @@ export default function NewCommunity({ toast, editKey }) {
       setSaving(false);
       return;
     }
+    // NOTE: No join: the owner is always a member (protocol 14.0.0), so the
+    // node lists the community among yours right away.
     const id = communityId(identity, value.name);
-    join({
-      id,
-      name: value.name,
-      about: value.about,
-      icon: value.icon,
-      path: icons.byName.get(value.icon).path,
-      color: value.color,
-      owner: identity,
-      ownerName: editing?.ownerName ?? null,
-      created: editing?.created ?? timestamp,
-    });
     capture(editing ? "community_edited" : "community_created", {
       community: id,
     });
