@@ -5,7 +5,7 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
-## Unreleased
+## 0.17.0
 
 ### BREAKING CHANGE: Community membership (protocol 14.0.0)
 
