@@ -7,6 +7,22 @@
 
 ## Unreleased
 
+### Communities: read API and feeds (no protocol change)
+
+- `GET /api/v1/communities` (`q`, `owner`, `limit`) lists communities, most
+  active first, and `GET /api/v1/communities/:owner/:key` returns one, or 404.
+- A community's feeds are namespaced by it:
+  `/api/v1/communities/:owner/:key/feeds/hot|new|best` and the rows endpoints
+  under the same path. They're Kiwi News' Hot, New and Best with only the
+  community's stories, ranked with the same rules. An invalid ID is a 400.
+- Kiwi News' feeds (also `/`, `/new` and `/best` on the website) are one
+  feed: they have every story, a community's ones included, ranked as always.
+- Stories in the feeds and from `GET /api/v1/stories` have `community`:
+  `null` or `{id, name, icon, color}`. The cache hands the column on as
+  `communityId`, so the bare ID no longer goes out as `community` anywhere.
+- `/c/<owner>/<key>`: a minimal page for a community's invite links, and
+  `/c/*` in the universal links.
+
 ### Fixes (communities, no protocol change)
 
 - A community's owner is resolved through the delegations when a post is

@@ -23,10 +23,12 @@ const workerRoutes = [
   "/api/v1/karma",
   "/api/v1/feeds",
   "/api/v1/stories",
+  "/api/v1/communities",
   "/",
   "/stories",
   "/best",
   "/community",
+  "/c",
 
   "/about",
   "/passkeys",

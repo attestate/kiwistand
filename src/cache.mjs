@@ -429,6 +429,48 @@ export function listCommunities(delegations = {}, database = db) {
     .sort((a, b) => a.created - b.created || (a.id < b.id ? -1 : 1));
 }
 
+// How many stories each community has and when the newest one came in, by
+// the ID its posts name (`submissions.community`). With `id`, only that
+// community's entry. A community without stories has no entry.
+export function communityActivity(id) {
+  const rows = db
+    .prepare(
+      `SELECT community AS id, COUNT(*) AS stories, MAX(timestamp) AS lastStory
+       FROM submissions
+       WHERE ${id === undefined ? "community IS NOT NULL" : "community = ?"}
+       GROUP BY community`,
+    )
+    .all(...(id === undefined ? [] : [id.toLowerCase()]));
+  return new Map(
+    rows.map(({ id, stories, lastStory }) => [id, { stories, lastStory }]),
+  );
+}
+
+// Which stories a feed reads (communities, protocol 13.0.0). listNewest and
+// getBest take one; without it they read every story, as Kiwi News' feeds
+// do: a community's stories are in them like any other.
+// - inCommunity(id): one community's stories.
+export function inCommunity(id) {
+  return { community: id.toLowerCase() };
+}
+
+function scopeFilter(scope, alias) {
+  if (!scope) return null;
+  if (typeof scope.community === "string") {
+    return { sql: `${alias}.community = ?`, params: [scope.community] };
+  }
+  throw new Error(`Unknown feed scope: ${JSON.stringify(scope)}`);
+}
+
+// NOTE: The `community` column holds the ID a story's submission named.
+// Readers hand it on as `communityId`, so the bare ID never goes out as a
+// story's `community`: the API puts the community object there
+// (src/communities-api.mjs `withCommunities`). Before the column exists
+// (initializeCommunities), it is null.
+function readCommunity({ community, ...row }) {
+  return { ...row, communityId: community ?? null };
+}
+
 export function initializeNotifications() {
   const tableExists = db
     .prepare(
@@ -728,11 +770,12 @@ export function getKarmaRanking() {
   }
 }
 
-export function getBest(amount, from, orderBy, domain, startDatetime) {
+export function getBest(amount, from, orderBy, domain, startDatetime, scope) {
   let orderClause = "upvotesCount DESC";
   if (orderBy === "new") {
     orderClause = "s.timestamp DESC";
   }
+  const filter = scopeFilter(scope, "s");
 
   const query = `
      SELECT
@@ -750,6 +793,7 @@ export function getBest(amount, from, orderBy, domain, startDatetime) {
          s.href GLOB 'https://' || ? || '/*'
        )
        AND (? = 0 OR s.timestamp > ?)
+       ${filter ? `AND ${filter.sql}` : ""}
      GROUP BY
        s.href
      ORDER BY
@@ -759,7 +803,17 @@ export function getBest(amount, from, orderBy, domain, startDatetime) {
 
   const submissions = db
     .prepare(query)
-    .all(domain, domain, domain, startDatetime, startDatetime, amount, from);
+    .all(
+      domain,
+      domain,
+      domain,
+      startDatetime,
+      startDatetime,
+      ...(filter ? filter.params : []),
+      amount,
+      from,
+    )
+    .map(readCommunity);
 
   return submissions.map((submission) => {
     const [, index] = submission.id.split("0x");
@@ -812,7 +866,10 @@ export function getSubmissions(identity, amount, from, orderBy, domains) {
      LIMIT ? OFFSET ?
    `;
 
-  const submissions = db.prepare(query).all(identity, amount, from);
+  const submissions = db
+    .prepare(query)
+    .all(identity, amount, from)
+    .map(readCommunity);
 
   return submissions.map((submission) => {
     const [, index] = submission.id.split("0x");
@@ -836,6 +893,7 @@ export function getUpvotes(identity) {
   const submissions = db
     .prepare(`SELECT * from submissions WHERE identity = ? AND timestamp >= ?`)
     .all(identity, threeWeeksAgo)
+    .map(readCommunity)
     .map((upvote) => ({
       ...upvote,
       index: upvote.id.split("0x")[1],
@@ -1061,6 +1119,7 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
   if (!submission && index) {
     throw new Error(`Couldn't find submission with index: ${index}`);
   }
+  submission = readCommunity(submission);
   // NOTE: The feeds hide a banned profile's stories (moderation.moderate), so
   // the story pages, link preview cards and the app's story API, which pass
   // bannedAddresses, mustn't show them either.
@@ -1233,7 +1292,8 @@ export function getWeekStories(start, end, amount) {
        ORDER BY upvotes * 3 + comments * 2 + clicks DESC, upvotes DESC, timestamp ASC
        LIMIT ?`,
     )
-    .all(start, end, amount);
+    .all(start, end, amount)
+    .map(readCommunity);
   return rows.map(({ id, ...row }) => ({ ...row, index: id.split("0x")[1] }));
 }
 
@@ -1280,15 +1340,27 @@ export function listWeeks({ activity = false } = {}) {
     }));
 }
 
-export function listNewest(limit = 30, lookbackUnixTime) {
+// `scope`: which stories, see inCommunity; without it every story.
+export function listNewest(limit = 30, lookbackUnixTime, scope) {
+  const where = [];
+  const params = [];
+  if (lookbackUnixTime) {
+    where.push("s.timestamp > ?");
+    params.push(lookbackUnixTime);
+  }
+  const filter = scopeFilter(scope, "s");
+  if (filter) {
+    where.push(filter.sql);
+    params.push(...filter.params);
+  }
   const query = `
-     SELECT * FROM submissions
-     ${lookbackUnixTime ? "WHERE timestamp > ?" : ""}
-     ORDER BY timestamp DESC
+     SELECT s.* FROM submissions s
+     ${where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""}
+     ORDER BY s.timestamp DESC
      LIMIT ?
    `;
-  const params = lookbackUnixTime ? [lookbackUnixTime, limit] : [limit];
-  const submissions = db.prepare(query).all(params);
+  params.push(limit);
+  const submissions = db.prepare(query).all(params).map(readCommunity);
 
   const submissionsWithUpvotes = submissions.map((submission) => {
     const upvotes =

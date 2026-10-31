@@ -13,7 +13,13 @@ import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
 import { robotsMeta } from "../indexable.mjs";
 import * as moderation from "./moderation.mjs";
-import { getLastComment, listNewest, countImpressions, lifetimeCache } from "../cache.mjs";
+import {
+  getLastComment,
+  listNewest,
+  countImpressions,
+  lifetimeCache,
+  inCommunity,
+} from "../cache.mjs";
 import Row from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
@@ -58,25 +64,16 @@ export function getCachedHtml() {
   return lifetimeCache.get(HTML_CACHE_KEY);
 }
 
-let inProgress = false;
-// NOTE: A submission that arrives while a recompute is running must not be
-// dropped, so we run once more afterwards.
-let rerun = false;
-export async function recompute() {
-  if (inProgress) {
-    rerun = true;
-    return;
-  }
-  inProgress = true;
+// The stories of /new: the newest 25, a community's ones included. A
+// community's New has as many of its own.
+export const NEW_STORIES = 25;
 
-  try {
-    const limit = 25;
-    let counts = listNewest(limit);
-    const path = "/new";
-    const previousStoriesByIndex = new Map(
-      stories.map((story) => [story.index, story]),
-    );
-
+// What /new shows of `counts` (listNewest rows), newest first: moderated,
+// with the last comment, the submitter's profile, the link preview and
+// impressions. A story whose preview can't be read now keeps the one in
+// `previousStoriesByIndex`.
+async function enrich(counts, previousStoriesByIndex = new Map()) {
+  const path = "/new";
   const [listsResult, writersResult] = await Promise.allSettled([
     moderation.getLists(),
     moderation.getWriters(),
@@ -172,7 +169,43 @@ export async function recompute() {
     }),
   );
 
-    stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
+  return nextStories.sort((a, b) => b.timestamp - a.timestamp);
+}
+
+// A community's New (/api/v1/feeds/new?community=): its newest stories with
+// the enrichment of /new. Computed on each request and kept apart from the
+// cached Kiwi News /new (`stories`, the HTML cache).
+export async function getCommunityStories(community) {
+  return await enrich(
+    listNewest(NEW_STORIES, undefined, inCommunity(community)),
+  );
+}
+
+// Where a community's New ends: the oldest of the stories
+// getCommunityStories shows, or undefined. /api/v1/new/rows pages on from it.
+export function communityCursor(community) {
+  const first = listNewest(NEW_STORIES, undefined, inCommunity(community));
+  return first.length > 0 ? first[first.length - 1].timestamp : undefined;
+}
+
+let inProgress = false;
+// NOTE: A submission that arrives while a recompute is running must not be
+// dropped, so we run once more afterwards.
+let rerun = false;
+export async function recompute() {
+  if (inProgress) {
+    rerun = true;
+    return;
+  }
+  inProgress = true;
+
+  try {
+    const counts = listNewest(NEW_STORIES);
+    const previousStoriesByIndex = new Map(
+      stories.map((story) => [story.index, story]),
+    );
+
+    stories = await enrich(counts, previousStoriesByIndex);
 
     // Pre-render and cache the HTML (same pattern as /best)
     try {

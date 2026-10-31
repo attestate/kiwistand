@@ -26,6 +26,7 @@ import {
   countCommentsBatch,
   countEngagements,
   getBest,
+  inCommunity,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import RightColumn from "./components/right-column.mjs";
@@ -390,10 +391,16 @@ export async function index(
   algorithm = 'control',
   skipAgeFilter = false,
   skipResolve = false,
+  // NOTE: With `community` (its ID), the community's Hot: only its stories,
+  // ranked with the same rules as Kiwi News' Hot. Kiwi News' own picks, the
+  // app curation, predictions and the pinned story, don't apply. Without it,
+  // Kiwi News' Hot, which has every story, a community's ones included.
+  { community } = {},
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
-  let leaves = listNewest(limit, lookbackUnixTime); // Raw leaves for prediction candidates later
+  const scope = community ? inCommunity(community) : undefined;
+  let leaves = listNewest(limit, lookbackUnixTime, scope); // Raw leaves for prediction candidates later
 
   const policy = await moderation.getLists();
   const path = "/";
@@ -438,7 +445,7 @@ export async function index(
   });
 
   // 3. Apply app curation if needed
-  if (appCuration) {
+  if (appCuration && !community) {
     const sheetName = "app";
     let result;
     try {
@@ -559,7 +566,9 @@ export async function index(
 
     // 7. Only people with a name, or enough named upvoters (hotnames.mjs)
     const shown = await Promise.all(
-      stories.map((story) => showInHot(story, (address) => ens.resolve(address))),
+      stories.map((story) =>
+        showInHot(story, (address) => ens.resolve(address)),
+      ),
     );
     stories = stories.filter((_, i) => shown[i]);
   }
@@ -568,7 +577,7 @@ export async function index(
   stories = stories.sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
-  if (page === 0 && paginate && stories.length > 0) {
+  if (page === 0 && paginate && stories.length > 0 && !community) {
     // --- Find the indices of the N oldest stories in the current list ---
     const storiesWithOriginalIndex = stories.map((story, index) => ({
       ...story,
@@ -742,7 +751,7 @@ export async function index(
 
   // 10. Handle pinned story (after potential replacements)
   let pinnedStory;
-  if (policy?.pinned?.length > 0 && page === 0) {
+  if (policy?.pinned?.length > 0 && page === 0 && !community) {
     const pinnedUrl = policy.pinned[0];
     const pinnedIndex = stories.findIndex(
       (story) => {
