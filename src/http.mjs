@@ -24,6 +24,7 @@ import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
 import { checkAdminKey } from "./securityheaders.mjs";
+import { docs } from "./docs.mjs";
 import Row, { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
@@ -291,6 +292,10 @@ app.use(
     },
   }),
 );
+
+// The docs site (docs/, see src/docs.mjs). Before the Early Hints middleware
+// below, whose preloads are the app's CSS and JS, not the docs'.
+app.use("/docs", docs());
 
 // NOTE: The primary process regenerates the sitemaps hourly (launch.mjs). sirv
 // indexes src/public once at startup (including each file's Content-Length),

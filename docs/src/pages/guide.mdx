@@ -1,0 +1,294 @@
+---
+showAskAi: false
+title: How Kiwi News Protocol works
+description: A guide to the Kiwi News Protocol, its Merkle Patricia trie and its set reconciliation algorithm.
+---
+
+# How Kiwi News Protocol works
+
+This document is a guide to understanding the Kiwi News Protocol.
+
+## Overview
+
+Kiwi News is built on an open, permissionless and decentralized peer to peer
+protocol which facilitates:
+
+- asynchronously verifiable distribution of all user-generated content using a [Patricia Merkle trie](https://ethereum.org/en/developers/docs/data-structures-and-encoding/patricia-merkle-trie/).
+- signed EIP-712 messages that let any Ethereum address post and upvote content in the name of its ENS domain, optionally through a delegated key.
+
+### Decentralizing content using a PMT
+
+Kiwi creates a total order over all user-generated messages. It sorts these messages into a Merkle Patricia trie. The trie's root is then gossiped to a p2p mesh network where two nodes with different root hashes start a synchronization process.
+
+### Identity (formerly NFT-based sybil-resistance)
+
+Until version 0.12.0, a node only accepted messages whose signer had minted the "Hyperkiwification" NFT at [oeth:0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45](https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45) (or a key delegated by such an address). 0.12.0 removed that requirement: any address can sign messages for itself, and a key delegated through [delegator2](https://github.com/attestate/delegator2) signs in the name of the delegating address.
+
+## Introducing Set Reconciliation
+
+In a peer to peer network, libraries like ChainSafe's [js-libp2p-gossipsub](https://github.com/ChainSafe/js-libp2p-gossipsub) make it trivial to create a mesh network of nodes and share messages in a publish and subscribe pattern.
+
+So, assuming all nodes have perfect internet connections, using such library we could effortlessly create a peer to peer network where all nodes stay "[live](https://en.wikipedia.org/wiki/Safety_and_liveness_properties)" by subscribing to a topic and by adding all messages in order to their database.
+
+And in this "perfect internet connection" scenario, where every node has a perfectly-ordered stream of incoming messages, we would hence assume that all nodes are always reaching the same state.
+
+However, the reality is far from this with nodes regularly losing internet connections, crashing due to bugs and so on. Hence, while we can leverage the above-mentioned gossip subscription mechanism to keep nodes synchronized - when something goes wrong, we want to fall back on a strategy that allows offline nodes to catch up.
+
+Consider the situation depicted in [Figure 1](#figure-1), step 1. "Node A" (blue) has transitioned from `state: 0` to `state: 1` and is now broadcasting the transition as a message (blue envelope) to all other nodes.
+
+<figure id="figure-1" className="kiwi-figure">
+  <img src="/docs/figures/network-message-0.svg" alt="Node A broadcasts its transition from state 0 to state 1 to all other nodes" />
+  <figcaption>Figure 1</figcaption>
+</figure>
+
+But, as we can see in step 2, "Node B" is currently offline and so it will not transition to `state: 1`, while all other nodes do. For the network, and "Node B" this starts to become a problem as past messages aren't rebroadcast and since it can therefore not catch up to its peers.
+
+<figure id="figure-2" className="kiwi-figure">
+  <img src="/docs/figures/network-message-1.svg" alt="Node B comes back online but cannot transition from state 0 to state 2" />
+  <figcaption>Figure 2</figcaption>
+</figure>
+
+[Figure 2](#figure-2) shows this problematic. "Node A" does a transition from `state: 1` to `state: 2`, and in step 3, again sends out a transition message (pink envelope). But this time (step 4), while "Node B" can receive the message now (has come back online), it cannot transition directly from `state: 0` to `state: 2` as `state: 1` is missing.
+
+That's why we don't consider just broadcasting messages a sufficient strategy for building a peer-to-peer network keeping data available.
+
+For example, crypto currencies, for that reason, all implement a widely-used mechanism to synchronize nodes back to the current state when having been offline. We refer to this algorithm as "set reconciliation." We're introducing it here as Kiwi News Protocol integrates one using a Merkle Patricia Tree.
+
+However, for the sake of explaining it, we'll now first run through a set reconciliation using a bitmap for keeping track of messages. In a following section, we'll then explain set reconciliation using Merkle trees.
+
+### A Naive Set Reconciliation algorithm
+
+First, consider that there is a fixed-length set of messages and a hash function
+that we're using to determine the identity of each message ([Figure 3](#figure-3)), where, for example:
+
+- `hash("A") == 0x0`
+- `hash("B") == 0x1`
+- ...
+
+and so on.
+
+<figure id="figure-3" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-hash.svg" alt="Messages A to F and their identities 0x0 to 0x5" />
+  <figcaption>Figure 3</figcaption>
+</figure>
+
+Hence, a set consists of messages "A", "B", ... "F" and their hexa-decimal identities `0x0`, `0x1`, ... `0x5`. For the sake of demonstration, we assume that there cannot be any other identities or messages.
+
+Which now makes this a great place to introduce the idea of the set reconciliation algorithm, which is quite literally the attempt of "reconciling" the distributed members of a set.
+
+In our scenario ([Figure 4](#figure-4)), we have two nodes ("Node A," and "Node B") which each store the incomplete set of messages with our task being to now "reconcile" these members such that each node contains all messages "A" to "F".
+
+<figure id="figure-4" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-schema.svg" alt="Node A and Node B each store an incomplete set of messages, mapped in a bitmap" />
+  <figcaption>Figure 4</figcaption>
+</figure>
+
+In [Figure 4](#figure-4), we also see the idea of mapping all messages' identities flags in a bitmap. This bitmap works by setting a flag at the respective location in the bitmap such as to indicate a message's existence in the node's database ([Figure 5](#figure-5)).
+
+<figure id="figure-5" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-bitmap.svg" alt="A bitmap with a flag per message identity" />
+  <figcaption>Figure 5</figcaption>
+</figure>
+
+#### Step-by-step walk-through
+
+Hence, with these primitives in place, we'll now do a step-by-step walk-through the
+algorithm, our goal being, to bring both nodes back into synchronization.
+
+In step 1, as outlined already in [Figure 4](#figure-4):
+
+- "Node A" stores messages "A", "B", "C" and "D", whereas
+- "Node B" stores messages "E" and "F".
+
+<figure id="figure-6" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-algo.svg" alt="The steps of the bitmap set reconciliation between Node A and Node B" />
+  <figcaption>Figure 6</figcaption>
+</figure>
+
+Steps:
+
+1. The algorithm starts with one node kicking off the process in step 1 ([Figure 6](#figure-6)) by "Node A" sending over their initial bitmap to "Node B." "Node B" then compares the received bitmap with its own local bitmap and finds that messages "E" and "F" are missing from "Node A"'s database.
+2. In step 2, "Node B" therefore sends "E" and "F" to "Node A."
+3. And "Node B" then also sends its own Bitmap in step 3 to "Node A," where it essentially does the same comparison to find that messages "A", "B", "C" and "D" are missing from "Node B".
+4. So "Node A" now sends the missing messages to "Node B".
+5. After some timeout, the process is then repeated, but "Node A" and "Node B" will find that their bitmaps match, and so no further synchronization of messages is deemed necessary.
+
+Now, considering this algorithm's simplicity, it naturally comes with rather significant drawbacks. And going through them in the following paragraphs will help us understand why using bitmaps to synchronize nodes over networks isn't a great idea.
+
+#### Drawbacks of bitmaps
+
+- Message sets are usually user-defined, meaning we cannot predict the set's size when constructing the algorithm, so assuming a fixed-length set size isn't practical.
+- Modern hash functions like keccak-256 produce an output between 0 and 2<sup>256</sup> - 1 which would make a bitmap of their size incredibly huge and impractical to share between nodes over a network. In fact, it would be significantly more bandwidth efficient to re-download each node's entire database on each re-synchronization.
+- But even more storage-efficient implementations of bitmaps, as for example, bloom filters don't work well as they are probabilistic (they can have false positives) and since they potentially require the remote node to re-validate its entire database upon synchronization.
+
+Hence, for set reconciliation, we favor a data structure that is deterministic and doesn't have over-linear complexity growth: Merkle trees.
+
+## Using Merkle Trees for Set Reconciliation
+
+Let's now consider an example that models the Kiwi News Protocol set reconciliation algorithm as close as possible.
+
+:::note
+To not use the term "node" twice, we refer to a Merkle tree's nodes as "nodes" whereas we refer to a peer-to-peer node as a "peer".
+:::
+
+We assume that there is a set of 8 or more messages, with the initial ones being "A", "B", ... "H". We also consider there to be the above-introduced hash function `hash("A") == 0x0`, `hash("B") == 0x1` etc.
+
+However, the data structure we're now using is a Merkle trie where a message is inserted at a leaf's location based on its identity, with "A" being the left most leaf as its identity is `0x0`, "B" being the second left most leaf (`0x1`) and so on.
+
+:::note
+We call the highest node in the tree the "root." We may refer to any node as a "node," but we only refer to the lowest nodes as "leaves."
+:::
+
+```mermaid
+graph TD
+    A_0[A<sub>0</sub><br>0xuvw] --> A_1,1[A<sub>1,1</sub><br>0xdef]
+    A_0 -->    A_1,2[A<sub>1,2</sub><br>0xopq]
+    A_1,1 -->  A_2,1[A<sub>2,1</sub><br>0xjkl]
+    A_1,1 -->  A_2,2[A<sub>2,2</sub><br>0xlmn]
+    A_2,1 -->  A("A"<br>0x0)
+    A_2,1 -->  B("B"<br>0x1)
+    A_2,2 -->  C("C"<br>0x2)
+    A_2,2 -->  D("D"<br>0x3)
+    A_1,2 -->  E("E"<br>0x4)
+    A_1,2 -->  F("F"<br>0x5)
+```
+
+Then, let's assume that this "Tree A" is on "Peer A" and that there is a different "Tree B" on "Peer B". "Peer A"'s tree has only messages from "A" to F", so it is behind and needs to synchronize. Below is a visualization "Peer B"'s tree.
+
+```mermaid
+graph TD
+    B_0[B<sub>0</sub><br>0xabc] --> B_1,1[B<sub>1,1</sub><br>0xdef]
+    B_0 -->    B_1,2[B<sub>1,2</sub><br>0xghi]
+    B_1,1 -->  B_2,1[B<sub>2,1</sub><br>0xjkl]
+    B_1,1 -->  B_2,2[B<sub>2,2</sub><br>0xlmn]
+    B_1,2 -->  B_2,3[B<sub>2,3</sub><br>0xopq]
+    B_1,2 -->  B_2,4[B<sub>2,4</sub><br>0xprs]
+    B_2,1 -->  A("A"<br>0x0)
+    B_2,1 -->  B("B"<br>0x1)
+    B_2,2 -->  C("C"<br>0x2)
+    B_2,2 -->  D("D"<br>0x3)
+    B_2,3 -->  E("E"<br>0x4)
+    B_2,3 -->  F("F"<br>0x5)
+    B_2,4 -->  G("G"<br>0x6)
+    B_2,4 -->  H("H"<br>0x7)
+
+    style B_0 fill:#FF3399,color:#000
+    style B_1,1 fill:#FF3399,color:#000
+    style B_2,1 fill:#FF3399,color:#000
+    style B_2,2 fill:#FF3399,color:#000
+    style B_1,2 fill:#FF3399,color:#000
+    style B_2,3 fill:#FF3399,color:#000
+    style B_2,4 fill:#FF3399,color:#000
+    style A fill:#FF3399,color:#000
+    style B fill:#FF3399,color:#000
+    style C fill:#FF3399,color:#000
+    style D fill:#FF3399,color:#000
+    style E fill:#FF3399,color:#000
+    style F fill:#FF3399,color:#000
+    style G fill:#FF3399,color:#000
+    style H fill:#FF3399,color:#000
+```
+
+To visualize the process within a peer to peer network, it is now useful to consider a mesh of nodes where "Peer A" (but also all other peers) periodically broadcast their latest tree root hash to all other peers ([Figure 7](#figure-7)).
+
+<figure id="figure-7" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-broadcast.svg" alt="Peer A broadcasts its tree root hash to all other peers, which compare it with their own" />
+  <figcaption>Figure 7</figcaption>
+</figure>
+
+As can be seen on the right of [Figure 7](#figure-7), each peer will then internally compare the received tree root hash with the local tree hash, but in our example only "Peer B" will find that its tree root hash is different from "Peer A".
+
+### Comparing trees level by level
+
+We're now ready to go into the details of the reconciliation algorithm as a sequence of events.
+
+Below ([Figure 8](#figure-8)) we can see in step 1 how "Peer A" broadcasts its Merkle tree root and how "Peer B" internally compares it to its root hash (a repetition of what we just saw).
+
+<figure id="figure-8" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-merkle-1-2.svg" alt="Steps 1 to 3: Peer B compares Peer A's root and sends its level 1 nodes for comparison" />
+  <figcaption>Figure 8</figcaption>
+</figure>
+
+:::note
+In case you're wondering, we're not showing the entire tree in these sequence diagrams (e.g. [Figure 8](#figure-8)). Instead, we're only showing the parts of the tree that are currently relevant for the comparison.
+:::
+
+Through carefully observing the payload that "Peer B" then sends to "Peer A", we can also understand the algorithm: Namely that upon comparing the root nodes (A<sub>0</sub> and B<sub>0</sub>), "Peer B" then descends a level deeper in the trie and sends the level 1 nodes B<sub>1,1</sub> and B<sub>1,2</sub> to "Peer A" for comparison. As can be seen in step 2, "Peer A" then compares the level 1 nodes of "Peer B", and it finds that A<sub>1,2</sub> (`0xopq`) and B<sub>1,2</sub> (`0xghi`) have different hashes, while A<sub>1,1</sub> (`0xdef`) and B<sub>1,1</sub> are the same.
+
+In step 3, "Peer A" then sends the comparison information back and both nodes mark the subtree with root A<sub>1,1</sub> or B<sub>1,1</sub> as finalized. See below:
+
+```mermaid
+graph TD
+    B_0[B<sub>0</sub><br>0xabc] --> B_1,1[B<sub>1,1</sub><br>0xdef]
+    B_0 -->    B_1,2[B<sub>1,2</sub><br>0xghi]
+    B_1,1 -->  B_2,1[B<sub>2,1</sub><br>0xjkl]
+    B_1,1 -->  B_2,2[B<sub>2,2</sub><br>0xlmn]
+    B_1,2 -->  B_2,3[B<sub>2,3</sub><br>0xopq]
+    B_1,2 -->  B_2,4[B<sub>2,4</sub><br>0xprs]
+    B_2,1 -->  A("A"<br>0x0)
+    B_2,1 -->  B("B"<br>0x1)
+    B_2,2 -->  C("C"<br>0x2)
+    B_2,2 -->  D("D"<br>0x3)
+    B_2,3 -->  E("E"<br>0x4)
+    B_2,3 -->  F("F"<br>0x5)
+    B_2,4 -->  G("G"<br>0x6)
+    B_2,4 -->  H("H"<br>0x7)
+
+    style B_0 fill:#FF3399,color:#000
+    style B_1,1 fill:#33FF99,color:#000
+    style B_2,1 fill:#33FF99,color:#000
+    style B_2,2 fill:#33FF99,color:#000
+    style B_1,2 fill:#FF3399,color:#000
+    style A fill:#33FF99,color:#000
+    style B fill:#33FF99,color:#000
+    style C fill:#33FF99,color:#000
+    style D fill:#33FF99,color:#000
+    style E fill:#33FF99,color:#000
+    style F fill:#33FF99,color:#000
+    style B_2,3 fill:#33FF99,color:#000
+    style B_2,4 fill:#FF3399,color:#000
+    style G fill:#FF3399,color:#000
+    style H fill:#FF3399,color:#000
+```
+
+It's noteworthy that this creates an efficiency where now most of the tree doesn't have to be verified anymore by both peers (the green part). Hence less messages are required to be sent over the network and less compute is used on comparing leaves that are anyways already synchronized. It's important, because if we think back to the section of the "naive" bitmap example, then saving bandwidth and keeping payloads small were its main drawbacks.
+
+But let's dive deeper into the actual comparison algorithm as it'll become more important to fully understand the process, because in step 3 of [Figure 8](#figure-8) we introduced a complex situation where the B<sub>2,3</sub> subtree mismatches (its hash: `0xopq`) with A<sub>1,2</sub> (same hash: `0xopq`). So the hashes are the same, but the respective locations of the nodes are different.
+
+### Resolving conflicting subtrees
+
+To resolve conflicting subtrees, we categorize three different types of comparisons. In all cases nodes arrive from "Peer B" (the remote peer) to "Peer A" (the local peer) (step 2 of [Figure 8](#figure-8)). Here's how "Peer A" handles incoming nodes ([Figure 9](#figure-9)):
+
+1. We look up the node's hash in the local tree. If it exists, we label it a "match". We also inform the remote peer of the match. We won't descend into that part of the sub tree anymore since we know that all leaves are equal.
+2. If we don't find the node's hash in the local tree, but in its place there exists a different node, we label it a "mismatch" but we don't act on this finding.
+3. Finally, if we neither find a node via its hash or in its place, then we consider it "missing". In case that missing node is a leaf, and we received it for comparison, we add it to our local tree and update all of that subtree's hashes.
+
+<figure id="figure-9" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-resolving.svg" alt="The three comparison outcomes: match, mismatch and missing" />
+  <figcaption>Figure 9</figcaption>
+</figure>
+
+:::note
+The above section appears to be rather complex but it really isn't if we mentally consider a few principles:
+
+1. A matching node always means that both remote and local tree are in sync for a sub-tree.
+2. The tree library is very powerful and can re-order the tree deterministically such that we will arrive at the same root hash if we just manage to insert all the missing leaves.
+:::
+
+### Finalizing the synchronization
+
+OK, now for the final part, which doesn't contain any new mechanism we would have to introduce. Instead, this is now a repetition of what we've already seen. In [Figure 10](#figure-10), "Peer B" sends B<sub>2,3</sub> and B<sub>2,4</sub>. "Peer A" will look for B<sub>2,3</sub>'s hash (`0xopq`) and actually recognize it as A<sub>1,2</sub> (a "match"). B<sub>2,4</sub>, however, won't be found through its hash and at its position is A's "F" (a "mismatch"). Hence only the children of B<sub>2,4</sub> are then left to compare.
+
+<figure id="figure-10" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-merkle-2-3.svg" alt="Peer B sends its level 2 nodes; one matches and one mismatches" />
+  <figcaption>Figure 10</figcaption>
+</figure>
+
+In [Figure 11](#figure-11), step 5, "Peer B" sends the leaves "G" and "H" to "Peer A." "Peer A" recognizes them as "missing" as they can neither be found through their hash, and since there are also no other nodes in their places.
+
+<figure id="figure-11" className="kiwi-figure">
+  <img src="/docs/figures/set-recon-merkle-3-4.svg" alt="Peer B sends leaves G and H, which Peer A adds to its tree" />
+  <figcaption>Figure 11</figcaption>
+</figure>
+
+In step 6, "Peer A" therefore adds messages "G" and "H" to their own tree, in turn updating a large part of its tree's hashes. The root hashes of tree A and B are now equal and the synchronization is completed.

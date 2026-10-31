@@ -52,6 +52,7 @@ const workerRoutes = [
   "/weekly",
   "/whattosubmit",
   "/welcome",
+  "/docs",
   "/profile",
   "/upvotes",
   "/submit",

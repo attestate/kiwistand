@@ -1,0 +1,46 @@
+---
+showAskAi: false
+title: Introduction
+description: Docs for the Kiwi News Protocol and kiwistand, the node that runs Kiwi News.
+---
+
+import { Card, Cards } from 'vocs'
+
+# Kiwi News Docs
+
+[kiwistand](https://github.com/attestate/kiwistand) is a p2p node client for a
+web3 writer friendly Hacker News that nobody controls but everybody co-owns.
+It runs [Kiwi News](https://news.kiwistand.com).
+
+These docs describe the Kiwi News Protocol that kiwistand nodes speak and the
+node's HTTP API.
+
+## Kiwi News Protocol
+
+<Cards>
+  <Card
+    title="How the protocol works"
+    description="A guide to the protocol: signed messages, the Merkle Patricia trie and set reconciliation."
+    to="/guide"
+  />
+  <Card
+    title="Protocol"
+    description="The specification: message IDs, message types and communities."
+    to="/protocol"
+  />
+  <Card
+    title="HTTP API"
+    description="Listing and adding messages through a node's REST API."
+    to="/http-api"
+  />
+  <Card
+    title="Delegation"
+    description="Signing messages with a delegated key."
+    to="/delegation"
+  />
+  <Card
+    title="Changelog"
+    description="Releases of kiwistand and their breaking changes."
+    to="/changelog"
+  />
+</Cards>
