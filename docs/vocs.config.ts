@@ -1,23 +1,45 @@
 import { defineConfig } from 'vocs/config'
 
-// Served at https://news.kiwistand.com/docs by a Cloudflare Worker, see
-// README.md and wrangler.jsonc.
+// The docs of kiwistand, served by the node itself at
+// https://news.kiwistand.com/docs (src/docs.mjs). They look like the rest of
+// the site: its colours, fonts, wordmark and favicon (see src/pages/_root.css).
 export default defineConfig({
   title: 'Kiwi News Docs',
-  description:
-    'Docs for the Kiwi News Protocol, the kiwistand node, and the attestate libraries it is built with.',
+  description: 'Docs for the Kiwi News Protocol and kiwistand, the node that runs Kiwi News.',
   basePath: '/docs',
   baseUrl: 'https://news.kiwistand.com',
-  // Vocs adds <base href={baseUrl}> by default. Under a basePath that sends
-  // in-page anchors to the site root, so leave it out.
-  head: { base: false },
-  // Vocs writes sitemap.xml and robots.txt without the basePath, and a
+  renderStrategy: 'full-static',
+  // The lime of the site (--kn-accent in src/public/news.css).
+  accentColor: '#D4EC37',
+  // The site's "kiwi news" wordmark (src/views/components/header.mjs) in its
+  // light and dark colours. Vocs doesn't add the base path to these.
+  logoUrl: { light: '/docs/wordmark-light.svg', dark: '/docs/wordmark-dark.svg' },
+  // The site's own favicon; the docs are served from the same origin.
+  iconUrl: '/favicon.ico',
+  head: {
+    // Vocs adds <base href={baseUrl}> by default. Under a base path that sends
+    // in-page anchors to the site root, so leave it out.
+    base: false,
+    link: [
+      // Inter, as the site loads it (src/views/components/head.mjs).
+      { rel: 'stylesheet', href: '/fonts/inter.css' },
+      ...['Regular', 'SemiBold', 'Bold'].map(
+        (weight) =>
+          ({
+            rel: 'preload',
+            href: `/fonts/Inter-${weight}-latin.woff2`,
+            as: 'font',
+            type: 'font/woff2',
+            crossorigin: 'anonymous',
+          }) as const,
+      ),
+    ],
+    // Points the wordmark at / instead of the docs home (see the file).
+    script: [{ src: '/docs/wordmark.js', defer: true }],
+  },
+  // Vocs writes sitemap.xml and robots.txt without the base path, and a
   // robots.txt under /docs isn't read by crawlers anyway.
   sitemap: false,
-  renderStrategy: 'full-static',
-  // Vocs doesn't prefix these with basePath, nor Markdown image paths.
-  logoUrl: { light: '/docs/logo-light.png', dark: '/docs/logo-dark.png' },
-  iconUrl: '/docs/favicon.ico',
   editLink: {
     link: (filePath) =>
       filePath === 'changelog.md'
@@ -29,20 +51,10 @@ export default defineConfig({
     {
       text: 'Protocol',
       link: '/guide',
-      match: (path) =>
-        ['/guide', '/protocol', '/http-api', '/delegation'].some((p) => path?.startsWith(p)),
+      match: (path) => ['/guide', '/protocol', '/delegation'].some((p) => path?.startsWith(p)),
     },
-    {
-      text: 'Libraries',
-      items: [
-        { text: 'crawler', link: '/crawler' },
-        { text: 'crawler-call-block-logs', link: '/crawler-call-block-logs' },
-        { text: 'delegator2', link: '/delegator' },
-        { text: 'eth-fun', link: '/eth-fun' },
-      ],
-    },
+    { text: 'HTTP API', link: '/http-api' },
     { text: 'Changelog', link: '/changelog' },
-    { text: 'Kiwi News', link: 'https://news.kiwistand.com', external: true },
   ],
   sidebar: [
     { text: 'Introduction', link: '/' },
@@ -56,41 +68,5 @@ export default defineConfig({
       ],
     },
     { text: 'Changelog', link: '/changelog' },
-    {
-      text: 'Libraries',
-      items: [
-        {
-          text: 'crawler',
-          link: '/crawler',
-          collapsed: true,
-          items: [
-            { text: 'Use cases', link: '/crawler/use-cases' },
-            { text: 'Extract, transform, load', link: '/crawler/extract-transform-load' },
-            { text: 'Getting started', link: '/crawler/getting-started' },
-            { text: 'Configuration', link: '/crawler/configuration' },
-            { text: 'JavaScript usage', link: '/crawler/javascript-usage' },
-            { text: 'Command line interface', link: '/crawler/command-line-interface' },
-            { text: 'Extraction worker', link: '/crawler/extraction-worker' },
-            { text: 'Strategy specification', link: '/crawler/strategy-specification' },
-          ],
-        },
-        {
-          text: 'crawler-call-block-logs',
-          link: '/crawler-call-block-logs',
-          collapsed: true,
-          items: [
-            { text: 'Usage', link: '/crawler-call-block-logs/usage' },
-            { text: 'Reference', link: '/crawler-call-block-logs/reference' },
-          ],
-        },
-        { text: 'delegator2', link: '/delegator' },
-        {
-          text: 'eth-fun',
-          link: '/eth-fun',
-          collapsed: true,
-          items: [{ text: 'API', link: '/eth-fun/api' }],
-        },
-      ],
-    },
   ],
 })

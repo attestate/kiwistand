@@ -7,8 +7,7 @@
     "predev": "node scripts/changelog.mjs",
     "dev": "vocs dev",
     "prebuild": "node scripts/changelog.mjs",
-    "build": "vocs build && node scripts/postbuild.mjs",
-    "preview": "wrangler dev"
+    "build": "vocs build && node scripts/postbuild.mjs"
   },
   "dependencies": {
     "mermaid": "11.17.2",
@@ -23,7 +22,6 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "typescript": "5.9.3",
-    "vite": "8.3.4",
-    "wrangler": "4.151.1"
+    "vite": "8.3.4"
   }
 }

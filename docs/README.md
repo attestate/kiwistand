@@ -1,11 +1,11 @@
 # Docs
 
-The docs site at [news.kiwistand.com/docs](https://news.kiwistand.com/docs),
-built with [Vocs](https://vocs.dev). It covers the Kiwi News Protocol, the
-node's HTTP API, the changelog, and attestate's libraries (crawler,
-crawler-call-block-logs, delegator2, eth-fun).
+The docs at [news.kiwistand.com/docs](https://news.kiwistand.com/docs): the
+Kiwi News Protocol, the node's HTTP API and the changelog. They're built with
+[Vocs](https://vocs.dev) into static files, and kiwistand serves them itself
+(`src/docs.mjs`).
 
-This folder is its own npm package: its dependencies don't touch the app's
+This folder is its own npm package, so its dependencies don't touch the app's
 `package.json`.
 
 ## Run it locally
@@ -15,24 +15,30 @@ cd docs
 npm ci
 npm run dev       # http://localhost:5173/docs/
 npm run build     # static site in dist/public
-npm run preview   # serves dist/public with wrangler, as Cloudflare does: http://localhost:8787/docs/
 ```
+
+To see the build as production serves it, run `npm run build:docs` in the
+repository root and start kiwistand as usual, then open
+`http://localhost:<HTTP_PORT>/docs/`.
+
+The fonts and the favicon are the site's own (`/fonts/…`, `/favicon.ico`), so
+`npm run dev` shows them only when kiwistand serves the docs; on its own it
+falls back to Arial. The build warns that the `/fonts/…` URLs in
+`_root.css` "didn't resolve at build time"; that's expected.
 
 ## Layout
 
 - `src/pages/`: one `.mdx` file per page. The URL is the path without the
-  extension, e.g. `src/pages/crawler/configuration.mdx` is
-  `/docs/crawler/configuration`.
+  extension: `src/pages/http-api.mdx` is `/docs/http-api`.
 - `src/pages/changelog.md` is generated from the repository's
   `changelog.md` by `scripts/changelog.mjs` before `dev` and `build`, and is
   gitignored. Edit `../changelog.md` instead.
-- `src/pages/_root.css`: the few styles of our own (figures, the video).
-- `public/`: files served as they are: the logo, the favicon and the
+- `src/pages/_root.css`: the site's look (see below) and the figures' style.
+- `public/`: files served as they are: the wordmark, `wordmark.js` and the
   protocol figures in `public/figures/`.
-- `vocs.config.ts`: title, sidebar, top navigation, base path.
+- `vocs.config.ts`: title, sidebar, top navigation, base path, colours.
 - `scripts/postbuild.mjs`: adjusts the build for serving under `/docs`, see
   below.
-- `wrangler.jsonc`: the Cloudflare Worker that serves the site.
 
 ## Writing pages
 
@@ -48,57 +54,45 @@ npm run preview   # serves dist/public with wrangler, as Cloudflare does: http:/
 - Callouts are `:::note`, `:::warning`, `:::tip` and `:::danger` blocks.
   Mermaid diagrams are ```` ```mermaid ```` code blocks.
 
-The pages for the libraries are copies of the docs in their own
-repositories, as of their `main` branch on 2026-10-31. A change there
-doesn't show up here by itself.
+## The look
 
-## Hosting
+The docs use the site's design rather than Vocs's defaults:
 
-The site is static. A Cloudflare Worker with static assets and no script
-serves `dist/public` on the route `news.kiwistand.com/docs*`. All other paths
-on news.kiwistand.com keep going to the node, and the more specific route
-takes precedence over a Worker on `news.kiwistand.com/*`.
+- Colours: the `--kn-*` tokens of `src/public/news.css`, light and dark,
+  mapped onto Vocs's variables in `_root.css`, with the lime
+  (`#D4EC37`) as Vocs's accent colour.
+- Fonts: Inter from the site's `/fonts/inter.css`, with the site's Arial
+  fallback metrics, and JetBrains Mono for code.
+- The "kiwi news" wordmark: `public/wordmark-light.svg` and
+  `public/wordmark-dark.svg` are the paths of
+  `src/views/components/header.mjs` in the text colour and the wordmark
+  green. If the wordmark changes, regenerate them.
+- The favicon is the site's `/favicon.ico`.
+- The wordmark links to `/`, as everywhere on the site. Vocs links its logo
+  to the docs home and has no setting for it, so `public/wordmark.js`
+  redirects those links.
 
-Two things in the build are specific to the base path:
+## How it's served and deployed
 
-- The HTML links to `/docs/...`, while the files sit at the root of
-  `dist/public`. `assets.base_path: "/docs"` in `wrangler.jsonc` maps one
-  onto the other (needs wrangler 4.148.0 or later).
-- The client-side router needs the home page at `/docs/` with a trailing
-  slash, while Vocs links every other page without one. So
-  `scripts/postbuild.mjs` moves each `<page>/index.html` to `<page>.html`,
-  and Cloudflare's default `auto-trailing-slash` handling then serves
-  `/docs/` and `/docs/protocol`, and redirects `/docs` and `/docs/protocol/`
-  to them. It also adds `/docs` to the links in `llms.txt` and
-  `llms-full.txt`.
-
-### Setting it up in Cloudflare
-
-Deploys run on Cloudflare's Workers Builds. To connect it once:
-
-1. In the Cloudflare dashboard, go to **Workers & Pages** and click
-   **Create application**.
-2. Choose **GitHub**, authorize it if asked, and pick `attestate/kiwistand`.
-3. Configure the project:
-   - **Project name:** `kiwistand-docs`. It must match `name` in
-     `wrangler.jsonc`, or the build fails.
-   - **Root directory:** `docs`
-   - **Build command:** `npm run build`
-   - **Deploy command:** `npx wrangler deploy` (the default)
-   - **Production branch:** `main`
-4. Click **Save and Deploy**.
-
-Workers Builds installs the dependencies from `package-lock.json` and uses
-Node 22 from `.node-version`. On deploy, wrangler creates the route
-`news.kiwistand.com/docs*` on the `kiwistand.com` zone from
-`wrangler.jsonc`; the API token Workers Builds generates by default may edit
-Workers Routes. `workers_dev` is off, so the site isn't also published on a
-`*.workers.dev` URL.
-
-After that, every push to `main` rebuilds and deploys the docs. If the build
-settings offer build watch paths, set them to `docs/*` and `changelog.md` so
-that other pushes don't rebuild the docs.
-
-To check the setup: `https://news.kiwistand.com/docs` should redirect to
-`/docs/` and show the docs, and `https://news.kiwistand.com/` should still
-show Kiwi News.
+- `src/docs.mjs` serves `docs/dist/public` at `/docs`. `/docs` redirects to
+  `/docs/`, which serves `index.html`; `/docs/<page>` serves `<page>.html`;
+  `/docs/<page>/` redirects to `/docs/<page>`; unknown paths get the build's
+  `404.html` with status 404. Without a build every `/docs` path is a plain
+  404.
+- Why `<page>.html`: Waku's client router needs the home page at `/docs/`
+  with a slash, while Vocs links every other page without one.
+  `scripts/postbuild.mjs` moves each `<page>/index.html` to `<page>.html`.
+  It also adds `/docs` to the links in `llms.txt` and `llms-full.txt`.
+- Caching: pages and the router's `RSC/` payloads
+  `public, s-maxage=3600, max-age=0, stale-while-revalidate=86400`; the
+  hashed files in `assets/` like the site's `/assets`; other files a day.
+  Static files only get these headers when `NODE_ENV=production`, as on the
+  rest of the site.
+- The load balancer sends `/docs` to the workers, like the site's other
+  pages.
+- Deploys build the docs: `.github/workflows/deploy.yml` and
+  `npm run deploy` run `npm run build:docs` (`npm ci` and `npm run build`
+  here), and `scripts/deploy-files.mjs` ships `docs/dist/public`. It refuses
+  to deploy without it. The server doesn't build anything. As rsync runs
+  without `--delete`, a page that's removed stays on the server until it's
+  deleted there.

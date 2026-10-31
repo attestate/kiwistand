@@ -22,7 +22,7 @@ Kiwi creates a total order over all user-generated messages. It sorts these mess
 
 ### Identity (formerly NFT-based sybil-resistance)
 
-Until version 0.12.0, a node only accepted messages whose signer had minted the "Hyperkiwification" NFT at [oeth:0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45](https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45) (or a key delegated by such an address). 0.12.0 removed that requirement: any address can sign messages for itself, and a key delegated through [delegator2](/delegator) signs in the name of the delegating address.
+Until version 0.12.0, a node only accepted messages whose signer had minted the "Hyperkiwification" NFT at [oeth:0x66747bdC903d17C586fA09eE5D6b54CC85bBEA45](https://optimistic.etherscan.io/address/0x66747bdc903d17c586fa09ee5d6b54cc85bbea45) (or a key delegated by such an address). 0.12.0 removed that requirement: any address can sign messages for itself, and a key delegated through [delegator2](https://github.com/attestate/delegator2) signs in the name of the delegating address.
 
 ## Introducing Set Reconciliation
 

@@ -3,11 +3,11 @@
 // so a deploy from a laptop sends exactly what CI sends.
 //
 // The list is every file git tracks (`git ls-files`) plus the outputs of
-// `npm run build`, minus a few tracked paths production doesn't need
-// (EXCLUDED). Untracked and gitignored files (.env, .keys.json, keys, editor
-// and agent histories, ...) are never in it. rsync runs with --files-from and
-// without --delete, so server-only files (.env, .keys.json, data/, cache/, ...)
-// are never touched.
+// `npm run build` and `npm run build:docs`, minus a few tracked paths
+// production doesn't need (EXCLUDED). Untracked and gitignored files (.env,
+// .keys.json, keys, editor and agent histories, ...) are never in it. rsync
+// runs with --files-from and without --delete, so server-only files (.env,
+// .keys.json, data/, cache/, ...) are never touched.
 //
 // As a second line of defense the script refuses to run when the list contains
 // anything that looks like a secret or a server-only path (FORBIDDEN), e.g.
@@ -33,9 +33,13 @@ export const BUILD_FILES = [
   "src/public/pages.min.css",
 ];
 export const BUILD_DIRS = ["src/public/assets"];
+// The docs site, built by `npm run build:docs` (gitignored) and served at
+// /docs by src/docs.mjs. Only this output ships, not docs/'s sources.
+export const DOCS_BUILD_DIR = "docs/dist/public";
 
 // Tracked, but not needed on the server (the old rsync excluded them too).
 // .env-copy is the env template; it would trip the .env* guard below.
+// docs/ is the docs' sources; their build is in buildOutputs().
 export const EXCLUDED = [".claude/", "docs/", "src/iOS/", ".env-copy"];
 
 // Never ship these. Matched against each file's basename...
@@ -76,7 +80,7 @@ function walk(root, dir) {
 }
 
 // Throws when the build outputs are missing: deploying without them would
-// serve pages whose scripts and styles 404.
+// serve pages whose scripts and styles 404, or no docs at /docs.
 export function buildOutputs(root) {
   const missing = BUILD_FILES.filter((f) => !existsSync(path.join(root, f)));
   const assets = BUILD_DIRS.flatMap((d) => walk(root, d));
@@ -85,7 +89,11 @@ export function buildOutputs(root) {
       `Build outputs missing (${[...missing, ...(assets.length ? [] : BUILD_DIRS)].join(", ")}). Run \`npm run build\` first.`,
     );
   }
-  return [...BUILD_FILES, ...assets];
+  const docs = walk(root, DOCS_BUILD_DIR);
+  if (!docs.includes(`${DOCS_BUILD_DIR}/index.html`)) {
+    throw new Error(`Docs build missing (${DOCS_BUILD_DIR}). Run \`npm run build:docs\` first.`);
+  }
+  return [...BUILD_FILES, ...assets, ...docs];
 }
 
 export function trackedFiles(root) {

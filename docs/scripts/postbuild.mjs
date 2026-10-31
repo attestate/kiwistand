@@ -6,9 +6,10 @@ const root = new URL('../dist/public/', import.meta.url).pathname
 
 // 1. Vocs writes each page as <page>/index.html. Waku's client router needs
 //    the home page at /docs/ (with a slash), while Vocs links every other page
-//    without one (/docs/protocol). Cloudflare's default "auto-trailing-slash"
-//    serves exactly that when pages are <page>.html files, so move them there.
-//    The home page stays index.html. The *.d folders aren't pages.
+//    without one (/docs/protocol). kiwistand (src/docs.mjs) serves /docs/
+//    from index.html and /docs/<page> from <page>.html, also where a <page>/
+//    folder of sub-pages exists, so move the pages there. The home page stays
+//    index.html. The *.d folders aren't pages.
 async function flatten(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     if (!entry.isDirectory() || entry.name.endsWith('.d')) continue

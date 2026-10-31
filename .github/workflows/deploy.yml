@@ -2,7 +2,8 @@ name: Deploy
 
 # Tests every push to main and, if they pass, does what `npm run deploy`
 # does by hand, with the same npm scripts:
-#   1. build the web bundle (npm run build)
+#   1. build the web bundle (npm run build) and the docs site at /docs
+#      (npm run build:docs: npm ci and vocs build in docs/)
 #   2. ship tracked files + build outputs (npm run rsync, which runs
 #      scripts/deploy-files.mjs: no untracked files, no --delete)
 #   3. on the server, `npm ci` if package-lock.json changed since the last
@@ -69,6 +70,11 @@ jobs:
         run: npm ci --prefix src/web
       - name: Build web bundle
         run: npm run build
+      # The docs site (docs/, served at /docs by src/docs.mjs) has its own
+      # package.json and lockfile; build:docs runs npm ci and the build there.
+      # The server doesn't build: rsync ships docs/dist/public.
+      - name: Build docs
+        run: npm run build:docs
 
       # The ssh config makes plain `ssh`/`rsync` use the deploy key, so the
       # npm scripts below are the same ones `npm run deploy` runs locally.
