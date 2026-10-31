@@ -11,22 +11,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "13.0.0",
+        version: "14.0.0",
       },
       messages: {
         id: "messages",
-        version: "13.0.0",
+        version: "14.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "16.0.0",
+      version: "17.0.0",
     },
     levels: {
       id: "levels",
-      version: "16.0.0",
+      version: "17.0.0",
     },
   },
 };
@@ -74,6 +74,17 @@ export const EIP712_COMMUNITY = {
     { name: "rules", type: "string[]" },
     { name: "icon", type: "string" },
     { name: "color", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+// Joining or leaving a community (protocol 14.0.0, src/memberships.mjs):
+// `type` is "join" or "leave" and `community` the community's ID. A person's
+// newest one per community says whether they're a member.
+export const EIP712_MEMBERSHIP = {
+  Membership: [
+    { name: "type", type: "string" },
+    { name: "community", type: "string" },
     { name: "timestamp", type: "uint256" },
   ],
 };
@@ -244,6 +255,32 @@ const community = {
   ],
 };
 
+const membership = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      enum: ["join", "leave"],
+    },
+    community: {
+      $comment:
+        "The community to join or leave, as '<owner address>/<name key>'. Signed with EIP712_MEMBERSHIP.",
+      type: "string",
+      pattern: COMMUNITY_ID_PATTERN,
+      maxLength: 42 + 1 + COMMUNITY_NAME_MAX_LENGTH,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: ["timestamp", "type", "community", "signature"],
+};
+
 export const SCHEMATA = {
   comparison: {
     type: "object",
@@ -281,12 +318,12 @@ export const SCHEMATA = {
         $comment:
           "The type of message that we should filter by in the request.",
         type: "string",
-        enum: ["amplify", "comment", "community"],
+        enum: ["amplify", "comment", "community", "join", "leave"],
       },
     },
     required: ["from", "amount"],
   },
   message: {
-    oneOf: [upvote, comment, community],
+    oneOf: [upvote, comment, community, membership],
   },
 };

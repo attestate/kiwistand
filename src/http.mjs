@@ -1506,7 +1506,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
   // NOTE: Kiwi News' feeds, and under /api/v1/communities/:owner/:key/ a
   // community's: the same feeds with only its stories (communities-api.mjs,
-  // docs/source/http-api.rst). communityParams answers 400 for an invalid ID.
+  // docs/src/pages/http-api.mdx). communityParams answers 400 for an invalid ID.
   const feedsHandler = async (request, reply) => {
     const { community } = reply.locals;
     let stories = [];
@@ -2686,6 +2686,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
+      // NOTE: Who joined your communities (protocol 14.0.0), newest first.
+      // Separate from `notifications`, which the apps render.
+      joins: data.joins,
       lastServerValue: data.latestValue,
     });
   });

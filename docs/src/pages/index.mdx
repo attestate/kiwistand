@@ -8,12 +8,20 @@ import { Card, Cards } from 'vocs'
 
 # Kiwi News Docs
 
-[kiwistand](https://github.com/attestate/kiwistand) is a p2p node client for a
-web3 writer friendly Hacker News that nobody controls but everybody co-owns.
-It runs [Kiwi News](https://news.kiwistand.com).
+[Kiwi News](https://news.kiwistand.com) is a community-curated news site for
+crypto, Ethereum and builder-focused tech, similar to Hacker News: its readers
+submit, upvote and discuss links.
 
-These docs describe the Kiwi News Protocol that kiwistand nodes speak and the
-node's HTTP API.
+Kiwi News keeps its links, upvotes and comments on the protocol level. Each
+one is a message signed by an Ethereum key, and the nodes that run Kiwi News
+share them over a peer-to-peer network. They aren't transactions on a
+blockchain, so posting costs no gas, and anyone can read all of them and build
+their own app on top. Only [delegations](/delegation) are onchain.
+
+[kiwistand](https://github.com/attestate/kiwistand) is that node: a p2p node
+client for a web3 writer friendly Hacker News that nobody controls but
+everybody co-owns. These docs describe the Kiwi News Protocol that kiwistand
+nodes speak and the node's HTTP API.
 
 ## Kiwi News Protocol
 
@@ -30,12 +38,12 @@ node's HTTP API.
   />
   <Card
     title="HTTP API"
-    description="Listing and adding messages through a node's REST API."
+    description="Listing and adding messages through a node's REST API, communities and karma."
     to="/http-api"
   />
   <Card
     title="Delegation"
-    description="Signing messages with a delegated key."
+    description="How an account lets a second key sign in its name, onchain."
     to="/delegation"
   />
   <Card
@@ -44,3 +52,14 @@ node's HTTP API.
     to="/changelog"
   />
 </Cards>
+
+## More from Kiwi News
+
+- [news.kiwistand.com](https://news.kiwistand.com): Kiwi News itself, and its
+  [guidelines](https://news.kiwistand.com/guidelines) for what to post.
+- [llms.txt](https://news.kiwistand.com/llms.txt): the site's URLs and JSON
+  API for LLMs and agents. These docs have their own
+  [llms.txt](https://news.kiwistand.com/docs/llms.txt).
+- [MCP client](https://github.com/attestate/kiwistand/tree/main/kiwimcp-client):
+  Kiwi News in AI assistants that speak MCP.
+- [Source code](https://github.com/attestate/kiwistand) on GitHub.

@@ -1,6 +1,6 @@
 // @format
 // Communities (protocol 13.0.0, see "Communities" in
-// docs/source/protocol.rst): the texts and limits of the Community message,
+// docs/src/pages/protocol.mdx): the texts and limits of the Community message,
 // the designer's colour palette and the icon suggestions. Ported from the
 // iOS app (KiwiNative/Core/Communities.swift and Phosphor.swift).
 //

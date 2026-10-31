@@ -17,7 +17,8 @@ export const PAGE_CACHE =
 // Like the site's /assets: the names change when the content does.
 export const ASSET_CACHE =
   "public, max-age=604800, s-maxage=604800, immutable, stale-while-revalidate=2592000";
-// The logo, favicon, fonts and figures keep their names across builds.
+// The wordmark and the other files of docs/public keep their names across
+// builds.
 export const FILE_CACHE =
   "public, max-age=86400, s-maxage=86400, stale-while-revalidate=600000";
 export const NOT_FOUND_CACHE = "public, s-maxage=60, max-age=0";

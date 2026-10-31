@@ -429,6 +429,258 @@ export function listCommunities(delegations = {}, database = db) {
     .sort((a, b) => a.created - b.created || (a.id < b.id ? -1 : 1));
 }
 
+// Community membership (protocol 14.0.0, src/memberships.mjs). Runs before
+// the node takes messages, like initializeCommunities.
+//
+// The table has one row per signing key and community: the newest join or
+// leave that key signed for it. Like the communities table, it doesn't store
+// the member: a person is the identity their signers resolve to through the
+// delegations, which a node may learn after it stored a message, so members
+// are resolved whenever memberships are read.
+export function initializeMemberships(database = db) {
+  database.exec(`
+     CREATE TABLE IF NOT EXISTS memberships (
+         signer TEXT NOT NULL,
+         community TEXT NOT NULL,
+         type TEXT NOT NULL,
+         timestamp INTEGER NOT NULL,
+         message TEXT NOT NULL,
+         PRIMARY KEY (signer, community)
+     );
+     CREATE INDEX IF NOT EXISTS idx_memberships_community ON memberships(community);
+   `);
+}
+
+// NOTE: The newest message wins; of two with the same timestamp, the one with
+// the greater index, so every node keeps the same one in any order.
+const upsertMembership = `INSERT INTO memberships
+     (signer, community, type, timestamp, message)
+   VALUES
+     (@signer, @community, @type, @timestamp, @message)
+   ON CONFLICT(signer, community) DO UPDATE SET
+     type = excluded.type,
+     timestamp = excluded.timestamp,
+     message = excluded.message
+   WHERE excluded.timestamp > memberships.timestamp OR
+     (excluded.timestamp = memberships.timestamp AND
+      excluded.message > memberships.message)`;
+
+// Stores a join or leave: the message plus its `index` and the `signer` that
+// recovered from it. Returns the row as it was before, for restoreMembership.
+export function insertMembership(message, database = db) {
+  const { index, type, community, timestamp, signer } = message;
+  const row = {
+    signer: signer.toLowerCase(),
+    community: normalizeId(community),
+  };
+  const before = database
+    .prepare(`SELECT * FROM memberships WHERE signer = ? AND community = ?`)
+    .get(row.signer, row.community);
+  database.prepare(upsertMembership).run({
+    ...row,
+    type,
+    timestamp,
+    message: index,
+  });
+  return { ...row, before };
+}
+
+// Undoes insertMembership, e.g. when storing the message in the trie failed.
+export function restoreMembership({ signer, community, before }, database = db) {
+  if (!before) {
+    database
+      .prepare(`DELETE FROM memberships WHERE signer = ? AND community = ?`)
+      .run(signer, community);
+    return;
+  }
+  database
+    .prepare(
+      `UPDATE memberships SET type = @type, timestamp = @timestamp,
+         message = @message
+       WHERE signer = @signer AND community = @community`,
+    )
+    .run(before);
+}
+
+// Puts every join and leave of the trie into the table again, at startup
+// (launch.mjs), like insertCommunities.
+export async function insertMemberships(messages, database = db) {
+  const batch = 500;
+  const insert = database.transaction((memberships) => {
+    for (const message of memberships) insertMembership(message, database);
+  });
+  for (let i = 0; i < messages.length; i += batch) {
+    const memberships = messages
+      .slice(i, i + batch)
+      .filter(
+        (message) =>
+          message && message.signer && message.community && message.type,
+      );
+    try {
+      insert(memberships);
+    } catch (err) {
+      log(`Failed to insert a batch of memberships: ${err.toString()}`);
+    }
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+}
+
+// NOTE: The table doesn't exist before initializeMemberships ran.
+function readMemberships(sql, params, database) {
+  try {
+    return database.prepare(sql).all(...params);
+  } catch (err) {
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+}
+
+// The signing keys that resolve to `identity`: itself and the keys it
+// delegated to, in lowercase.
+function signersOf(identity, delegations) {
+  const target = identity.toLowerCase();
+  const signers = new Set([target]);
+  for (const [to, from] of Object.entries(delegations)) {
+    if (String(from).toLowerCase() === target) signers.add(to.toLowerCase());
+  }
+  return [...signers].filter(
+    (signer) => utils.isAddress(signer) && ownerOf(signer, delegations) === target,
+  );
+}
+
+// The rows of the given communities (IDs in lowercase), or of all of them.
+function membershipRows(ids, database) {
+  if (ids === undefined) {
+    return readMemberships(`SELECT * FROM memberships`, [], database);
+  }
+  if (ids.length === 0) return [];
+  // NOTE: SQLite limits the number of parameters of a statement.
+  if (ids.length > 500) {
+    const wanted = new Set(ids);
+    return membershipRows(undefined, database).filter((row) =>
+      wanted.has(row.community),
+    );
+  }
+  return readMemberships(
+    `SELECT * FROM memberships WHERE community IN (${ids
+      .map(() => "?")
+      .join(", ")})`,
+    ids,
+    database,
+  );
+}
+
+// Each person's newest join or leave per community, resolving signers through
+// the delegations: {community, identity (lowercase), signer, type, timestamp,
+// message}.
+function newestMemberships(rows, delegations) {
+  const newest = new Map();
+  for (const row of rows) {
+    let identity;
+    try {
+      identity = ownerOf(row.signer, delegations);
+    } catch (err) {
+      continue;
+    }
+    const key = `${row.community}|${identity}`;
+    const current = newest.get(key);
+    if (
+      !current ||
+      row.timestamp > current.timestamp ||
+      (row.timestamp === current.timestamp && row.message > current.message)
+    ) {
+      newest.set(key, { ...row, identity });
+    }
+  }
+  return [...newest.values()];
+}
+
+// How many members each community has, by ID: the people whose newest
+// membership message for it is a join, and its owner (the address in its ID),
+// who is always a member. Every ID of `ids` has an entry.
+export function memberCounts(ids, delegations = {}, database = db) {
+  const wanted = ids.map((id) => normalizeId(id));
+  const counts = new Map(wanted.map((id) => [id, 1]));
+  for (const membership of newestMemberships(
+    membershipRows(wanted, database),
+    delegations,
+  )) {
+    const owner = membership.community.split("/")[0];
+    if (membership.type === "join" && membership.identity !== owner) {
+      counts.set(membership.community, (counts.get(membership.community) ?? 1) + 1);
+    }
+  }
+  return counts;
+}
+
+// The IDs of the communities `identity` joined and hasn't left since. The
+// ones it owns aren't in it unless it joined them: see memberCounts.
+export function joinedCommunities(identity, delegations = {}, database = db) {
+  const signers = signersOf(identity, delegations);
+  if (!signers.length) return new Set();
+  const rows = readMemberships(
+    `SELECT * FROM memberships WHERE signer IN (${signers
+      .map(() => "?")
+      .join(", ")})`,
+    signers,
+    database,
+  );
+  return new Set(
+    newestMemberships(rows, delegations)
+      .filter(({ type }) => type === "join")
+      .map(({ community }) => community),
+  );
+}
+
+// The people who joined `owner`'s communities and haven't left since, newest
+// first, from `since` on (a unix timestamp): {community, identity, signer,
+// timestamp, index}, `community` being the Community as getCommunity returns
+// it. The owner's own joins aren't in it. For the notifications page.
+export function getJoins(owner, delegations = {}, since = 0, database = db) {
+  const target = owner.toLowerCase();
+  const signers = signersOf(target, delegations);
+  if (!signers.length) return [];
+  let rows;
+  try {
+    rows = database
+      .prepare(
+        `SELECT * FROM communities WHERE signer IN (${signers
+          .map(() => "?")
+          .join(", ")})`,
+      )
+      .all(...signers);
+  } catch (err) {
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+  const byKey = new Map();
+  for (const row of rows) {
+    if (!byKey.has(row.key)) byKey.set(row.key, []);
+    byKey.get(row.key).push(row);
+  }
+  const owned = new Map(
+    [...byKey.values()].map((versions) => {
+      const community = merge(target, versions);
+      return [community.id, community];
+    }),
+  );
+  return newestMemberships(membershipRows([...owned.keys()], database), delegations)
+    .filter(
+      (membership) =>
+        membership.type === "join" &&
+        membership.identity !== target &&
+        membership.timestamp >= since,
+    )
+    .map(({ community, identity, signer, timestamp, message }) => ({
+      community: owned.get(community),
+      identity: utils.getAddress(identity),
+      signer: utils.getAddress(signer),
+      timestamp,
+      index: message,
+    }))
+    .sort((a, b) => b.timestamp - a.timestamp || (a.index < b.index ? 1 : -1));
+}
+
 // How many stories each community has and when the newest one came in, by
 // the ID its posts name (`submissions.community`). With `id`, only that
 // community's entry. A community without stories has no entry.
@@ -1514,7 +1766,7 @@ export function insertMessage(message) {
     } catch (err) {
       log(`Failing to insert comment "${title}", error: "${err.toString()}"`);
     }
-  } else if (type === "community") {
+  } else if (type === "community" || type === "join" || type === "leave") {
     // NOTE: store.mjs's atomicPut writes the row before the trie.
     return;
   } else {

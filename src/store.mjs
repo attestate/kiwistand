@@ -33,7 +33,10 @@ import {
   communityCreatedAt,
   insertCommunity,
   restoreCommunity,
+  insertMembership,
+  restoreMembership,
 } from "./cache.mjs";
+import { isMembership, TYPES as MEMBERSHIP_TYPES } from "./memberships.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -356,9 +359,13 @@ async function atomicPut(trie, message, identity, delegations, signer) {
   //
   // To check whether a comment exists and then aborting the routine now
   // prevents the above from happening.
-  // NOTE: The same goes for communities: a version that's already stored
-  // must not be processed again.
-  if (message.type === "comment" || message.type === "community") {
+  // NOTE: The same goes for communities, joins and leaves: a message that's
+  // already stored must not be processed again (nor notify the owner again).
+  if (
+    message.type === "comment" ||
+    message.type === "community" ||
+    isMembership(message)
+  ) {
     const existingLeaf = await trie.get(Buffer.from(index, "hex"));
     if (existingLeaf) {
       const err = `Message with index "${index}" already exists in the trie. Skipping.`;
@@ -385,6 +392,12 @@ async function atomicPut(trie, message, identity, delegations, signer) {
   let community;
   if (message.type === "community") {
     community = insertCommunity({ ...message, index, signer });
+  }
+  // NOTE: Joins and leaves go into the memberships table the same way, so the
+  // table only ever lacks a message the trie lacks too.
+  let membership;
+  if (isMembership(message)) {
+    membership = insertMembership({ ...message, index, signer });
   }
 
   try {
@@ -477,6 +490,7 @@ async function atomicPut(trie, message, identity, delegations, signer) {
     // No in-memory comment count incrementing; SQLite holds canonical counts
   } catch (err) {
     if (community) restoreCommunity(community);
+    if (membership) restoreMembership(membership);
     if (message.type !== "amplify") {
       throw new Error(
         `atomicPut: putting to trie failed with error "${err.toString()}" for message "${JSON.stringify(
@@ -591,6 +605,23 @@ async function _add({
     }
     if (created >= message.timestamp) {
       throw new Error("add: The community must be older than the post");
+    }
+  }
+
+  // NOTE: Joining or leaving follows the same rule as posting: the community
+  // must exist and be older than the message. The signer's earlier joins and
+  // leaves don't matter, so whether a node takes a message doesn't depend on
+  // the order messages arrive in; the newest one per person wins when they're
+  // read (cache.mjs).
+  if (isMembership(message)) {
+    const created = communityCreatedAt(message.community, delegations);
+    if (created === undefined) {
+      throw new Error("add: Didn't find the community to join or leave");
+    }
+    if (created >= message.timestamp) {
+      throw new Error(
+        "add: The community must be older than the join or leave",
+      );
     }
   }
 
@@ -766,9 +797,13 @@ export async function leaves(
   type = "amplify",
   root = trie.root(),
 ) {
-  if (type !== "amplify" && type !== "comment" && type !== "community") {
+  // NOTE: `type` may be a list, e.g. ["join", "leave"], to read several types
+  // in one walk of the trie.
+  const types = Array.isArray(type) ? type : [type];
+  const known = ["amplify", "comment", "community", ...MEMBERSHIP_TYPES];
+  if (!types.length || !types.every((name) => known.includes(name))) {
     throw new Error(
-      "store leaves: Must be called with type 'amplify', 'comment' or 'community'",
+      "store leaves: Must be called with type 'amplify', 'comment', 'community', 'join' or 'leave'",
     );
   }
   const nodes = [];
@@ -792,7 +827,7 @@ export async function leaves(
     if (parser) {
       const parsed = parser(value);
 
-      if (type && type === parsed.type) {
+      if (types.includes(parsed.type)) {
         pointer++;
       }
 
@@ -803,10 +838,11 @@ export async function leaves(
       if (parsed.timestamp < startDatetime) {
         continue;
       }
-      // NOTE: The type is checked first as communities have no href. It is
-      // always set: the check at the top of the function throws otherwise.
+      // NOTE: The type is checked first as communities, joins and leaves
+      // have no href. It is always set: the check at the top of the function
+      // throws otherwise.
       if (
-        type !== parsed.type ||
+        !types.includes(parsed.type) ||
         (href && (parsed.href.startsWith('data:') || href.startsWith('data:')
           ? parsed.href !== href
           : normalizeUrl(parsed.href) !== normalizeUrl(href)))
