@@ -3,29 +3,45 @@
 // tabs and side box, the Joined tab of /communities, a community's "Invite
 // people" and the page an invite link opens.
 //
-// NOTE: This is the one place membership comes from. It isn't on the
-// protocol (yet), so a community is yours when you joined it in this browser
-// (localStorage, like the iOS app keeps it on the phone; theme-init.js reads
-// the same key before the first paint) or when your account runs it
-// (GET /api/v1/communities?owner=, on every device). You can't leave a
-// community you run.
+// NOTE: This is the one place membership comes from. Since protocol 14.0.0
+// (src/memberships.mjs) joining and leaving are signed Membership messages,
+// and the node lists the communities you're a member of, the ones your
+// account runs included (GET /api/v1/communities?member=). This browser keeps
+// that list as you last saw it (theme-init.js reads it before the first
+// paint), with the joins and leaves you signed that the node doesn't show
+// yet. Joins kept here before 14.0.0 are signed once, with this browser's
+// Kiwi key. You can't leave a community you run.
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Wallet } from "@ethersproject/wallet";
 
 import {
+  MEMBERSHIP_TYPES,
   canLeave,
   colorVars,
   creator,
   inviteURL,
   isOwner,
+  legacyJoins,
+  memberCount,
+  membership,
+  record,
+  settle,
   shortName,
-  yourCommunities,
+  toSign,
+  withPending,
 } from "./communities.mjs";
 import { paths as ui } from "./cm-icons.mjs";
+import { EIP712_DOMAIN, send } from "./API.mjs";
 import { getCookie, getLocalAccount } from "./session.mjs";
 import { capture } from "./analytics.mjs";
 
+// Your communities as last shown (theme-init.js reads it too).
 const KEY = "kiwi-communities";
+// The joins and leaves the node's list doesn't show yet (communities.mjs).
+const PENDING = "kiwi-communities-pending";
+// Set once the joins kept before 14.0.0 moved to PENDING.
+const MIGRATED = "kiwi-communities-14";
 const EVENT = "kiwi-communities";
 
 // ---------------------------------------------------------------- storage
@@ -40,31 +56,70 @@ const fields = [
   "owner",
   "ownerName",
   "created",
+  "timestamp",
+  "members",
+  "stories",
 ];
 
 function entry(community) {
   return Object.fromEntries(fields.map((key) => [key, community[key] ?? null]));
 }
 
-// Joined in this browser, newest first.
-export function readJoined() {
+function read(key) {
   let list;
   try {
-    list = JSON.parse(localStorage.getItem(KEY) || "[]");
+    list = JSON.parse(localStorage.getItem(key) || "[]");
   } catch (err) {
     return [];
   }
-  if (!Array.isArray(list)) return [];
-  return list.filter(
+  return Array.isArray(list) ? list : [];
+}
+
+function write(key, list) {
+  try {
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch (err) {
+    // Private mode or storage full: it lasts until the page reloads.
+  }
+}
+
+// Your communities as last shown: the node's list (or, before it was read,
+// the joins kept here), the joins signed since first.
+export function readJoined() {
+  return read(KEY).filter(
     (c) => c && typeof c.id === "string" && typeof c.name === "string",
   );
 }
 
-function writeJoined(list) {
+function readPending() {
+  return read(PENDING).filter(
+    (p) => p && p.community && typeof p.community.id === "string",
+  );
+}
+
+// Once: the joins kept in this browser before 14.0.0 become joins to sign.
+function migrateStorage() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(list));
+    if (localStorage.getItem(MIGRATED)) return;
+    write(PENDING, [...legacyJoins(readJoined()), ...readPending()]);
+    localStorage.setItem(MIGRATED, "1");
   } catch (err) {
-    // Private mode or storage full: joining lasts until the page reloads.
+    // No storage: nothing was kept either.
+  }
+}
+
+// The node's list of your communities, once read on this page.
+let node = { identity: null, list: null };
+
+// Shows the node's list with what's pending, and keeps it for the next page.
+function update() {
+  let pending = readPending();
+  if (node.list) {
+    pending = settle(node.list, pending);
+    write(PENDING, pending);
+    write(KEY, withPending(node.list, pending));
+  } else {
+    write(KEY, withPending(readJoined(), pending));
   }
   window.dispatchEvent(new Event(EVENT));
 }
@@ -91,61 +146,181 @@ export function useIdentity() {
   return identity;
 }
 
-// The communities your account runs, loaded once per page and identity.
-let owned = { identity: null, list: [] };
-function loadOwned(identity) {
+// This browser's Kiwi key for `identity`: it signs without asking.
+function keyFor(identity) {
+  let local;
+  try {
+    local = getLocalAccount(identity);
+  } catch (err) {
+    local = null;
+  }
+  return local?.privateKey ? new Wallet(local.privateKey) : null;
+}
+
+// The Kiwi key, else the connected wallet, as for a submission.
+async function signerFor(identity) {
+  const key = keyFor(identity);
+  if (key) return key;
+  try {
+    const { getConnectorClient } = await import("@wagmi/core");
+    const { client, walletClientToSigner } = await import("./client.mjs");
+    return walletClientToSigner(await getConnectorClient(client));
+  } catch (err) {
+    return null;
+  }
+}
+
+async function sign(signer, type, community) {
+  const value = membership(type, community);
+  const signature = await signer._signTypedData(
+    EIP712_DOMAIN,
+    MEMBERSHIP_TYPES,
+    value,
+  );
+  return { value, signature };
+}
+
+// Reads your communities from the node, once per page and identity, and
+// signs the joins kept from before 14.0.0.
+function load(identity) {
   const key = identity ? identity.toLowerCase() : null;
-  if (owned.identity === key) return;
-  owned = { identity: key, list: [] };
-  if (!key) return;
-  fetch(`/api/v1/communities?owner=${key}&limit=200`)
+  if (!key || node.identity === key) return;
+  node = { identity: key, list: null };
+  fetch(`/api/v1/communities?member=${key}&limit=200`)
     .then((response) => response.json())
     .then(({ data }) => {
-      if (owned.identity !== key || !Array.isArray(data)) return;
-      owned = { identity: key, list: data.map(entry) };
-      window.dispatchEvent(new Event(EVENT));
+      if (node.identity !== key || !Array.isArray(data)) return;
+      node = { identity: key, list: data.map(entry) };
+      update();
+      return migrate(identity);
     })
     .catch((err) => console.error("Couldn't load your communities", err));
 }
 
+// Signs the joins kept from before 14.0.0, with this browser's Kiwi key
+// only: a wallet would ask once per community.
+let migrating = false;
+async function migrate(identity) {
+  const signer = keyFor(identity);
+  if (!signer || migrating) return;
+  const { sign: joins, drop } = toSign(readPending(), identity);
+  if (joins.length === 0 && drop.length === 0) return;
+  migrating = true;
+  const done = new Set(drop.map(({ community }) => community.id));
+  const joined = [];
+  for (const { community } of joins) {
+    let response;
+    try {
+      const { value, signature } = await sign(signer, "join", community);
+      response = await send(value, signature, true);
+    } catch (err) {
+      break;
+    }
+    if (response.status === "success") {
+      joined.push(community);
+    } else if (response.code === 400) {
+      // The node doesn't know it (anymore).
+      done.add(community.id);
+    } else {
+      // Offline or too many requests: the rest waits for the next page.
+      break;
+    }
+  }
+  let pending = readPending().filter(
+    ({ community, signed }) => signed || !done.has(community.id),
+  );
+  for (const community of joined) {
+    pending = record(pending, {
+      type: "join",
+      community,
+      signed: true,
+      at: Date.now(),
+    });
+  }
+  write(PENDING, pending);
+  migrating = false;
+  update();
+}
+
+// Signs and sends a join or leave. The change shows right away and is
+// undone if the node refuses it. False if nothing was sent.
+async function change(type, community) {
+  const identity = currentIdentity();
+  const signer = identity && (await signerFor(identity));
+  if (!signer) {
+    const { openOnboarding } = await import("./LoginModal.jsx");
+    openOnboarding();
+    return false;
+  }
+  let message;
+  try {
+    message = await sign(signer, type, community);
+  } catch (err) {
+    return false;
+  }
+  const before = readPending();
+  write(
+    PENDING,
+    record(before, {
+      type,
+      community: entry(community),
+      signed: true,
+      at: Date.now(),
+    }),
+  );
+  update();
+  const response = await send(message.value, message.signature, true);
+  if (response.status !== "success") {
+    write(PENDING, before);
+    update();
+    const verb = type === "join" ? "join" : "leave";
+    window.toast?.error?.(`Couldn't ${verb} ${community.name}: ${response.details}`);
+    return false;
+  }
+  capture(type === "join" ? "community_joined" : "community_left", {
+    community: community.id,
+  });
+  return true;
+}
+
 export function join(community) {
-  const list = readJoined().filter((c) => c.id !== community.id);
-  writeJoined([entry(community), ...list]);
-  capture("community_joined", { community: community.id });
+  return change("join", community);
 }
 
-export function leave(community, identity) {
-  if (!canLeave(community, identity)) return;
-  writeJoined(readJoined().filter((c) => c.id !== community.id));
-  capture("community_left", { community: community.id });
+export async function leave(community, identity) {
+  if (!canLeave(community, identity)) return false;
+  return change("leave", community);
 }
 
-// Refreshes a joined community's entry (its owner may have changed its
-// name, icon or colour).
+// Refreshes a community's entry in your list (its owner may have changed
+// its name, icon or colour).
 export function remember(community) {
   const list = readJoined();
   const index = list.findIndex((c) => c.id === community.id);
   if (index === -1) return;
-  const fresh = entry(community);
+  const fresh = entry({ ...list[index], ...community });
   if (JSON.stringify(list[index]) === JSON.stringify(fresh)) return;
   list[index] = fresh;
-  writeJoined(list);
+  write(KEY, list);
+  window.dispatchEvent(new Event(EVENT));
 }
 
-// Your communities: joined here, then the ones you run (yourCommunities).
+// Your communities: the node's, with what's pending.
 export function useJoined() {
   const identity = useIdentity();
-  const read = () => yourCommunities(readJoined(), owned.list);
-  const [list, setList] = useState(read);
+  const [list, setList] = useState(() => {
+    migrateStorage();
+    return readJoined();
+  });
   useEffect(() => {
-    const update = () => setList(read());
-    loadOwned(identity);
-    update();
-    window.addEventListener(EVENT, update);
-    window.addEventListener("storage", update);
+    const show = () => setList(readJoined());
+    load(identity);
+    show();
+    window.addEventListener(EVENT, show);
+    window.addEventListener("storage", show);
     return () => {
-      window.removeEventListener(EVENT, update);
-      window.removeEventListener("storage", update);
+      window.removeEventListener(EVENT, show);
+      window.removeEventListener("storage", show);
     };
   }, [identity]);
   return list;
@@ -211,6 +386,14 @@ function JoinButton({ community, size = "" }) {
   const identity = useIdentity();
   const joined = useJoined().some((c) => c.id === community.id);
   const [inviting, setInviting] = useState(false);
+  // While the wallet asks to sign, a second click does nothing.
+  const [busy, setBusy] = useState(false);
+  const act = async (done) => {
+    if (busy) return;
+    setBusy(true);
+    await done();
+    setBusy(false);
+  };
   const cls = size ? ` cm-btn-${size}` : "";
   if (isOwner(community, identity)) {
     return (
@@ -238,8 +421,9 @@ function JoinButton({ community, size = "" }) {
       <button
         type="button"
         className={`cm-btn cm-btn-outline${cls}`}
-        onClick={() => leave(community, identity)}
+        onClick={() => act(() => leave(community, identity))}
         aria-pressed="true"
+        aria-busy={busy ? "true" : undefined}
       >
         <UI name="check-bold" size={size ? 14 : 15} />
         Joined
@@ -250,8 +434,9 @@ function JoinButton({ community, size = "" }) {
     <button
       type="button"
       className={`cm-btn cm-btn-dark${cls}`}
-      onClick={() => join(community)}
+      onClick={() => act(() => join(community))}
       aria-pressed="false"
+      aria-busy={busy ? "true" : undefined}
     >
       <UI name="plus-bold" size={size ? 14 : 15} />
       Join
@@ -452,8 +637,8 @@ function InviteJoin({ community }) {
       <button
         type="button"
         className="cm-btn cm-btn-dark cm-btn-lg"
-        onClick={() => {
-          if (!joined) join(community);
+        onClick={async () => {
+          if (!joined && !(await join(community))) return;
           open();
         }}
       >
@@ -544,6 +729,15 @@ function JoinedList() {
                 <span className="cm-item-by">
                   created by {creator(community, identity)}
                 </span>
+                {community.members && (
+                  <span className="cm-item-count">
+                    {memberCount(community.members)}
+                    {community.stories !== null &&
+                      ` · ${community.stories} ${
+                        community.stories === 1 ? "story" : "stories"
+                      }`}
+                  </span>
+                )}
               </div>
               <div className="cm-join">
                 <JoinButton community={community} size="sm" />

@@ -1,14 +1,14 @@
 // @format
 // The submit page's "Post to" (designs 8, 16 and 17): a card with Kiwi News
 // (its wordmark, "Everyone · goes straight into New") and your communities
-// as a list of choices, a search once there are many, and "Browse
-// communities". Readers without communities don't get it (design 18). A
-// community preselected with /submit?community=<id> comes with the page
-// (views/submit.mjs).
+// with their members as a list of choices, a search once there are many,
+// and "Browse communities". Readers without communities don't get it
+// (design 18). A community preselected with /submit?community=<id> comes
+// with the page (views/submit.mjs).
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { colorVars } from "./communities.mjs";
+import { colorVars, memberCount } from "./communities.mjs";
 import { WORDMARK } from "./wordmark.mjs";
 import { Tile, UI, useJoined } from "./Communities.jsx";
 
@@ -55,15 +55,17 @@ function Option({ community, selected, onPick }) {
       {community && (
         <Tile community={community} size={28} iconSize={15} variant="tint" />
       )}
-      <span className="cm-option-text">
+      <span className={`cm-option-text${community ? " cm-option-wrap" : ""}`}>
         {community ? (
           <span className="cm-option-name">{community.name}</span>
         ) : (
           <Wordmark />
         )}
-        {!community && (
-          <span className="cm-option-meta">Everyone · goes straight into New</span>
-        )}
+        <span className="cm-option-meta">
+          {community
+            ? community.members && memberCount(community.members)
+            : "Everyone · goes straight into New"}
+        </span>
       </span>
       <span className={`cm-option-state${selected ? " is-selected" : ""}`}>
         <UI name={selected ? "radio-button-fill" : "circle"} size={20} />

@@ -20,6 +20,9 @@ import { WORDMARK } from "../src/web/src/wordmark.mjs";
 import { needsCommunities } from "../src/web/src/community-gate.mjs";
 import { PHOSPHOR_ICONS } from "../src/phosphor-icons.mjs";
 import * as c from "../src/web/src/communities.mjs";
+import * as id from "../src/id.mjs";
+import { EIP712_DOMAIN, EIP712_MEMBERSHIP } from "../src/constants.mjs";
+import { Wallet } from "ethers";
 
 const db = new Database(join(env.CACHE_DIR, "database.db"));
 const hex = (bytes) => randomBytes(bytes).toString("hex");
@@ -541,17 +544,109 @@ test.serial("GET /communities searches with q, GET /communities/new", async (t) 
 
 // --- v4: membership, owners and markup -----------------------------------------
 
-test("a community you run counts as joined, after the ones joined here", (t) => {
-  const joinedHere = [{ id: "0xa/ai" }, { id: "0xb/zk" }];
-  const owned = [{ id: "0xb/zk" }, { id: "0xc/mine" }];
-  t.deepEqual(
-    c.yourCommunities(joinedHere, owned).map(({ id }) => id),
-    ["0xa/ai", "0xb/zk", "0xc/mine"],
+test("joins and leaves are signed as the node verifies them", async (t) => {
+  t.deepEqual(c.MEMBERSHIP_TYPES, EIP712_MEMBERSHIP);
+  const wallet = Wallet.createRandom();
+  const ai = community({ timestamp: now() - DAY, created: now() - 2 * DAY });
+  for (const type of ["join", "leave"]) {
+    const value = c.membership(type, ai);
+    t.deepEqual(Object.keys(value), ["type", "community", "timestamp"]);
+    t.is(value.community, ai.id);
+    const signature = await wallet._signTypedData(
+      EIP712_DOMAIN,
+      c.MEMBERSHIP_TYPES,
+      value,
+    );
+    t.is(id.verify({ ...value, signature }), wallet.address);
+  }
+  // A node takes it only after the community's newest version, also when
+  // this clock is behind.
+  const edited = community({ timestamp: now() + 60 });
+  t.is(c.membership("join", edited).timestamp, edited.timestamp + 1);
+  t.is(c.membership("join", ai, 1700000000500).timestamp, ai.timestamp + 1);
+  t.is(
+    c.membership("join", { id: ai.id, created: 100 }, 1700000000500).timestamp,
+    1700000000,
   );
-  // On a device that never joined it, it's still yours.
-  t.true(c.isMember("0xc/mine", [], owned));
-  t.false(c.isMember("0xd/other", joinedHere, owned));
-  t.deepEqual(c.yourCommunities([], []), []);
+});
+
+test("your communities: the node's list with what this browser did since", (t) => {
+  const ai = { id: "0xa/ai" };
+  const zk = { id: "0xb/zk" };
+  const art = { id: "0xc/art" };
+  const at = 1700000000000;
+  const node = [ai, zk];
+
+  // A join shows first; a leave hides it; only the newest change counts.
+  let pending = c.record([], { type: "join", community: art, signed: true, at });
+  t.deepEqual(c.withPending(node, pending), [art, ai, zk]);
+  pending = c.record(pending, { type: "leave", community: zk, signed: true, at });
+  t.deepEqual(c.withPending(node, pending), [art, ai]);
+  pending = c.record(pending, { type: "leave", community: art, signed: true, at });
+  t.deepEqual(pending.map(({ community }) => community.id), ["0xb/zk", "0xc/art"]);
+  t.deepEqual(c.withPending(node, pending), [ai]);
+  // Applying it twice changes nothing (the list is kept with it applied).
+  t.deepEqual(c.withPending(c.withPending(node, pending), pending), [ai]);
+
+  // Once the node shows a change, it's done.
+  const joined = [{ type: "join", community: art, signed: true, at }];
+  t.deepEqual(c.settle([ai, art], joined, at + 1000), []);
+  t.deepEqual(c.settle([ai], joined, at + 1000), joined);
+  const left = [{ type: "leave", community: zk, signed: true, at }];
+  t.deepEqual(c.settle([ai], left, at + 1000), []);
+  t.deepEqual(c.settle([ai, zk], left, at + 1000), left);
+  // One it never shows is given up after PENDING_MS.
+  t.deepEqual(c.settle([ai], joined, at + c.PENDING_MS), []);
+  // A join kept from before 14.0.0 waits until it's signed.
+  const kept = [{ type: "join", community: art, signed: false, at: 0 }];
+  t.deepEqual(c.settle([ai], kept, at + c.PENDING_MS), kept);
+  t.deepEqual(c.settle([ai, art], kept, at), []);
+});
+
+test("joins kept before 14.0.0 are signed once, none for the communities you run", (t) => {
+  const me = "0x6e56Cf0000000000000000000000000000C0fFeE";
+  const mine = { id: `${me.toLowerCase()}/ai`, owner: me };
+  const theirs = { id: "0xb/zk", owner: "0x000000000000000000000000000000000000000b" };
+  const older = { id: "0xc/art", owner: "0x000000000000000000000000000000000000000c" };
+  // Kept newest first; signed oldest first, so the newest stays first.
+  const pending = c.legacyJoins([theirs, mine, older]);
+  t.deepEqual(
+    pending.map(({ type, community, signed }) => [type, community.id, signed]),
+    [
+      ["join", "0xc/art", false],
+      ["join", mine.id, false],
+      ["join", "0xb/zk", false],
+    ],
+  );
+  t.deepEqual(c.withPending([], pending), [theirs, mine, older]);
+  const { sign, drop } = c.toSign(pending, me.toLowerCase());
+  t.deepEqual(sign.map(({ community }) => community.id), ["0xc/art", "0xb/zk"]);
+  t.deepEqual(drop.map(({ community }) => community.id), [mine.id]);
+  // Signed ones aren't signed again.
+  const done = c.record(pending, { type: "join", community: older, signed: true, at: 1 });
+  t.deepEqual(
+    c.toSign(done, me).sign.map(({ community }) => community.id),
+    ["0xb/zk"],
+  );
+});
+
+test("member counts on the cards, the header and the invite page", (t) => {
+  t.is(c.memberCount(1), "1 member");
+  t.is(c.memberCount(1204), "1,204 members");
+  t.is(c.memberCount(undefined), "1 member");
+  t.is(c.memberCount(0), "1 member");
+
+  const ai = community({ members: 1204, ownerName: "sam.eth" });
+  t.true(browse.Card(ai).includes("1,204 members · 3 stories"));
+  t.true(page.render(undefined, ai, "hot", []).includes("1,204 members · created by"));
+  t.true(
+    page
+      .renderInvite(undefined, ai, { name: "sam.eth" })
+      .includes("1,204 members · created by sam.eth · 3 stories"),
+  );
+  const data = JSON.parse(page.communityData(ai));
+  t.is(data.members, 1204);
+  t.is(data.timestamp, ai.timestamp);
 });
 
 test("the owner can't leave their community; others can", (t) => {

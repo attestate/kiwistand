@@ -16,6 +16,7 @@ import { Icon, Tile, communityPath } from "./components/communities.mjs";
 import { communityData, creatorName } from "./community.mjs";
 import { robotsMeta } from "../indexable.mjs";
 import { listCommunities } from "../communities-api.mjs";
+import { memberCount } from "../web/src/communities.mjs";
 import log from "../logger.mjs";
 
 const html = htm.bind(vhtml);
@@ -82,7 +83,11 @@ export function Card(community) {
       <div class="cm-item-text">
         <a class="cm-item-name" href="${href}">${community.name}</a>
         <span class="cm-item-by">created by ${creatorName(community)}</span>
-        <span class="cm-item-count">${storyCount(community.stories)}</span>
+        <span class="cm-item-count"
+          >${`${memberCount(community.members)} · ${storyCount(
+            community.stories,
+          )}`}</span
+        >
       </div>
       <div
         class="cm-join"

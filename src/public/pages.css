@@ -3171,6 +3171,16 @@ html[data-cm-joined] .n2-post-to:empty,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* A community's name and member count share a line when they fit; else
+   the count goes below the name (cut with an ellipsis if it's still too
+   long). */
+.cm-option-wrap {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.cm-option-wrap .cm-option-meta {
+  flex-shrink: 0;
+}
 .cm-wordmark {
   flex: 0 0 auto;
   width: 75.4px;
