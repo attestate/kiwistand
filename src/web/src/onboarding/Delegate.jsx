@@ -118,7 +118,7 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
       {desk && (
         <a
           className="kob-howto"
-          href="https://github.com/attestate/delegator2"
+          href="/docs/delegation"
           target="_blank"
           rel="noopener noreferrer"
         >

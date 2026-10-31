@@ -394,8 +394,11 @@ export async function index(
   skipResolve = false,
   // NOTE: With `community` (its ID), the community's Hot: only its stories,
   // ranked with the same rules as Kiwi News' Hot. Kiwi News' own picks, the
-  // app curation, predictions and the pinned story, don't apply. Without it,
-  // Kiwi News' Hot, which has every story, a community's ones included.
+  // app curation, predictions and the pinned story, don't apply. A story
+  // that misses Kiwi News' engagement rules (upvotes, karma, a known name)
+  // isn't hidden but listed below the ones that meet them, so a small
+  // community's Hot isn't empty. Without it, Kiwi News' Hot, which has every
+  // story, a community's ones included.
   { community } = {},
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
@@ -415,7 +418,10 @@ export async function index(
   const commentCounts = countCommentsBatch(
     rankedStories.map(({ index }) => `kiwi:0x${index}`),
   );
-  rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
+  // Keep stories > 7 days old out of page 0 initially, but allow them on other pages
+  const inWindow = ({ timestamp }) =>
+    !(page === 0 && itemAge(timestamp) / (60 * 24) > 7);
+  const engaging = ({ index, identity, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = commentCounts.get(`kiwi:0x${index}`) || 0;
     // Karma only matters for single-upvote stories, so skip the lookup otherwise.
@@ -426,10 +432,6 @@ export async function index(
       return false;
     }
 
-    // Keep stories > 7 days old out of page 0 initially, but allow them on other pages
-    if (page === 0 && storyAgeInDays > 7) {
-      return false;
-    }
     // General engagement filter (applied after ranking)
     if (skipAgeFilter) {
       // For endless scroll: include all stories (no engagement filter)
@@ -443,7 +445,22 @@ export async function index(
         return upvotes + commentCount > 3;
       }
     }
-  });
+  };
+  if (community) {
+    // NOTE: A community lists the stories that miss the rules below the
+    // others (`belowRules`, sorted in step 8) instead of hiding them.
+    rankedStories = rankedStories
+      .filter(inWindow)
+      .map((story) => (engaging(story) ? story : { ...story, belowRules: true }));
+    rankedStories = [
+      ...rankedStories.filter((story) => !story.belowRules),
+      ...rankedStories.filter((story) => story.belowRules),
+    ];
+  } else {
+    rankedStories = rankedStories.filter(
+      (story) => inWindow(story) && engaging(story),
+    );
+  }
 
   // 3. Apply app curation if needed
   if (appCuration && !community) {
@@ -571,11 +588,20 @@ export async function index(
         showInHot(story, (address) => ens.resolve(address)),
       ),
     );
-    stories = stories.filter((_, i) => shown[i]);
+    stories = community
+      ? stories.map((story, i) =>
+          shown[i] ? story : { ...story, belowRules: true },
+        )
+      : stories.filter((_, i) => shown[i]);
   }
 
-  // 8. FINAL SORT before prediction injection - always by score
-  stories = stories.sort((a, b) => (b.score || 0) - (a.score || 0));
+  // 8. FINAL SORT before prediction injection - always by score, a
+  // community's stories that miss the rules after the others.
+  stories = stories.sort(
+    (a, b) =>
+      (a.belowRules ? 1 : 0) - (b.belowRules ? 1 : 0) ||
+      (b.score || 0) - (a.score || 0),
+  );
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
   if (page === 0 && paginate && stories.length > 0 && !community) {
@@ -781,6 +807,8 @@ export async function index(
       (story) => nowTimestamp - story.timestamp <= twoDaysInSeconds,
     );
   }
+
+  if (community) stories = stories.map(({ belowRules, ...story }) => story);
 
   // Return final data
   return {

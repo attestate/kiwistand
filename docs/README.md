@@ -34,8 +34,8 @@ falls back to Arial. The build warns that the `/fonts/…` URLs in
   `changelog.md` by `scripts/changelog.mjs` before `dev` and `build`, and is
   gitignored. Edit `../changelog.md` instead.
 - `src/pages/_root.css`: the site's look (see below) and the figures' style.
-- `public/`: files served as they are: the wordmark, `wordmark.js` and the
-  protocol figures in `public/figures/`.
+- `src/components/figures.tsx`: the guide's figures, see below.
+- `public/`: files served as they are: the wordmark and `wordmark.js`.
 - `vocs.config.ts`: title, sidebar, top navigation, base path, colours.
 - `scripts/postbuild.mjs`: adjusts the build for serving under `/docs`, see
   below.
@@ -46,13 +46,24 @@ falls back to Arial. The build warns that the `/fonts/…` URLs in
   the base path. The build fails on links to pages that don't exist (not on
   missing `#anchors`).
 - Reference images and other files in `public/` with `/docs` in front:
-  `<img src="/docs/figures/set-recon-hash.svg" />`. Vocs doesn't add the
-  base path to those.
+  `<img src="/docs/wordmark-light.svg" />`. Vocs doesn't add the base path
+  to those.
 - Start every page with `showAskAi: false` in its frontmatter. Vocs's "Ask
   AI" and "Copy for AI" buttons build their URLs without the base path, so
   under `/docs` they point at the wrong page.
 - Callouts are `:::note`, `:::warning`, `:::tip` and `:::danger` blocks.
   Mermaid diagrams are ```` ```mermaid ```` code blocks.
+
+## Figures
+
+The guide's figures are React components in `src/components/figures.tsx`
+that draw inline SVG, imported into `guide.mdx` (`<Figure1 />`, `<TreeA />`).
+They have no background and no colours of their own: lines and text take the
+site's text colours, and the tones (blue for Node and Peer A, pink for B,
+green for in sync, red for not) are the `--kf-*` tokens in `_root.css`, each
+with a light and a dark value. So they sit on the page in both themes. Draw
+new figures with the same building blocks (`Figure`, `Circle`, `Tree`,
+`Arrow`, `Row`, …) rather than as images on a white background.
 
 ## The look
 

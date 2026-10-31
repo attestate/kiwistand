@@ -1,10 +1,219 @@
 ---
 showAskAi: false
-description: How key delegation works in the Kiwi News Protocol.
+description: How an account lets a second key sign Kiwi News messages in its name, and how kiwistand nodes index and resolve these delegations.
 ---
 
 # Delegation
 
-Key delegation in the Kiwi News Protocol is specified and implemented at
-[@attestate/delegator2](https://github.com/attestate/delegator2#readme). Please
-refer to its readme.txt for details.
+So you don't have to confirm every upvote, submission and comment in your
+wallet, your account can let a second key sign for it. The account approves
+the key once, with a transaction on OP Mainnet, and from then on every message
+the key signs counts as the account's. The website creates such a key in your
+browser when you enable one-tap actions.
+
+Since 0.12.0, any address can sign messages for itself, so a delegation
+doesn't decide who may post. It decides whom a key's messages are credited
+to.
+
+- **Account** (`from`): the address messages are credited to, the identity.
+- **Key** (`to`): the address that signs the messages.
+- **Delegations**: the map from each key to its account that a node builds
+  from the chain. A key without an entry signs for itself.
+
+## How a key signs for an account
+
+A message names no account. It's signed by one key with the EIP-712 types
+on the [Protocol](/protocol#message-types) page, and that's all a node sees.
+The node recovers the signer from the signature and looks it up in its
+delegations with `resolveIdentity` from
+[@attestate/delegator2](https://github.com/attestate/delegator2):
+
+```js
+import { resolveIdentity } from "@attestate/delegator2";
+
+// The account that delegated to `signer`, or `signer` itself.
+const identity = resolveIdentity(delegations, signer);
+```
+
+kiwistand resolves the signer with the delegations it knows at that moment:
+
+- When it adds a message, to enforce one upvote per account and link: an
+  account and its keys share that one upvote.
+- When it lists messages: [`POST /api/v1/list`](/http-api#post-apiv1list)
+  returns each message's `signer` and `identity`.
+- When it shows a community, to find its owner (see
+  [Communities](/protocol#ids-and-updates)).
+- For the website's signed requests, such as bookmarks, profiles and story
+  analytics.
+
+The trie stores the signed message, not the account. So when a delegation
+reaches a node after messages its key signed, the node's `/api/v1/list` and
+its communities credit those messages to the account from then on.
+
+## Creating a delegation
+
+A delegation is a `Delegate` event of the Delegator3 contract on OP Mainnet
+(chain ID 10):
+
+- **Contract**: [`0x418910fef46896eb0bfe38f656e2f7df3eca7198`](https://optimistic.etherscan.io/address/0x418910fef46896eb0bfe38f656e2f7df3eca7198)
+- **Function**: `etch(bytes32[3] data)`
+- **Event**: `Delegate(bytes32[3] data, address sender)`, where `sender` is
+  the transaction's `msg.sender`
+- **Indexed since**: block 140309527
+
+Both sides sign:
+
+1. **The key signs the account.** It signs the EIP-712 message
+   `Authorization(address from,bool authorize)` with `from` set to the
+   account and `authorize` to `true`, in this domain:
+
+   ```js
+   {
+     name: "kiwinews",
+     version: "1.0.0",
+     chainId: 10,
+     verifyingContract: "0x418910fef46896eb0bfe38f656e2f7df3eca7198",
+     salt: "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b",
+   }
+   ```
+
+   It's the domain of the protocol's messages plus `chainId` and
+   `verifyingContract`, so an authorization can't be replayed on another
+   chain or contract.
+
+2. **The account sends it.** The account calls `etch(data)` with the
+   signature packed into three `bytes32`:
+
+   - `data[0]` and `data[1]`: the signature as an
+     [EIP-2098](https://eips.ethereum.org/EIPS/eip-2098) compact signature
+     (`r`, then `yParityAndS`).
+   - `data[2]`: the key's address (20 bytes), 11 zero bytes and a last byte
+     of `01` to authorize. With spaces between the parts:
+
+   ```
+   0x4E774b8530d6f3A21C449A6f0D9A1229aB2b8C47 0000000000000000000000 01
+     key (to), 20 bytes                       11 zero bytes          authorize
+   ```
+
+   The transaction moves no value; the account only pays the network fee.
+
+`create` from @attestate/delegator2 does step 1 and the packing. The website
+does it like this ([`src/web/src/DelegateButton.jsx`](https://github.com/attestate/kiwistand/blob/main/src/web/src/DelegateButton.jsx)):
+
+```js
+import { Wallet } from "@ethersproject/wallet";
+import { create } from "@attestate/delegator2";
+
+const key = Wallet.createRandom();
+// Signed by the new key: (signer, from, to, authorize)
+const data = await create(key, account, key.address, true);
+// Then, sent by `account` on OP Mainnet:
+// Delegator3.etch(data)
+```
+
+The two signatures protect each other. The account's transaction shows it
+wants the key. The key's signature over the account's address stops someone
+who sees the key's address from calling `etch` with it first and getting the
+key's future messages credited to them.
+
+Once the wallet has sent the transaction, the website keeps the key's
+private key in the browser's `localStorage`, under a name with the account's
+address: `-kiwi-news-0x…-key`.
+It asks [`GET /api/v1/delegations`](#reading-delegations) every 5 seconds
+until the key shows up there, which usually takes a minute or two.
+
+:::note
+The key is a new, empty Ethereum account. The delegation only makes Kiwi
+News nodes credit the key's messages to your account; it gives the key no
+access to your account or its funds.
+:::
+
+## How nodes index delegations
+
+kiwistand crawls the delegations itself
+([`src/chainstate/delegate.config.crawler.mjs`](https://github.com/attestate/kiwistand/blob/main/src/chainstate/delegate.config.crawler.mjs)):
+it reads Delegator3's `Delegate(bytes32[3],address)` logs (topic
+`0xcd9cc59d1cc3aa17955023d009176720c8a383000a973ae2933c1cf6cbeee480`) from
+block 140309527 on, from the RPC hosts in `OPTIMISM_CRAWLER_RPC_HOSTS` (or
+`OPTIMISM_RPC_HTTP_HOST`), and looks for new blocks every 5 seconds.
+
+After a crawl that found new logs, it rebuilds its delegations
+([`src/chainstate/registry.mjs`](https://github.com/attestate/kiwistand/blob/main/src/chainstate/registry.mjs)).
+`organize` from @attestate/delegator2 goes through the logs in chain order
+(block, transaction, log index) and keeps a delegation if:
+
+1. The signature is valid: the address that signed
+   `Authorization{from: sender, authorize}` is the key in `data[2]`. So the
+   account is always the transaction's sender.
+2. The key and the account are different addresses.
+3. The key isn't already delegated. A key belongs to the first account that
+   delegates to it; later delegations of the same key are ignored.
+4. The key isn't already an account that keys delegate to, and the account
+   isn't already another account's key.
+
+An account can delegate to any number of keys.
+
+Delegations from before Delegator3 went through the Delegator2 contract
+([`0x08b7ecfac2c5754abafb789c84f8fa37c9f088b0`](https://optimistic.etherscan.io/address/0x08b7ecfac2c5754abafb789c84f8fa37c9f088b0)),
+up to block 140309526. kiwistand doesn't crawl it: it loads those delegations
+from
+[`src/chainstate/historical-delegations.json`](https://github.com/attestate/kiwistand/blob/main/src/chainstate/historical-delegations.json)
+(2,561 keys) and puts the Delegator3 delegations on top, so for a key in both,
+the Delegator3 delegation counts.
+
+## Revoking
+
+The contract and @attestate/delegator2 know revocations: the same
+`etch(data)`, with `authorize` set to `false` and a last byte of `00`.
+kiwistand ignores them. It drops every log whose last bit is 0 before it
+organizes the delegations, so a key keeps signing for its account for good.
+
+The reason is in `registry.mjs`: a revoked key would leave the set of
+delegations, and a node that syncs later would then judge the messages the
+key signed before differently than the nodes that saw them arrive, which can
+split the network.
+
+Logging out of the website deletes the key from the browser. The delegation
+stays: what the key signed, and anything it still signs, counts as the
+account's.
+
+## Accounts without a delegation
+
+A wallet that signs its messages itself needs no delegation; neither does a
+passkey account. The website derives a passkey account's key from the
+passkey ([`src/web/src/passkey.mjs`](https://github.com/attestate/kiwistand/blob/main/src/web/src/passkey.mjs)),
+and that key's address is its own identity.
+
+## Reading delegations
+
+### GET /api/v1/delegations
+
+On the node's `API_PORT` (8443 on news.kiwistand.com). `data` is the
+delegations object, keys to accounts, both checksummed:
+
+```json
+{
+  "status": "success",
+  "code": 200,
+  "message": "OK",
+  "details": "Returning delegations list",
+  "data": {
+    "0x4E774b8530d6f3A21C449A6f0D9A1229aB2b8C47": "0xee324c588ceF1BF1c1360883E4318834af66366d"
+  }
+}
+```
+
+With `?cached=true`, the response has
+`Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800`, and
+the node purges that URL from Cloudflare's cache whenever its delegations
+change. The website asks for the cached URL.
+
+`resolveIdentity(data, address)` resolves any address with it, as a node
+does.
+
+## Reference implementation
+
+- [`src/chainstate/delegate.config.crawler.mjs`](https://github.com/attestate/kiwistand/blob/main/src/chainstate/delegate.config.crawler.mjs): the crawler of the Delegator3 logs.
+- [`src/chainstate/registry.mjs`](https://github.com/attestate/kiwistand/blob/main/src/chainstate/registry.mjs): building the delegations, without revocations, on top of the historical ones.
+- [`src/store.mjs`](https://github.com/attestate/kiwistand/blob/main/src/store.mjs): resolving the signer when adding and listing messages.
+- [@attestate/delegator2](https://github.com/attestate/delegator2): the Delegator3 contract and `create`, `validate`, `organize` and `resolveIdentity`.

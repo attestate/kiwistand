@@ -2,8 +2,8 @@
 // The read side of communities (protocol 13.0.0, src/communities.mjs):
 // GET /api/v1/communities and /api/v1/communities/:owner/:key, the
 // `community` query of the feeds, and the `community` object on stories. See
-// "Communities" in docs/src/pages/http-api.mdx. Since protocol 14.0.0
-// (src/memberships.mjs) a community has `members`, and the list takes
+// "Reading communities" in docs/src/pages/http-api.mdx. Since protocol
+// 14.0.0 (src/memberships.mjs) a community has `members`, and the list takes
 // `member`.
 //
 // NOTE: Communities are read through cache.listCommunities and

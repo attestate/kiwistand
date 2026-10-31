@@ -24,12 +24,42 @@ async function flatten(dir) {
 await flatten(root)
 
 // 2. Vocs writes the page links in llms.txt and llms-full.txt without the
-//    basePath, e.g. "](/protocol)". Prefix them with /docs.
+//    basePath, e.g. "](/protocol)". Prefix them with /docs. And the guide's
+//    figures are components (src/components/figures.tsx) that these files
+//    show as tags, e.g. "<Figure1 />": put in the figures' descriptions,
+//    their aria-labels in the built guide.
+const figures = new Map()
+const guide = await readFile(join(root, 'guide.html'), 'utf8')
+for (const [, id, label] of guide.matchAll(/<figure id="([^"]+)" class="kiwi-figure"><svg[^>]* aria-label="([^"]*)"/g)) {
+  figures.set(id, unescape(label))
+}
+const figureId = (name, props) =>
+  name.startsWith('Figure')
+    ? `figure-${name.slice('Figure'.length)}`
+    : `tree-${name.slice('Tree'.length).toLowerCase()}${props.includes('synced') ? '-step-3' : ''}`
+
 for (const name of ['llms.txt', 'llms-full.txt']) {
   const file = join(root, name)
   const text = await readFile(file, 'utf8')
   await writeFile(
     file,
-    text.replaceAll('](/index)', '](/)').replace(/\]\(\/(?!docs(\/|\)))/g, '](/docs/'),
+    text
+      .replaceAll('](/index)', '](/)')
+      .replace(/\]\(\/(?!docs(\/|\)))/g, '](/docs/')
+      .replace(/<(Figure\d+|Tree[AB])([^/>]*)\/>/g, (tag, component, props) => {
+        const label = figures.get(figureId(component, props))
+        if (!label) return tag
+        const number = component.match(/^Figure(\d+)$/)
+        return `*${number ? `Figure ${number[1]}: ` : ''}${label}*`
+      }),
   )
+}
+
+function unescape(html) {
+  return html
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#x27;', "'")
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&amp;', '&')
 }

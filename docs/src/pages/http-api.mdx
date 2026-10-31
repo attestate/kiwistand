@@ -105,8 +105,8 @@ Retrieves an object of valid delegations in the form of `to:from`, where
 `from` is the user's "identity" (the address messages are attributed to),
 whereas `to` can be any delegated Ethereum address.
 
-The rules of what we consider a valid delegation are documented in the
-[delegator2 repository](https://github.com/attestate/delegator2).
+What makes a delegation valid, how to create one and how nodes index them is
+on the [Delegation](/delegation#reading-delegations) page.
 
 Please note that it may take some time for the indexer to pick up a new
 delegation (usually around 1-2 minutes).
@@ -236,7 +236,7 @@ One Community object as `data`, or 404 when the node doesn't know the community.
 
 `:name` is `hot`, `new` or `best`. A community's feeds, namespaced by the community like its page. They take the same parameters and answer like `/api/v1/feeds/:name`, with only that community's stories, ranked with the same rules as Kiwi News' feeds:
 
-- Hot: Kiwi News' Hot ranking and rules. Kiwi News' own picks (the app curation, predictions and the pinned story) don't apply. `/api/v1/communities/:owner/:key/feed/rows` pages on like `/api/v1/feed/rows`.
+- Hot: Kiwi News' Hot ranking and rules, except that a story missing its engagement rules (enough upvotes, the submitter's karma, a known name) isn't hidden: it comes after the stories that meet them, so a small community's Hot isn't empty. Kiwi News' own picks (the app curation, predictions and the pinned story) don't apply. `/api/v1/communities/:owner/:key/feed/rows` pages on like `/api/v1/feed/rows`, with the same exception.
 - New: the community's newest 25 stories, as `/new` shows them. `/api/v1/communities/:owner/:key/new/rows` pages on from there.
 - Best: per `period` and `page`, like Kiwi News' Best.
 
@@ -269,5 +269,53 @@ Since protocol 14.0.0, the notifications of `GET /api/v1/activity?address=<addre
     "community": { "id": "0x0f6a…/agent-builders", "name": "Agent Builders", "icon": "robot", "color": "#6E56CF" }
   },
   "identities": [{ "address": "0xA1…", "displayName": "alice.eth", … }]
+}
+```
+
+## Karma
+
+Karma counts what an identity contributed: one point for every story it
+submitted and one for every upvote its stories received. Upvotes it gives and
+comments don't count. Karma belongs to the identity, so what an account's
+[delegated keys](/delegation) did counts for the account. The website serves
+these endpoints (`HTTP_PORT`, e.g. https://news.kiwistand.com) and answers in
+the envelope described above.
+
+### GET /api/v1/karma/:address
+
+`:address` may be in any case; 400 if it isn't an address. `data` is
+`{"address", "karma"}`, the address checksummed:
+
+```js
+{
+  "address": "0x0f6A…",
+  "karma": 1234
+}
+```
+
+### GET /api/v1/karma/top
+
+The identities with the most karma, most first. Query parameters, both
+optional:
+
+- `limit` (integer): 10 by default, at most 100.
+- `offset` (integer): how many to skip, 0 by default.
+
+`data`:
+
+```js
+{
+  "total": 2048,        // identities with karma
+  "limit": 10,
+  "offset": 0,
+  "holders": [
+    {
+      "rank": 1,
+      "identity": "0x0f6A…",
+      "displayName": "alice.eth",   // ENS name, else the address
+      "karma": 1234,
+      "ensData": { "name": "alice.eth", "avatar": "https://…" } // or null
+    }
+  ]
 }
 ```
