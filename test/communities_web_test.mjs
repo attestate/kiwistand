@@ -437,6 +437,30 @@ test.serial("?via= opens the invite page, other values don't", async (t) => {
   t.false(plain.body.includes("<script>"));
 });
 
+test.serial("a community's feeds are cached like Kiwi News' own", async (t) => {
+  const owner = address();
+  const id = insert(owner, { name: "Web Caching" });
+  const [, key] = id.split("/");
+  const handler = page.handler({
+    ...deps,
+    getStories: async () => ({ stories: [], start: 0 }),
+  });
+  // NOTE: The same values src/http.mjs sends for /, /new and /best.
+  for (const [feed, expected] of [
+    [undefined, "public, s-maxage=20, max-age=0, stale-while-revalidate=86400"],
+    ["new", "no-cache"],
+    [
+      "best",
+      "public, s-maxage=3600, max-age=0, stale-while-revalidate=2592000",
+    ],
+  ]) {
+    const r = reply();
+    await handler({ params: { owner, key, feed }, query: {}, path: "/c" }, r);
+    t.is(r.statusCode, 200, feed);
+    t.is(r.headers["Cache-Control"], expected, feed);
+  }
+});
+
 // --- /communities and /communities/new ----------------------------------------
 
 test("browse lists communities as cards, most active first", (t) => {
