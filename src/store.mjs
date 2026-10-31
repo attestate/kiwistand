@@ -27,7 +27,11 @@ import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
-import { insertMessage, isReactionComment } from "./cache.mjs";
+import {
+  insertMessage,
+  isReactionComment,
+  communityCreatedAt,
+} from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -316,7 +320,11 @@ export function upvoteID(identity, link, type) {
 
 let messagesAdded = 0;
 async function atomicPut(trie, message, identity, delegations) {
-  const marker = upvoteID(identity, message.href, message.type);
+  // NOTE: Only amplifies have a marker; a community has no href.
+  const marker =
+    message.type === "amplify"
+      ? upvoteID(identity, message.href, message.type)
+      : null;
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${JSON.stringify(
@@ -346,13 +354,17 @@ async function atomicPut(trie, message, identity, delegations) {
   //
   // To check whether a comment exists and then aborting the routine now
   // prevents the above from happening.
-  if (message.type === "comment") {
+  // NOTE: The same goes for communities: a version that's already stored
+  // must not be processed again.
+  if (message.type === "comment" || message.type === "community") {
     const existingLeaf = await trie.get(Buffer.from(index, "hex"));
     if (existingLeaf) {
       const err = `Message with index "${index}" already exists in the trie. Skipping.`;
       log(err);
       throw new Error(err);
     }
+  }
+  if (message.type === "comment") {
     if (isReactionComment(message.title)) {
       const reactionMarker = upvoteID(identity, message.href, "reaction");
       const legit = await passesReaction(reactionMarker);
@@ -440,7 +452,9 @@ async function atomicPut(trie, message, identity, delegations) {
       });
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
-      // want the protocol to continue to execute as normally.
+      // want the protocol to continue to execute as normally. For a
+      // community, it means this node rejects posts to it until the next
+      // start puts the trie's communities into the table again (launch.mjs).
       log(
         `Inserting message threw: ${JSON.stringify(
           message,
@@ -556,6 +570,16 @@ async function _add({
     const err = `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`;
     log(err);
     throw new Error(err);
+  }
+
+  if (message.type === "amplify" && message.community !== undefined) {
+    const created = communityCreatedAt(message.community);
+    if (created === undefined) {
+      throw new Error("add: Didn't find the community of the post");
+    }
+    if (created >= message.timestamp) {
+      throw new Error("add: The community must be older than the post");
+    }
   }
 
   if (message.type === "comment") {
@@ -728,9 +752,9 @@ export async function leaves(
   type = "amplify",
   root = trie.root(),
 ) {
-  if (type !== "amplify" && type !== "comment") {
+  if (type !== "amplify" && type !== "comment" && type !== "community") {
     throw new Error(
-      "store leaves: Must be called with type 'amplify' or 'comment'",
+      "store leaves: Must be called with type 'amplify', 'comment' or 'community'",
     );
   }
   const nodes = [];
@@ -765,11 +789,13 @@ export async function leaves(
       if (parsed.timestamp < startDatetime) {
         continue;
       }
+      // NOTE: The type is checked first as communities have no href. It is
+      // always set: the check at the top of the function throws otherwise.
       if (
+        type !== parsed.type ||
         (href && (parsed.href.startsWith('data:') || href.startsWith('data:')
           ? parsed.href !== href
-          : normalizeUrl(parsed.href) !== normalizeUrl(href))) ||
-        (type && type !== parsed.type)
+          : normalizeUrl(parsed.href) !== normalizeUrl(href)))
       ) {
         continue;
       }

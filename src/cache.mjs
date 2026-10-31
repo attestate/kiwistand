@@ -21,6 +21,7 @@ import normalizeUrl from "normalize-url";
 
 import log from "./logger.mjs";
 import { toDigest } from "./id.mjs";
+import { communityId } from "./communities.mjs";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
@@ -152,9 +153,11 @@ export function initialize(messages) {
          title TEXT NOT NULL,
          timestamp INTEGER NOT NULL,
          signer TEXT NOT NULL,
-         identity TEXT NOT NULL
+         identity TEXT NOT NULL,
+         community TEXT
      );
      CREATE INDEX IF NOT EXISTS idx_submission_href ON submissions(href);
+     CREATE INDEX IF NOT EXISTS idx_submissions_community ON submissions(community);
      CREATE INDEX IF NOT EXISTS idx_submissions_timestamp ON submissions(timestamp);
      CREATE INDEX IF NOT EXISTS idx_submissions_identity ON submissions(identity);
    `);
@@ -202,6 +205,144 @@ export function initialize(messages) {
     `);
   messages.forEach(insertMessage);
   log("initialize: Done re-inserting all messages");
+}
+
+// Communities (protocol 13.0.0, src/communities.mjs). Runs before
+// `initialize`: it adds the `community` column to a submissions table made by
+// an older version and creates the communities table, which holds the newest
+// version of each community and when it was first created.
+export function initializeCommunities(database = db) {
+  const db = database;
+  const submissions = db
+    .prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='submissions'`,
+    )
+    .get();
+  if (submissions) {
+    const columns = db
+      .prepare(`PRAGMA table_info(submissions)`)
+      .all()
+      .map(({ name }) => name);
+    if (!columns.includes("community")) {
+      try {
+        db.exec(`ALTER TABLE submissions ADD COLUMN community TEXT`);
+      } catch (err) {
+        // NOTE: Another process may have added it in the meantime.
+        if (!err.message.includes("duplicate column")) throw err;
+      }
+    }
+    db.exec(
+      `CREATE INDEX IF NOT EXISTS idx_submissions_community ON submissions(community)`,
+    );
+  }
+
+  db.exec(`
+     CREATE TABLE IF NOT EXISTS communities (
+         id TEXT PRIMARY KEY NOT NULL,
+         owner TEXT NOT NULL,
+         name TEXT NOT NULL,
+         about TEXT NOT NULL,
+         rules TEXT NOT NULL,
+         icon TEXT NOT NULL,
+         color TEXT NOT NULL,
+         created INTEGER NOT NULL,
+         timestamp INTEGER NOT NULL,
+         message TEXT NOT NULL,
+         signer TEXT NOT NULL
+     );
+     CREATE INDEX IF NOT EXISTS idx_communities_owner ON communities(owner);
+   `);
+}
+
+// NOTE: In an UPDATE, SQLite evaluates every SET expression on the row as it
+// was, so "newer" compares against the stored version throughout. Of two
+// versions with the same timestamp, the one with the greater index wins, so
+// every node keeps the same one.
+const newerCommunity = `(excluded.timestamp > communities.timestamp OR
+  (excluded.timestamp = communities.timestamp AND excluded.message > communities.message))`;
+const pick = (column) =>
+  `${column} = CASE WHEN ${newerCommunity} THEN excluded.${column} ELSE communities.${column} END`;
+
+export function insertCommunity(message) {
+  const { index, name, about, rules, icon, color, timestamp, signer, identity } =
+    message;
+  db.prepare(
+    `INSERT INTO communities
+       (id, owner, name, about, rules, icon, color, created, timestamp, message, signer)
+     VALUES
+       (@id, @owner, @name, @about, @rules, @icon, @color, @timestamp, @timestamp, @message, @signer)
+     ON CONFLICT(id) DO UPDATE SET
+       created = MIN(communities.created, excluded.created),
+       ${["name", "about", "rules", "icon", "color", "timestamp", "message", "signer"]
+         .map(pick)
+         .join(",\n       ")}`,
+  ).run({
+    id: communityId(identity, name),
+    owner: identity,
+    name,
+    about,
+    rules: JSON.stringify(rules),
+    icon,
+    color,
+    timestamp,
+    message: index,
+    signer,
+  });
+}
+
+export function insertCommunities(messages) {
+  for (const message of messages) {
+    try {
+      insertCommunity(message);
+    } catch (err) {
+      log(`Failed to insert community "${message.name}": ${err.toString()}`);
+    }
+  }
+}
+
+// When the community was first created (its oldest version's timestamp), or
+// undefined if this node doesn't have it. Nodes judge posts to a community by
+// it, so it must hold every community of the trie: atomicPut inserts each one
+// and launch.mjs inserts them all again at startup.
+export function communityCreatedAt(id) {
+  try {
+    const row = db
+      .prepare(`SELECT created FROM communities WHERE id = ?`)
+      .get(id.toLowerCase());
+    return row ? row.created : undefined;
+  } catch (err) {
+    // NOTE: The table doesn't exist before initializeCommunities ran.
+    return undefined;
+  }
+}
+
+function toCommunity(row) {
+  return {
+    id: row.id,
+    owner: row.owner,
+    name: row.name,
+    about: row.about,
+    rules: JSON.parse(row.rules),
+    icon: row.icon,
+    color: row.color,
+    created: row.created,
+    timestamp: row.timestamp,
+    index: `0x${row.message}`,
+  };
+}
+
+export function getCommunity(id) {
+  const row = db
+    .prepare(`SELECT * FROM communities WHERE id = ?`)
+    .get(id.toLowerCase());
+  return row ? toCommunity(row) : null;
+}
+
+export function listCommunities() {
+  return db
+    .prepare(`SELECT * FROM communities ORDER BY created ASC, id ASC`)
+    .all()
+    .map(toCommunity);
 }
 
 export function initializeNotifications() {
@@ -1138,7 +1279,20 @@ export function insertMessage(message) {
       db
         .prepare(`SELECT COUNT(*) AS count FROM submissions WHERE href = ?`)
         .get(normalizedHref).count > 0;
-    if (!submissionExists) {
+    if (!submissionExists && message.community !== undefined) {
+      // A submission to a community (an upvote never changes it).
+      db.prepare(
+        `INSERT INTO submissions (id, href, title, timestamp, signer, identity, community) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        `kiwi:0x${index}`,
+        normalizedHref,
+        title,
+        timestamp,
+        signer,
+        identity,
+        message.community.toLowerCase(),
+      );
+    } else if (!submissionExists) {
       // Insert as submission if it doesn't exist
       const insertSubmission = db.prepare(
         `INSERT INTO submissions (id, href, title, timestamp, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -1204,6 +1358,8 @@ export function insertMessage(message) {
     } catch (err) {
       log(`Failing to insert comment "${title}", error: "${err.toString()}"`);
     }
+  } else if (type === "community") {
+    insertCommunity(message);
   } else {
     throw new Error("Unsupported message type");
   }

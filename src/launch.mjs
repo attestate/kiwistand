@@ -58,6 +58,9 @@ if (cluster.isPrimary) {
   cache.initializeLtCache();
   cache.initializeImpressions();
   cache.initializeShares();
+  // NOTE: Before the node takes messages: posts to communities are judged
+  // with the communities table (see store.mjs `_add`).
+  cache.initializeCommunities();
 
   // Run cache cleanup in background (non-blocking)
   const cleanupProcess = fork("./scripts/cleanup-cache.mjs", [], {
@@ -292,10 +295,34 @@ await Promise.allSettled([
     .catch((error) => console.error("Comment posts error:", error)),
 ]);
 
+cache.initializeCommunities();
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
 cache.initializeReactions();
 cache.addCompoundIndexes();
+
+// NOTE: Posts to a community are judged with the communities table. The
+// primary, which takes messages, puts every community of the trie into it
+// again in the background, to fill in any the table missed (e.g. a failed
+// insert).
+if (cluster.isPrimary) {
+  store
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      delegations,
+      href,
+      "community",
+    )
+    .then((result) => {
+      cache.insertCommunities(result);
+      log(`Loaded ${result.length} community versions`);
+    })
+    .catch((error) => console.error("Community posts error:", error));
+}
 
 // Make upvote/reaction marker caching non-blocking to improve startup time
 setImmediate(() => {
