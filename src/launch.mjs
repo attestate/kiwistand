@@ -18,7 +18,6 @@ import * as api from "./api.mjs";
 // Dynamic import for http module - only loaded when not in reconcile mode
 import * as store from "./store.mjs";
 import * as cache from "./cache.mjs";
-import * as communities from "./communities.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
@@ -60,7 +59,7 @@ if (cluster.isPrimary) {
   cache.initializeImpressions();
   cache.initializeShares();
   // NOTE: Before the node takes messages: posts to communities are judged
-  // with the communities table (see store.communityCreated).
+  // with the communities table (see store.mjs `_add`).
   cache.initializeCommunities();
 
   // Run cache cleanup in background (non-blocking)
@@ -302,9 +301,10 @@ cache.initializeNotifications();
 cache.initializeReactions();
 cache.addCompoundIndexes();
 
-// NOTE: The primary, which takes messages, reads communities from the trie in
-// the background: until then, posts are judged with the communities table,
-// and this fills in whatever the table missed.
+// NOTE: Posts to a community are judged with the communities table. The
+// primary, which takes messages, puts every community of the trie into it
+// again in the background, to fill in any the table missed (e.g. a failed
+// insert).
 if (cluster.isPrimary) {
   store
     .posts(
@@ -318,12 +318,6 @@ if (cluster.isPrimary) {
       "community",
     )
     .then((result) => {
-      for (const community of result) {
-        communities.remember(
-          communities.communityId(community.identity, community.name),
-          community.timestamp,
-        );
-      }
       cache.insertCommunities(result);
       log(`Loaded ${result.length} community versions`);
     })

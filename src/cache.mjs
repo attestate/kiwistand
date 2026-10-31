@@ -300,7 +300,10 @@ export function insertCommunities(messages) {
   }
 }
 
-// When the community was first created, or undefined if it isn't cached.
+// When the community was first created (its oldest version's timestamp), or
+// undefined if this node doesn't have it. Nodes judge posts to a community by
+// it, so it must hold every community of the trie: atomicPut inserts each one
+// and launch.mjs inserts them all again at startup.
 export function communityCreatedAt(id) {
   try {
     const row = db

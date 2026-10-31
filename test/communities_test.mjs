@@ -48,7 +48,6 @@ async function freshTrie(t) {
   env.DATA_DIR = dir;
   t.teardown(() => rm(dir, { recursive: true, force: true }));
   store.upvotes.clear();
-  communities.clear();
   return await store.create();
 }
 
@@ -369,14 +368,26 @@ test.serial("the same community version can't be added twice", async (t) => {
   await t.throwsAsync(() => add(trie, message), { message: /already exists in the trie/ });
 });
 
-test.serial("after a restart, posts are judged with the cached communities", async (t) => {
+test.serial("a community missing from the table comes back when the node re-reads the trie", async (t) => {
   const trie = await freshTrie(t);
   const owner = Wallet.createRandom();
+  const id_ = communities.communityId(owner.address, "AI");
   await add(trie, await signCommunity(owner));
-  communities.clear();
-  t.is(communities.createdAt(`${owner.address}/ai`), undefined);
-  t.is(store.communityCreated(`${owner.address}/ai`), T);
-  t.truthy(await add(trie, await signPost(owner, `${owner.address}/ai`, T + 1)));
+  t.is(cache.communityCreatedAt(id_), T);
+
+  // E.g. a failed insert: the node rejects posts to the community...
+  db.prepare(`DELETE FROM communities WHERE id = ?`).run(id_);
+  const post = await signPost(owner, id_, T + 1);
+  await t.throwsAsync(() => add(trie, post), {
+    message: "add: Didn't find the community of the post",
+  });
+
+  // ...until launch.mjs puts the trie's communities into the table again.
+  cache.insertCommunities(
+    await store.posts(trie, null, null, JSON.parse, null, {}, null, "community"),
+  );
+  t.is(cache.communityCreatedAt(id_), T);
+  t.truthy(await add(trie, post));
 });
 
 test.serial("a post to a link that's already a story counts as an upvote", async (t) => {

@@ -32,7 +32,6 @@ import {
   isReactionComment,
   communityCreatedAt,
 } from "./cache.mjs";
-import * as communities from "./communities.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -379,14 +378,6 @@ async function atomicPut(trie, message, identity, delegations) {
 
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
-    // NOTE: Unlike the SQLite cache below, this is protocol state: posts to
-    // this community are judged by it.
-    if (message.type === "community") {
-      communities.remember(
-        communities.communityId(identity, message.name),
-        message.timestamp,
-      );
-    }
     try {
       const cacheEnabled = false;
       const enhancer = enhance(delegations, cacheEnabled);
@@ -461,7 +452,9 @@ async function atomicPut(trie, message, identity, delegations) {
       });
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
-      // want the protocol to continue to execute as normally.
+      // want the protocol to continue to execute as normally. For a
+      // community, it means this node rejects posts to it until the next
+      // start puts the trie's communities into the table again (launch.mjs).
       log(
         `Inserting message threw: ${JSON.stringify(
           message,
@@ -580,7 +573,7 @@ async function _add({
   }
 
   if (message.type === "amplify" && message.community !== undefined) {
-    const created = communityCreated(message.community);
+    const created = communityCreatedAt(message.community);
     if (created === undefined) {
       throw new Error("add: Didn't find the community of the post");
     }
@@ -629,17 +622,6 @@ async function _add({
   log(`Sending message to peers: "${messages.name}" and index: "${index}"`);
   libp2p.pubsub.publish(messages.name, canonical);
   return index;
-}
-
-// When a community was first created, or undefined if this node doesn't know
-// it. The in-memory registry has every community this process added or read
-// from the trie at startup; the SQLite cache has them across restarts, so
-// posts are judged correctly while launch.mjs is still reading the trie.
-export function communityCreated(id) {
-  const known = [communities.createdAt(id), communityCreatedAt(id)].filter(
-    Number.isInteger,
-  );
-  return known.length ? Math.min(...known) : undefined;
 }
 
 export async function leaf(trie, index, parser) {

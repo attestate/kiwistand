@@ -41,24 +41,3 @@ export function create({ name, about, rules, icon, color, timestamp }) {
     timestamp,
   };
 }
-
-// When each community was first created: the timestamp of its oldest version
-// this node has seen, which is what the "older than the post" check needs.
-// store.mjs fills it as communities are added; launch.mjs fills it from the
-// trie at startup. The SQLite cache (cache.mjs) keeps the same value across
-// restarts.
-const created = new Map();
-
-export function remember(id, timestamp) {
-  const key = normalizeId(id);
-  const known = created.get(key);
-  if (known === undefined || timestamp < known) created.set(key, timestamp);
-}
-
-export function createdAt(id) {
-  return created.get(normalizeId(id));
-}
-
-export function clear() {
-  created.clear();
-}
