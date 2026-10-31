@@ -335,8 +335,8 @@ test("chunkList stays under the byte budget and keeps order", (t) => {
 // The trie is bigger than one frame, so a single leaves/levels message would
 // have been the thing that used to force maxDataLength up.
 test.serial("two nodes on the new protocol sync a trie bigger than one frame", async (t) => {
-  t.is(PROTOCOL.protocols.leaves.version, "16.0.0");
-  t.is(PROTOCOL.protocols.levels.version, "16.0.0");
+  t.is(PROTOCOL.protocols.leaves.version, "17.0.0");
+  t.is(PROTOCOL.protocols.levels.version, "17.0.0");
 
   const dirA = "dbtestChunkA";
   const dirB = "dbtestChunkB";

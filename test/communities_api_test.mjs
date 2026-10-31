@@ -156,6 +156,7 @@ test.serial("the list has the Community objects, most active first", async (t) =
     "timestamp",
     "stories",
     "lastStory",
+    "members",
   ]);
   t.is(first.owner, utils.getAddress(owner));
   t.is(first.ownerName, "builder.eth");

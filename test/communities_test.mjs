@@ -98,10 +98,12 @@ function submissionCommunity(href) {
 // --- Protocol version -----------------------------------------------------
 
 test("communities bump the protocol versions", (t) => {
-  t.is(PROTOCOL.pubsub.topics.roots.version, "13.0.0");
-  t.is(PROTOCOL.pubsub.topics.messages.version, "13.0.0");
-  t.is(PROTOCOL.protocols.leaves.version, "16.0.0");
-  t.is(PROTOCOL.protocols.levels.version, "16.0.0");
+  // NOTE: 13.0.0 and 16.0.0 brought communities; membership (14.0.0 and
+  // 17.0.0, test/memberships_test.mjs) bumped them again.
+  t.is(PROTOCOL.pubsub.topics.roots.version, "14.0.0");
+  t.is(PROTOCOL.pubsub.topics.messages.version, "14.0.0");
+  t.is(PROTOCOL.protocols.leaves.version, "17.0.0");
+  t.is(PROTOCOL.protocols.levels.version, "17.0.0");
 });
 
 // --- Names and IDs --------------------------------------------------------

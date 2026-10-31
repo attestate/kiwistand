@@ -2,7 +2,9 @@
 // The read side of communities (protocol 13.0.0, src/communities.mjs):
 // GET /api/v1/communities and /api/v1/communities/:owner/:key, the
 // `community` query of the feeds, and the `community` object on stories. See
-// "Communities" in docs/source/http-api.rst.
+// "Communities" in docs/src/pages/http-api.mdx. Since protocol 14.0.0
+// (src/memberships.mjs) a community has `members`, and the list takes
+// `member`.
 //
 // NOTE: Communities are read through cache.listCommunities and
 // cache.getCommunity only, with the delegations, which resolve a community's
@@ -32,6 +34,9 @@ const defaults = {
   listCommunities: (delegations) => cache.listCommunities(delegations),
   getCommunity: (id, delegations) => cache.getCommunity(id, delegations),
   communityActivity: (id) => cache.communityActivity(id),
+  memberCounts: (ids, delegations) => cache.memberCounts(ids, delegations),
+  joinedCommunities: (address, delegations) =>
+    cache.joinedCommunities(address, delegations),
 };
 
 // A community ID from a request: undefined without one, else the lowercase
@@ -94,8 +99,8 @@ async function ownerName(owner, resolve) {
   }
 }
 
-// The Community object of the API.
-async function present(id, community, activity, resolve) {
+// The Community object of the API. `members` counts the owner.
+async function present(id, community, activity, members, resolve) {
   const { stories = 0, lastStory = null } = activity || {};
   return {
     id,
@@ -110,6 +115,7 @@ async function present(id, community, activity, resolve) {
     timestamp: community.timestamp,
     stories,
     lastStory,
+    members: members ?? 1,
   };
 }
 
@@ -134,7 +140,12 @@ export function parseLimit(value) {
 // GET /api/v1/communities. Throws a TypeError for invalid parameters.
 // NOTE: The communities of a profile the moderation bans aren't listed, as
 // its stories aren't.
-export async function listCommunities({ q, owner, limit } = {}, deps = {}) {
+// `member`: only the communities that identity is a member of, the ones it
+// owns included (protocol 14.0.0).
+export async function listCommunities(
+  { q, owner, member, limit } = {},
+  deps = {},
+) {
   const d = { ...defaults, ...deps };
   if (q !== undefined && typeof q !== "string") {
     throw new TypeError("q must be a string");
@@ -143,18 +154,30 @@ export async function listCommunities({ q, owner, limit } = {}, deps = {}) {
   if (owner !== undefined && !addressPattern.test(owner)) {
     throw new TypeError("owner must be an address");
   }
+  if (member === "") member = undefined;
+  if (
+    member !== undefined &&
+    (typeof member !== "string" || !addressPattern.test(member))
+  ) {
+    throw new TypeError("member must be an address");
+  }
 
   const [delegations, banned] = await Promise.all([
     d.delegations(),
     bannedAddresses(d.getLists),
   ]);
   const query = (q || "").trim().toLowerCase();
+  const joined =
+    member === undefined ? null : d.joinedCommunities(member, delegations);
   const communities = d
     .listCommunities(delegations)
     .filter(
       (community) =>
         !banned.includes(community.owner.toLowerCase()) &&
         (!owner || community.owner.toLowerCase() === owner.toLowerCase()) &&
+        (!joined ||
+          community.owner.toLowerCase() === member.toLowerCase() ||
+          joined.has(community.id)) &&
         (!query ||
           community.name.toLowerCase().includes(query) ||
           community.about.toLowerCase().includes(query)),
@@ -170,9 +193,13 @@ export async function listCommunities({ q, owner, limit } = {}, deps = {}) {
     }))
     .sort(byActivity)
     .slice(0, parseLimit(limit));
+  const members = d.memberCounts(
+    ranked.map(({ id }) => id),
+    delegations,
+  );
   return await Promise.all(
     ranked.map(({ id, community }) =>
-      present(id, community, activity.get(id), d.resolve),
+      present(id, community, activity.get(id), members.get(id), d.resolve),
     ),
   );
 }
@@ -196,11 +223,15 @@ export async function findCommunity(owner, key, deps = {}) {
     id,
     community,
     d.communityActivity(id).get(id),
+    d.memberCounts([id], delegations).get(id),
     d.resolve,
   );
 }
 
 const CACHE_CONTROL = "public, s-maxage=30, max-age=0, stale-while-revalidate=300";
+// NOTE: The communities someone is a member of change when they join or
+// leave, and they read them right after, so `member` isn't cached.
+const MEMBER_CACHE_CONTROL = "no-cache";
 
 export function listHandler(deps = {}) {
   return async (request, reply) => {
@@ -214,7 +245,10 @@ export function listHandler(deps = {}) {
       log(`/api/v1/communities: ${err.stack}`);
       return sendError(reply, 500, "Internal Server Error", "Couldn't list the communities");
     }
-    reply.header("Cache-Control", CACHE_CONTROL);
+    reply.header(
+      "Cache-Control",
+      request.query?.member ? MEMBER_CACHE_CONTROL : CACHE_CONTROL,
+    );
     return sendStatus(reply, 200, "OK", "Communities", communities);
   };
 }

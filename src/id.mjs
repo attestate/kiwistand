@@ -21,6 +21,7 @@ import {
   EIP712_MESSAGE,
   EIP712_COMMUNITY_MESSAGE,
   EIP712_COMMUNITY,
+  EIP712_MEMBERSHIP,
 } from "./constants.mjs";
 import log from "./logger.mjs";
 
@@ -79,10 +80,17 @@ export function create(title, href, type, timestamp, community) {
   return message;
 }
 
-// The EIP-712 types a protocol message is signed with: a community, a post to
-// a community (an amplify with `community`), or any other message.
+// The EIP-712 types a protocol message is signed with: a community, joining
+// or leaving one, a post to a community (an amplify with `community`), or any
+// other message.
+//
+// NOTE: Memberships have a `community` too, so they're told apart by type
+// first.
 export function messageTypes(message) {
   if (message.type === "community") return EIP712_COMMUNITY;
+  if (message.type === "join" || message.type === "leave") {
+    return EIP712_MEMBERSHIP;
+  }
   if (message.community !== undefined) return EIP712_COMMUNITY_MESSAGE;
   return EIP712_MESSAGE;
 }

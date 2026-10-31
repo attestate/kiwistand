@@ -7,7 +7,9 @@ import { utils } from "ethers";
 import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
+import * as registry from "../chainstate/registry.mjs";
 import { custom } from "./components/head.mjs";
+import { Tile, communityPath } from "./components/communities.mjs";
 import { Page, EmptyState, Icon, timeAgo } from "./components/n2.mjs";
 import { getSlug } from "../utils.mjs";
 import {
@@ -16,11 +18,13 @@ import {
   othersText,
   headlineText,
   groupReactions,
+  groupJoins,
 } from "./activity-groups.mjs";
 import {
   getUpvotes,
   getComments,
   getReactionsToComments,
+  getJoins,
   getTimestamp,
   setTimestamp,
 } from "../cache.mjs";
@@ -92,7 +96,15 @@ function linkFromLike(activity) {
   return `/stories/${getSlug(title)}?index=0x${activity.message.index}`;
 }
 
+// NOTE: Someone joined one of your communities (protocol 14.0.0): its page.
+function linkFromJoin(activity) {
+  return communityPath(activity.message.community.id);
+}
+
 export function href(activity) {
+  if (activity.verb === "joined" || activity.verb === "joins") {
+    return linkFromJoin(activity);
+  }
   return activity.verb === "liked"
     ? linkFromLike(activity)
     : linkFromComment(activity);
@@ -184,7 +196,17 @@ function Face(actor) {
 // the story's title or the comment in the secondary colour. The faces and
 // the name link to profiles, so the row isn't one link: a cover link under
 // them goes to the story (no links inside links).
-function GroupRow({ isNew, href, i, kind, activity, predicate, extra, text }) {
+function GroupRow({
+  isNew,
+  href,
+  i,
+  kind,
+  mark,
+  activity,
+  predicate,
+  extra,
+  text,
+}) {
   const [newest] = activity.actors;
   const name = newest.displayName || newest.address;
   const label = `${headlineText(name, activity.actorCount, predicate)}${
@@ -199,7 +221,7 @@ function GroupRow({ isNew, href, i, kind, activity, predicate, extra, text }) {
         data-no-instant="${i < 3}"
         onclick="${spinnerOnClick}"
       ></a>
-      ${Mark(kind)}
+      ${mark || Mark(kind)}
       <span class="n2-notif-body">
         <span class="n2-notif-faces">${activity.actors.map(Face)}</span>
         <span class="n2-notif-headline"
@@ -253,6 +275,24 @@ function generateRow(lastUpdate) {
       });
     }
 
+    // NOTE: The people who joined one of your communities, under its icon in
+    // its colour.
+    if (activity.verb === "joins" && activity.actors?.length) {
+      const { community } = activity.message;
+      return GroupRow({
+        isNew,
+        i,
+        href: linkFromJoin(activity),
+        kind: "join",
+        mark: html`<span class="n2-notif-mark"
+          >${Tile(community, 32, 18)}</span
+        >`,
+        activity,
+        predicate: "joined your community",
+        text: DOMPurify.sanitize(community.name),
+      });
+    }
+
     if (activity.verb === "liked" && activity.actors?.length) {
       return GroupRow({
         isNew,
@@ -276,8 +316,8 @@ const Heading = html`<header class="n2-page-head">
   <p class="n2-sub n2-m">The conversation continues.</p>
 </header>`;
 
-// NOTE: `notifications` is data()'s `feed`: likes grouped per story and
-// reactions grouped per comment.
+// NOTE: `notifications` is data()'s `feed`: likes grouped per story,
+// reactions grouped per comment and joins grouped per community.
 export async function page(
   theme,
   identity,
@@ -353,11 +393,15 @@ export async function loggedOutPage(theme) {
   });
 }
 
+// `options.delegations`: the delegations to find the owner's communities and
+// their members with; registry.delegations() by default. `options.resolve`:
+// how to resolve a profile; ens.resolve by default.
 export async function data(
   trie,
   identity,
   lastRemoteValue,
   skipDetails = false,
+  options = {},
 ) {
   if (!identity) {
     throw new Error("Address has to be a query parameter");
@@ -394,6 +438,30 @@ export async function data(
     });
   });
 
+  // NOTE: The people who joined your communities (protocol 14.0.0), from the
+  // memberships table, like comments from the last three weeks. They're
+  // `joins`, not in `notifications`: the apps' notifications list would show
+  // a verb it doesn't know as a like.
+  const joinActivities = [];
+  if (!skipDetails) {
+    const delegations = options.delegations ?? (await registry.delegations());
+    const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
+    for (const join of getJoins(identity, delegations, threeWeeksAgo)) {
+      const { id, name, icon, color } = join.community;
+      joinActivities.push({
+        verb: "joined",
+        message: {
+          index: join.index,
+          identity: join.identity,
+          timestamp: join.timestamp,
+          community: { id, name, icon, color },
+        },
+        timestamp: join.timestamp,
+        identities: [join.identity],
+      });
+    }
+  }
+
   // Process reactions - only include them if we'll resolve ENS data later
   if (!skipDetails) {
     reactions.map((reaction) => {
@@ -419,8 +487,7 @@ export async function data(
     if (!profiles.has(key)) {
       profiles.set(
         key,
-        ens
-          .resolve(address)
+        (options.resolve ?? ens.resolve)(address)
           .then((ensData) => ({ address, ...ensData }))
           .catch(() => null),
       );
@@ -511,8 +578,23 @@ export async function data(
     };
   }
 
+  // NOTE: Joins to one community are one row on the page, like likes on a
+  // story. Members without a profile show their address.
+  async function enrichJoins(group) {
+    const shown = group.members.slice(0, MAX_AVATARS);
+    const actors = (
+      await Promise.all(
+        shown.map(async (address) => (await profile(address)) || unresolved(address)),
+      )
+    ).map(actor);
+    return { ...group, actors, actorCount: group.members.length };
+  }
+
   const notifications = (
     await Promise.all(activities.slice(0, 20).map(enrich))
+  ).filter(Boolean);
+  const joins = (
+    await Promise.all(joinActivities.slice(0, 20).map(enrich))
   ).filter(Boolean);
 
   // NOTE: The page's rows (`feed`): likes and comments as in
@@ -527,24 +609,34 @@ export async function data(
     const rows = [
       ...activities.filter((activity) => activity.verb !== "reacted"),
       ...groups,
+      ...groupJoins(joinActivities, identity),
     ]
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 20);
     feed = (
       await Promise.all(
         rows.map((row) =>
-          row.verb === "reactions" ? enrichReactions(row) : enrich(row),
+          row.verb === "reactions"
+            ? enrichReactions(row)
+            : row.verb === "joins"
+            ? enrichJoins(row)
+            : enrich(row),
         ),
       )
     ).filter(Boolean);
   }
 
   let lastUpdate = "0";
-  if (notifications.length > 0) {
-    lastUpdate = notifications[0].timestamp;
+  const newest = Math.max(
+    notifications[0]?.timestamp ?? 0,
+    joins[0]?.timestamp ?? 0,
+  );
+  if (newest > 0) {
+    lastUpdate = newest;
   }
   return {
     notifications: notifications,
+    joins,
     feed,
     lastUpdate,
     latestValue,

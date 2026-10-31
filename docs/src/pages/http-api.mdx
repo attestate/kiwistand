@@ -44,8 +44,8 @@ For news.kiwistand.com it is at 8443.
 
 ### Message
 
-A message is one of three objects, each with `"additionalProperties": false`.
-The schemas are `upvote`, `comment` and `community` in
+A message is one of four objects, each with `"additionalProperties": false`.
+The schemas are `upvote`, `comment`, `community` and `membership` in
 [src/constants.mjs](https://github.com/attestate/kiwistand/blob/main/src/constants.mjs).
 
 ```javascript
@@ -79,10 +79,18 @@ The schemas are `upvote`, `comment` and `community` in
   "color": "#6E56CF",        // any hex colour, #RRGGBB
   "signature": "0x..."
 }
+
+// join or leave a community (protocol 14.0.0)
+{
+  "timestamp": 1700000000,
+  "type": "join",            // or "leave"
+  "community": "0x.../ai",   // the community's ID
+  "signature": "0x..."
+}
 ```
 
-See [Communities](/protocol#communities) for what a community is and which
-EIP-712 type each message is signed with.
+See [Communities](/protocol#communities) and [Membership](/protocol#membership)
+for what they are and which EIP-712 type each message is signed with.
 
 ## API Versioning
 
@@ -114,8 +122,9 @@ Request body:
 - `amount` (integer): The number of entries that the request should contain.
   Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the [.env
   file](https://github.com/attestate/kiwistand/blob/main/.env-copy).
-- `type` (enum: `["amplify", "comment", "community"]`, defaults to:
-  "amplify" if the parameter is omitted): The type of the message.
+- `type` (enum: `["amplify", "comment", "community", "join", "leave"]`,
+  defaults to: "amplify" if the parameter is omitted): The type of the
+  message.
 
 Response body
 
@@ -150,7 +159,8 @@ Request body:
 
 - `timestamp` (integer): Unix timestamp. Must be bigger than
   MIN_TIMESTAMP_SECS (1672527600), as defined in the [.env file](https://github.com/attestate/kiwistand/blob/main/.env-copy).
-- `type` (string): `"amplify"`, `"comment"` or `"community"`.
+- `type` (string): `"amplify"`, `"comment"`, `"community"`, `"join"` or
+  `"leave"`.
 - The other fields of that type, see [Message](#message).
 - `signature` (string): Message signature. Must match the pattern
   "0x[a-fA-F0-9]+".
@@ -171,10 +181,21 @@ Request body:
 7. A comment's story must exist and be older than the comment.
 8. An amplify with `community` must name a community the node has, in a
    version older than the post (see [Communities](/protocol#communities)).
+9. A join or leave must name a community the node has, in a version older
+   than the message (see [Membership](/protocol#membership)). The signer's
+   earlier joins and leaves don't matter.
+
+When the node takes a join, it notifies the community's owner (a push
+notification to the iOS app and a Farcaster mini app notification), unless the
+owner joined their own community. Like for upvotes, the person joining needs a
+name and a Neynar score of at least `MIN_NEYNAR_SCORE`, and someone who leaves
+and joins again within a day notifies only once. Leaves don't notify.
 
 ## Reading communities
 
 Since protocol 13.0.0 (see [Communities](/protocol#communities)). The website serves these endpoints (`HTTP_PORT`, e.g. https://news.kiwistand.com), not the node's `API_PORT`. They answer in the envelope described above: `status`, `code`, `message`, `details` and `data`.
+
+`GET /api/v1/communities` and `GET /api/v1/communities/:owner/:key` are cached for 30 seconds (`Cache-Control: public, s-maxage=30, max-age=0, stale-while-revalidate=300`), so a new community, story or member shows up within about half a minute. With `member`, the list isn't cached (`no-cache`): it changes when that person joins or leaves, and they read it right after.
 
 ### GET /api/v1/communities
 
@@ -184,6 +205,7 @@ Query parameters, all optional:
 
 - `q` (string): only communities whose name or `about` contains it, ignoring case.
 - `owner` (address, any case): only that owner's communities. 400 if it isn't an address.
+- `member` (address, any case; since protocol 14.0.0): only the communities that identity is a member of: the ones it joined and hasn't left since, and the ones it owns. Joins signed with a key it delegated to count. 400 if it isn't an address.
 - `limit` (integer): 50 by default, at most 200.
 
 `data` is an array of Community objects:
@@ -201,7 +223,8 @@ Query parameters, all optional:
   "created": 1700000000,          // the oldest version's timestamp
   "timestamp": 1700000500,        // the newest version's timestamp
   "stories": 12,                  // stories submitted to it
-  "lastStory": 1700009999         // the newest story's timestamp, or null
+  "lastStory": 1700009999,        // the newest story's timestamp, or null
+  "members": 1204                 // since 14.0.0: its members, the owner included
 }
 ```
 
@@ -229,4 +252,22 @@ Also `/c/:owner/:key/new` and `/c/:owner/:key/best`. The community's web pages: 
 
 ### GET /communities
 
-Also `/communities?tab=joined` and `/communities/new`. The website's list of communities, most active first (`q` searches them like `GET /api/v1/communities`), the ones you joined, and the form to start a community or to edit yours (`?edit=<name key>`). Joining isn't on the protocol: the website keeps the communities you joined in the browser.
+Also `/communities?tab=joined` and `/communities/new`. The website's list of communities, most active first (`q` searches them like `GET /api/v1/communities`), the ones you joined, and the form to start a community or to edit yours (`?edit=<name key>`). The website still keeps the communities you joined in the browser; since protocol 14.0.0 clients sign a join or leave instead and read `GET /api/v1/communities?member=<address>`.
+
+### Who joined: GET /api/v1/activity
+
+Since protocol 14.0.0, the notifications of `GET /api/v1/activity?address=<address>` have `joins` next to `notifications`: who joined that person's communities in the last three weeks and hasn't left since, newest first, at most 20. They're separate so that apps that don't know them yet don't show them as likes. The website's notifications page (`/activity`) shows them grouped per community. A join or leave purges the owner's cached notifications, like a like or a comment does.
+
+```js
+{
+  "verb": "joined",
+  "timestamp": 1700000000,
+  "message": {
+    "index": "…",               // the join's message ID, without 0x
+    "identity": "0xA1…",        // who joined
+    "timestamp": 1700000000,
+    "community": { "id": "0x0f6a…/agent-builders", "name": "Agent Builders", "icon": "robot", "color": "#6E56CF" }
+  },
+  "identities": [{ "address": "0xA1…", "displayName": "alice.eth", … }]
+}
+```

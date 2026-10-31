@@ -1,6 +1,6 @@
 ---
 showAskAi: false
-description: The Kiwi News Protocol specification, including message IDs, message types and communities.
+description: The Kiwi News Protocol specification, including message IDs, message types, communities and membership.
 ---
 
 # Protocol
@@ -23,12 +23,13 @@ description is the implementation of the attestate/kiwistand client.
 
 ### Message types
 
-Messages are signed with EIP-712 in the domain `{name: "kiwinews", version: "1.0.0", salt: keccak256("kiwinews domain separator salt")}`. There are four kinds:
+Messages are signed with EIP-712 in the domain `{name: "kiwinews", version: "1.0.0", salt: keccak256("kiwinews domain separator salt")}`. There are five kinds:
 
 - **amplify**: a submission or an upvote. The first amplify of a link is its submission; later ones are upvotes. Signed as `Message(string title,string href,string type,uint256 timestamp)`.
 - **amplify with** `community` (since protocol 13.0.0): a submission to a community, see [Communities](#communities). Signed as `Message(string title,string href,string type,uint256 timestamp,string community)`. The fifth field gives it its own type hash, so a signature can't move between the two.
 - **comment**: `href` is `kiwi:0x<index of the story>`. Signed as the 4-field `Message`.
 - **community** (since protocol 13.0.0): a user community, written by its owner, see [Communities](#communities). Signed as `Community(string type,string name,string about,string[] rules,string icon,string color,uint256 timestamp)`.
+- **join** and **leave** (since protocol 14.0.0): joining or leaving a community, see [Membership](#membership). Signed as `Membership(string type,string community,uint256 timestamp)`.
 
 ### Process
 
@@ -76,7 +77,7 @@ Adding icons is a protocol change, as nodes with the older list reject the new n
 - A community's ID is `<owner address>/<name key>`, e.g. `0x0f6a79a579658e401e0b81c6dde1f2cd51d97176/agent-builders`.
 - Signing a `Community` under a name key you already use updates that community. Every version stays in the trie. Readers show the newest one: the greatest timestamp, and of equal timestamps the greatest message ID.
 - A node resolves a version's signer to its owner with the delegations it knows when it judges a post or shows the community, not when it stored the version. A delegation that reaches a node later (they take a minute or two to be indexed) then still makes the community its account's. Versions signed by an account and by its delegated keys under the same name are one community.
-- There's no deleting or transferring a community, and no membership or moderation on the protocol. Whoever loses the owning account can't change the community anymore.
+- There's no deleting or transferring a community, and no moderation on the protocol. Whoever loses the owning account can't change the community anymore.
 
 ### Posting to a community
 
@@ -85,6 +86,17 @@ Adding icons is a protocol change, as nodes with the older list reject the new n
 - If the link already is a story, the post counts as an upvote of that story, wherever the story lives.
 - Upvotes and comments don't name a community. A story stays in the community of its first submission.
 
+### Membership
+
+Since protocol 14.0.0, joining and leaving a community are signed messages, so every node knows who is a member and a person's communities follow them from device to device.
+
+- A membership message has three fields: `type`, `"join"` or `"leave"`; `community`, the community's ID (the address part in any case); and `timestamp`. It is signed as `Membership(string type,string community,uint256 timestamp)`.
+- A node accepts it only if it has a version of that community older than the message, the same rule as for [posts to a community](#posting-to-a-community). It doesn't look at the signer's earlier joins and leaves: whether a node takes a message never depends on the order in which messages arrive, so set reconciliation converges. Leaving a community you never joined is a valid message.
+- A person is an identity: a membership signed with a delegated key counts for the account that delegated to it, resolved with the delegations a node knows when it counts, like a community's owner.
+- A person's newest membership message for a community decides whether they're a member: the greatest timestamp, and of equal timestamps the greatest message ID. Every message stays in the trie, so joining again after leaving is a new message.
+- The owner of a community is always a member, whether or not they signed a join, and leaving their own community changes nothing.
+- A community's member count is its owner plus every other person whose newest membership message for it is a join.
+
 ### Reference implementation
 
-- [`src/communities.mjs`](https://github.com/attestate/kiwistand/blob/main/src/communities.mjs), [`src/constants.mjs`](https://github.com/attestate/kiwistand/blob/main/src/constants.mjs) (`EIP712_COMMUNITY`, `EIP712_COMMUNITY_MESSAGE`, the `community` schema) and [`src/store.mjs`](https://github.com/attestate/kiwistand/blob/main/src/store.mjs) (`_add`).
+- [`src/communities.mjs`](https://github.com/attestate/kiwistand/blob/main/src/communities.mjs), [`src/memberships.mjs`](https://github.com/attestate/kiwistand/blob/main/src/memberships.mjs), [`src/constants.mjs`](https://github.com/attestate/kiwistand/blob/main/src/constants.mjs) (`EIP712_COMMUNITY`, `EIP712_COMMUNITY_MESSAGE`, `EIP712_MEMBERSHIP`, the `community` and `membership` schemas) and [`src/store.mjs`](https://github.com/attestate/kiwistand/blob/main/src/store.mjs) (`_add`).

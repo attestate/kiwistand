@@ -59,8 +59,10 @@ if (cluster.isPrimary) {
   cache.initializeImpressions();
   cache.initializeShares();
   // NOTE: Before the node takes messages: posts to communities are judged
-  // with the communities table (see store.mjs `_add`).
+  // with the communities table (see store.mjs `_add`), and joins and leaves
+  // go into the memberships table.
   cache.initializeCommunities();
+  cache.initializeMemberships();
 
   // Run cache cleanup in background (non-blocking)
   const cleanupProcess = fork("./scripts/cleanup-cache.mjs", [], {
@@ -301,15 +303,17 @@ await Promise.allSettled([
 ]);
 
 cache.initializeCommunities();
+cache.initializeMemberships();
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
 cache.initializeReactions();
 cache.addCompoundIndexes();
 
-// NOTE: Posts to a community are judged with the communities table. The
-// primary, which takes messages, puts every community of the trie into it
-// again in the background, to fill in any the table missed (e.g. a failed
-// insert).
+// NOTE: Posts to a community are judged with the communities table, and
+// members are counted with the memberships table. The primary, which takes
+// messages, puts every community, join and leave of the trie into them again
+// in the background (one walk of the trie), to fill in any the tables missed
+// (e.g. a failed insert).
 if (cluster.isPrimary) {
   store
     .posts(
@@ -320,11 +324,15 @@ if (cluster.isPrimary) {
       startDatetime,
       delegations,
       href,
-      "community",
+      ["community", "join", "leave"],
     )
     .then(async (result) => {
-      await cache.insertCommunities(result);
-      log(`Loaded ${result.length} community versions`);
+      const versions = result.filter(({ type }) => type === "community");
+      const memberships = result.filter(({ type }) => type !== "community");
+      await cache.insertCommunities(versions);
+      log(`Loaded ${versions.length} community versions`);
+      await cache.insertMemberships(memberships);
+      log(`Loaded ${memberships.length} joins and leaves`);
     })
     .catch((error) => console.error("Community posts error:", error));
 }
