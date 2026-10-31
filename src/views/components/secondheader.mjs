@@ -220,7 +220,7 @@ function pageHead(site, period) {
   let eyebrow, headline, sub, meta;
   if (site === "top") {
     eyebrow = `${today()} \u00b7 HOT`;
-    headline = "Good stories. Curious people.";
+    headline = "Good links, no hype.";
     sub = "The best of crypto, tech and the open web. Curated by humans.";
     meta = "RANKED BY UPVOTES AND AGE";
   } else if (site === "new") {
