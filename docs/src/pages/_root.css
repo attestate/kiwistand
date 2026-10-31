@@ -1,0 +1,184 @@
+/* The look of news.kiwistand.com for the docs: the --kn-* colours of
+   src/public/news.css, the fonts the site loads, and its doc pages'
+   headings and links (.n2-doc in src/public/pages.css). Vocs reads the
+   --vocs-* variables set below. Vocs puts its own styles in cascade
+   layers and this file isn't in one, so its rules win. */
+
+/* Inter itself comes from the site's /fonts/inter.css (vocs.config.ts).
+   Until it arrives, text is set in Arial resized to Inter's metrics, as on
+   the site (news.css), so lines don't move when it swaps in. */
+@font-face {
+  font-family: 'Inter Fallback';
+  font-weight: 100 400;
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+  size-adjust: 107.13%;
+  ascent-override: 90.43%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Inter Fallback';
+  font-weight: 500;
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+  size-adjust: 108.29%;
+  ascent-override: 89.45%;
+  descent-override: 22.27%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Inter Fallback';
+  font-weight: 600;
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 101.32%;
+  ascent-override: 95.61%;
+  descent-override: 23.81%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Inter Fallback';
+  font-weight: 700 900;
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 102.38%;
+  ascent-override: 94.62%;
+  descent-override: 23.56%;
+  line-gap-override: 0%;
+}
+
+/* The site's mono face (news.css), for code. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-700.woff2') format('woff2');
+}
+
+:root {
+  /* The site's tokens, light and dark (news.css). */
+  --kn-page: light-dark(#f8f9f4, #191d17);
+  --kn-text-primary: light-dark(#10131d, #f4f6ef);
+  --kn-text-secondary: light-dark(#78818a, #b3bcae);
+  --kn-text-tertiary: light-dark(#606971, #c1c9ba);
+  --kn-text-muted: light-dark(#858d94, #abb5a5);
+  --kn-accent: #d4ec37;
+  --kn-accent-strong: light-dark(#adc724, #d4ec37);
+  --kn-card: light-dark(#ffffff, #252b22);
+  --kn-card-border: light-dark(#eceee7, #3a4433);
+  --kn-border: light-dark(#e6e9df, #414b38);
+  --kn-surface: light-dark(#ffffff, #2c3328);
+  --kn-segment-track: light-dark(#eeefea, #2e3529);
+  --kn-tab-selected: light-dark(#eef6c8, #47541a);
+  --kn-comment-strip: light-dark(#f4f5ef, #30372a);
+  --kn-font: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --kn-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Vocs, mapped onto them. */
+  --vocs-font-family: var(--kn-font);
+  --vocs-font-family-mono: var(--kn-font-mono);
+
+  --vocs-background-color-primary: var(--kn-page);
+  --vocs-background-color-surface: var(--kn-card);
+  --vocs-background-color-surfaceMuted: var(--kn-segment-track);
+  --vocs-background-color-surfaceTint: var(--kn-comment-strip);
+  --vocs-background-color-code-block: var(--kn-comment-strip);
+  --vocs-background-color-code-highlighted: var(--kn-segment-track);
+  --vocs-background-color-inline-code: var(--kn-segment-track);
+  --vocs-border-color-code-highlighted: var(--kn-border);
+
+  --vocs-text-color-primary: var(--kn-text-primary);
+  --vocs-text-color-secondary: var(--kn-text-tertiary);
+  --vocs-text-color-muted: var(--kn-text-muted);
+  --vocs-text-color-heading: var(--kn-text-primary);
+  --vocs-text-color-link: var(--kn-text-primary);
+  --vocs-text-color-link-hover: var(--kn-text-secondary);
+  --vocs-text-color-quote: var(--kn-text-secondary);
+
+  --vocs-border-color-primary: var(--kn-border);
+  --vocs-border-color-secondary: var(--kn-card-border);
+
+  --vocs-color-note: var(--kn-text-secondary);
+}
+
+/* Headings and links as on the site's doc pages (.n2-doc). */
+h1[data-v],
+h2[data-v] {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+h3[data-v],
+h4[data-v] {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+a[data-v],
+[data-v-link] {
+  font-weight: inherit;
+}
+
+/* Content on the page colour, as on the site, not on a white panel (or,
+   on phones, a white page); the panel's lines stay, like the site's top bar
+   rule. */
+:root,
+[data-v-surface-bg],
+[data-v-outline-mobile] {
+  background-color: var(--kn-page);
+}
+
+/* The wordmark is 18px high, as in the site's top bar. */
+[data-v-logo-image] {
+  height: 18px;
+  width: auto;
+}
+
+/* The selected sidebar item: the site's selected-tab colour with the text
+   colour, not lime text (it's an !important utility, so set what it reads). */
+[data-v-sidebar] {
+  --vocs-color-accent8: var(--kn-text-primary);
+  --vocs-color-accenta3: var(--kn-tab-selected);
+}
+
+/* The current heading in "On this page": lime only for the marker. Long
+   routes (HTTP API) wrap instead of running off the page. */
+[data-v-outline-item] a[data-active='true'] {
+  color: var(--kn-text-primary);
+}
+[data-v-outline-item] a {
+  overflow-wrap: anywhere;
+}
+
+/* The protocol diagrams are drawn black on transparent, so give them a light
+   card that keeps them readable in dark mode too. */
+.kiwi-figure {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.kiwi-figure img {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  padding: 0.75rem;
+  border: 1px solid var(--kn-card-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.kiwi-figure figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--kn-text-secondary);
+}
