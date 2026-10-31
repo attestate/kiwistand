@@ -213,7 +213,7 @@ One Community object as `data`, or 404 when the node doesn't know the community.
 
 `:name` is `hot`, `new` or `best`. A community's feeds, namespaced by the community like its page. They take the same parameters and answer like `/api/v1/feeds/:name`, with only that community's stories, ranked with the same rules as Kiwi News' feeds:
 
-- Hot: Kiwi News' Hot ranking and rules. Kiwi News' own picks (the app curation, predictions and the pinned story) don't apply. `/api/v1/communities/:owner/:key/feed/rows` pages on like `/api/v1/feed/rows`.
+- Hot: Kiwi News' Hot ranking and rules, except that a story missing its engagement rules (enough upvotes, the submitter's karma, a known name) isn't hidden: it comes after the stories that meet them, so a small community's Hot isn't empty. Kiwi News' own picks (the app curation, predictions and the pinned story) don't apply. `/api/v1/communities/:owner/:key/feed/rows` pages on like `/api/v1/feed/rows`, with the same exception.
 - New: the community's newest 25 stories, as `/new` shows them. `/api/v1/communities/:owner/:key/new/rows` pages on from there.
 - Best: per `period` and `page`, like Kiwi News' Best.
 
