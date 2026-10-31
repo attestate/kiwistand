@@ -37,6 +37,7 @@ const spinner =
   "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
 
 const discoverPaths = ["/", "/new", "/best", "/stories"];
+const isCommunities = (path) => /^\/(communities(\/|$)|c\/)/.test(path || "");
 
 export const Logo = (className = "") => html`
   <a
@@ -55,8 +56,7 @@ export const Logo = (className = "") => html`
 // mounts into #bell) and the menu on the right. On desktop the bar spans
 // the window (see .kn-topbar in news.css).
 //
-// NOTE: There is no Communities link (they come later) and no Leaderboard
-// link (the site has no leaderboard page).
+// NOTE: There is no Leaderboard link (the site has no leaderboard page).
 const header = (theme, path) => {
   const isStoryPage = path === "/stories";
   // NOTE: Phones show a back button and the page's title instead of the
@@ -95,6 +95,7 @@ const header = (theme, path) => {
           : null}
         <nav class="kn-navlinks kn-only-desktop" aria-label="Main">
           ${navLink("/", "Discover", discoverPaths.includes(path))}
+          ${navLink("/communities", "Communities", isCommunities(path))}
           ${navLink("/saved", "Saved stories", path === "/saved")}
         </nav>
       </div>

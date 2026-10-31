@@ -20,6 +20,7 @@ import { robotsMeta } from "../indexable.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import Row from "./components/row.mjs";
+import { withCommunities } from "../communities-api.mjs";
 import {
   getBest,
   getLastComment,
@@ -220,7 +221,13 @@ export async function getStories(page, period, domain, options = {}) {
 
 export default async function index(theme, page, period, domain, options) {
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
-  const stories = await getStories(page, period, domain || "", options);
+  let stories = await getStories(page, period, domain || "", options);
+  // NOTE: Community stories show their community's tag (row.mjs).
+  try {
+    stories = await withCommunities(stories);
+  } catch (err) {
+    log(`/best: Couldn't tag the communities: ${err.message}`);
+  }
   const ogImage = "https://news.kiwistand.com/kiwi_top_feed_page.png?v=2";
   const prefetch = [
     "/",
@@ -245,7 +252,7 @@ export default async function index(theme, page, period, domain, options) {
       >
         <div class="container">
           ${Sidebar("/best")}
-          ${RightColumn()}
+          ${RightColumn({ communities: true })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">
               Best crypto stories on Kiwi News${period === "all"

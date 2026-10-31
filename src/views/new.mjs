@@ -23,6 +23,7 @@ import {
 import Row from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
+import { withCommunities } from "../communities-api.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
@@ -231,7 +232,13 @@ export async function recompute() {
 }
 
 async function renderPage(theme) {
+  // NOTE: Community stories show their community's tag (row.mjs).
   let items = stories;
+  try {
+    items = await withCommunities(stories);
+  } catch (err) {
+    log(`/new: Couldn't tag the communities: ${err.message}`);
+  }
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png?v=2";
   const prefetch = ["/", "/submit", "/best"];
@@ -249,7 +256,7 @@ async function renderPage(theme) {
       >
         <div class="container">
           ${Sidebar(path)}
-          ${RightColumn()}
+          ${RightColumn({ communities: true })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">New crypto stories on Kiwi News</h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">

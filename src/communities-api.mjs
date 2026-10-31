@@ -239,7 +239,8 @@ export function detailHandler(deps = {}) {
 
 // Puts each story's community, {id, name, icon, color}, or null for a Kiwi
 // News story, into `community`, in place of the cache's `communityId`.
-// A community this node doesn't know (yet) is null as well.
+// A community this node doesn't know (yet) is null as well. A story that
+// already has its community object keeps it.
 export async function withCommunities(stories, deps = {}) {
   const d = { ...defaults, ...deps };
   const idOf = (story) =>
@@ -274,8 +275,21 @@ export async function withCommunities(stories, deps = {}) {
   }
 
   return stories.map((story) => {
-    const id = idOf(story);
     const { communityId, ...rest } = story;
-    return { ...rest, community: ref(id) };
+    if (story.community && typeof story.community === "object") return rest;
+    return { ...rest, community: ref(idOf(story)) };
   });
+}
+
+// Every community this node knows, by ID, as withCommunities puts it on a
+// story: for the home feed, which renders in a worker thread that has no
+// delegations to find a community's owner with (http.mjs feedPiscina).
+export async function communityRefs(deps = {}) {
+  const d = { ...defaults, ...deps };
+  const delegations = await d.delegations();
+  const refs = {};
+  for (const { id, name, icon, color } of d.listCommunities(delegations)) {
+    refs[id] = { id, name, icon, color };
+  }
+  return refs;
 }

@@ -29,6 +29,7 @@ const workerRoutes = [
   "/best",
   "/community",
   "/c",
+  "/communities",
 
   "/about",
   "/passkeys",

@@ -256,6 +256,16 @@ story, else ``{"id", "name", "icon", "color"}``.
 
 **GET /c/:owner/:key**, ``/c/:owner/:key/new``, ``/c/:owner/:key/best``
 
-The community's web pages, where invite links land: its name, icon, about and
-rules, who created it, its stories (its Hot) and a link to the app. 404 when
-the community isn't known. The app's universal links include ``/c/*``.
+The community's web pages: its Hot, New and Best, like ``/``, ``/new`` and
+``/best`` with only its stories, under its header card (icon, name, about,
+who created it) and with its house rules. With ``?via=<address>``, the page an
+invite link opens: who invited you, the community and its rules, to join it.
+404 when the community isn't known. The app's universal links include
+``/c/*``.
+
+**GET /communities**, ``/communities?tab=joined``, ``/communities/new``
+
+The website's list of communities, most active first (``q`` searches them
+like ``GET /api/v1/communities``), the ones you joined, and the form to start
+a community or to edit yours (``?edit=<name key>``). Joining isn't on the
+protocol: the website keeps the communities you joined in the browser.

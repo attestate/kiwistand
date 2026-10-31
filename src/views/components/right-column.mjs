@@ -4,6 +4,7 @@ import vhtml from "vhtml";
 
 import { NewsletterCardElement } from "./newsletter-card.mjs";
 import { ms } from "./icons.mjs";
+import { Icon } from "./communities.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -98,13 +99,34 @@ export const SideFooter = () => html`
   </div>
 `;
 
+// The communities you joined (Communities.jsx lists them from this
+// browser), with links to all of them and to start one.
+export const CommunitiesBox = () => html`
+  <div class="kn-side-box cm-side">
+    <span class="kn-eyebrow">Communities</span>
+    <div class="cm-side-list" data-cm="side">
+      <p class="cm-side-empty">Smaller feeds for one topic, with their own rules.</p>
+    </div>
+    <div class="cm-side-links">
+      <a class="cm-side-all" href="/communities">See all${" "}${Icon("arrow-right", 13)}</a>
+      <a href="/communities/new">+ Start a community</a>
+    </div>
+  </div>
+`;
+
 // The desktop right column (1101px and up): the newsletter sign-up, the
 // iPhone beta and the footer links. A page can opt out of the sign-up
-// (`newsletter: false`) or put its own boxes in (`children`, e.g. the story
-// page's "More from Hot"). anon-rpc lives only on /settings.
-export default function RightColumn({ newsletter = true, children = null } = {}) {
+// (`newsletter: false`), add the communities box (the feeds) or put its own
+// boxes in (`children`, e.g. the story page's "More from Hot"). anon-rpc
+// lives only on /settings.
+export default function RightColumn({
+  newsletter = true,
+  communities = false,
+  children = null,
+} = {}) {
   return html`
     <aside class="right-column kn-right">
+      ${communities ? CommunitiesBox() : null}
       ${newsletter
         ? NewsletterCardElement("sidebar", sidebarCopy)
         : null}

@@ -29,9 +29,10 @@ const Item = ({ href, icon, label, active, external, onClick }) => (
 );
 
 // The NEU 2 menu (iOS "Menu" frames): a bottom sheet on phones, a panel from
-// the right on wider screens. Home, Profile, Saved stories, Settings; then
-// Guidelines, Privacy Policy, Wiki; then Log out (or Log in). The anon-rpc
-// switch lives only on /settings (Settings is the first group's last item).
+// the right on wider screens. Home, Communities, Profile, Saved stories,
+// Settings; then Guidelines, Privacy Policy, Wiki; then Log out (or Log in).
+// The anon-rpc switch lives only on /settings (Settings is the first group's
+// last item).
 const SidebarDrawer = ({ delegations, toast }) => {
   const [open, setOpen] = useState(false);
   const [login, setLogin] = useState(false);
@@ -81,6 +82,13 @@ const SidebarDrawer = ({ delegations, toast }) => {
               icon="house"
               label="Home"
               active={isHome}
+              onClick={close}
+            />
+            <Item
+              href="/communities"
+              icon="users-three"
+              label="Communities"
+              active={path === "/communities" || path.startsWith("/c/")}
               onClick={close}
             />
             <ConnectedProfile toast={toast} delegations={delegations} />

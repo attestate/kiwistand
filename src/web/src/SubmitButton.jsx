@@ -25,6 +25,20 @@ import { capture } from "./analytics.mjs";
 import { uploadImage } from "./uploadImage.mjs";
 import { openOnboarding } from "./LoginModal.jsx";
 import ShareModal from "./ShareModal.jsx";
+import { postTimestamp } from "./communities.mjs";
+
+// NOTE: Only for readers who joined a community, or who came with
+// ?community= (views/submit.mjs): the others post to Kiwi News as before.
+const PostTo = React.lazy(() => import("./PostTo.jsx"));
+function hasCommunities(root) {
+  if (!root) return false;
+  if (root.dataset.community) return true;
+  try {
+    return JSON.parse(localStorage.getItem("kiwi-communities") || "[]").length > 0;
+  } catch (err) {
+    return false;
+  }
+}
 import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 
@@ -284,7 +298,7 @@ const AddPhotoSVG = () => (
 
 
 const SubmitButton = (props) => {
-  const { toast, url } = props;
+  const { toast, url, target } = props;
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [remainingChars, setRemainingChars] = useState(80);
@@ -507,6 +521,12 @@ const SubmitButton = (props) => {
       title.replace(/(\r\n|\n|\r)/gm, " "),
       canonicalURL,
     );
+    // NOTE: A post to a community names it and is signed as the 5-field
+    // Message. Nodes only take it once the community is older than it.
+    if (target) {
+      value.timestamp = postTimestamp(target.created, value.timestamp);
+      value.community = target.id;
+    }
 
     if (title.length > 80 || canonicalURL.length > 2048) {
       toast.error(
@@ -538,7 +558,7 @@ const SubmitButton = (props) => {
     try {
       signature = await signer._signTypedData(
         API.EIP712_DOMAIN,
-        API.EIP712_TYPES,
+        target ? API.EIP712_COMMUNITY_TYPES : API.EIP712_TYPES,
         value,
       );
     } catch (err) {
@@ -585,7 +605,11 @@ const SubmitButton = (props) => {
     // navigates to the story next.
     capture(
       "story_submitted",
-      { href: canonicalURL, platform: "web" },
+      {
+        href: canonicalURL,
+        platform: "web",
+        ...(target ? { community: target.id } : {}),
+      },
       { send_instantly: true, transport: "sendBeacon" },
     );
 
@@ -732,7 +756,9 @@ const SubmitButton = (props) => {
             ? !localAccount
               ? "Please confirm signature..."
               : "Submitting..."
-            : "Submit"}
+            : target
+              ? `Post to ${target.name}`
+              : "Submit"}
         </button>
         <span className="n2-note n2-d">
           Your submission is signed with your account and is public.
@@ -767,6 +793,8 @@ const queryClient = new QueryClient();
 const Form = (props) => {
   const urlInput = document.getElementById("urlInput");
   const [url, setURL] = useState(urlInput.value);
+  const [target, setTarget] = useState(null);
+  const postTo = document.getElementById("n2-post-to");
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("focus") !== "url") return;
@@ -786,8 +814,13 @@ const Form = (props) => {
     <QueryClientProvider client={queryClient}>
       <KiwiWagmiProvider>
         <RainbowKitProvider chains={chains}>
+          {hasCommunities(postTo) && (
+            <React.Suspense fallback={null}>
+              <PostTo root={postTo} target={target} setTarget={setTarget} />
+            </React.Suspense>
+          )}
           <UrlInput url={url} setURL={setURL} toast={toast} />
-          <SubmitButton {...props} url={url} />
+          <SubmitButton {...props} url={url} target={target} />
         </RainbowKitProvider>
       </KiwiWagmiProvider>
     </QueryClientProvider>

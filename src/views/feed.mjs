@@ -41,6 +41,7 @@ import NewsletterCard from "./components/newsletter-card.mjs";
 // Import twitterFrontends for checking Twitter/X links
 import { twitterFrontends } from "../parser.mjs";
 import { hasName, showInHot } from "../hotnames.mjs";
+import { withCommunities } from "../communities-api.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -844,7 +845,10 @@ async function fetchTopStories(feedStoryHrefs) {
     .slice(0, 8);
 }
 
-export default async function (trie, theme, page, domain, identity, hash, variant) {
+// NOTE: `communities` (communities-api.mjs communityRefs) tags community
+// stories: this renders in a worker thread without the delegations that
+// resolve a community's owner.
+export default async function (trie, theme, page, domain, identity, hash, variant, communities = {}) {
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
@@ -857,7 +861,15 @@ export default async function (trie, theme, page, domain, identity, hash, varian
   const content = await index(trie, page, domain, sub(new Date(), { days: 3 }), true, false, algorithm);
 
   // Destructure content
-  const { originals, stories, start, pinnedStory } = content;
+  const { start } = content;
+  const deps = {
+    delegations: async () => ({}),
+    getCommunity: (id) => communities[id] || null,
+  };
+  const stories = await withCommunities(content.stories, deps);
+  const [pinnedStory] = content.pinnedStory
+    ? await withCommunities([content.pinnedStory], deps)
+    : [content.pinnedStory];
   // The pinned story takes position 1, so ranked stories start after it.
   const storiesStart = start + (pinnedStory ? 1 : 0);
 
@@ -940,7 +952,7 @@ export default async function (trie, theme, page, domain, identity, hash, varian
       >
         <div class="container">
           ${Sidebar(path)}
-          ${RightColumn()}
+          ${RightColumn({ communities: true })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">
               Kiwi News: handpicked crypto news for builders
