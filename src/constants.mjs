@@ -3,28 +3,30 @@ import { env } from "process";
 
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 
+import { PHOSPHOR_ICONS } from "./phosphor-icons.mjs";
+
 export const PROTOCOL = {
   pubsub: {
     prefix: "kiwi",
     topics: {
       roots: {
         id: "roots",
-        version: "12.0.0",
+        version: "13.0.0",
       },
       messages: {
         id: "messages",
-        version: "12.0.0",
+        version: "13.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "15.0.0",
+      version: "16.0.0",
     },
     levels: {
       id: "levels",
-      version: "15.0.0",
+      version: "16.0.0",
     },
   },
 };
@@ -51,6 +53,54 @@ export const EIP712_MESSAGE = {
     { name: "timestamp", type: "uint256" },
   ],
 };
+
+// A post to a community: an amplify that names the community it goes to. It
+// keeps the type name "Message" but has a fifth field, so its type hash
+// differs from the 4-field Message and a signature can't move between them.
+export const EIP712_COMMUNITY_MESSAGE = {
+  Message: [
+    ...EIP712_MESSAGE.Message,
+    { name: "community", type: "string" },
+  ],
+};
+
+// A community, written by its owner (the identity that signs it). Signing a
+// Community again under the same name updates it; see src/communities.mjs.
+export const EIP712_COMMUNITY = {
+  Community: [
+    { name: "type", type: "string" },
+    { name: "name", type: "string" },
+    { name: "about", type: "string" },
+    { name: "rules", type: "string[]" },
+    { name: "icon", type: "string" },
+    { name: "color", type: "string" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+// The designer's community palette. Clients map each name to its light and
+// dark shades.
+export const COMMUNITY_COLORS = [
+  "violet",
+  "teal",
+  "coral",
+  "blue",
+  "amber",
+  "rose",
+  "slate",
+  "brown",
+];
+
+// Words of letters and digits, separated by single spaces or hyphens, so the
+// name key (lowercase, spaces as hyphens) is unambiguous: "Agent Builders"
+// has the key "agent-builders".
+export const COMMUNITY_NAME_PATTERN = "^[A-Za-z0-9]+([ -][A-Za-z0-9]+)*$";
+export const COMMUNITY_NAME_MAX_LENGTH = 24;
+// A community's ID: "<owner address>/<name key>".
+export const COMMUNITY_ID_PATTERN =
+  "^0x[a-fA-F0-9]{40}/[a-z0-9]+(-[a-z0-9]+)*$";
+// No control characters (line breaks included) in a community's texts.
+const SINGLE_LINE = "^[^\\u0000-\\u001F\\u007F]*$";
 
 const node = {
   type: "object",
@@ -128,12 +178,77 @@ const upvote = {
       pattern: "^(https?://|data:text/plain,|kiwi:0x)",
       maxLength: 2048,
     },
+    community: {
+      $comment:
+        "The community a post goes to, as '<owner address>/<name key>'. Without it, the post goes to Kiwi News. Signed with EIP712_COMMUNITY_MESSAGE.",
+      type: "string",
+      pattern: COMMUNITY_ID_PATTERN,
+      maxLength: 42 + 1 + COMMUNITY_NAME_MAX_LENGTH,
+    },
     signature: {
       type: "string",
       pattern: "0x[a-fA-F0-9]+",
     },
   },
   required: ["timestamp", "type", "title", "href", "signature"],
+};
+
+const community = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "community",
+    },
+    name: {
+      type: "string",
+      minLength: 1,
+      maxLength: COMMUNITY_NAME_MAX_LENGTH,
+      pattern: COMMUNITY_NAME_PATTERN,
+    },
+    about: {
+      type: "string",
+      maxLength: 100,
+      pattern: SINGLE_LINE,
+    },
+    rules: {
+      type: "array",
+      maxItems: 5,
+      items: {
+        type: "string",
+        minLength: 1,
+        maxLength: 140,
+        pattern: SINGLE_LINE,
+      },
+    },
+    icon: {
+      $comment: "A Phosphor Icons 2.1.1 name, see src/phosphor-icons.mjs",
+      type: "string",
+      enum: PHOSPHOR_ICONS,
+    },
+    color: {
+      type: "string",
+      enum: COMMUNITY_COLORS,
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: [
+    "timestamp",
+    "type",
+    "name",
+    "about",
+    "rules",
+    "icon",
+    "color",
+    "signature",
+  ],
 };
 
 export const SCHEMATA = {
@@ -173,12 +288,12 @@ export const SCHEMATA = {
         $comment:
           "The type of message that we should filter by in the request.",
         type: "string",
-        enum: ["amplify", "comment"],
+        enum: ["amplify", "comment", "community"],
       },
     },
     required: ["from", "amount"],
   },
   message: {
-    oneOf: [upvote, comment],
+    oneOf: [upvote, comment, community],
   },
 };

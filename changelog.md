@@ -7,6 +7,44 @@
 
 ## Unreleased
 
+## 0.16.0
+
+**BREAKING CHANGE**: User communities
+
+Anyone can now run a community and post to it. A community belongs to the
+identity that signs it and lives in its namespace (`<owner address>/<name
+key>`), so creating one needs no consensus. See "Communities" in the protocol
+docs.
+
+### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `12.0.0 → 13.0.0`
+  - Protocols (leaves/levels): `15.0.0 → 16.0.0`
+- **New message type `community`**, signed as
+  `Community(string type,string name,string about,string[] rules,string icon,string color,uint256 timestamp)`:
+  a name (24 characters), a one-line description (100), up to 5 house rules
+  (140 each), a Phosphor Icons 2.1.1 icon and one of 8 palette colours.
+  Signing one again under the same name updates it.
+- **Amplify gets an optional `community`** (`<owner address>/<name key>`).
+  With it, the message is signed as the 5-field
+  `Message(string title,string href,string type,uint256 timestamp,string community)`.
+  Nodes accept it only if the community exists in an older version. Upvotes
+  and comments are unchanged.
+
+### Cache
+
+- New `communities` table (newest version of each community, and when it was
+  first created) and a `community` column on `submissions`, added to existing
+  caches on start.
+- `POST /api/v1/list` takes `type: "community"`.
+
+### Migration
+
+All nodes must upgrade together. A 13.0.0 node will not sync with a 12.0.0
+node. Feeds don't treat community posts differently yet; that comes with the
+clients.
+
 ## 0.15.0
 
 **BREAKING CHANGE**: Chunk trie sync so one frame no longer grows with the tree

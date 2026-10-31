@@ -18,6 +18,7 @@ import * as api from "./api.mjs";
 // Dynamic import for http module - only loaded when not in reconcile mode
 import * as store from "./store.mjs";
 import * as cache from "./cache.mjs";
+import * as communities from "./communities.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as newest from "./views/new.mjs";
@@ -58,6 +59,9 @@ if (cluster.isPrimary) {
   cache.initializeLtCache();
   cache.initializeImpressions();
   cache.initializeShares();
+  // NOTE: Before the node takes messages: posts to communities are judged
+  // with the communities table (see store.communityCreated).
+  cache.initializeCommunities();
 
   // Run cache cleanup in background (non-blocking)
   const cleanupProcess = fork("./scripts/cleanup-cache.mjs", [], {
@@ -292,10 +296,39 @@ await Promise.allSettled([
     .catch((error) => console.error("Comment posts error:", error)),
 ]);
 
+cache.initializeCommunities();
 cache.initialize([...upvotes, ...comments]);
 cache.initializeNotifications();
 cache.initializeReactions();
 cache.addCompoundIndexes();
+
+// NOTE: The primary, which takes messages, reads communities from the trie in
+// the background: until then, posts are judged with the communities table,
+// and this fills in whatever the table missed.
+if (cluster.isPrimary) {
+  store
+    .posts(
+      trie,
+      from,
+      amount,
+      parser,
+      startDatetime,
+      delegations,
+      href,
+      "community",
+    )
+    .then((result) => {
+      for (const community of result) {
+        communities.remember(
+          communities.communityId(community.identity, community.name),
+          community.timestamp,
+        );
+      }
+      cache.insertCommunities(result);
+      log(`Loaded ${result.length} community versions`);
+    })
+    .catch((error) => console.error("Community posts error:", error));
+}
 
 // Make upvote/reaction marker caching non-blocking to improve startup time
 setImmediate(() => {

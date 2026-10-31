@@ -27,7 +27,12 @@ import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
-import { insertMessage, isReactionComment } from "./cache.mjs";
+import {
+  insertMessage,
+  isReactionComment,
+  communityCreatedAt,
+} from "./cache.mjs";
+import * as communities from "./communities.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -316,7 +321,11 @@ export function upvoteID(identity, link, type) {
 
 let messagesAdded = 0;
 async function atomicPut(trie, message, identity, delegations) {
-  const marker = upvoteID(identity, message.href, message.type);
+  // NOTE: Only amplifies have a marker; a community has no href.
+  const marker =
+    message.type === "amplify"
+      ? upvoteID(identity, message.href, message.type)
+      : null;
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${JSON.stringify(
@@ -346,13 +355,17 @@ async function atomicPut(trie, message, identity, delegations) {
   //
   // To check whether a comment exists and then aborting the routine now
   // prevents the above from happening.
-  if (message.type === "comment") {
+  // NOTE: The same goes for communities: a version that's already stored
+  // must not be processed again.
+  if (message.type === "comment" || message.type === "community") {
     const existingLeaf = await trie.get(Buffer.from(index, "hex"));
     if (existingLeaf) {
       const err = `Message with index "${index}" already exists in the trie. Skipping.`;
       log(err);
       throw new Error(err);
     }
+  }
+  if (message.type === "comment") {
     if (isReactionComment(message.title)) {
       const reactionMarker = upvoteID(identity, message.href, "reaction");
       const legit = await passesReaction(reactionMarker);
@@ -366,6 +379,14 @@ async function atomicPut(trie, message, identity, delegations) {
 
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
+    // NOTE: Unlike the SQLite cache below, this is protocol state: posts to
+    // this community are judged by it.
+    if (message.type === "community") {
+      communities.remember(
+        communities.communityId(identity, message.name),
+        message.timestamp,
+      );
+    }
     try {
       const cacheEnabled = false;
       const enhancer = enhance(delegations, cacheEnabled);
@@ -558,6 +579,16 @@ async function _add({
     throw new Error(err);
   }
 
+  if (message.type === "amplify" && message.community !== undefined) {
+    const created = communityCreated(message.community);
+    if (created === undefined) {
+      throw new Error("add: Didn't find the community of the post");
+    }
+    if (created >= message.timestamp) {
+      throw new Error("add: The community must be older than the post");
+    }
+  }
+
   if (message.type === "comment") {
     let [_, hash] = message.href.split(":");
     if (!hash) {
@@ -598,6 +629,17 @@ async function _add({
   log(`Sending message to peers: "${messages.name}" and index: "${index}"`);
   libp2p.pubsub.publish(messages.name, canonical);
   return index;
+}
+
+// When a community was first created, or undefined if this node doesn't know
+// it. The in-memory registry has every community this process added or read
+// from the trie at startup; the SQLite cache has them across restarts, so
+// posts are judged correctly while launch.mjs is still reading the trie.
+export function communityCreated(id) {
+  const known = [communities.createdAt(id), communityCreatedAt(id)].filter(
+    Number.isInteger,
+  );
+  return known.length ? Math.min(...known) : undefined;
 }
 
 export async function leaf(trie, index, parser) {
@@ -728,9 +770,9 @@ export async function leaves(
   type = "amplify",
   root = trie.root(),
 ) {
-  if (type !== "amplify" && type !== "comment") {
+  if (type !== "amplify" && type !== "comment" && type !== "community") {
     throw new Error(
-      "store leaves: Must be called with type 'amplify' or 'comment'",
+      "store leaves: Must be called with type 'amplify', 'comment' or 'community'",
     );
   }
   const nodes = [];
@@ -765,11 +807,12 @@ export async function leaves(
       if (parsed.timestamp < startDatetime) {
         continue;
       }
+      // NOTE: The type is checked first as communities have no href.
       if (
+        (type && type !== parsed.type) ||
         (href && (parsed.href.startsWith('data:') || href.startsWith('data:')
           ? parsed.href !== href
-          : normalizeUrl(parsed.href) !== normalizeUrl(href))) ||
-        (type && type !== parsed.type)
+          : normalizeUrl(parsed.href) !== normalizeUrl(href)))
       ) {
         continue;
       }

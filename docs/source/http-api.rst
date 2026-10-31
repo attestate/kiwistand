@@ -47,37 +47,45 @@ Pagination
 Message
 .......
 
+A message is one of three objects, each with ``"additionalProperties": false``.
+The schemas are ``upvote``, ``comment`` and ``community`` in
+`src/constants.mjs <https://github.com/attestate/kiwistand/blob/main/src/constants.mjs>`_.
 
 .. code-block:: javascript
 
+  // amplify: a submission or an upvote
   {
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-      "timestamp": {
-        "type": "integer"
-      },
-      "type": {
-        "type": "string",
-        "enum": ["amplify"]
-      },
-      "title": {
-        "type": "string",
-        "maxLength": 80
-      },
-      "href": {
-        "type": "string",
-        "format": "uri",
-        "pattern": "^https?://",
-        "maxLength": 2048
-      },
-      "signature": {
-        "type": "string",
-        "pattern": "0x[a-fA-F0-9]+"
-      }
-    },
-    "required": ["timestamp", "type", "title", "href", "signature"]
+    "timestamp": 1700000000,
+    "type": "amplify",
+    "title": "...",            // up to 80 characters
+    "href": "https://...",     // https?://, data:text/plain, or kiwi:0x; up to 2048 characters
+    "community": "0x.../ai",   // optional: posts to a community (protocol 13.0.0)
+    "signature": "0x..."
   }
+
+  // comment
+  {
+    "timestamp": 1700000000,
+    "type": "comment",
+    "title": "...",            // the comment, up to 10,000 characters
+    "href": "kiwi:0x...",      // the story's index (72 hex characters)
+    "signature": "0x..."
+  }
+
+  // community (protocol 13.0.0)
+  {
+    "timestamp": 1700000000,
+    "type": "community",
+    "name": "Agent Builders",  // up to 24 characters: words of letters and digits
+    "about": "...",            // up to 100 characters, one line
+    "rules": ["..."],          // up to 5, each 1 to 140 characters, one line
+    "icon": "robot",           // a Phosphor Icons 2.1.1 name
+    "color": "violet",         // violet, teal, coral, blue, amber, rose, slate or brown
+    "signature": "0x..."
+  }
+
+See :ref:`communities` for what a community is and which EIP-712 type each
+message is signed with.
 
 API Versioning
 --------------
@@ -111,8 +119,8 @@ Request body:
 - ``amount`` (integer): The number of entries that the request should contain.
   Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the `.env
   file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
-- ``type`` (enum: ``["amplify", "comment"]``, defaults to: "amplify" if the
-  parameter is omitted): The type of the message.
+- ``type`` (enum: ``["amplify", "comment", "community"]``, defaults to:
+  "amplify" if the parameter is omitted): The type of the message.
 
 Response body
 
@@ -149,10 +157,8 @@ Request body:
 
 - ``timestamp`` (integer): Unix timestamp. Must be bigger than
   MIN_TIMESTAMP_SECS (1672527600), as defined in the `.env file <https://github.com/attestate/kiwistand/blob/main/.env-copy>`_.
-- ``type`` (string): Message type. Currently, only "amplify" is supported.
-- ``title`` (string): Message title. Max length is 80 characters.
-- ``href`` (string): Message link. Must be a valid URI with a max length of
-  2048 characters.
+- ``type`` (string): ``"amplify"``, ``"comment"`` or ``"community"``.
+- The other fields of that type, see :ref:`message-schema`.
 - ``signature`` (string): Message signature. Must match the pattern
   "0x[a-fA-F0-9]+".
 
@@ -170,3 +176,6 @@ Acceptance Criteria for Messages
    (https://eips.ethereum.org/EIPS/eip-712).
 6. For every link, a combination of address, link, and "amplify" type can only
    exist once. This means that every user can only upvote a link once.
+7. A comment's story must exist and be older than the comment.
+8. An amplify with ``community`` must name a community the node has, in a
+   version older than the post (see :ref:`communities`).
