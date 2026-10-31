@@ -99,6 +99,7 @@ import {
   inCommunity,
 } from "./cache.mjs";
 import * as communitiesAPI from "./communities-api.mjs";
+import { suggestHandler } from "./community-suggest.mjs";
 import * as communityView from "./views/community.mjs";
 import { iconFile } from "./views/components/communities.mjs";
 import * as communitiesView from "./views/communities.mjs";
@@ -1502,6 +1503,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
   
   // Communities (protocol 13.0.0): see communities-api.mjs.
   app.get("/api/v1/communities", communitiesAPI.listHandler());
+  // Which of your communities a link fits best (community-suggest.mjs).
+  app.get("/api/v1/communities/suggest", suggestHandler());
   app.get("/api/v1/communities/:owner/:key", communitiesAPI.detailHandler());
 
   // NOTE: Kiwi News' feeds, and under /api/v1/communities/:owner/:key/ a

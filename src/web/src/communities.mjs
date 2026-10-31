@@ -200,6 +200,22 @@ export function memberCount(members) {
   return n === 1 ? "1 member" : `${n.toLocaleString("en-US")} members`;
 }
 
+// Links GET /api/v1/communities/suggest can say something about: web
+// pages, not text posts (data:) or images uploaded on the submit page.
+export function suggestable(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch (err) {
+    return false;
+  }
+  return (
+    (parsed.protocol === "https:" || parsed.protocol === "http:") &&
+    parsed.hostname !== "imagedelivery.net" &&
+    url.length <= 2048
+  );
+}
+
 // Nobody leaves the community they run.
 export function canLeave(community, identity) {
   return !isOwner(community, identity);

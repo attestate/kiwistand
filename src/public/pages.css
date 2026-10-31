@@ -3110,6 +3110,105 @@ html[data-cm-joined] .n2-post-to:empty,
   font-weight: 600;
   color: var(--kn-text-primary);
 }
+/* "Post to" and, once a link is pasted, the suggested community: on the
+   same row while they fit, so the form below doesn't move. */
+.cm-post-to-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  /* The chip's height, so its arrival doesn't move the form. */
+  min-height: 32px;
+}
+.cm-suggest {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  height: 32px;
+  border: 1px solid var(--kn-card-border);
+  border-radius: 999px;
+  background: var(--kn-card);
+  color: var(--kn-text-primary);
+  font-family: var(--kn-font);
+}
+.cm-suggest-use {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0 4px 0 10px;
+  border: 0;
+  border-radius: 999px 0 0 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cm-suggest-use > .cm-icon {
+  color: var(--cm-text);
+}
+.cm-suggest-label {
+  color: var(--kn-text-secondary);
+}
+.cm-suggest .cm-tile {
+  border-radius: 6px;
+}
+.cm-suggest-name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cm-suggest-action {
+  margin-left: 2px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--cm-tint);
+  color: var(--cm-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.cm-suggest-dismiss {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 100%;
+  margin: 0;
+  padding: 0 4px 0 0;
+  border: 0;
+  border-radius: 0 999px 999px 0;
+  background: none;
+  color: var(--kn-text-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .cm-suggest-use:hover .cm-suggest-action {
+    background: var(--cm-soft);
+  }
+  .cm-suggest-dismiss:hover {
+    color: var(--kn-text-primary);
+  }
+}
+.cm-suggest-use:focus-visible,
+.cm-suggest-dismiss:focus-visible {
+  outline: 2px solid var(--kn-text-primary);
+  outline-offset: -2px;
+}
+/* Phones: the sparkle says it's a suggestion, the row keeps its height. */
+@media (max-width: 480px) {
+  .cm-suggest-label {
+    display: none;
+  }
+}
 .n2-post-to .cm-post-to-search {
   width: 100%;
   height: 40px;

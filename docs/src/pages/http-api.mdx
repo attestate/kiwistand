@@ -232,6 +232,36 @@ Query parameters, all optional:
 
 One Community object as `data`, or 404 when the node doesn't know the community. `:owner` may be in any case, `:key` is the name key.
 
+### GET /api/v1/communities/suggest
+
+Which of a member's communities a link fits best, for a client's "Post to" when someone pastes a link. Not cached (`Cache-Control: no-cache`), and limited to 60 requests a minute per IP, like `/api/v1/metadata`.
+
+Query parameters, both required:
+
+- `url` (string): the link, `http:` or `https:`, at most 2048 characters. 400 otherwise.
+- `member` (address, any case): whose communities to choose from. 400 if it isn't an address.
+
+The node reads the member's communities itself, the same ones as `GET /api/v1/communities?member=` (the ones it joined and the ones it owns). A request can't name communities to choose from.
+
+`data` is `{"community": {"id", "name", "icon", "color"}}`, or `{"community": null}`:
+
+```js
+{
+  "community": {
+    "id": "0x0f6a…/agent-builders",
+    "name": "Agent Builders",
+    "icon": "robot",
+    "color": "#6E56CF"
+  }
+}
+```
+
+- No communities: `null`.
+- One: that one.
+- More: always one of them. A model reads the link's title and description and each community's name, `about` and rules, and picks one of their IDs. If it fails or takes too long (a few seconds), the answer is the member's most active community (as the list orders them).
+
+The same link with the same set of communities gets the same suggestion from a bounded in-memory cache. A suggestion is only a suggestion: posting to a community is still the client's choice (the `community` of a submission).
+
 ### GET /api/v1/communities/:owner/:key/feeds/:name
 
 `:name` is `hot`, `new` or `best`. A community's feeds, namespaced by the community like its page. They take the same parameters and answer like `/api/v1/feeds/:name`, with only that community's stories, ranked with the same rules as Kiwi News' feeds:
@@ -252,7 +282,7 @@ Also `/c/:owner/:key/new` and `/c/:owner/:key/best`. The community's web pages: 
 
 ### GET /communities
 
-Also `/communities?tab=joined` and `/communities/new`. The website's list of communities, most active first (`q` searches them like `GET /api/v1/communities`), the ones you joined, and the form to start a community or to edit yours (`?edit=<name key>`). The website still keeps the communities you joined in the browser; since protocol 14.0.0 clients sign a join or leave instead and read `GET /api/v1/communities?member=<address>`.
+Also `/communities?tab=joined` and `/communities/new`. The website's list of communities, most active first (`q` searches them like `GET /api/v1/communities`), the ones you joined, and the form to start a community or to edit yours (`?edit=<name key>`). Joining and leaving sign a join or leave (protocol 14.0.0), and the joined list comes from `GET /api/v1/communities?member=<address>`.
 
 ### Who joined: GET /api/v1/activity
 

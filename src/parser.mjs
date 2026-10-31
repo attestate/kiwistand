@@ -260,7 +260,8 @@ const filtered = [
   "instagram.com",
 ];
 
-const anthropic = new Anthropic({
+// NOTE: Also the client of community-suggest.mjs.
+export const anthropic = new Anthropic({
   apiKey: env.ANTHROPIC_API_KEY,
 });
 

@@ -8,9 +8,9 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { colorVars, memberCount } from "./communities.mjs";
+import { colorVars, memberCount, suggestable } from "./communities.mjs";
 import { WORDMARK } from "./wordmark.mjs";
-import { Tile, UI, useJoined } from "./Communities.jsx";
+import { Tile, UI, useIdentity, useJoined } from "./Communities.jsx";
 
 // With more communities than this, the card has a search.
 export const SEARCH_FROM = 6;
@@ -74,9 +74,68 @@ function Option({ community, selected, onPick }) {
   );
 }
 
-export default function PostTo({ root, target, setTarget }) {
+// Which of your communities the pasted link fits best
+// (GET /api/v1/communities/suggest, src/community-suggest.mjs), asked for
+// once typing pauses, like the title. `null` until it's there.
+function useSuggestion(url, identity, enabled) {
+  const [suggestion, setSuggestion] = useState(null);
+  useEffect(() => {
+    setSuggestion(null);
+    if (!enabled || !identity || !suggestable(url)) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const query = `url=${encodeURIComponent(url)}&member=${identity}`;
+      fetch(`/api/v1/communities/suggest?${query}`, {
+        signal: controller.signal,
+      })
+        .then((response) => response.json())
+        .then(({ data }) => {
+          if (data?.community) setSuggestion({ url, community: data.community });
+        })
+        .catch(() => {});
+    }, 500);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [url, identity, enabled]);
+  return suggestion;
+}
+
+// "Suggested: <community>": one click picks it. Never picked for you.
+function Suggestion({ community, onUse, onDismiss }) {
+  return (
+    <span className="cm-c cm-suggest" style={colorVars(community.color)}>
+      <button
+        type="button"
+        className="cm-suggest-use"
+        onClick={onUse}
+        aria-label={`Suggested: ${community.name}. Post to it`}
+      >
+        <UI name="sparkle" size={14} />
+        <span className="cm-suggest-label">Suggested</span>
+        <Tile community={community} size={20} iconSize={12} variant="tint" />
+        <span className="cm-suggest-name">{community.name}</span>
+        <span className="cm-suggest-action">Use</span>
+      </button>
+      <button
+        type="button"
+        className="cm-suggest-dismiss"
+        onClick={onDismiss}
+        aria-label="Dismiss the suggestion"
+      >
+        <UI name="x-bold" size={11} />
+      </button>
+    </span>
+  );
+}
+
+export default function PostTo({ root, url = "", target, setTarget }) {
   const joined = useJoined();
+  const identity = useIdentity();
   const [query, setQuery] = useState("");
+  // The link whose suggestion was used or dismissed.
+  const [done, setDone] = useState(null);
   const [preset] = useState(() => {
     try {
       return JSON.parse(root.dataset.community || "null");
@@ -93,8 +152,18 @@ export default function PostTo({ root, target, setTarget }) {
   if (preset && !options.some((c) => c.id === preset.id)) {
     options.unshift(preset);
   }
+  const suggestion = useSuggestion(url, identity, options.length > 0);
   // Nothing to pick from: posts go to Kiwi News, as before communities.
   if (options.length === 0) return null;
+
+  // Shown while posting to Kiwi News: a community picked by hand (or
+  // preset) stays.
+  const suggested =
+    suggestion &&
+    suggestion.url === url &&
+    done !== url &&
+    !target &&
+    options.find(({ id }) => id === suggestion.community.id);
 
   const search = options.length > SEARCH_FROM;
   const words = query.trim().toLowerCase();
@@ -103,7 +172,19 @@ export default function PostTo({ root, target, setTarget }) {
     : options;
   return createPortal(
     <>
-      <span className="cm-post-to-label">Post to</span>
+      <div className="cm-post-to-head">
+        <span className="cm-post-to-label">Post to</span>
+        {suggested && (
+          <Suggestion
+            community={suggested}
+            onUse={() => {
+              setTarget(suggested);
+              setDone(url);
+            }}
+            onDismiss={() => setDone(url)}
+          />
+        )}
+      </div>
       {search && (
         <label className="cm-search cm-post-to-search">
           <UI name="magnifying-glass" size={16} />
