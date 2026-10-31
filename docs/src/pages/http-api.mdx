@@ -209,18 +209,20 @@ Query parameters, all optional:
 
 One Community object as `data`, or 404 when the node doesn't know the community. `:owner` may be in any case, `:key` is the name key.
 
-### GET /api/v1/feeds/:name?community=&lt;id&gt;
+### GET /api/v1/communities/:owner/:key/feeds/:name
 
-`:name` is `hot`, `new` or `best`. The feeds take an optional `community`, a community's ID. A value that doesn't match `COMMUNITY_ID_PATTERN` (src/constants.mjs: the address in any case, the key in lowercase) is a 400. With `community`, a feed has only that community's stories:
+`:name` is `hot`, `new` or `best`. A community's feeds, namespaced by the community like its page. They take the same parameters and answer like `/api/v1/feeds/:name`, with only that community's stories, ranked with the same rules as Kiwi News' feeds:
 
-- Hot ranks them like Kiwi News' Hot, but without its lookback and its engagement, karma, age and name rules, so a new community's story with one upvote shows. Moderation applies. All of it, the community's newest 100 stories at most, comes in one response: `/api/v1/feed/rows` has no further page for a community.
-- New has the community's newest 25 stories, as `/new` shows them. `/api/v1/new/rows?community=<id>` pages on from there.
-- Best ranks them per `period` and `page`, like Kiwi News' Best.
+- Hot: Kiwi News' Hot ranking and rules. Kiwi News' own picks (the app curation, predictions and the pinned story) don't apply. `/api/v1/communities/:owner/:key/feed/rows` pages on like `/api/v1/feed/rows`.
+- New: the community's newest 25 stories, as `/new` shows them. `/api/v1/communities/:owner/:key/new/rows` pages on from there.
+- Best: per `period` and `page`, like Kiwi News' Best.
 
-Without `community`, the feeds are Kiwi News', which the website's `/`, `/new` and `/best` show too. They have every story, a community's ones included, ranked as always. `/api/v1/feed/rows` and `/api/v1/new/rows` page through the same stories.
+An `:owner`/`:key` that isn't a community ID (`COMMUNITY_ID_PATTERN` in src/constants.mjs) is a 400.
+
+Kiwi News' feeds (`/api/v1/feeds/:name`, and the website's `/`, `/new` and `/best`) have every story, a community's ones included, ranked as always. `/api/v1/feed/rows` and `/api/v1/new/rows` page through the same stories.
 
 Every story of these feeds, of their rows (`format=json`) and of `GET /api/v1/stories?index=` has `community`: `null` for a Kiwi News story, else `{"id", "name", "icon", "color"}`.
 
 ### GET /c/:owner/:key
 
-The community's web page, where invite links land: its name, icon, about and rules, who created it, its stories and a link to the app. 404 when the community isn't known. The app's universal links include `/c/*`.
+Also `/c/:owner/:key/new` and `/c/:owner/:key/best`. The community's web pages, where invite links land: its name, icon, about and rules, who created it, its stories and a link to the app. 404 when the community isn't known. The app's universal links include `/c/*`.
