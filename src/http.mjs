@@ -95,7 +95,6 @@ import {
   storeMiniAppUpvote,
   listNewest,
   countComments,
-  KIWI_NEW,
   inCommunity,
 } from "./cache.mjs";
 import * as communitiesAPI from "./communities-api.mjs";
@@ -1701,7 +1700,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
   // Endless scroll endpoint - returns just HTML rows for a page
-  // NOTE: These are Kiwi News' Hot (index() reads KIWI_TOP). A community's
+  // NOTE: These are Kiwi News' Hot, which has every story. A community's
   // Hot has all of its stories on its first page (/api/v1/feeds/hot?community=),
   // so with `community` there's no further page.
   app.get("/api/v1/feed/rows", communitiesAPI.communityQuery, async (request, reply) => {
@@ -1818,8 +1817,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
           initialStories[initialStories.length - 1].timestamp;
         const older = listNewest(
           initialStories.length + ENDLESS_WARM_AHEAD,
-          undefined,
-          KIWI_NEW,
         ).filter((s) => s.timestamp < oldestTimestamp);
         warmStoryPreviews(older.slice(0, ENDLESS_WARM_AHEAD));
       } catch (err) {
@@ -1835,7 +1832,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
   const NEW_ROWS_MAX_PAGE = 50;
 
   // Endless scroll endpoint for /new — returns HTML rows for older stories
-  // NOTE: Kiwi News' New (KIWI_NEW), or with `community` that community's
+  // NOTE: Kiwi News' New (every story), or with `community` that community's
   // New, after its first page (/api/v1/feeds/new?community=).
   app.get("/api/v1/new/rows", communitiesAPI.communityQuery, async (request, reply) => {
     const { community } = reply.locals;
@@ -1874,7 +1871,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     let allStories = listNewest(
       fetchLimit + initialCount,
       undefined,
-      community ? inCommunity(community) : KIWI_NEW,
+      community ? inCommunity(community) : undefined,
     );
 
     // Only keep stories older than the initial page

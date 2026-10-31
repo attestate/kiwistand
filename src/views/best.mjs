@@ -25,7 +25,6 @@ import {
   getLastComment,
   countImpressions,
   lifetimeCache,
-  KIWI_TOP,
   inCommunity,
 } from "../cache.mjs";
 import { metadata, cachedMetadata } from "../parser.mjs";
@@ -124,7 +123,7 @@ export async function getStories(page, period, domain, options = {}) {
   if (memo && Date.now() - memo.time < BEST_TTL) {
     result = memo.result;
   } else {
-    const scope = community ? inCommunity(community) : KIWI_TOP;
+    const scope = community ? inCommunity(community) : undefined;
     result = getBest(amount, from, orderBy, domain, startDatetime, scope);
     if (memoize) bestMemo.set(key, { result, time: Date.now() });
   }

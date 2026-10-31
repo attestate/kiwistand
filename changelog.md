@@ -14,10 +14,8 @@
 - The feeds take `community=<id>`: Hot, New and Best of that community only.
   A community's Hot has no engagement, karma or age rules, so a new
   community's single-upvote stories show. An invalid ID is a 400.
-- Kiwi News' feeds (also `/`, `/new` and `/best` on the website): New has no
-  community stories; Hot and Best take a community's story once it has 10
-  upvotes (`COMMUNITY_KIWI_MIN_UPVOTES`). The rows endpoints follow the same
-  rules.
+- Kiwi News' feeds (also `/`, `/new` and `/best` on the website) are one
+  feed: they have every story, a community's ones included, ranked as always.
 - Stories in the feeds and from `GET /api/v1/stories` have `community`:
   `null` or `{id, name, icon, color}`. The cache hands the column on as
   `communityId`, so the bare ID no longer goes out as `community` anywhere.

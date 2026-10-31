@@ -18,7 +18,6 @@ import {
   listNewest,
   countImpressions,
   lifetimeCache,
-  KIWI_NEW,
   inCommunity,
 } from "../cache.mjs";
 import Row from "./components/row.mjs";
@@ -65,8 +64,8 @@ export function getCachedHtml() {
   return lifetimeCache.get(HTML_CACHE_KEY);
 }
 
-// The stories of /new: the newest 25 without a community (KIWI_NEW). A
-// community's New has as many.
+// The stories of /new: the newest 25, a community's ones included. A
+// community's New has as many of its own.
 export const NEW_STORIES = 25;
 
 // What /new shows of `counts` (listNewest rows), newest first: moderated,
@@ -201,7 +200,7 @@ export async function recompute() {
   inProgress = true;
 
   try {
-    const counts = listNewest(NEW_STORIES, undefined, KIWI_NEW);
+    const counts = listNewest(NEW_STORIES);
     const previousStoriesByIndex = new Map(
       stories.map((story) => [story.index, story]),
     );

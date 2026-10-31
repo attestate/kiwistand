@@ -26,7 +26,6 @@ import {
   countCommentsBatch,
   countEngagements,
   getBest,
-  KIWI_TOP,
   inCommunity,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
@@ -400,15 +399,14 @@ export async function index(
   // age and name rules below, as a new community's stories have one upvote
   // from people without karma. Moderation still applies; Kiwi News'
   // curation, predictions and pinned story don't. Without it, Kiwi News'
-  // Hot, which has a community's story once it has
-  // COMMUNITY_KIWI_MIN_UPVOTES upvotes (src/cache.mjs KIWI_TOP).
+  // Hot, which has every story, a community's ones included.
   { community } = {},
 ) {
   const lookbackUnixTime = community
     ? undefined
     : Math.floor(lookback.getTime() / 1000);
   const limit = community ? COMMUNITY_HOT_STORIES : -1;
-  const scope = community ? inCommunity(community) : KIWI_TOP;
+  const scope = community ? inCommunity(community) : undefined;
   let leaves = listNewest(limit, lookbackUnixTime, scope); // Raw leaves for prediction candidates later
 
   const policy = await moderation.getLists();
@@ -804,7 +802,7 @@ export async function index(
 
 async function fetchTopStories(feedStoryHrefs) {
   const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  let topRaw = getBest(80, 0, null, "", weekAgo, KIWI_TOP);
+  let topRaw = getBest(80, 0, null, "", weekAgo);
 
   // Apply moderation
   const policy = await moderation.getLists();

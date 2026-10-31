@@ -245,14 +245,9 @@ community's stories:
 - Best ranks them per ``period`` and ``page``, like Kiwi News' Best.
 
 Without ``community``, the feeds are Kiwi News', which the website's ``/``,
-``/new`` and ``/best`` show too:
-
-- New has only the stories without a community.
-- Hot and Best have the stories without a community, and a community's story
-  once it has 10 upvotes (``COMMUNITY_KIWI_MIN_UPVOTES``, counted like a
-  story's ``upvotes``: the submission is one).
-- ``/api/v1/feed/rows`` and ``/api/v1/new/rows`` page through the same
-  stories.
+``/new`` and ``/best`` show too. They have every story, a community's ones
+included, ranked as always. ``/api/v1/feed/rows`` and ``/api/v1/new/rows``
+page through the same stories.
 
 Every story of these feeds, of their rows (``format=json``) and of
 ``GET /api/v1/stories?index=`` has ``community``: ``null`` for a Kiwi News

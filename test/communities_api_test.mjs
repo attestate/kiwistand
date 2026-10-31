@@ -18,7 +18,6 @@ import { index } from "../src/views/feed.mjs";
 import * as newest from "../src/views/new.mjs";
 import * as best from "../src/views/best.mjs";
 import { nameKey } from "../src/communities.mjs";
-import { COMMUNITY_KIWI_MIN_UPVOTES } from "../src/constants.mjs";
 
 const db = new Database(join(env.CACHE_DIR, "database.db"));
 const HOST = "https://communities-api.example";
@@ -290,37 +289,32 @@ test.serial("a community signed with a delegated key is the account's", async (t
 
 // --- Feed rules ---------------------------------------------------------
 
-test.serial("Kiwi News' New has no community stories", async (t) => {
+test.serial("Kiwi News' New has every story, a community's ones included", async (t) => {
   const id = community(address(), { name: "New Rules" });
   const kiwi = story({});
-  const popular = story({ community: id, upvotes: COMMUNITY_KIWI_MIN_UPVOTES + 2 });
   const fresh = story({ community: id });
 
-  const listed = hrefs(cache.listNewest(500, undefined, cache.KIWI_NEW));
+  const listed = hrefs(cache.listNewest(500));
   t.true(listed.includes(kiwi.href));
-  t.false(listed.includes(popular.href));
-  t.false(listed.includes(fresh.href));
+  t.true(listed.includes(fresh.href));
 
   await newest.recompute();
   const page = hrefs(newest.getStories());
   t.true(page.includes(kiwi.href));
-  t.false(page.includes(popular.href));
-  t.false(page.includes(fresh.href));
+  t.true(page.includes(fresh.href));
 });
 
-test.serial(`Kiwi News' Hot and Best take a community's story from ${COMMUNITY_KIWI_MIN_UPVOTES} upvotes`, async (t) => {
+test.serial("Kiwi News' Hot and Best rank a community's stories like any other", async (t) => {
   const id = community(address(), { name: "Top Rules" });
   const kiwi = story({ upvotes: 2, age: 3 * DAY });
-  const below = story({ community: id, upvotes: COMMUNITY_KIWI_MIN_UPVOTES - 1, age: 3 * DAY });
-  const enough = story({ community: id, upvotes: COMMUNITY_KIWI_MIN_UPVOTES, age: 3 * DAY });
+  const few = story({ community: id, upvotes: 2, age: 3 * DAY });
+  const many = story({ community: id, upvotes: 12, age: 3 * DAY });
 
   for (const listed of [
-    hrefs(cache.listNewest(500, undefined, cache.KIWI_TOP)),
-    hrefs(cache.getBest(500, 0, null, "", 0, cache.KIWI_TOP)),
+    hrefs(cache.listNewest(500)),
+    hrefs(cache.getBest(500, 0, null, "", 0)),
   ]) {
-    t.true(listed.includes(kiwi.href));
-    t.true(listed.includes(enough.href));
-    t.false(listed.includes(below.href));
+    for (const { href } of [kiwi, few, many]) t.true(listed.includes(href));
   }
 
   // Hot as /api/v1/feed/rows computes it (no ENS, no engagement rules).
@@ -335,14 +329,13 @@ test.serial(`Kiwi News' Hot and Best take a community's story from ${COMMUNITY_K
     true,
     true,
   );
-  t.true(hrefs(hot).includes(kiwi.href));
-  t.true(hrefs(hot).includes(enough.href));
-  t.false(hrefs(hot).includes(below.href));
+  for (const { href } of [kiwi, few, many]) t.true(hrefs(hot).includes(href));
 
   const week = await best.getStories(0, "week", "", { amount: 500 });
-  t.true(hrefs(week).includes(kiwi.href));
-  t.true(hrefs(week).includes(enough.href));
-  t.false(hrefs(week).includes(below.href));
+  for (const { href } of [kiwi, few, many]) t.true(hrefs(week).includes(href));
+  // Ranked by upvotes, the community's popular story comes first.
+  const ranked = hrefs(week);
+  t.true(ranked.indexOf(many.href) < ranked.indexOf(kiwi.href));
 });
 
 test.serial("a community's feeds have only its stories", async (t) => {
@@ -402,7 +395,9 @@ test.serial("a community's feeds don't change Kiwi News' cached feeds", async (t
   const before = hrefs(newest.getStories());
   await newest.getCommunityStories(id);
   t.deepEqual(hrefs(newest.getStories()), before);
-  t.false(before.includes(mine.href));
+  // Kiwi News' New has both; the community's New didn't replace it.
+  t.true(before.includes(kiwi.href));
+  t.true(before.includes(mine.href));
 
   // Best memoizes Kiwi News' pages; a community's page with the same
   // period, page and amount must not take its place.

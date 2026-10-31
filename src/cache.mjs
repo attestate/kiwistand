@@ -24,7 +24,6 @@ import { resolveIdentity } from "@attestate/delegator2";
 import log from "./logger.mjs";
 import { toDigest } from "./id.mjs";
 import { nameKey, normalizeId } from "./communities.mjs";
-import { COMMUNITY_KIWI_MIN_UPVOTES } from "./constants.mjs";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
@@ -448,13 +447,9 @@ export function communityActivity(id) {
 }
 
 // Which stories a feed reads (communities, protocol 13.0.0). listNewest and
-// getBest take one; without it they read every story.
-// - KIWI_NEW: Kiwi News' New, the stories without a community.
-// - KIWI_TOP: Kiwi News' Hot and Best, which also take a community's story
-//   once it has COMMUNITY_KIWI_MIN_UPVOTES upvotes.
+// getBest take one; without it they read every story, as Kiwi News' feeds
+// do: a community's stories are in them like any other.
 // - inCommunity(id): one community's stories.
-export const KIWI_NEW = Object.freeze({ kiwi: "new" });
-export const KIWI_TOP = Object.freeze({ kiwi: "top" });
 export function inCommunity(id) {
   return { community: id.toLowerCase() };
 }
@@ -463,17 +458,6 @@ function scopeFilter(scope, alias) {
   if (!scope) return null;
   if (typeof scope.community === "string") {
     return { sql: `${alias}.community = ?`, params: [scope.community] };
-  }
-  if (scope.kiwi === "new") {
-    return { sql: `${alias}.community IS NULL`, params: [] };
-  }
-  if (scope.kiwi === "top") {
-    // NOTE: Counted like the feeds' `upvotes`: the submission is one.
-    return {
-      sql: `(${alias}.community IS NULL OR
-        (SELECT COUNT(*) FROM upvotes kiwi_u WHERE kiwi_u.href = ${alias}.href) + 1 >= ?)`,
-      params: [COMMUNITY_KIWI_MIN_UPVOTES],
-    };
   }
   throw new Error(`Unknown feed scope: ${JSON.stringify(scope)}`);
 }
@@ -1356,7 +1340,7 @@ export function listWeeks({ activity = false } = {}) {
     }));
 }
 
-// `scope`: which stories, see KIWI_NEW, KIWI_TOP and inCommunity.
+// `scope`: which stories, see inCommunity; without it every story.
 export function listNewest(limit = 30, lookbackUnixTime, scope) {
   const where = [];
   const params = [];
