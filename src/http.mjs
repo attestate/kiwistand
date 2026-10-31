@@ -1461,10 +1461,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
   app.get("/api/v1/communities", communitiesAPI.listHandler());
   app.get("/api/v1/communities/:owner/:key", communitiesAPI.detailHandler());
 
-  // NOTE: With `community` (a community's ID), the feeds are that
-  // community's (see communities-api.mjs and docs/source/http-api.rst);
-  // without it, Kiwi News'. communityQuery answers 400 for an invalid one.
-  app.get("/api/v1/feeds/:name", communitiesAPI.communityQuery, async (request, reply) => {
+  // NOTE: Kiwi News' feeds, and under /api/v1/communities/:owner/:key/ a
+  // community's: the same feeds with only its stories (communities-api.mjs,
+  // docs/source/http-api.rst). communityParams answers 400 for an invalid ID.
+  const feedsHandler = async (request, reply) => {
     const { community } = reply.locals;
     let stories = [];
     
@@ -1599,7 +1599,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const httpMessage = "OK";
     const details = `${request.params.name} feed`;
     return sendStatus(reply, code, httpMessage, details, { stories });
-  });
+  };
+  app.get("/api/v1/feeds/:name", communitiesAPI.kiwiNews, feedsHandler);
+  app.get(
+    "/api/v1/communities/:owner/:key/feeds/:name",
+    communitiesAPI.communityParams,
+    feedsHandler,
+  );
 
   // Cache for endless scroll stories (refreshed every 30s)
   let cachedEndlessStories = null;
@@ -1669,6 +1675,25 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
   }
 
+  // NOTE: A community's endless scroll pages through its Hot the way Kiwi
+  // News' does, computed per request (the cache above is Kiwi News').
+  async function communityEndlessStories(community) {
+    const config = variantConfigs[currentVariant] || variantConfigs.control;
+    const results = await index(
+      trie,
+      999,
+      undefined,
+      sub(new Date(), { weeks: 6 }),
+      false,
+      false,
+      config.algorithm,
+      true,
+      true,
+      { community },
+    );
+    return results.stories;
+  }
+
   async function getEndlessStories() {
     const now = Date.now();
 
@@ -1700,27 +1725,22 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
   // Endless scroll endpoint - returns just HTML rows for a page
-  // NOTE: These are Kiwi News' Hot, which has every story. A community's
-  // Hot has all of its stories on its first page (/api/v1/feeds/hot?community=),
-  // so with `community` there's no further page.
-  app.get("/api/v1/feed/rows", communitiesAPI.communityQuery, async (request, reply) => {
+  // NOTE: Kiwi News' Hot, which has every story, or under
+  // /api/v1/communities/:owner/:key/ that community's.
+  const feedRowsHandler = async (request, reply) => {
+    const { community } = reply.locals;
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 1; // Default to page 1 for endless scroll (page 0 is already loaded)
-    }
-
-    if (reply.locals.community) {
-      reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
-      return request.query.format === "json"
-        ? reply.json({ stories: [] })
-        : reply.status(200).type("text/html").send("");
     }
 
     const endlessPageSize = 10;
 
     let allStories;
     try {
-      allStories = await getEndlessStories();
+      allStories = community
+        ? await communityEndlessStories(community)
+        : await getEndlessStories();
     } catch (err) {
       log(`Error in /api/v1/feed/rows: ${err.stack}`);
       return reply.status(500).send("");
@@ -1799,7 +1819,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(rowsHtml);
-  });
+  };
+  app.get("/api/v1/feed/rows", communitiesAPI.kiwiNews, feedRowsHandler);
+  app.get(
+    "/api/v1/communities/:owner/:key/feed/rows",
+    communitiesAPI.communityParams,
+    feedRowsHandler,
+  );
 
   // Warm the previews of the first scroll-loaded /new pages when someone
   // opens /new (at most once a minute), so the first rows and the page the
@@ -1832,9 +1858,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
   const NEW_ROWS_MAX_PAGE = 50;
 
   // Endless scroll endpoint for /new — returns HTML rows for older stories
-  // NOTE: Kiwi News' New (every story), or with `community` that community's
-  // New, after its first page (/api/v1/feeds/new?community=).
-  app.get("/api/v1/new/rows", communitiesAPI.communityQuery, async (request, reply) => {
+  // NOTE: Kiwi News' New (every story), or under
+  // /api/v1/communities/:owner/:key/ that community's, after its first page.
+  const newRowsHandler = async (request, reply) => {
     const { community } = reply.locals;
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
@@ -1959,7 +1985,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(rowsHtml);
-  });
+  };
+  app.get("/api/v1/new/rows", communitiesAPI.kiwiNews, newRowsHandler);
+  app.get(
+    "/api/v1/communities/:owner/:key/new/rows",
+    communitiesAPI.communityParams,
+    newRowsHandler,
+  );
 
   app.get("/api/v1/profile/:address", async (request, reply) => {
     let address;

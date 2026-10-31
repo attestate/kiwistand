@@ -7,13 +7,14 @@
 
 ## Unreleased
 
-### Communities: read API and feed rules (no protocol change)
+### Communities: read API and feeds (no protocol change)
 
 - `GET /api/v1/communities` (`q`, `owner`, `limit`) lists communities, most
   active first, and `GET /api/v1/communities/:owner/:key` returns one, or 404.
-- The feeds take `community=<id>`: Hot, New and Best of that community only.
-  A community's Hot has no engagement, karma or age rules, so a new
-  community's single-upvote stories show. An invalid ID is a 400.
+- A community's feeds are namespaced by it:
+  `/api/v1/communities/:owner/:key/feeds/hot|new|best` and the rows endpoints
+  under the same path. They're Kiwi News' Hot, New and Best with only the
+  community's stories, ranked with the same rules. An invalid ID is a 400.
 - Kiwi News' feeds (also `/`, `/new` and `/best` on the website) are one
   feed: they have every story, a community's ones included, ranked as always.
 - Stories in the feeds and from `GET /api/v1/stories` have `community`:

@@ -341,15 +341,19 @@ test.serial("Kiwi News' Hot and Best rank a community's stories like any other",
 test.serial("a community's feeds have only its stories", async (t) => {
   const id = community(address(), { name: "Only Mine" });
   const other = community(address(), { name: "Only Mine" });
-  const mine = [story({ community: id, age: 2 * DAY }), story({ community: id, age: DAY })];
-  story({ community: other });
+  const mine = [
+    story({ community: id, upvotes: 2, age: 2 * DAY - 60 }),
+    story({ community: id, upvotes: 2, age: DAY }),
+  ];
+  story({ community: other, upvotes: 2 });
   story({ upvotes: 3 });
 
   const listed = cache.listNewest(500, undefined, cache.inCommunity(id));
   t.deepEqual(hrefs(listed), [mine[1].href, mine[0].href]);
 
+  // Hot as the rows endpoint computes it (no ENS lookups).
   const { stories: hot } = await index(
-    null, 0, undefined, sub(new Date(), { weeks: 3 }), false, false, "control", false, false,
+    null, 0, undefined, sub(new Date(), { weeks: 3 }), false, false, "control", false, true,
     { community: id },
   );
   t.deepEqual(hrefs(hot).sort(), hrefs(mine).sort());
@@ -362,17 +366,21 @@ test.serial("a community's feeds have only its stories", async (t) => {
   t.deepEqual(hrefs(top).sort(), hrefs(mine).sort());
 });
 
-test.serial("a new community's 1-upvote story shows in its Hot, whatever its age", async (t) => {
+test.serial("a community's Hot has Kiwi News' rules; its New has every story", async (t) => {
   const id = community(address(), { name: "Brand New" });
-  const first = story({ community: id, age: 30 * DAY });
+  const old = story({ community: id, age: 30 * DAY });
+  const lonely = story({ community: id, age: 60 });
+  const liked = story({ community: id, upvotes: 3 });
 
-  // As /api/v1/feeds/hot?community= asks for it.
+  // As /api/v1/communities/:owner/:key/feeds/hot asks for it, without ENS.
   const { stories } = await index(
-    null, 0, undefined, sub(new Date(), { weeks: 3 }), false, false, "control", false, false,
+    null, 0, undefined, sub(new Date(), { weeks: 3 }), false, false, "control", false, true,
     { community: id },
   );
-  t.deepEqual(hrefs(stories), [first.href]);
-  t.is(stories[0].upvotes, 1);
+  t.deepEqual(hrefs(stories), [liked.href]);
+
+  const fresh = await newest.getCommunityStories(id);
+  t.deepEqual(hrefs(fresh), [liked.href, lonely.href, old.href]);
 });
 
 test.serial("a community's Best works per period", async (t) => {
@@ -435,12 +443,9 @@ test.serial("stories carry their community as an object, or null", async (t) => 
   );
   t.deepEqual(single.community, ref);
 
-  // A community's Hot
-  const { stories: hot } = await index(
-    null, 0, undefined, undefined, false, false, "control", false, false,
-    { community: id },
-  );
-  t.deepEqual((await api.withCommunities(hot, deps))[0].community, ref);
+  // A community's New
+  const fresh = await newest.getCommunityStories(id);
+  t.deepEqual((await api.withCommunities(fresh, deps))[0].community, ref);
 
   // A community this node doesn't know
   const [unknown] = await api.withCommunities(
@@ -450,39 +455,39 @@ test.serial("stories carry their community as an object, or null", async (t) => 
   t.is(unknown.community, null);
 });
 
-// --- The `community` query --------------------------------------------------
+// --- A community's routes ----------------------------------------------------
 
-test("an invalid community query is a 400", (t) => {
+test("an invalid community in the path is a 400", (t) => {
   const owner = address();
-  for (const value of [
-    "ai",
-    "",
-    `${owner}`,
-    `${owner}/AI`,
-    `${owner}/agent builders`,
-    `${owner.slice(0, 41)}/ai`,
-    [`${owner}/ai`, `${owner}/ai`],
+  for (const params of [
+    { owner: "ai", key: "ai" },
+    { owner: "", key: "ai" },
+    { owner, key: "" },
+    { owner, key: "AI" },
+    { owner, key: "agent builders" },
+    { owner: owner.slice(0, 41), key: "ai" },
   ]) {
     const r = reply();
     let next = false;
-    api.communityQuery({ query: { community: value } }, r, () => (next = true));
-    t.false(next, JSON.stringify(value));
+    api.communityParams({ params }, r, () => (next = true));
+    t.false(next, JSON.stringify(params));
     t.is(r.statusCode, 400);
     t.like(r.body, { status: "error", code: 400 });
   }
 });
 
-test("a valid community query reaches the feed, in lowercase", (t) => {
+test("a community's path reaches the feed, in lowercase; Kiwi News' has none", (t) => {
   const owner = upper(address());
   const r = reply();
   let next = false;
-  api.communityQuery({ query: { community: `${owner}/agent-builders` } }, r, () => (next = true));
+  api.communityParams({ params: { owner, key: "agent-builders" } }, r, () => (next = true));
   t.true(next);
   t.is(r.locals.community, `${owner.toLowerCase()}/agent-builders`);
 
-  const none = reply();
-  api.communityQuery({ query: {} }, none, () => {});
-  t.is(none.locals.community, undefined);
+  const kiwi = reply();
+  kiwi.locals.community = "stale";
+  api.kiwiNews({ params: {} }, kiwi, () => {});
+  t.is(kiwi.locals.community, undefined);
 });
 
 // --- /c/:owner/:key -----------------------------------------------------------
@@ -495,12 +500,13 @@ test.serial("a community's page shows it, its rules, its creator and its stories
     about: "Agents <b>and</b> more",
     rules: ["Be kind.", "Link sources."],
   });
-  const post = story({ community: id, title: "A community story" });
+  // NOTE: Two upvotes, as a community's Hot has Kiwi News' rules.
+  const post = story({ community: id, title: "A community story", upvotes: 2 });
   const handler = page.handler({
     ...deps,
     getStories: async (community) =>
       (
-        await index(null, 0, undefined, undefined, false, false, "control", false, false, {
+        await index(null, 0, undefined, undefined, false, false, "control", false, true, {
           community,
         })
       ).stories,

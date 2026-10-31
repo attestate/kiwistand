@@ -95,9 +95,6 @@ const PREDICTION_REPLACEMENT_COUNT = 10; // Number of oldest stories to replace
 const cutoffDate = new Date("2025-01-15");
 // Minimum karma needed for a story to surface with only a single upvote
 const singleUpvoteKarmaThreshold = 50;
-// NOTE: A community's Hot (index() with `community`) ranks the community's
-// newest stories of any age, at most this many.
-export const COMMUNITY_HOT_STORIES = 100;
 
 // Karma as of the fixed cutoffDate only changes when a peer sync backfills
 // pre-cutoff messages, but karma.resolve runs a SQL join per call and the
@@ -394,18 +391,14 @@ export async function index(
   algorithm = 'control',
   skipAgeFilter = false,
   skipResolve = false,
-  // NOTE: With `community` (its ID), the community's Hot: its stories ranked
-  // like Kiwi News' Hot, but without the lookback and the engagement, karma,
-  // age and name rules below, as a new community's stories have one upvote
-  // from people without karma. Moderation still applies; Kiwi News'
-  // curation, predictions and pinned story don't. Without it, Kiwi News'
-  // Hot, which has every story, a community's ones included.
+  // NOTE: With `community` (its ID), the community's Hot: only its stories,
+  // ranked with the same rules as Kiwi News' Hot. Kiwi News' own picks, the
+  // app curation, predictions and the pinned story, don't apply. Without it,
+  // Kiwi News' Hot, which has every story, a community's ones included.
   { community } = {},
 ) {
-  const lookbackUnixTime = community
-    ? undefined
-    : Math.floor(lookback.getTime() / 1000);
-  const limit = community ? COMMUNITY_HOT_STORIES : -1;
+  const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
+  const limit = -1;
   const scope = community ? inCommunity(community) : undefined;
   let leaves = listNewest(limit, lookbackUnixTime, scope); // Raw leaves for prediction candidates later
 
@@ -422,7 +415,6 @@ export async function index(
     rankedStories.map(({ index }) => `kiwi:0x${index}`),
   );
   rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
-    if (community) return true;
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = commentCounts.get(`kiwi:0x${index}`) || 0;
     // Karma only matters for single-upvote stories, so skip the lookup otherwise.
@@ -573,14 +565,12 @@ export async function index(
     stories = await resolveIds(pageStories); // Process the current page
 
     // 7. Only people with a name, or enough named upvoters (hotnames.mjs)
-    if (!community) {
-      const shown = await Promise.all(
-        stories.map((story) =>
-          showInHot(story, (address) => ens.resolve(address)),
-        ),
-      );
-      stories = stories.filter((_, i) => shown[i]);
-    }
+    const shown = await Promise.all(
+      stories.map((story) =>
+        showInHot(story, (address) => ens.resolve(address)),
+      ),
+    );
+    stories = stories.filter((_, i) => shown[i]);
   }
 
   // 8. FINAL SORT before prediction injection - always by score
@@ -783,7 +773,7 @@ export async function index(
   let originals = stories.filter((story) => story.isOriginal).slice(0, 2); // Take top 2 originals *remaining* in the list
 
   // 12. FINAL FILTER: Remove stories older than 2 days (skip for endless scroll)
-  if (!skipAgeFilter && !community) {
+  if (!skipAgeFilter) {
     const twoDaysInSeconds = 2 * 24 * 60 * 60;
     const nowTimestamp = getUnixTime(new Date());
     stories = stories.filter(

@@ -34,8 +34,8 @@ const defaults = {
   communityActivity: (id) => cache.communityActivity(id),
 };
 
-// The `community` query of the feeds: undefined without one, else the
-// lowercase ID. Throws for a value that isn't a community ID.
+// A community ID from a request: undefined without one, else the lowercase
+// ID. Throws for a value that isn't a community ID.
 export function parseCommunity(value) {
   if (value === undefined) return undefined;
   if (typeof value !== "string" || !idPattern.test(value)) {
@@ -46,14 +46,23 @@ export function parseCommunity(value) {
   return value.toLowerCase();
 }
 
-// Express middleware for the feed endpoints: 400 for an invalid `community`,
-// else its ID (or undefined) in res.locals.community.
-export function communityQuery(req, res, next) {
+// Express middleware for a community's feeds (/api/v1/communities/:owner/
+// :key/…): 400 for an invalid ID, else the lowercase ID in
+// res.locals.community.
+export function communityParams(req, res, next) {
   try {
-    res.locals.community = parseCommunity(req.query.community);
+    res.locals.community = parseCommunity(
+      `${req.params.owner}/${req.params.key}`,
+    );
   } catch (err) {
     return sendError(res, 400, "Bad Request", err.message);
   }
+  return next();
+}
+
+// Express middleware for Kiwi News' feeds: no community.
+export function kiwiNews(req, res, next) {
+  res.locals.community = undefined;
   return next();
 }
 
