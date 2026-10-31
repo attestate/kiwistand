@@ -20,7 +20,14 @@ import { robotsMeta } from "../indexable.mjs";
 import * as moderation from "./moderation.mjs";
 import log from "../logger.mjs";
 import Row from "./components/row.mjs";
-import { getBest, getLastComment, countImpressions, lifetimeCache } from "../cache.mjs";
+import {
+  getBest,
+  getLastComment,
+  countImpressions,
+  lifetimeCache,
+  KIWI_TOP,
+  inCommunity,
+} from "../cache.mjs";
 import { metadata, cachedMetadata } from "../parser.mjs";
 
 const html = htm.bind(vhtml);
@@ -84,13 +91,15 @@ async function addMetadata(post, wait) {
 
 // NOTE: getBest aggregates all submissions on every call (~0.5s for
 // period=all), so we stop at a page no reader gets to and briefly memoize
-// the unfiltered pages, whose number that bounds.
+// the unfiltered pages, whose number that bounds. A community's Best
+// (`options.community`, its ID) only reads that community's stories, through
+// an index, so it isn't memoized: the memo stays Kiwi News' alone.
 export const MAX_PAGE = 50;
 const BEST_TTL = 60000;
 const bestMemo = new Map();
 
 export async function getStories(page, period, domain, options = {}) {
-  const { forceFetch = false, rawMetadata = false, waitMetadata = false, createStoryLink = false, amount = parseInt(env.TOTAL_STORIES, 10) } = options;
+  const { forceFetch = false, rawMetadata = false, waitMetadata = false, createStoryLink = false, amount = parseInt(env.TOTAL_STORIES, 10), community } = options;
   if (page > MAX_PAGE) return [];
 
   let startDatetime = 0;
@@ -109,13 +118,15 @@ export async function getStories(page, period, domain, options = {}) {
   const from = amount * page;
   const orderBy = null;
   const key = `${period}:${page}:${amount}`;
-  const memo = bestMemo.get(key);
+  const memoize = !domain && !community;
+  const memo = memoize ? bestMemo.get(key) : undefined;
   let result;
-  if (!domain && memo && Date.now() - memo.time < BEST_TTL) {
+  if (memo && Date.now() - memo.time < BEST_TTL) {
     result = memo.result;
   } else {
-    result = getBest(amount, from, orderBy, domain, startDatetime);
-    if (!domain) bestMemo.set(key, { result, time: Date.now() });
+    const scope = community ? inCommunity(community) : KIWI_TOP;
+    result = getBest(amount, from, orderBy, domain, startDatetime, scope);
+    if (memoize) bestMemo.set(key, { result, time: Date.now() });
   }
 
   const [policy, writers] = await Promise.all([

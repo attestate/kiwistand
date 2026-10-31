@@ -95,7 +95,11 @@ import {
   storeMiniAppUpvote,
   listNewest,
   countComments,
+  KIWI_NEW,
+  inCommunity,
 } from "./cache.mjs";
+import * as communitiesAPI from "./communities-api.mjs";
+import * as communityView from "./views/community.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
@@ -670,6 +674,8 @@ function buildAppleAppSiteAssociation() {
             { "/": "/best*" },
             { "/": "/upvotes*" },
             { "/": "/activity*" },
+            // A community's invite link
+            { "/": "/c/*" },
             // Fallback – match everything under the domain
             { "/": "/*" },
           ],
@@ -681,6 +687,7 @@ function buildAppleAppSiteAssociation() {
             "/best*",
             "/upvotes*",
             "/activity*",
+            "/c/*",
             "/*",
           ],
         },
@@ -1451,7 +1458,15 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   });
   
-  app.get("/api/v1/feeds/:name", async (request, reply) => {
+  // Communities (protocol 13.0.0): see communities-api.mjs.
+  app.get("/api/v1/communities", communitiesAPI.listHandler());
+  app.get("/api/v1/communities/:owner/:key", communitiesAPI.detailHandler());
+
+  // NOTE: With `community` (a community's ID), the feeds are that
+  // community's (see communities-api.mjs and docs/source/http-api.rst);
+  // without it, Kiwi News'. communityQuery answers 400 for an invalid one.
+  app.get("/api/v1/feeds/:name", communitiesAPI.communityQuery, async (request, reply) => {
+    const { community } = reply.locals;
     let stories = [];
     
     if (request.params.name === "hot") {
@@ -1482,6 +1497,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
           paginate,
           appCuration,
           config.algorithm, // Pass algorithm selection
+          false, // skipAgeFilter
+          false, // skipResolve
+          { community },
         );
       } catch (err) {
         log(`Error in api/v1/feeds/hot (variant: ${variant || 'control'}): ${err.stack}`);
@@ -1499,7 +1517,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.header("Cache-Control", "no-cache");
 
       try {
-        stories = newAPI.getStories();
+        stories = community
+          ? await newAPI.getCommunityStories(community)
+          : newAPI.getStories();
       } catch (err) {
         log(`Error in api/v1/feeds/new: ${err.stack}`);
       }
@@ -1521,7 +1541,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
 
       try {
-        stories = await bestAPI.getStories(page, period, request.query.domain || "");
+        stories = await bestAPI.getStories(page, period, request.query.domain || "", {
+          community,
+        });
       } catch (err) {
         log(`error in /api/v1/feeds/best: ${err.stack}`);
       }
@@ -1535,7 +1557,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     // NOTE: Same count the website's story rows show (row.mjs).
-    stories = stories.map((story) => ({
+    stories = (await communitiesAPI.withCommunities(stories)).map((story) => ({
       ...story,
       commentCount: countComments(`kiwi:0x${story.index}`),
     }));
@@ -1568,7 +1590,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
           score: story.score || 0,
           upvotes: story.upvotes || 0,
           timestamp: story.timestamp,
-          age: age
+          age: age,
+          community: story.community,
         };
       });
     }
@@ -1678,10 +1701,20 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
   // Endless scroll endpoint - returns just HTML rows for a page
-  app.get("/api/v1/feed/rows", async (request, reply) => {
+  // NOTE: These are Kiwi News' Hot (index() reads KIWI_TOP). A community's
+  // Hot has all of its stories on its first page (/api/v1/feeds/hot?community=),
+  // so with `community` there's no further page.
+  app.get("/api/v1/feed/rows", communitiesAPI.communityQuery, async (request, reply) => {
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 1; // Default to page 1 for endless scroll (page 0 is already loaded)
+    }
+
+    if (reply.locals.community) {
+      reply.header("Cache-Control", "public, s-maxage=60, max-age=0");
+      return request.query.format === "json"
+        ? reply.json({ stories: [] })
+        : reply.status(200).type("text/html").send("");
     }
 
     const endlessPageSize = 10;
@@ -1740,7 +1773,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
       );
       return reply.json({
-        stories: stories.map((story) => ({
+        stories: (await communitiesAPI.withCommunities(stories)).map((story) => ({
           ...story,
           commentCount: countComments(`kiwi:0x${story.index}`),
         })),
@@ -1785,6 +1818,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
           initialStories[initialStories.length - 1].timestamp;
         const older = listNewest(
           initialStories.length + ENDLESS_WARM_AHEAD,
+          undefined,
+          KIWI_NEW,
         ).filter((s) => s.timestamp < oldestTimestamp);
         warmStoryPreviews(older.slice(0, ENDLESS_WARM_AHEAD));
       } catch (err) {
@@ -1800,7 +1835,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
   const NEW_ROWS_MAX_PAGE = 50;
 
   // Endless scroll endpoint for /new — returns HTML rows for older stories
-  app.get("/api/v1/new/rows", async (request, reply) => {
+  // NOTE: Kiwi News' New (KIWI_NEW), or with `community` that community's
+  // New, after its first page (/api/v1/feeds/new?community=).
+  app.get("/api/v1/new/rows", communitiesAPI.communityQuery, async (request, reply) => {
+    const { community } = reply.locals;
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 1;
@@ -1814,16 +1852,30 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     // Use the oldest story on the initial /new page as the cursor so we
     // never overlap with already-rendered stories.
-    const initialStories = newAPI.getStories();
-    const oldestTimestamp = initialStories.length > 0
-      ? initialStories[initialStories.length - 1].timestamp
-      : Math.floor(Date.now() / 1000);
+    let initialCount, oldestTimestamp;
+    if (community) {
+      oldestTimestamp = newAPI.communityCursor(community);
+      initialCount = oldestTimestamp === undefined ? 0 : newAPI.NEW_STORIES;
+    } else {
+      const initialStories = newAPI.getStories();
+      initialCount = initialStories.length;
+      oldestTimestamp = initialStories.length > 0
+        ? initialStories[initialStories.length - 1].timestamp
+        : undefined;
+    }
+    if (oldestTimestamp === undefined) {
+      oldestTimestamp = Math.floor(Date.now() / 1000);
+    }
 
     // Fetch enough stories older than the initial page to fill this page
     // and the pages whose previews we warm ahead.
     // Over-fetch to account for moderation filtering.
     const fetchLimit = endlessPageSize * page + ENDLESS_WARM_AHEAD + 20;
-    let allStories = listNewest(fetchLimit + initialStories.length);
+    let allStories = listNewest(
+      fetchLimit + initialCount,
+      undefined,
+      community ? inCommunity(community) : KIWI_NEW,
+    );
 
     // Only keep stories older than the initial page
     allStories = allStories.filter(s => s.timestamp < oldestTimestamp);
@@ -1883,7 +1935,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
       );
       return reply.json({
-        stories: stories.map((story) => ({
+        stories: (await communitiesAPI.withCommunities(stories)).map((story) => ({
           ...story,
           commentCount: countComments(`kiwi:0x${story.index}`),
         })),
@@ -2080,11 +2132,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
         ? "public, s-maxage=60, max-age=0"
         : "public, s-maxage=86400, max-age=0, stale-while-revalidate=31536000",
     );
+    const [withCommunity] = await communitiesAPI.withCommunities([submission]);
     const code = 200;
     const httpMessage = "OK";
     const details = "Responding with story queried by index";
     return sendStatus(reply, code, httpMessage, details, {
-      ...submission,
+      ...withCommunity,
       metadata,
       comments: enrichedComments,
     });
@@ -2939,6 +2992,30 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     return reply.status(200).type("text/html").send(content.valueOf());
   });
+  // A community's page, where its invite links land. Its stories are the
+  // community's Hot.
+  app.get(
+    "/c/:owner/:key",
+    communityView.handler({
+      getStories: async (community) => {
+        const variant = variantConfigs[currentVariant] || variantConfigs.control;
+        const { stories } = await index(
+          trie,
+          0,
+          undefined,
+          undefined,
+          false, // paginate
+          false, // appCuration
+          variant.algorithm,
+          false, // skipAgeFilter
+          false, // skipResolve
+          { community },
+        );
+        return stories;
+      },
+    }),
+  );
+
   app.get("/*", async (request, reply, next) => {
     const name = request.params[0];
     if (!name.endsWith(".eth")) {

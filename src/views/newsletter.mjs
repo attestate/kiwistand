@@ -6,7 +6,7 @@ import { sub } from "date-fns";
 import { custom } from "./components/head.mjs";
 import { Page, Icon } from "./components/n2.mjs";
 import * as moderation from "./moderation.mjs";
-import { getBest, countOutbounds, countComments } from "../cache.mjs";
+import { getBest, countOutbounds, countComments, KIWI_TOP } from "../cache.mjs";
 import { getSlug } from "../utils.mjs";
 import log from "../logger.mjs";
 
@@ -62,7 +62,7 @@ export async function getWeeklyPicks(amount = 5) {
   if (Date.now() - picksCache.at < PICKS_TTL_MS) return picksCache.picks;
   try {
     const since = Math.floor(sub(new Date(), { weeks: 1 }).getTime() / 1000);
-    let stories = getBest(25, 0, null, "", since);
+    let stories = getBest(25, 0, null, "", since, KIWI_TOP);
     const policy = await moderation.getLists();
     stories = moderation.moderate(stories, policy, "/best");
 

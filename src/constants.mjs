@@ -91,6 +91,10 @@ export const COMMUNITY_NAME_MAX_LENGTH = 24;
 // A community's ID: "<owner address>/<name key>".
 export const COMMUNITY_ID_PATTERN =
   "^0x[a-fA-F0-9]{40}/[a-z0-9]+(-[a-z0-9]+)*$";
+// A community's story also shows in Kiwi News' Hot and Best (not New) once
+// it has this many upvotes, counted as the feeds show them: the submitter's
+// own submission is one.
+export const COMMUNITY_KIWI_MIN_UPVOTES = 10;
 // No control characters (line breaks included) in a community's texts.
 const SINGLE_LINE = "^[^\\u0000-\\u001F\\u007F]*$";
 

@@ -179,3 +179,87 @@ Acceptance Criteria for Messages
 7. A comment's story must exist and be older than the comment.
 8. An amplify with ``community`` must name a community the node has, in a
    version older than the post (see :ref:`communities`).
+
+.. _communities-read-api:
+
+Reading communities
+-------------------
+
+Since protocol 13.0.0 (see :ref:`communities`). The website serves these
+endpoints (``HTTP_PORT``, e.g. https://news.kiwistand.com), not the node's
+``API_PORT``. They answer in the envelope described above: ``status``,
+``code``, ``message``, ``details`` and ``data``.
+
+**GET /api/v1/communities**
+
+Lists communities, most active first: by their newest story, then the
+communities without stories, the newest first. The communities of a profile
+the moderation bans aren't listed.
+
+Query parameters, all optional:
+
+- ``q`` (string): only communities whose name or ``about`` contains it,
+  ignoring case.
+- ``owner`` (address, any case): only that owner's communities. 400 if it
+  isn't an address.
+- ``limit`` (integer): 50 by default, at most 200.
+
+``data`` is an array of Community objects:
+
+.. code-block:: javascript
+
+  {
+    "id": "0x0f6a…/agent-builders", // as posts name it (submissions' community)
+    "owner": "0x0f6A…",             // checksummed
+    "ownerName": "timdaub.eth",     // ENS, Farcaster, Lens or Kiwi name, or null
+    "name": "Agent Builders",
+    "about": "…",
+    "rules": ["…"],
+    "icon": "robot",                // a Phosphor Icons 2.1.1 name
+    "color": "#6E56CF",
+    "created": 1700000000,          // the oldest version's timestamp
+    "timestamp": 1700000500,        // the newest version's timestamp
+    "stories": 12,                  // stories submitted to it
+    "lastStory": 1700009999         // the newest story's timestamp, or null
+  }
+
+**GET /api/v1/communities/:owner/:key**
+
+One Community object as ``data``, or 404 when the node doesn't know the
+community. ``:owner`` may be in any case, ``:key`` is the name key.
+
+**GET /api/v1/feeds/:name?community=<id>** (``hot``, ``new`` or ``best``)
+
+The feeds take an optional ``community``, a community's ID. A value that
+doesn't match ``COMMUNITY_ID_PATTERN`` (src/constants.mjs: the address in any
+case, the key in lowercase) is a 400. With ``community``, a feed has only that
+community's stories:
+
+- Hot ranks them like Kiwi News' Hot, but without its lookback and its
+  engagement, karma, age and name rules, so a new community's story with one
+  upvote shows. Moderation applies. All of it, the community's newest 100
+  stories at most, comes in one response: ``/api/v1/feed/rows`` has no
+  further page for a community.
+- New has the community's newest 25 stories, as ``/new`` shows them.
+  ``/api/v1/new/rows?community=<id>`` pages on from there.
+- Best ranks them per ``period`` and ``page``, like Kiwi News' Best.
+
+Without ``community``, the feeds are Kiwi News', which the website's ``/``,
+``/new`` and ``/best`` show too:
+
+- New has only the stories without a community.
+- Hot and Best have the stories without a community, and a community's story
+  once it has 10 upvotes (``COMMUNITY_KIWI_MIN_UPVOTES``, counted like a
+  story's ``upvotes``: the submission is one).
+- ``/api/v1/feed/rows`` and ``/api/v1/new/rows`` page through the same
+  stories.
+
+Every story of these feeds, of their rows (``format=json``) and of
+``GET /api/v1/stories?index=`` has ``community``: ``null`` for a Kiwi News
+story, else ``{"id", "name", "icon", "color"}``.
+
+**GET /c/:owner/:key**
+
+The community's web page, where invite links land: its name, icon, about and
+rules, who created it, its stories (its Hot) and a link to the app. 404 when
+the community isn't known. The app's universal links include ``/c/*``.

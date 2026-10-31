@@ -26,6 +26,8 @@ import {
   countCommentsBatch,
   countEngagements,
   getBest,
+  KIWI_TOP,
+  inCommunity,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import RightColumn from "./components/right-column.mjs";
@@ -94,6 +96,9 @@ const PREDICTION_REPLACEMENT_COUNT = 10; // Number of oldest stories to replace
 const cutoffDate = new Date("2025-01-15");
 // Minimum karma needed for a story to surface with only a single upvote
 const singleUpvoteKarmaThreshold = 50;
+// NOTE: A community's Hot (index() with `community`) ranks the community's
+// newest stories of any age, at most this many.
+export const COMMUNITY_HOT_STORIES = 100;
 
 // Karma as of the fixed cutoffDate only changes when a peer sync backfills
 // pre-cutoff messages, but karma.resolve runs a SQL join per call and the
@@ -390,10 +395,21 @@ export async function index(
   algorithm = 'control',
   skipAgeFilter = false,
   skipResolve = false,
+  // NOTE: With `community` (its ID), the community's Hot: its stories ranked
+  // like Kiwi News' Hot, but without the lookback and the engagement, karma,
+  // age and name rules below, as a new community's stories have one upvote
+  // from people without karma. Moderation still applies; Kiwi News'
+  // curation, predictions and pinned story don't. Without it, Kiwi News'
+  // Hot, which has a community's story once it has
+  // COMMUNITY_KIWI_MIN_UPVOTES upvotes (src/cache.mjs KIWI_TOP).
+  { community } = {},
 ) {
-  const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
-  const limit = -1;
-  let leaves = listNewest(limit, lookbackUnixTime); // Raw leaves for prediction candidates later
+  const lookbackUnixTime = community
+    ? undefined
+    : Math.floor(lookback.getTime() / 1000);
+  const limit = community ? COMMUNITY_HOT_STORIES : -1;
+  const scope = community ? inCommunity(community) : KIWI_TOP;
+  let leaves = listNewest(limit, lookbackUnixTime, scope); // Raw leaves for prediction candidates later
 
   const policy = await moderation.getLists();
   const path = "/";
@@ -408,6 +424,7 @@ export async function index(
     rankedStories.map(({ index }) => `kiwi:0x${index}`),
   );
   rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
+    if (community) return true;
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = commentCounts.get(`kiwi:0x${index}`) || 0;
     // Karma only matters for single-upvote stories, so skip the lookup otherwise.
@@ -438,7 +455,7 @@ export async function index(
   });
 
   // 3. Apply app curation if needed
-  if (appCuration) {
+  if (appCuration && !community) {
     const sheetName = "app";
     let result;
     try {
@@ -558,17 +575,21 @@ export async function index(
     stories = await resolveIds(pageStories); // Process the current page
 
     // 7. Only people with a name, or enough named upvoters (hotnames.mjs)
-    const shown = await Promise.all(
-      stories.map((story) => showInHot(story, (address) => ens.resolve(address))),
-    );
-    stories = stories.filter((_, i) => shown[i]);
+    if (!community) {
+      const shown = await Promise.all(
+        stories.map((story) =>
+          showInHot(story, (address) => ens.resolve(address)),
+        ),
+      );
+      stories = stories.filter((_, i) => shown[i]);
+    }
   }
 
   // 8. FINAL SORT before prediction injection - always by score
   stories = stories.sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
-  if (page === 0 && paginate && stories.length > 0) {
+  if (page === 0 && paginate && stories.length > 0 && !community) {
     // --- Find the indices of the N oldest stories in the current list ---
     const storiesWithOriginalIndex = stories.map((story, index) => ({
       ...story,
@@ -742,7 +763,7 @@ export async function index(
 
   // 10. Handle pinned story (after potential replacements)
   let pinnedStory;
-  if (policy?.pinned?.length > 0 && page === 0) {
+  if (policy?.pinned?.length > 0 && page === 0 && !community) {
     const pinnedUrl = policy.pinned[0];
     const pinnedIndex = stories.findIndex(
       (story) => {
@@ -764,7 +785,7 @@ export async function index(
   let originals = stories.filter((story) => story.isOriginal).slice(0, 2); // Take top 2 originals *remaining* in the list
 
   // 12. FINAL FILTER: Remove stories older than 2 days (skip for endless scroll)
-  if (!skipAgeFilter) {
+  if (!skipAgeFilter && !community) {
     const twoDaysInSeconds = 2 * 24 * 60 * 60;
     const nowTimestamp = getUnixTime(new Date());
     stories = stories.filter(
@@ -783,7 +804,7 @@ export async function index(
 
 async function fetchTopStories(feedStoryHrefs) {
   const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  let topRaw = getBest(80, 0, null, "", weekAgo);
+  let topRaw = getBest(80, 0, null, "", weekAgo, KIWI_TOP);
 
   // Apply moderation
   const policy = await moderation.getLists();
