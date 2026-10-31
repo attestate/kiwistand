@@ -18,10 +18,12 @@ export default cache;
 
 import Database from "better-sqlite3";
 import normalizeUrl from "normalize-url";
+import { utils } from "ethers";
+import { resolveIdentity } from "@attestate/delegator2";
 
 import log from "./logger.mjs";
 import { toDigest } from "./id.mjs";
-import { communityId } from "./communities.mjs";
+import { nameKey, normalizeId } from "./communities.mjs";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
@@ -209,8 +211,15 @@ export function initialize(messages) {
 
 // Communities (protocol 13.0.0, src/communities.mjs). Runs before
 // `initialize`: it adds the `community` column to a submissions table made by
-// an older version and creates the communities table, which holds the newest
-// version of each community and when it was first created.
+// an older version and creates the communities table.
+//
+// The table has one row per signing key and name key: the newest version
+// that key signed under that name, and when the first one was created. It
+// doesn't store the owner. A community belongs to the identity its signers
+// resolve to through the delegations, and a node may learn a delegation
+// after it stored the community, so the owner is resolved whenever posts are
+// judged or communities are read. That way the rows depend only on the trie,
+// and every node that knows the same delegations comes to the same result.
 export function initializeCommunities(database = db) {
   const db = database;
   const submissions = db
@@ -236,10 +245,21 @@ export function initializeCommunities(database = db) {
     );
   }
 
+  // NOTE: The first 13.0.0 release keyed the table by the owner as resolved
+  // when a community was stored. It's derived data, so it's dropped and
+  // launch.mjs fills the new table from the trie.
+  const columns = db
+    .prepare(`PRAGMA table_info(communities)`)
+    .all()
+    .map(({ name }) => name);
+  if (columns.length && !columns.includes("key")) {
+    db.exec(`DROP TABLE IF EXISTS communities`);
+  }
+
   db.exec(`
      CREATE TABLE IF NOT EXISTS communities (
-         id TEXT PRIMARY KEY NOT NULL,
-         owner TEXT NOT NULL,
+         signer TEXT NOT NULL,
+         key TEXT NOT NULL,
          name TEXT NOT NULL,
          about TEXT NOT NULL,
          rules TEXT NOT NULL,
@@ -248,9 +268,9 @@ export function initializeCommunities(database = db) {
          created INTEGER NOT NULL,
          timestamp INTEGER NOT NULL,
          message TEXT NOT NULL,
-         signer TEXT NOT NULL
+         PRIMARY KEY (signer, key)
      );
-     CREATE INDEX IF NOT EXISTS idx_communities_owner ON communities(owner);
+     CREATE INDEX IF NOT EXISTS idx_communities_key ON communities(key);
    `);
 }
 
@@ -262,23 +282,30 @@ const newerCommunity = `(excluded.timestamp > communities.timestamp OR
   (excluded.timestamp = communities.timestamp AND excluded.message > communities.message))`;
 const pick = (column) =>
   `${column} = CASE WHEN ${newerCommunity} THEN excluded.${column} ELSE communities.${column} END`;
+const upsertCommunity = `INSERT INTO communities
+     (signer, key, name, about, rules, icon, color, created, timestamp, message)
+   VALUES
+     (@signer, @key, @name, @about, @rules, @icon, @color, @timestamp, @timestamp, @message)
+   ON CONFLICT(signer, key) DO UPDATE SET
+     created = MIN(communities.created, excluded.created),
+     ${["name", "about", "rules", "icon", "color", "timestamp", "message"]
+       .map(pick)
+       .join(",\n     ")}`;
 
-export function insertCommunity(message) {
-  const { index, name, about, rules, icon, color, timestamp, signer, identity } =
-    message;
-  db.prepare(
-    `INSERT INTO communities
-       (id, owner, name, about, rules, icon, color, created, timestamp, message, signer)
-     VALUES
-       (@id, @owner, @name, @about, @rules, @icon, @color, @timestamp, @timestamp, @message, @signer)
-     ON CONFLICT(id) DO UPDATE SET
-       created = MIN(communities.created, excluded.created),
-       ${["name", "about", "rules", "icon", "color", "timestamp", "message", "signer"]
-         .map(pick)
-         .join(",\n       ")}`,
-  ).run({
-    id: communityId(identity, name),
-    owner: identity,
+// Stores a version of a community: the message plus its `index` and the
+// `signer` that recovered from it. Returns the row as it was before, for
+// restoreCommunity.
+export function insertCommunity(message, database = db) {
+  const { index, name, about, rules, icon, color, timestamp, signer } = message;
+  const row = {
+    signer: signer.toLowerCase(),
+    key: nameKey(name),
+  };
+  const before = database
+    .prepare(`SELECT * FROM communities WHERE signer = ? AND key = ?`)
+    .get(row.signer, row.key);
+  database.prepare(upsertCommunity).run({
+    ...row,
     name,
     about,
     rules: JSON.stringify(rules),
@@ -286,63 +313,120 @@ export function insertCommunity(message) {
     color,
     timestamp,
     message: index,
-    signer,
   });
+  return { ...row, before };
 }
 
-export function insertCommunities(messages) {
-  for (const message of messages) {
-    try {
-      insertCommunity(message);
-    } catch (err) {
-      log(`Failed to insert community "${message.name}": ${err.toString()}`);
-    }
+// Undoes insertCommunity, e.g. when storing the message in the trie failed.
+export function restoreCommunity({ signer, key, before }, database = db) {
+  if (!before) {
+    database
+      .prepare(`DELETE FROM communities WHERE signer = ? AND key = ?`)
+      .run(signer, key);
+    return;
   }
+  database
+    .prepare(
+      `UPDATE communities SET name = @name, about = @about, rules = @rules,
+         icon = @icon, color = @color, created = @created,
+         timestamp = @timestamp, message = @message
+       WHERE signer = @signer AND key = @key`,
+    )
+    .run(before);
+}
+
+// Puts every version of the trie's communities into the table again, at
+// startup (launch.mjs), in case an insert went missing. It's one transaction
+// per batch and yields in between, so a node with many versions keeps
+// answering.
+export async function insertCommunities(messages, database = db) {
+  const batch = 500;
+  const insert = database.transaction((versions) => {
+    for (const message of versions) insertCommunity(message, database);
+  });
+  for (let i = 0; i < messages.length; i += batch) {
+    const versions = messages
+      .slice(i, i + batch)
+      .filter((message) => message && message.signer && message.name);
+    try {
+      insert(versions);
+    } catch (err) {
+      log(`Failed to insert a batch of communities: ${err.toString()}`);
+    }
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+}
+
+function ownerOf(signer, delegations) {
+  return resolveIdentity(delegations, signer).toLowerCase();
+}
+
+// The rows that make up the community `<owner>/<key>`: every key that signed
+// a version under that name and resolves to the owner.
+function rowsOf(id, delegations, database) {
+  const [owner, key] = normalizeId(id).split("/");
+  if (!owner || !key) return [];
+  let rows;
+  try {
+    rows = database
+      .prepare(`SELECT * FROM communities WHERE key = ?`)
+      .all(key);
+  } catch (err) {
+    // NOTE: The table doesn't exist before initializeCommunities ran.
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+  return rows.filter((row) => ownerOf(row.signer, delegations) === owner);
 }
 
 // When the community was first created (its oldest version's timestamp), or
 // undefined if this node doesn't have it. Nodes judge posts to a community by
-// it, so it must hold every community of the trie: atomicPut inserts each one
-// and launch.mjs inserts them all again at startup.
-export function communityCreatedAt(id) {
-  try {
-    const row = db
-      .prepare(`SELECT created FROM communities WHERE id = ?`)
-      .get(id.toLowerCase());
-    return row ? row.created : undefined;
-  } catch (err) {
-    // NOTE: The table doesn't exist before initializeCommunities ran.
-    return undefined;
-  }
+// it.
+export function communityCreatedAt(id, delegations = {}, database = db) {
+  const rows = rowsOf(id, delegations, database);
+  return rows.length ? Math.min(...rows.map((row) => row.created)) : undefined;
 }
 
-function toCommunity(row) {
+// A community from its rows: the newest version's content, the oldest
+// version's creation time.
+function merge(owner, rows) {
+  const newest = rows.reduce((a, b) =>
+    b.timestamp > a.timestamp ||
+    (b.timestamp === a.timestamp && b.message > a.message)
+      ? b
+      : a,
+  );
   return {
-    id: row.id,
-    owner: row.owner,
-    name: row.name,
-    about: row.about,
-    rules: JSON.parse(row.rules),
-    icon: row.icon,
-    color: row.color,
-    created: row.created,
-    timestamp: row.timestamp,
-    index: `0x${row.message}`,
+    id: `${owner}/${newest.key}`,
+    owner: utils.getAddress(owner),
+    name: newest.name,
+    about: newest.about,
+    rules: JSON.parse(newest.rules),
+    icon: newest.icon,
+    color: newest.color,
+    created: Math.min(...rows.map((row) => row.created)),
+    timestamp: newest.timestamp,
+    index: `0x${newest.message}`,
   };
 }
 
-export function getCommunity(id) {
-  const row = db
-    .prepare(`SELECT * FROM communities WHERE id = ?`)
-    .get(id.toLowerCase());
-  return row ? toCommunity(row) : null;
+export function getCommunity(id, delegations = {}, database = db) {
+  const rows = rowsOf(id, delegations, database);
+  if (!rows.length) return null;
+  return merge(normalizeId(id).split("/")[0], rows);
 }
 
-export function listCommunities() {
-  return db
-    .prepare(`SELECT * FROM communities ORDER BY created ASC, id ASC`)
-    .all()
-    .map(toCommunity);
+export function listCommunities(delegations = {}, database = db) {
+  const groups = new Map();
+  for (const row of database.prepare(`SELECT * FROM communities`).all()) {
+    const owner = ownerOf(row.signer, delegations);
+    const id = `${owner}/${row.key}`;
+    if (!groups.has(id)) groups.set(id, { owner, rows: [] });
+    groups.get(id).rows.push(row);
+  }
+  return [...groups.values()]
+    .map(({ owner, rows }) => merge(owner, rows))
+    .sort((a, b) => a.created - b.created || (a.id < b.id ? -1 : 1));
 }
 
 export function initializeNotifications() {
@@ -1359,7 +1443,8 @@ export function insertMessage(message) {
       log(`Failing to insert comment "${title}", error: "${err.toString()}"`);
     }
   } else if (type === "community") {
-    insertCommunity(message);
+    // NOTE: store.mjs's atomicPut writes the row before the trie.
+    return;
   } else {
     throw new Error("Unsupported message type");
   }
