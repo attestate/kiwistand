@@ -443,7 +443,7 @@ function InviteJoin({ community }) {
   if (isOwner(community, identity)) {
     return (
       <a className="cm-btn cm-btn-dark cm-btn-lg" href={href(community)}>
-        Open {shortName(community.name)}
+        <span className="cm-btn-label">Open {shortName(community.name)}</span>
       </a>
     );
   }
@@ -458,7 +458,9 @@ function InviteJoin({ community }) {
         }}
       >
         {!joined && <UI name="plus-bold" size={16} />}
-        {joined ? "Open" : "Join"} {shortName(community.name)}
+        <span className="cm-btn-label">
+          {joined ? "Open" : "Join"} {shortName(community.name)}
+        </span>
       </button>
       <a className="cm-btn cm-btn-quiet cm-btn-lg" href={href(community)}>
         Not now

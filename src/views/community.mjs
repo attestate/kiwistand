@@ -414,10 +414,14 @@ export function renderInvite(theme, community, inviter) {
             data-community="${communityData(community)}"
           >
             <span class="cm-btn cm-btn-dark cm-btn-lg cm-ph-join"
-              >${Icon("plus-bold", 16)}Join ${shortName(community.name)}</span
+              >${Icon("plus-bold", 16)}<span class="cm-btn-label"
+                >Join ${shortName(community.name)}</span
+              ></span
             >
             <span class="cm-btn cm-btn-dark cm-btn-lg cm-ph-open"
-              >Open ${shortName(community.name)}</span
+              ><span class="cm-btn-label"
+                >Open ${shortName(community.name)}</span
+              ></span
             >
             <a
               class="cm-btn cm-btn-quiet cm-btn-lg cm-ph-notnow"

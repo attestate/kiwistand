@@ -2352,7 +2352,17 @@ html[data-cm-owner] .cm-ph-open {
   display: flex;
   justify-content: center;
   gap: 12px;
+  max-width: 100%;
   padding-top: 8px;
+}
+/* A long name shrinks the dark button to an ellipsis; "Not now" keeps its width. */
+.cm-invite-actions .cm-btn {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+.cm-invite-actions .cm-btn-quiet {
+  flex-shrink: 0;
 }
 @media (min-width: 1101px) {
   body.cm-invite-page .container.container {
@@ -3069,9 +3079,22 @@ html[data-cm-joined] .n2-post-to:empty,
   position: relative;
   order: 0;
 }
-/* "Post to <name>" (16 characters at most, shortName) stays on one line. */
+/* "Post to <name>" (shortName) stays on one line, cut on narrow phones. */
 .n2 #button-onboarding.n2-btn {
   max-width: 100%;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .n2 #button-onboarding.n2-btn {
+    width: auto;
+    min-width: 50%;
+  }
+}
+.n2-btn-label,
+.cm-btn-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .n2-post-to:not(:empty) {

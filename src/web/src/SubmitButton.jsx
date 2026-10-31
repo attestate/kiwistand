@@ -745,13 +745,15 @@ const SubmitButton = (props) => {
             (!url.startsWith("https://") && !url.startsWith("http://") && !url.startsWith("data:text/plain,"))
           }
         >
-          {isLoading
-            ? !localAccount
-              ? "Please confirm signature..."
-              : "Submitting..."
-            : target
-              ? `Post to ${shortName(target.name)}`
-              : "Submit"}
+          <span className="n2-btn-label">
+            {isLoading
+              ? !localAccount
+                ? "Please confirm signature..."
+                : "Submitting..."
+              : target
+                ? `Post to ${shortName(target.name)}`
+                : "Submit"}
+          </span>
         </button>
         <span className="n2-note n2-d">
           Your submission is signed with your account and is public.
