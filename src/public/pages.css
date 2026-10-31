@@ -1982,3 +1982,45 @@ html:not([data-own-profile])
 .n2-doc ul.n2-writers-stories li {
   margin: 0 0 4px 0;
 }
+
+/* /c/<owner>/<key>: a community's page (views/community.mjs). */
+.n2-community-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.n2-community-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--n2-radius-lg);
+  color: #fff;
+  font-family: var(--n2-font);
+  font-size: 22px;
+  font-weight: 700;
+}
+.n2 .n2-community-head .n2-sub a {
+  color: var(--n2-text);
+  font-weight: 500;
+  text-decoration: none;
+}
+ol.n2-community-rules {
+  margin: 0;
+  padding: 12px 16px 12px 36px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--n2-text);
+}
+ol.n2-community-rules li + li {
+  margin-top: 6px;
+}
+.n2-community-app {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 20px 0;
+}
