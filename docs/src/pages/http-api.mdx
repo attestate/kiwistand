@@ -97,8 +97,8 @@ Retrieves an object of valid delegations in the form of `to:from`, where
 `from` is the user's "identity" (the address messages are attributed to),
 whereas `to` can be any delegated Ethereum address.
 
-The rules of what we consider a valid delegation are documented in the
-[delegator2 repository](https://github.com/attestate/delegator2).
+What makes a delegation valid, how to create one and how nodes index them is
+on the [Delegation](/delegation#reading-delegations) page.
 
 Please note that it may take some time for the indexer to pick up a new
 delegation (usually around 1-2 minutes).
@@ -230,3 +230,51 @@ Also `/c/:owner/:key/new` and `/c/:owner/:key/best`. The community's web pages: 
 ### GET /communities
 
 Also `/communities?tab=joined` and `/communities/new`. The website's list of communities, most active first (`q` searches them like `GET /api/v1/communities`), the ones you joined, and the form to start a community or to edit yours (`?edit=<name key>`). Joining isn't on the protocol: the website keeps the communities you joined in the browser.
+
+## Karma
+
+Karma counts what an identity contributed: one point for every story it
+submitted and one for every upvote its stories received. Upvotes it gives and
+comments don't count. Karma belongs to the identity, so what an account's
+[delegated keys](/delegation) did counts for the account. The website serves
+these endpoints (`HTTP_PORT`, e.g. https://news.kiwistand.com) and answers in
+the envelope described above.
+
+### GET /api/v1/karma/:address
+
+`:address` may be in any case; 400 if it isn't an address. `data` is
+`{"address", "karma"}`, the address checksummed:
+
+```js
+{
+  "address": "0x0f6A…",
+  "karma": 1234
+}
+```
+
+### GET /api/v1/karma/top
+
+The identities with the most karma, most first. Query parameters, both
+optional:
+
+- `limit` (integer): 10 by default, at most 100.
+- `offset` (integer): how many to skip, 0 by default.
+
+`data`:
+
+```js
+{
+  "total": 2048,        // identities with karma
+  "limit": 10,
+  "offset": 0,
+  "holders": [
+    {
+      "rank": 1,
+      "identity": "0x0f6A…",
+      "displayName": "alice.eth",   // ENS name, else the address
+      "karma": 1234,
+      "ensData": { "name": "alice.eth", "avatar": "https://…" } // or null
+    }
+  ]
+}
+```

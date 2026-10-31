@@ -30,7 +30,7 @@ const Item = ({ href, icon, label, active, external, onClick }) => (
 
 // The NEU 2 menu (iOS "Menu" frames): a bottom sheet on phones, a panel from
 // the right on wider screens. Home, Communities, Profile, Saved stories,
-// Settings; then Guidelines, Privacy Policy, Wiki; then Log out (or Log in).
+// Settings; then Guidelines, Privacy Policy, Docs; then Log out (or Log in).
 // The anon-rpc switch lives only on /settings (Settings is the first group's
 // last item).
 const SidebarDrawer = ({ delegations, toast }) => {
@@ -124,13 +124,7 @@ const SidebarDrawer = ({ delegations, toast }) => {
               active={path === "/privacy-policy"}
               onClick={close}
             />
-            <Item
-              href="https://kiwistand.github.io/kiwi-docs/"
-              icon="book"
-              label="Wiki"
-              external
-              onClick={close}
-            />
+            <Item href="/docs/" icon="book" label="Docs" onClick={close} />
           </div>
           <div className="kn-menu-group kn-menu-account">
             {loggedIn ? (

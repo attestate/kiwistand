@@ -55,6 +55,9 @@ export default defineConfig({
     },
     { text: 'HTTP API', link: '/http-api' },
     { text: 'Changelog', link: '/changelog' },
+    // Back to the site, as the wordmark (public/wordmark.js). Vocs opens
+    // absolute links in a new tab.
+    { text: 'Kiwi News', link: 'https://news.kiwistand.com' },
   ],
   sidebar: [
     { text: 'Introduction', link: '/' },
