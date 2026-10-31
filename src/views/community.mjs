@@ -35,6 +35,7 @@ import {
   colorStyle,
   isAddress,
   shortAddress,
+  shortName,
 } from "../web/src/communities.mjs";
 import log from "../logger.mjs";
 
@@ -55,6 +56,12 @@ export const CACHE_CONTROL = {
 
 function storyCount(count) {
   return count === 1 ? "1 story" : `${count} stories`;
+}
+
+// NOTE: Names may have 24 characters, and many wide ones ("WWWW…") don't
+// fit the cards' 36px on a phone: long names get a smaller size.
+function nameClass(community) {
+  return community.name.length > 14 ? "cm-name cm-name-long" : "cm-name";
 }
 
 export function creatorName(community) {
@@ -118,7 +125,7 @@ function HeaderCard(community) {
   >
     <div class="cm-card-top">
       <span class="cm-mark">${Icon(community.icon, 40)}</span>
-      <h1 class="cm-name">${community.name}</h1>
+      <h1 class="${nameClass(community)}">${community.name}</h1>
       ${community.about
         ? html`<span class="cm-divider" aria-hidden="true"></span>
             <p class="cm-about">${community.about}</p>`
@@ -390,7 +397,7 @@ export function renderInvite(theme, community, inviter) {
             style="${colorStyle(community.color)}"
           >
             <span class="cm-mark cm-mark-lg">${Icon(community.icon, 42)}</span>
-            <h1 class="cm-name">${community.name}</h1>
+            <h1 class="${nameClass(community)}">${community.name}</h1>
             ${community.about
               ? html`<p class="cm-about">${community.about}</p>`
               : null}
@@ -406,10 +413,21 @@ export function renderInvite(theme, community, inviter) {
             data-cm="invite"
             data-community="${communityData(community)}"
           >
-            <span class="cm-btn cm-btn-dark cm-btn-lg"
-              >${Icon("plus-bold", 16)}Join ${community.name}</span
+            <span class="cm-btn cm-btn-dark cm-btn-lg cm-ph-join"
+              >${Icon("plus-bold", 16)}<span class="cm-btn-label"
+                >Join ${shortName(community.name)}</span
+              ></span
             >
-            <a class="cm-btn cm-btn-quiet cm-btn-lg" href="${path}">Not now</a>
+            <span class="cm-btn cm-btn-dark cm-btn-lg cm-ph-open"
+              ><span class="cm-btn-label"
+                >Open ${shortName(community.name)}</span
+              ></span
+            >
+            <a
+              class="cm-btn cm-btn-quiet cm-btn-lg cm-ph-notnow"
+              href="${path}"
+              >Not now</a
+            >
           </div>
         </div>
       </td>

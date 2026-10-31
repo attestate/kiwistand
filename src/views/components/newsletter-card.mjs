@@ -47,7 +47,17 @@ export function NewsletterCardElement(source = "feed_card", text, sample) {
       data-sample=${hasSample ? JSON.stringify(sample) : undefined}
     >
       <div class="newsletter-card">
-        <div class="newsletter-card-eyebrow">Kiwi weekly</div>
+        <div class="newsletter-card-top">
+          <img
+            class="newsletter-card-mascot"
+            src="/kiwi-glasses.webp"
+            alt=""
+            width="52"
+            height="52"
+            loading="lazy"
+          />
+          <div class="newsletter-card-eyebrow">Kiwi weekly</div>
+        </div>
         <div class="newsletter-card-title">${headline}</div>
         ${hasSample
           ? html`<p class="newsletter-card-copy">${sampleCopy}</p>

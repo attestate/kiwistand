@@ -176,9 +176,6 @@ export function renderBrowse(theme, { tab, query, communities }) {
           text: query
             ? "Try a different word, or start a community for it yourself."
             : "Be the first to start one.",
-          action: html`<a class="cm-btn cm-btn-accent" href="/communities/new"
-            >${Icon("plus-bold", 14)}Start a community</a
-          >`,
         })}
   `;
   const joined = html`<div class="cm-joined" data-cm="joined">

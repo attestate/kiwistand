@@ -1,15 +1,26 @@
 // @format
-// The communities you joined, and what depends on them: Join and Joined,
-// the Home tabs and side box, the Joined tab of /communities, a community's
-// "Invite people" and the page an invite link opens.
+// Your communities, and what depends on them: Join and Joined, the Home
+// tabs and side box, the Joined tab of /communities, a community's "Invite
+// people" and the page an invite link opens.
 //
-// NOTE: Membership isn't on the protocol, so joining only keeps the
-// community in this browser (localStorage, like the iOS app keeps it on the
-// phone). theme-init.js reads the same key before the first paint.
+// NOTE: This is the one place membership comes from. It isn't on the
+// protocol (yet), so a community is yours when you joined it in this browser
+// (localStorage, like the iOS app keeps it on the phone; theme-init.js reads
+// the same key before the first paint) or when your account runs it
+// (GET /api/v1/communities?owner=, on every device). You can't leave a
+// community you run.
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
-import { colorVars, creator, inviteURL } from "./communities.mjs";
+import {
+  canLeave,
+  colorVars,
+  creator,
+  inviteURL,
+  isOwner,
+  shortName,
+  yourCommunities,
+} from "./communities.mjs";
 import { paths as ui } from "./cm-icons.mjs";
 import { getCookie, getLocalAccount } from "./session.mjs";
 import { capture } from "./analytics.mjs";
@@ -35,7 +46,7 @@ function entry(community) {
   return Object.fromEntries(fields.map((key) => [key, community[key] ?? null]));
 }
 
-// Newest first.
+// Joined in this browser, newest first.
 export function readJoined() {
   let list;
   try {
@@ -58,8 +69,43 @@ function writeJoined(list) {
   window.dispatchEvent(new Event(EVENT));
 }
 
-export function isJoined(id) {
-  return readJoined().some((c) => c.id === id);
+// Who's reading: the account of the wallet or of the local Kiwi key.
+// main.jsx announces a change ("kiwi-identity") once the wallet connects.
+export function currentIdentity() {
+  let local;
+  try {
+    local = getLocalAccount();
+  } catch (err) {
+    local = null;
+  }
+  return window.__kiwiIdentity || local?.identity || getCookie("identity");
+}
+
+export function useIdentity() {
+  const [identity, setIdentity] = useState(currentIdentity);
+  useEffect(() => {
+    const update = () => setIdentity(currentIdentity());
+    window.addEventListener("kiwi-identity", update);
+    return () => window.removeEventListener("kiwi-identity", update);
+  }, []);
+  return identity;
+}
+
+// The communities your account runs, loaded once per page and identity.
+let owned = { identity: null, list: [] };
+function loadOwned(identity) {
+  const key = identity ? identity.toLowerCase() : null;
+  if (owned.identity === key) return;
+  owned = { identity: key, list: [] };
+  if (!key) return;
+  fetch(`/api/v1/communities?owner=${key}&limit=200`)
+    .then((response) => response.json())
+    .then(({ data }) => {
+      if (owned.identity !== key || !Array.isArray(data)) return;
+      owned = { identity: key, list: data.map(entry) };
+      window.dispatchEvent(new Event(EVENT));
+    })
+    .catch((err) => console.error("Couldn't load your communities", err));
 }
 
 export function join(community) {
@@ -68,9 +114,10 @@ export function join(community) {
   capture("community_joined", { community: community.id });
 }
 
-export function leave(id) {
-  writeJoined(readJoined().filter((c) => c.id !== id));
-  capture("community_left", { community: id });
+export function leave(community, identity) {
+  if (!canLeave(community, identity)) return;
+  writeJoined(readJoined().filter((c) => c.id !== community.id));
+  capture("community_left", { community: community.id });
 }
 
 // Refreshes a joined community's entry (its owner may have changed its
@@ -85,35 +132,23 @@ export function remember(community) {
   writeJoined(list);
 }
 
+// Your communities: joined here, then the ones you run (yourCommunities).
 export function useJoined() {
-  const [list, setList] = useState(readJoined);
+  const identity = useIdentity();
+  const read = () => yourCommunities(readJoined(), owned.list);
+  const [list, setList] = useState(read);
   useEffect(() => {
-    const update = () => setList(readJoined());
+    const update = () => setList(read());
+    loadOwned(identity);
+    update();
     window.addEventListener(EVENT, update);
     window.addEventListener("storage", update);
     return () => {
       window.removeEventListener(EVENT, update);
       window.removeEventListener("storage", update);
     };
-  }, []);
+  }, [identity]);
   return list;
-}
-
-// Who's reading: the account of the local Kiwi key, or the wallet's.
-export function currentIdentity() {
-  let local;
-  try {
-    local = getLocalAccount();
-  } catch (err) {
-    local = null;
-  }
-  return window.__kiwiIdentity || local?.identity || getCookie("identity");
-}
-
-function owns(community, identity) {
-  return (
-    !!identity && community.owner.toLowerCase() === identity.toLowerCase()
-  );
 }
 
 // ---------------------------------------------------------------- drawing
@@ -138,6 +173,22 @@ export function UI({ name, size = 16 }) {
   return <Svg path={ui[name]} size={size} />;
 }
 
+// A community's icon: its path when we have it (joined here, the pages hand
+// it over), else the server's SVG of it (/icons/phosphor/, e.g. for the
+// communities you run, which the API names only), as a mask in the current
+// colour.
+export function CommunityIcon({ community, size }) {
+  if (community.path) return <Svg path={community.path} size={size} />;
+  const url = `url("/icons/phosphor/${community.icon}.svg")`;
+  return (
+    <span
+      className="cm-icon cm-mask"
+      style={{ width: size, height: size, "--icon": url }}
+      aria-hidden="true"
+    />
+  );
+}
+
 export function Tile({ community, size, iconSize, variant = "soft" }) {
   return (
     <span
@@ -145,7 +196,7 @@ export function Tile({ community, size, iconSize, variant = "soft" }) {
       style={{ ...colorVars(community.color), width: size, height: size }}
       aria-hidden="true"
     >
-      <Svg path={community.path} size={iconSize} />
+      <CommunityIcon community={community} size={iconSize} />
     </span>
   );
 }
@@ -154,15 +205,40 @@ const href = (community) => `/c/${community.id}`;
 
 // ---------------------------------------------------------------- pieces
 
+// Join or Joined; for the community's owner, who can't leave it, "Invite"
+// instead (design 12's owner state).
 function JoinButton({ community, size = "" }) {
+  const identity = useIdentity();
   const joined = useJoined().some((c) => c.id === community.id);
+  const [inviting, setInviting] = useState(false);
   const cls = size ? ` cm-btn-${size}` : "";
+  if (isOwner(community, identity)) {
+    return (
+      <>
+        <button
+          type="button"
+          className={`cm-btn cm-btn-dark${cls}`}
+          onClick={() => setInviting(true)}
+        >
+          <UI name="user-plus" size={size ? 14 : 16} />
+          Invite
+        </button>
+        {inviting && (
+          <InviteModal
+            community={community}
+            inviter={identity}
+            onClose={() => setInviting(false)}
+          />
+        )}
+      </>
+    );
+  }
   if (joined) {
     return (
       <button
         type="button"
         className={`cm-btn cm-btn-outline${cls}`}
-        onClick={() => leave(community.id)}
+        onClick={() => leave(community, identity)}
         aria-pressed="true"
       >
         <UI name="check-bold" size={size ? 14 : 15} />
@@ -323,10 +399,12 @@ export function InviteModal({ community, inviter, onClose }) {
 // The header card's buttons: Join or Joined, and for the owner "Edit" and
 // "Invite people".
 function Actions({ community }) {
-  const identity = currentIdentity();
+  const identity = useIdentity();
   const [inviting, setInviting] = useState(false);
   useEffect(() => remember(community), []);
-  if (!owns(community, identity)) return <JoinButton community={community} />;
+  if (!isOwner(community, identity)) {
+    return <JoinButton community={community} />;
+  }
   const key = community.id.split("/")[1];
   return (
     <>
@@ -356,10 +434,19 @@ function Actions({ community }) {
   );
 }
 
-// The page an invite link opens: "Join <name>", then its page.
+// The page an invite link opens: "Join <name>", then its page. Members and
+// the owner (opening their own link) just open it.
 function InviteJoin({ community }) {
+  const identity = useIdentity();
   const joined = useJoined().some((c) => c.id === community.id);
   const open = () => (window.location.href = href(community));
+  if (isOwner(community, identity)) {
+    return (
+      <a className="cm-btn cm-btn-dark cm-btn-lg" href={href(community)}>
+        <span className="cm-btn-label">Open {shortName(community.name)}</span>
+      </a>
+    );
+  }
   return (
     <>
       <button
@@ -370,8 +457,10 @@ function InviteJoin({ community }) {
           open();
         }}
       >
-        <UI name={joined ? "check-bold" : "plus-bold"} size={16} />
-        {joined ? `Open ${community.name}` : `Join ${community.name}`}
+        {!joined && <UI name="plus-bold" size={16} />}
+        <span className="cm-btn-label">
+          {joined ? "Open" : "Join"} {shortName(community.name)}
+        </span>
       </button>
       <a className="cm-btn cm-btn-quiet cm-btn-lg" href={href(community)}>
         Not now
@@ -390,9 +479,9 @@ function Tabs() {
       href={href(community)}
     >
       <span className="cm-icon-c">
-        <Svg path={community.path} size={18} />
+        <CommunityIcon community={community} size={18} />
       </span>
-      {community.name}
+      <span className="cm-tab-name">{community.name}</span>
     </a>
   ));
 }
@@ -400,7 +489,7 @@ function Tabs() {
 // The side box's rows.
 function SideList({ placeholder }) {
   const list = useJoined();
-  const identity = currentIdentity();
+  const identity = useIdentity();
   if (list.length === 0) {
     return <p className="cm-side-empty">{placeholder}</p>;
   }
@@ -421,7 +510,7 @@ function SideList({ placeholder }) {
 // The Joined tab of /communities: the cards of the communities you joined.
 function JoinedList() {
   const list = useJoined();
-  const identity = currentIdentity();
+  const identity = useIdentity();
   if (list.length === 0) {
     return (
       <div className="cm-empty">

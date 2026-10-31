@@ -114,6 +114,15 @@ export default async function submit(theme, url = "", title = "", community = nu
                           >
                             Text
                           </button>
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            class="n2-tab"
+                            disabled
+                          >
+                            Image
+                          </button>
                         </div>
                         <div class="n2-field n2-field-link">
                           <label for="urlInput" class="n2-label n2-d"
@@ -135,17 +144,6 @@ export default async function submit(theme, url = "", title = "", community = nu
                               >Paste the link to the original source.</span
                             >
                           </div>
-                        </div>
-                        <div class="n2-upload-row">
-                          <span class="n2-btn-outline n2-upload" aria-disabled="true"
-                            >${Icon("addPhoto")}<span class="n2-d"
-                              >Upload image</span
-                            ><span class="n2-m">Upload Image</span></span
-                          >
-                          <span class="n2-hint n2-d"
-                            >Optional. Replaces the preview image from the
-                            link.</span
-                          >
                         </div>
                         <div class="n2-actions">
                           <button id="button-onboarding" class="n2-btn" disabled>

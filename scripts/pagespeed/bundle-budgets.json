@@ -36,7 +36,7 @@
     "src/Karma.jsx": 500,
     "src/Navigation.jsx": 2200,
     "src/NewCommunity.jsx": 4500,
-    "src/NewsletterFeedCard.jsx": 1500,
+    "src/NewsletterFeedCard.jsx": 1600,
     "src/NewsletterScrollModal.jsx": 2600,
     "src/PostTo.jsx": 1500,
     "src/PrivateRpcSetting.jsx": 2200,

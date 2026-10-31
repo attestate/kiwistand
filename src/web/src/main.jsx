@@ -93,6 +93,7 @@ async function applySafeAreaInsets() {
 
 import { readRpcSettings } from "./rpc.mjs";
 import { isIOS, getCookie } from "./session.mjs";
+import { needsCommunities } from "./community-gate.mjs";
 import {
   capture,
   flushAnalytics,
@@ -245,16 +246,15 @@ async function addSubmitButton(delegations, toast) {
 }
 
 // Communities (Communities.jsx): Join buttons, the Home tabs and side box
-// with the communities you joined, a community's actions and invites. On
-// the feeds they only list joined communities, so readers who joined none
-// (theme-init.js marks the others) don't load them.
+// with your communities, a community's actions and invites.
 async function addCommunities() {
   const elements = [...document.querySelectorAll("[data-cm]")];
-  const lists = elements.every(
-    (element) => element.dataset.cm === "tabs" || element.dataset.cm === "side",
-  );
-  const joined = document.documentElement.hasAttribute("data-cm-joined");
-  if (elements.length === 0 || (lists && !joined)) return;
+  let joined = null;
+  try {
+    joined = localStorage.getItem("kiwi-communities");
+  } catch (err) {}
+  const kinds = elements.map((element) => element.dataset.cm);
+  if (!needsCommunities(kinds, joined, getCookie("identity"))) return;
   const { mount } = await import("./Communities.jsx");
   mount(elements);
 }
@@ -1258,6 +1258,8 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
       document.body.classList.add("kiwi-logged-in");
     } catch {}
     window.__kiwiIdentity = identity;
+    // NOTE: Communities.jsx shows the owner's buttons once it knows them.
+    window.dispatchEvent(new Event("kiwi-identity"));
     identifyPostHog(identity);
 
     // Set iOS wallet for push notifications

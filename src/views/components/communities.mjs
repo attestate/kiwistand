@@ -10,6 +10,7 @@ import vhtml from "vhtml";
 
 import { colorStyle } from "../../web/src/communities.mjs";
 import { paths as ui } from "../../web/src/cm-icons.mjs";
+import { PHOSPHOR_ICONS } from "../../phosphor-icons.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -41,6 +42,13 @@ export function Icon(name, size = 16) {
   >
     <path d="${iconPath(name)}" />
   </svg>`;
+}
+
+// A community icon (any of Phosphor's, regular weight) as an SVG file, or
+// null for a name that isn't one (GET /icons/phosphor/<name>.svg).
+export function iconFile(name) {
+  if (!PHOSPHOR_ICONS.includes(name)) return null;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><path d="${iconPath(name)}"/></svg>`;
 }
 
 export function communityPath(id) {

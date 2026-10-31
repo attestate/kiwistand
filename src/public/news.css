@@ -2389,12 +2389,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 /* NOTE: The wordmark alone (logo rules: no mascot next to it in any nav),
-   105.15 x 18 as in the design's nav-bar and desktop top nav. Its colours
+   105.15 x 18.55 as in the design's nav-bar and desktop top nav. Its colours
    are tokens, so it follows the colour scheme from the first paint. */
 .kn-logo .kiwi-wordmark {
   display: block;
   width: 105.15px;
-  height: 18px;
+  height: 18.55px;
   flex: 0 0 auto;
   overflow: visible;
 }
@@ -2404,7 +2404,6 @@ body {
 }
 .kiwi-wordmark-bar {
   fill: var(--kn-wordmark-green);
-  stroke: var(--kn-wordmark-green);
 }
 
 /* -- Top bar ------------------------------------------------------------- */
@@ -3244,6 +3243,23 @@ html:not([data-signed-out]) .kn-tab-ph-out {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+/* NOTE: The kiwi with glasses heads the box in the desktop right column
+   (Web 2 frames); the sign-up cards elsewhere start with the eyebrow. */
+.newsletter-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.newsletter-card-mascot {
+  display: none;
+}
+.kn-right .newsletter-card-mascot {
+  display: block;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
 }
 .newsletter-card-eyebrow {
   font-family: var(--kn-font-mono);
@@ -5130,6 +5146,13 @@ body.kn-has-dock .bottom-nav::before {
   flex: 0 0 auto;
   display: block;
 }
+/* An icon from /icons/phosphor/<name>.svg (Communities.jsx CommunityIcon),
+   drawn in the current colour. */
+.cm-mask {
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
 .cm-tag,
 .cm-tag:link,
 .cm-tag:visited {
@@ -5219,6 +5242,13 @@ body.kn-has-dock .bottom-nav::before {
 .cm-tab .cm-icon-c {
   display: flex;
   color: var(--cm);
+}
+/* NOTE: Names may have 24 characters ("WWWWWWWWWWWW WWWWWWWWWWW"): tabs,
+   tags and rows cut them with an ellipsis. */
+.cm-tab-name {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* The side box of the feeds and the community pages. */
 .cm-side {
