@@ -122,7 +122,17 @@ const NewsletterFeedCard = ({ source = "feed_card", copy, sample }) => {
           ×
         </button>
       )}
-      <div className="newsletter-card-eyebrow">Kiwi weekly</div>
+      <div className="newsletter-card-top">
+        <img
+          className="newsletter-card-mascot"
+          src="/kiwi-glasses.webp"
+          alt=""
+          width="52"
+          height="52"
+          loading="lazy"
+        />
+        <div className="newsletter-card-eyebrow">Kiwi weekly</div>
+      </div>
       <div className="newsletter-card-title">{HEADLINE}</div>
       {status === "success" ? (
         <p className="newsletter-card-copy newsletter-card-success">

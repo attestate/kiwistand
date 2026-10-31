@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-import { paths, wordmark } from "./icons.mjs";
+import { paths } from "./icons.mjs";
+import { WORDMARK } from "../wordmark.mjs";
 
 // The site's mobile/desktop breakpoint (news.css: max-width 640px).
 const DESKTOP = "(min-width: 641px)";
@@ -37,14 +38,22 @@ export function Logo() {
     <div className="kob-logo">
       <svg
         className="kob-wordmark"
-        viewBox="2.65 -70.25 428.2 73.3"
-        strokeWidth="3.498"
+        viewBox={WORDMARK.viewBox}
         strokeLinejoin="round"
         role="img"
         aria-label="Kiwi News"
       >
-        <path className="kob-wm-text" d={wordmark.text} />
-        <path className="kob-wm-bar" d={wordmark.bar} />
+        <path
+          className="kob-wm-text"
+          strokeWidth={WORDMARK.kiwiStroke}
+          d={WORDMARK.kiwi}
+        />
+        <path
+          className="kob-wm-text"
+          strokeWidth={WORDMARK.newsStroke}
+          d={WORDMARK.news}
+        />
+        <path className="kob-wm-bar" d={WORDMARK.bar} />
       </svg>
     </div>
   );

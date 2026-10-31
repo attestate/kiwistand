@@ -100,6 +100,7 @@ import {
 } from "./cache.mjs";
 import * as communitiesAPI from "./communities-api.mjs";
 import * as communityView from "./views/community.mjs";
+import { iconFile } from "./views/components/communities.mjs";
 import * as communitiesView from "./views/communities.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
@@ -340,6 +341,23 @@ for (const name of ["news", "pages"]) {
 // src/public once at startup, so a card made since the last restart was a
 // 404 for every crawler until the next one. Serve them from disk instead.
 const previewFile = /^[0-9a-f]+(-comment-[0-9a-f]+)?(-v\d+)?(-frame)?\.jpg$/;
+// NOTE: A community's icon as an SVG file, for the web client to draw the
+// communities it only knows by name, e.g. the ones your account runs from
+// GET /api/v1/communities (src/web/src/Communities.jsx). The icon set is
+// fixed (Phosphor 2.1.1), so the files never change.
+app.get("/icons/phosphor/:file", (req, res, next) => {
+  const match = /^([a-z0-9-]+)\.svg$/.exec(req.params.file);
+  const svg = match && iconFile(match[1]);
+  if (!svg) return next();
+  if (env.NODE_ENV === "production") {
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=31536000, s-maxage=31536000, immutable",
+    );
+  }
+  res.type("image/svg+xml").send(svg);
+});
+
 app.get("/previews/:file", (req, res, next) => {
   if (!previewFile.test(req.params.file)) return next();
   const headers = {};

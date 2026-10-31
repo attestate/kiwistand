@@ -14,7 +14,10 @@ import * as cache from "../src/cache.mjs";
 import * as page from "../src/views/community.mjs";
 import * as browse from "../src/views/communities.mjs";
 import Row from "../src/views/components/row.mjs";
-import { iconPath } from "../src/views/components/communities.mjs";
+import { iconFile, iconPath } from "../src/views/components/communities.mjs";
+import { NewsletterCardElement } from "../src/views/components/newsletter-card.mjs";
+import { WORDMARK } from "../src/web/src/wordmark.mjs";
+import { needsCommunities } from "../src/web/src/community-gate.mjs";
 import { PHOSPHOR_ICONS } from "../src/phosphor-icons.mjs";
 import * as c from "../src/web/src/communities.mjs";
 
@@ -510,4 +513,97 @@ test.serial("GET /communities searches with q, GET /communities/new", async (t) 
   const bad = reply();
   await browse.newHandler()({ query: { edit: '"><b>' } }, bad);
   t.true(bad.body.includes('data-edit=""'));
+});
+
+// --- v4: membership, owners and markup -----------------------------------------
+
+test("a community you run counts as joined, after the ones joined here", (t) => {
+  const joinedHere = [{ id: "0xa/ai" }, { id: "0xb/zk" }];
+  const owned = [{ id: "0xb/zk" }, { id: "0xc/mine" }];
+  t.deepEqual(
+    c.yourCommunities(joinedHere, owned).map(({ id }) => id),
+    ["0xa/ai", "0xb/zk", "0xc/mine"],
+  );
+  // On a device that never joined it, it's still yours.
+  t.true(c.isMember("0xc/mine", [], owned));
+  t.false(c.isMember("0xd/other", joinedHere, owned));
+  t.deepEqual(c.yourCommunities([], []), []);
+});
+
+test("the owner can't leave their community; others can", (t) => {
+  const community = { owner: "0x6e56Cf0000000000000000000000000000C0fFeE" };
+  t.true(c.isOwner(community, "0x6e56cf0000000000000000000000000000c0ffee"));
+  t.false(c.canLeave(community, "0x6E56CF0000000000000000000000000000C0FFEE"));
+  t.true(c.canLeave(community, "0x1f8a7a00000000000000000000000000000000aa"));
+  t.true(c.canLeave(community, undefined));
+  t.false(c.isOwner(community, null));
+  t.false(c.isOwner({}, "0x6e56cf0000000000000000000000000000c0ffee"));
+});
+
+test("long names are cut in buttons, after 16 characters", (t) => {
+  t.is(c.shortName("AI"), "AI");
+  t.is(c.shortName("x".repeat(16)), "x".repeat(16));
+  t.is(c.shortName("WWWWWWWWWWWW WWWWWWWWWWW"), "WWWWWWWWWWWW WW…");
+});
+
+test("the server hands out any community icon as an SVG file", (t) => {
+  const svg = iconFile("robot");
+  t.true(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"'));
+  t.true(svg.includes(iconPath("robot")));
+  t.is(iconFile("not-an-icon"), null);
+  t.is(iconFile("../package.json"), null);
+});
+
+test("an invite link's page opens the community for its owner and members", (t) => {
+  const html = page.renderInvite(undefined, community(), { name: "sam.eth" });
+  t.true(html.includes('class="cm-btn cm-btn-dark cm-btn-lg cm-ph-join"'));
+  t.true(html.includes("Open Agent Builders"));
+  t.true(html.includes("cm-ph-notnow"));
+  const css = readFileSync("src/public/pages.css", "utf8");
+  t.true(css.includes("html[data-cm-owner] .cm-ph-notnow"));
+  t.true(css.includes("html[data-cm-owner] .cm-ph-open"));
+});
+
+test("browse shows “Start a community” once, also without results", (t) => {
+  for (const query of ["quantum", ""]) {
+    const html = browse.renderBrowse(undefined, {
+      tab: "discover",
+      query,
+      communities: [],
+    });
+    t.is(html.split("Start a community</a").length - 1, 1, query);
+  }
+});
+
+test("the header draws the new wordmark, the head a versioned theme-init.js", (t) => {
+  const html = page.render(undefined, community(), "hot", []);
+  t.true(html.includes(`d="${WORDMARK.news}"`));
+  t.true(html.includes(`d="${WORDMARK.bar}"`));
+  t.true(html.includes('stroke-width="2.5"'));
+  t.regex(html, /<script src="\/theme-init\.js\?v=[0-9a-f]{8}"><\/script>/);
+});
+
+test("the newsletter box has the kiwi, shown in the right column", (t) => {
+  const card = NewsletterCardElement("sidebar", "Copy").toString();
+  t.true(card.includes('class="newsletter-card-mascot"'));
+  t.true(card.includes('src="/kiwi-glasses.webp"'));
+  const css = readFileSync("src/public/news.css", "utf8");
+  t.regex(css, /\.newsletter-card-mascot \{\s*display: none;/);
+  t.regex(css, /\.kn-right \.newsletter-card-mascot \{\s*display: block;/);
+});
+
+test("the feeds list your communities without relying on theme-init.js", (t) => {
+  const joined = JSON.stringify([{ id: "0xa/ai", name: "AI" }]);
+  // A joined community: the tabs and side box mount.
+  t.true(needsCommunities(["tabs", "side"], joined, undefined));
+  // An account: it may run communities it never joined in this browser.
+  t.true(needsCommunities(["tabs", "side"], null, "0xa"));
+  // Neither: nothing to list, Communities.jsx isn't loaded.
+  t.false(needsCommunities(["tabs", "side"], null, undefined));
+  t.false(needsCommunities(["tabs", "side"], "[]", undefined));
+  t.false(needsCommunities(["tabs", "side"], "not json", undefined));
+  // A community's pages always need it.
+  t.true(needsCommunities(["actions"], null, undefined));
+  t.true(needsCommunities(["join", "join"], null, undefined));
+  t.false(needsCommunities([], joined, "0xa"));
 });

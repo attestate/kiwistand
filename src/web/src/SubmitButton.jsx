@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
 import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -20,24 +20,26 @@ import {
   useIsMiniApp,
   isInIOSApp,
 } from "./client.mjs";
-import { getLocalAccount } from "./session.mjs";
+import { getCookie, getLocalAccount } from "./session.mjs";
 import { capture } from "./analytics.mjs";
 import { uploadImage } from "./uploadImage.mjs";
 import { openOnboarding } from "./LoginModal.jsx";
 import ShareModal from "./ShareModal.jsx";
-import { postTimestamp } from "./communities.mjs";
+import { postTimestamp, shortName } from "./communities.mjs";
+import { mayHaveCommunities } from "./community-gate.mjs";
 
-// NOTE: Only for readers who joined a community, or who came with
+// NOTE: Only for readers who may have communities (joined here, or an
+// account that may run some, see community-gate.mjs) or who came with
 // ?community= (views/submit.mjs): the others post to Kiwi News as before.
 const PostTo = React.lazy(() => import("./PostTo.jsx"));
 function hasCommunities(root) {
   if (!root) return false;
   if (root.dataset.community) return true;
+  let joined = null;
   try {
-    return JSON.parse(localStorage.getItem("kiwi-communities") || "[]").length > 0;
-  } catch (err) {
-    return false;
-  }
+    joined = localStorage.getItem("kiwi-communities");
+  } catch (err) {}
+  return mayHaveCommunities(joined, getCookie("identity"));
 }
 import GuidelinesDrawer, { useGuidelinesCheck } from "./GuidelinesDrawer.jsx";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
@@ -64,27 +66,33 @@ function safeExtractDomain(link) {
   return tld;
 }
 
+// The form's tabs: "link", "text" or "image" (an uploaded image as the
+// post's link). Choosing "Image" opens the file picker right away.
 const UrlInput = (props) => {
   const { url, setURL, toast } = props;
   const [checkedURLs, setCheckedURLs] = useState(new Set());
   const [isUploading, setIsUploading] = useState(false);
-  const [isTextMode, setIsTextMode] = useState(false);
+  const [mode, setMode] = useState("link");
   const [textContent, setTextContent] = useState("");
   const account = useAccount();
   const wallet = useSigner();
+  const isTextMode = mode === "text";
+  const fileInput = useRef(null);
+  // The tab to go back to when the picker is cancelled.
+  const previous = useRef("link");
 
   useEffect(() => {
     if (
       !checkedURLs.has(url) &&
       (url.includes("http") || url.includes("https")) &&
-      !isTextMode
+      mode === "link"
     ) {
       // NOTE: Wait until typing pauses: every keystroke changes `url`, and
       // /api/v1/metadata is rate limited per IP (src/ratelimit.mjs).
       const timer = setTimeout(() => fetchMetadata(url), 500);
       return () => clearTimeout(timer);
     }
-  }, [url, isTextMode]);
+  }, [url, mode]);
 
   const fetchMetadata = async (url) => {
     try {
@@ -104,14 +112,20 @@ const UrlInput = (props) => {
     }
   };
 
+  // Back to the tab before "Image" (a cancelled picker or a failed upload),
+  // or stay on it when it already has an image.
+  const back = () => setMode(previous.current);
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    // NOTE: Lets choosing the same file again fire `change`.
+    e.target.value = "";
+    if (!file) return back();
 
     // Only allow image files
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
-      return;
+      return back();
     }
 
     setIsUploading(true);
@@ -124,39 +138,41 @@ const UrlInput = (props) => {
     try {
       const imageUrl = await uploadImage(file, signer);
 
-      // Set the URL in the input field
+      // The image is the post's link.
       setURL(imageUrl);
       toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Error uploading image: " + error.message);
+      back();
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Handle toggle between URL and Text mode
-  const handleModeToggle = () => {
-    const newMode = !isTextMode;
-    setIsTextMode(newMode);
+  const chooseImage = () => {
+    previous.current = mode;
+    setMode("image");
+    fileInput.current?.click();
+  };
 
-    if (newMode) {
-      // Switching to text mode - decode if there's a data URL
-      if (url.startsWith("data:text/plain,")) {
-        const decoded = decodeURIComponent(url.replace("data:text/plain,", ""));
-        setTextContent(decoded);
-      } else {
-        setTextContent("");
-      }
-      setURL("");
-    } else {
-      // Switching to URL mode - encode text if there is any
-      if (textContent.trim()) {
-        const encoded = `data:text/plain,${encodeURIComponent(textContent)}`;
-        setURL(encoded);
-      }
+  // The picker closed without a file.
+  useEffect(() => {
+    const input = fileInput.current;
+    if (!input) return;
+    input.addEventListener("cancel", back);
+    return () => input.removeEventListener("cancel", back);
+  }, []);
+
+  const choose = (next) => {
+    if (next === "image") return chooseImage();
+    if (next === "text" && mode !== "text") {
+      // A text post's link is its text, as a data: URL.
       setTextContent("");
+      setURL("");
     }
+    if (next === "link" && mode === "text") setURL("");
+    setMode(next);
   };
 
   // Update URL when text content changes in text mode
@@ -169,49 +185,59 @@ const UrlInput = (props) => {
     }
   }, [textContent, isTextMode]);
 
-  // NOTE: The page's subtitle and layout differ between the Link and Text
-  // tabs (views/submit.mjs, public/pages.css).
+  // NOTE: The page's subtitle and layout differ between the tabs
+  // (views/submit.mjs, public/pages.css).
   useEffect(() => {
-    document
-      .getElementById("n2-submit-form")
-      ?.classList.toggle("is-text", isTextMode);
-  }, [isTextMode]);
+    const form = document.getElementById("n2-submit-form");
+    form?.classList.toggle("is-text", isTextMode);
+    form?.classList.toggle("is-image", mode === "image");
+  }, [mode]);
 
   const textRemaining = 2048 - textContent.length;
+  const tab = (value, label) => (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={mode === value}
+      className={`n2-tab${mode === value ? " is-active" : ""}`}
+      onClick={() => choose(value)}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <>
       <div className="n2-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={!isTextMode}
-          className={`n2-tab${!isTextMode ? " is-active" : ""}`}
-          onClick={() => setIsTextMode(false)}
-        >
-          Link
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={isTextMode}
-          className={`n2-tab${isTextMode ? " is-active" : ""}`}
-          onClick={() => setIsTextMode(true)}
-        >
-          Text
-        </button>
+        {tab("link", "Link")}
+        {tab("text", "Text")}
+        {tab("image", "Image")}
       </div>
+      <input
+        ref={fileInput}
+        type="file"
+        id="imageUpload"
+        accept="image/*"
+        onChange={handleImageUpload}
+        style={{ display: "none" }}
+      />
 
-      {/* Link Tab Content */}
+      {/* Link and Image Tab Content */}
       <div
         className="n2-field n2-field-link"
         style={{ display: !isTextMode ? undefined : "none" }}
       >
         <label htmlFor="urlInput" className="n2-label n2-d">
-          Link
+          {mode === "image" ? "Image" : "Link"}
         </label>
         <input
-          placeholder="Enter or paste article URL"
+          placeholder={
+            mode === "image"
+              ? isUploading
+                ? "Uploading..."
+                : "Choose an image"
+              : "Enter or paste article URL"
+          }
           id="urlInput"
           className="n2-input"
           type="text"
@@ -219,38 +245,19 @@ const UrlInput = (props) => {
           size="50"
           maxLength="2048"
           required
+          readOnly={mode === "image"}
           value={url}
           onChange={(e) => setURL(e.target.value)}
         />
         <div className="n2-hint-row n2-d">
-          <span className="n2-hint">Paste the link to the original source.</span>
+          <span className="n2-hint">
+            {mode === "image"
+              ? isUploading
+                ? "Uploading your image..."
+                : "Click Image again to replace it."
+              : "Paste the link to the original source."}
+          </span>
         </div>
-      </div>
-      <div
-        className="n2-upload-row"
-        style={{ display: !isTextMode ? undefined : "none" }}
-      >
-        <input
-          type="file"
-          id="imageUpload"
-          accept="image/*"
-          onChange={handleImageUpload}
-          style={{ display: "none" }}
-        />
-        <label htmlFor="imageUpload" className="n2-btn-outline n2-upload">
-          <AddPhotoSVG />
-          {isUploading ? (
-            "Uploading..."
-          ) : (
-            <>
-              <span className="n2-d">Upload image</span>
-              <span className="n2-m">Upload Image</span>
-            </>
-          )}
-        </label>
-        <span className="n2-hint n2-d">
-          Optional. Replaces the preview image from the link.
-        </span>
       </div>
 
       {/* Text Tab Content */}
@@ -282,20 +289,6 @@ const UrlInput = (props) => {
     </>
   );
 };
-
-// NOTE: Phosphor "image".
-const AddPhotoSVG = () => (
-  <svg
-    className="n2-icon"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-    fill="currentColor"
-    aria-hidden="true"
-  >
-    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z" />
-  </svg>
-);
-
 
 const SubmitButton = (props) => {
   const { toast, url, target } = props;
@@ -757,7 +750,7 @@ const SubmitButton = (props) => {
               ? "Please confirm signature..."
               : "Submitting..."
             : target
-              ? `Post to ${target.name}`
+              ? `Post to ${shortName(target.name)}`
               : "Submit"}
         </button>
         <span className="n2-note n2-d">

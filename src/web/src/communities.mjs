@@ -107,6 +107,40 @@ export function prepare({ name, about, rules, icon, color }) {
   return { fields };
 }
 
+// ---------------------------------------------------------------- membership
+
+// Whether `identity` (an address, any case) runs the community.
+export function isOwner(community, identity) {
+  return (
+    typeof identity === "string" &&
+    typeof community?.owner === "string" &&
+    community.owner.toLowerCase() === identity.toLowerCase()
+  );
+}
+
+// Your communities: the ones you joined (newest first), then the ones your
+// account runs that aren't among them. A community you run always counts as
+// joined, on every device, even if this browser never joined it.
+export function yourCommunities(joined, owned) {
+  const ids = new Set(joined.map(({ id }) => id));
+  return [...joined, ...owned.filter(({ id }) => !ids.has(id))];
+}
+
+export function isMember(id, joined, owned) {
+  return yourCommunities(joined, owned).some((c) => c.id === id);
+}
+
+// Nobody leaves the community they run.
+export function canLeave(community, identity) {
+  return !isOwner(community, identity);
+}
+
+// Names in buttons are cut after 16 characters, like the iOS app's.
+export function shortName(name) {
+  const chars = [...String(name)];
+  return chars.length > 16 ? `${chars.slice(0, 15).join("")}…` : name;
+}
+
 // ---------------------------------------------------------------- people
 
 // "0x6E56…FfEe", like the rows show addresses.

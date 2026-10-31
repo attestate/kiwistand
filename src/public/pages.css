@@ -548,9 +548,6 @@ body.n2 #hnmain > table.n2-table {
 .n2-field-text {
   order: 3;
 }
-.n2-upload-row {
-  order: 4;
-}
 .n2-actions {
   order: 5;
 }
@@ -626,15 +623,6 @@ body.n2 #hnmain > table.n2-table {
   border-color: var(--n2-text-2);
   line-height: 1.3;
   resize: vertical;
-}
-.n2-upload-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: -6px;
-}
-.n2-upload[aria-disabled="true"] {
-  cursor: default;
 }
 .n2-actions {
   display: flex;
@@ -721,10 +709,6 @@ body.n2 #hnmain > table.n2-table {
   }
   .n2-submit-form.is-text .n2-field-text {
     order: 3;
-  }
-  .n2-upload-row {
-    order: 4;
-    margin-top: 0;
   }
   .n2-preview-wrap {
     order: 5;
@@ -1998,6 +1982,11 @@ html:not([data-own-profile])
 .cm-page .kn-feedhead {
   padding-top: 28px;
 }
+.cm-page .kn-toolbar-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .cm-btn,
 .cm-btn:link,
 .cm-btn:visited {
@@ -2095,8 +2084,13 @@ html:not([data-own-profile])
   text-decoration: underline;
 }
 .cm-crumbs [aria-current] {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   font-weight: 600;
   color: var(--kn-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cm-card {
   display: flex;
@@ -2127,7 +2121,8 @@ html:not([data-own-profile])
   height: 80px;
 }
 .cm-name {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
   max-width: 100%;
   margin: 0;
   font-size: 36px;
@@ -2143,6 +2138,14 @@ html:not([data-own-profile])
   height: 44px;
   background: var(--kn-text-muted);
   opacity: 0.35;
+}
+.cm-name-long {
+  font-size: 28px;
+}
+/* NOTE: A long name takes at most half of the row; the about keeps the
+   rest. */
+.cm-card-top .cm-name {
+  max-width: 50%;
 }
 .cm-about {
   flex: 1;
@@ -2192,6 +2195,16 @@ html[data-cm-owner] .cm-ph-member {
 html[data-cm-member]:not([data-cm-owner]) .cm-ph-member,
 html[data-cm-owner] .cm-ph-owner {
   display: flex;
+}
+/* The invite page: members and the owner open the community; the owner
+   (opening their own link) has no "Not now". */
+.cm-ph-open,
+html[data-cm-owner] .cm-ph-notnow {
+  display: none;
+}
+html[data-cm-member] .cm-ph-open,
+html[data-cm-owner] .cm-ph-open {
+  display: inline-flex;
 }
 .cm-rules {
   display: flex;
@@ -3041,66 +3054,132 @@ textarea.cm-input:focus {
   }
 }
 
-/* The submit page's "Post to". */
+/* The submit page's "Post to" (PostTo.jsx): a card of choices. */
 .n2-post-to:empty {
   display: none;
 }
+/* NOTE: Room for the card before PostTo.jsx mounts, for readers with
+   communities (theme-init.js counts them) or with ?community= set. */
 html[data-cm-joined] .n2-post-to:empty,
 .n2-post-to[data-community]:empty {
   display: block;
-  min-height: 98px;
+  min-height: calc(140px + var(--cm-rows, 1) * 49px);
 }
 .n2-post-to {
   position: relative;
   order: 0;
 }
-.cm-post-to-button {
+/* "Post to <name>" (16 characters at most, shortName) stays on one line. */
+.n2 #button-onboarding.n2-btn {
+  max-width: 100%;
+  white-space: nowrap;
+}
+.n2-post-to:not(:empty) {
+  gap: 10px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--kn-card-border);
+  border-radius: var(--kn-radius-lg);
+  background: var(--kn-card);
+  font-family: var(--kn-font);
+}
+.cm-post-to-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kn-text-primary);
+}
+.n2-post-to .cm-post-to-search {
+  width: 100%;
+  height: 40px;
+}
+.cm-post-to-search:focus-within {
+  border: 1.5px solid var(--kn-text-primary);
+  padding: 0 11.5px;
+}
+.cm-post-to-search input {
+  font-size: 14px;
+}
+.cm-results {
+  flex: 0 0 auto;
+  font-family: var(--kn-font-mono);
+  font-size: 11px;
+  color: var(--kn-text-muted);
+}
+.cm-options {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.cm-option {
   display: flex;
   align-items: center;
-  gap: 10px;
-  box-sizing: border-box;
-  width: 100%;
-  height: 52px;
+  gap: 12px;
+  min-width: 0;
+  min-height: 48px;
   margin: 0;
-  padding: 0 12px;
-  border: 1px solid var(--kn-border);
-  border-radius: var(--kn-radius);
-  background: var(--kn-surface);
+  padding: 10px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--kn-separator);
+  border-radius: 0;
+  background: none;
   color: var(--kn-text-primary);
   font-family: var(--kn-font);
   text-align: left;
   cursor: pointer;
 }
-.cm-post-to-button.cm-c {
-  border: 1.5px solid var(--cm);
-}
-.cm-post-to-text {
+.cm-option-text {
   display: flex;
   flex: 1;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
-.cm-post-to-name {
+.cm-option-name {
   overflow: hidden;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cm-post-to-meta {
+.cm-option-meta {
   overflow: hidden;
-  font-family: var(--kn-font-mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--kn-text-secondary);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cm-kiwi {
+.cm-wordmark {
   flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  object-fit: contain;
+  width: 75.4px;
+  height: 13.3px;
+  overflow: visible;
+}
+.cm-option-state {
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--kn-text-muted);
+}
+.cm-option-state.is-selected {
+  color: var(--kn-accent-strong);
+}
+.cm-tile-tint {
+  background: var(--cm-tint);
+}
+.cm-browse,
+.cm-browse:link,
+.cm-browse:visited {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kn-text-primary);
+  text-decoration: none;
+}
+.cm-browse:hover {
+  text-decoration: underline;
 }
 .cm-post-to-hint {
   display: flex;
@@ -3109,78 +3188,7 @@ html[data-cm-joined] .n2-post-to:empty,
   margin: 0;
   font-size: 13px;
   line-height: 1.4;
-  color: var(--kn-text-secondary);
-}
-.cm-post-to-hint.cm-c {
   color: var(--cm-text);
-}
-.cm-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-height: 360px;
-  padding: 8px;
-  overflow-y: auto;
-  border: 1px solid var(--kn-border);
-  border-radius: var(--kn-radius-lg);
-  background: var(--kn-page);
-  box-shadow: var(--kn-shadow-menu);
-}
-.cm-menu-label {
-  padding: 8px 8px 4px;
-  font-family: var(--kn-font-mono);
-  font-size: 11px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: var(--kn-text-muted);
-}
-.cm-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  padding: 10px 8px;
-  border: 1px solid transparent;
-  border-radius: var(--kn-radius-lg);
-  background: none;
-  color: var(--kn-text-primary);
-  font-family: var(--kn-font);
-  text-align: left;
-  cursor: pointer;
-}
-.cm-option:hover,
-.cm-option[aria-selected="true"] {
-  border-color: var(--kn-border);
-  background: var(--kn-surface);
-}
-.cm-option .cm-post-to-meta {
-  font-family: var(--kn-font);
-  font-size: 12px;
-  white-space: normal;
-}
-.cm-option-state {
-  color: var(--kn-text-muted);
-}
-.cm-option[aria-selected="true"] .cm-option-state {
-  color: var(--kn-wordmark-green);
-}
-.cm-menu-browse,
-.cm-menu-browse:link,
-.cm-menu-browse:visited {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 8px 6px;
-  font-family: var(--kn-font);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--kn-text-secondary);
-  text-decoration: none;
 }
 
 /* Phones and narrow windows: one column. */
@@ -3205,6 +3213,16 @@ html[data-cm-joined] .n2-post-to:empty,
   }
   .cm-name {
     font-size: 28px;
+  }
+  .cm-card-top .cm-name {
+    max-width: calc(100% - 64px);
+  }
+  .cm-name-long {
+    font-size: 22px;
+  }
+  .cm-title-row {
+    flex-wrap: wrap;
+    align-items: center;
   }
   .cm-divider {
     display: none;
