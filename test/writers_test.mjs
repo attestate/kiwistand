@@ -1,14 +1,7 @@
 import test from "ava";
-import { mkdtempSync, rmSync, writeFileSync } from "fs";
-import { tmpdir } from "os";
-import path from "path";
 
 import * as writers from "../src/writers.mjs";
-import * as featured from "../src/featured.mjs";
-import { FeaturedBadgeRow } from "../src/views/story.mjs";
 import writersPage from "../src/views/writers.mjs";
-
-const IDX = "a".repeat(72);
 
 // --- Writers ------------------------------------------------------------
 
@@ -179,49 +172,4 @@ test("writers page lists entries and says noindex below 10 entries", (t) => {
   );
   const full = String(writersPage("light", { range, entries: many, previous: null }));
   t.false(full.includes("noindex"));
-});
-
-// --- Featured badge ------------------------------------------------------
-
-test("badgeSvg shows rank and upvotes and escapes text", (t) => {
-  const svg = featured.badgeSvg({ rank: 2, upvotes: 34 });
-  t.true(svg.startsWith("<svg"));
-  t.true(svg.includes("#2 on Kiwi · 34 upvotes"));
-  t.true(svg.includes("Featured on Kiwi News"));
-  t.is(featured.badgeText({ rank: null, upvotes: 1 }), "1 upvote");
-  t.is(featured.badgeText({}), "Kiwi News");
-});
-
-test("parseBadgeParam accepts only story indexes", (t) => {
-  t.is(featured.parseBadgeParam(`0x${IDX}.svg`), `0x${IDX}`);
-  t.is(featured.parseBadgeParam(`${IDX.toUpperCase()}.svg`), `0x${IDX}`);
-  t.is(featured.parseBadgeParam(`0x${IDX}.png`), null);
-  t.is(featured.parseBadgeParam("../etc/passwd.svg"), null);
-});
-
-test("peakRank reads the reach state file, top 3 only", (t) => {
-  const dir = mkdtempSync(path.join(tmpdir(), "featured-"));
-  t.teardown(() => rmSync(dir, { recursive: true, force: true }));
-  const file = path.join(dir, "reach.json");
-  t.is(featured.peakRank(IDX, file), null);
-  writeFileSync(file, JSON.stringify({ peak: { [IDX]: { rank: 2, at: 1 }, b: { rank: 7, at: 1 } } }));
-  t.is(featured.peakRank(`0x${IDX}`, file), 2);
-  t.is(featured.peakRank("b", file), null);
-});
-
-test("badge snippets link the story page and the badge", (t) => {
-  const snippets = featured.badgeSnippets({ title: "Hello World", index: IDX });
-  t.is(
-    snippets.markdown,
-    `[![Featured on Kiwi News](https://news.kiwistand.com/badge/0x${IDX}.svg)](https://news.kiwistand.com/stories/Hello-World?index=0x${IDX})`,
-  );
-  t.true(snippets.html.startsWith('<a href="https://news.kiwistand.com/stories/Hello-World'));
-});
-
-test("story page badge row has the snippets and no script", (t) => {
-  const row = String(FeaturedBadgeRow({ title: "Hello World", index: IDX }, 1));
-  t.true(row.includes("this story reached #1"));
-  t.true(row.includes(`/badge/0x${IDX}.svg`));
-  t.true(row.includes("&lt;a href="));
-  t.false(row.includes("<script"));
 });

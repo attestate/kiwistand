@@ -57,7 +57,6 @@ import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import writersPage from "./views/writers.mjs";
 import * as writers from "./writers.mjs";
-import * as featured from "./featured.mjs";
 import saved from "./views/saved.mjs";
 import settings from "./views/settings.mjs";
 import newsletterPage from "./views/newsletter.mjs";
@@ -2777,32 +2776,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "public, s-maxage=3600, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(content.valueOf());
-  });
-  // "Featured on Kiwi News" badge for writers' sites (src/featured.mjs).
-  app.get("/badge/:file", async (request, reply) => {
-    const index = featured.parseBadgeParam(request.params.file);
-    if (!index) {
-      return reply.status(404).type("text/plain").send("Badge not found");
-    }
-    let submission;
-    try {
-      submission = await generateStory(index);
-    } catch (err) {
-      return reply.status(404).type("text/plain").send("Badge not found");
-    }
-    const svg = featured.badgeSvg({
-      rank: featured.peakRank(index),
-      upvotes: submission.upvotes,
-    });
-    reply.header("X-Robots-Tag", "noindex");
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=3600, max-age=600, stale-while-revalidate=86400",
-    );
-    return reply
-      .status(200)
-      .type("image/svg+xml; charset=utf-8")
-      .send(svg);
   });
   app.get("/privacy-policy", async (request, reply) => {
     const content = await privacy(reply.locals.theme);
