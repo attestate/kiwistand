@@ -88,6 +88,11 @@ if (cluster.isPrimary) {
     diskcheck();
   }
 
+  // NOTE: Messages are attributed to identities through the delegations
+  // (upvote markers, community owners), so the node only takes messages, over
+  // p2p or the API, once the delegations it has on disk are loaded.
+  await registry.initialize();
+
   const node = await start(config);
 
   await api.launch(trie, node);
@@ -317,8 +322,8 @@ if (cluster.isPrimary) {
       href,
       "community",
     )
-    .then((result) => {
-      cache.insertCommunities(result);
+    .then(async (result) => {
+      await cache.insertCommunities(result);
       log(`Loaded ${result.length} community versions`);
     })
     .catch((error) => console.error("Community posts error:", error));

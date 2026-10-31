@@ -81,6 +81,15 @@ function add(trie, message, delegations = {}, synching = false) {
   return store.add(trie, message, null, delegations, synching);
 }
 
+// Drops a community from this process's table, e.g. to stand for a node that
+// doesn't have it.
+function forgetCommunity(signer, name = "AI") {
+  db.prepare(`DELETE FROM communities WHERE signer = ? AND key = ?`).run(
+    signer.toLowerCase(),
+    communities.nameKey(name),
+  );
+}
+
 function submissionCommunity(href) {
   return db.prepare(`SELECT community FROM submissions WHERE href = ?`).get(href)
     ?.community;
@@ -289,12 +298,146 @@ test.serial("a community signed with a delegated key belongs to the account", as
   const delegations = { [device.address]: account.address };
   await add(trie, await signCommunity(device), delegations);
 
-  const community = cache.getCommunity(communities.communityId(account.address, "AI"));
+  const community = cache.getCommunity(
+    communities.communityId(account.address, "AI"),
+    delegations,
+  );
   t.is(community.owner, account.address);
   t.truthy(await add(trie, await signPost(device, `${account.address}/ai`, T + 1), delegations));
   await t.throwsAsync(async () => add(trie, await signPost(device, `${device.address}/ai`, T + 2), delegations), {
     message: "add: Didn't find the community of the post",
   });
+});
+
+test.serial("a community stored before its delegation was known belongs to the account once it is", async (t) => {
+  const trie = await freshTrie(t);
+  const account = Wallet.createRandom();
+  const device = Wallet.createRandom();
+  const before = {};
+  const after = { [device.address]: account.address };
+  // The node stores the community while it doesn't know the delegation yet,
+  // e.g. right after the user delegated.
+  await add(trie, await signCommunity(device), before);
+  t.truthy(cache.getCommunity(`${device.address}/ai`, before));
+
+  // Once it knows it, the community is the account's, as on a node that only
+  // ever knew the delegation.
+  t.is(cache.getCommunity(`${account.address}/ai`, after).owner, account.address);
+  t.is(cache.getCommunity(`${device.address}/ai`, after), null);
+  t.truthy(await add(trie, await signPost(device, `${account.address}/ai`, T + 1), after));
+  await t.throwsAsync(
+    async () => add(trie, await signPost(device, `${device.address}/ai`, T + 2), after),
+    { message: "add: Didn't find the community of the post" },
+  );
+});
+
+test("two nodes that stored a community with different delegations judge posts alike", (t) => {
+  const account = Wallet.createRandom().address;
+  const device = Wallet.createRandom().address;
+  const version = {
+    ...draft(),
+    index: "ff".repeat(36),
+    signer: device,
+  };
+  // Node A stored it before it knew the delegation, node B after. The rows
+  // don't depend on that.
+  const [a, b] = [new Database(":memory:"), new Database(":memory:")];
+  for (const node of [a, b]) {
+    cache.initializeCommunities(node);
+    cache.insertCommunity(version, node);
+  }
+  t.deepEqual(
+    a.prepare(`SELECT * FROM communities`).all(),
+    b.prepare(`SELECT * FROM communities`).all(),
+  );
+  for (const delegations of [{}, { [device]: account }]) {
+    for (const owner of [account, device]) {
+      t.is(
+        cache.communityCreatedAt(`${owner}/ai`, delegations, a),
+        cache.communityCreatedAt(`${owner}/ai`, delegations, b),
+      );
+    }
+  }
+  t.is(cache.communityCreatedAt(`${account}/ai`, { [device]: account }, a), T);
+  t.is(cache.communityCreatedAt(`${device}/ai`, { [device]: account }, a), undefined);
+});
+
+test("versions signed by an account and its device key make one community", (t) => {
+  const account = Wallet.createRandom().address;
+  const device = Wallet.createRandom().address;
+  const node = new Database(":memory:");
+  cache.initializeCommunities(node);
+  cache.insertCommunity({ ...draft({ about: "from the device" }), index: "01".repeat(36), signer: device }, node);
+  cache.insertCommunity(
+    { ...draft({ about: "from the account", timestamp: T + 9 }), index: "02".repeat(36), signer: account },
+    node,
+  );
+  const delegations = { [device]: account };
+  const [community] = cache.listCommunities(delegations, node);
+  t.is(cache.listCommunities(delegations, node).length, 1);
+  t.is(community.owner, account);
+  t.is(community.id, `${account.toLowerCase()}/ai`);
+  t.is(community.about, "from the account");
+  t.is(community.created, T);
+  t.deepEqual(cache.getCommunity(community.id, delegations, node), community);
+  // Without the delegation they're two communities.
+  t.is(cache.listCommunities({}, node).length, 2);
+});
+
+test.serial("a community whose trie write fails leaves the table as it was", async (t) => {
+  const owner = Wallet.createRandom();
+  const failing = {
+    get: async () => null,
+    put: async () => {
+      throw new Error("trie.put error");
+    },
+    root: () => Buffer.from("abc", "hex"),
+  };
+  const first = await signCommunity(owner);
+  await t.throwsAsync(() => add(failing, first), { message: /trie.put error/ });
+  t.is(cache.communityCreatedAt(`${owner.address}/ai`), undefined);
+
+  // An existing row goes back to how it was.
+  const trie = await freshTrie(t);
+  await add(trie, first);
+  const before = db
+    .prepare(`SELECT * FROM communities WHERE signer = ?`)
+    .get(owner.address.toLowerCase());
+  const update = await signCommunity(owner, { about: "update", timestamp: T + 1 });
+  await t.throwsAsync(() => add(failing, update), { message: /trie.put error/ });
+  t.deepEqual(
+    db.prepare(`SELECT * FROM communities WHERE signer = ?`).get(owner.address.toLowerCase()),
+    before,
+  );
+});
+
+test.serial("a community the table can't take isn't stored, so a peer offers it again", async (t) => {
+  const trie = await freshTrie(t);
+  const owner = Wallet.createRandom();
+  db.exec(`ALTER TABLE communities RENAME TO communities_away`);
+  t.teardown(() => {
+    db.exec(`DROP TABLE IF EXISTS communities`);
+    db.exec(`ALTER TABLE communities_away RENAME TO communities`);
+  });
+  const message = await signCommunity(owner);
+  await t.throwsAsync(() => add(trie, message), { message: /no such table/ });
+  t.is((await store.leaves(trie, null, null, JSON.parse, null, null, "community")).length, 0);
+});
+
+test("putting communities back skips broken entries and keeps going", async (t) => {
+  const node = new Database(":memory:");
+  cache.initializeCommunities(node);
+  const signer = Wallet.createRandom().address;
+  await cache.insertCommunities(
+    [undefined, null, {}, { ...draft(), index: "03".repeat(36), signer }],
+    node,
+  );
+  t.is(cache.communityCreatedAt(`${signer}/ai`, {}, node), T);
+});
+
+test("a missing communities table reads as no community", (t) => {
+  const node = new Database(":memory:");
+  t.is(cache.communityCreatedAt(`${Wallet.createRandom().address}/ai`, {}, node), undefined);
 });
 
 test.serial("signing a community again under its name updates it", async (t) => {
@@ -345,9 +488,7 @@ test.serial("of two versions with the same timestamp, every node keeps the same 
     [b, a],
   ]) {
     const trie = await freshTrie(t);
-    db.prepare(`DELETE FROM communities WHERE id = ?`).run(
-      communities.communityId(owner.address, "AI"),
-    );
+    forgetCommunity(owner.address);
     for (const message of order) await add(trie, message);
     t.is(cache.getCommunity(`${owner.address}/ai`).about, winner);
   }
@@ -369,14 +510,14 @@ test.serial("a community missing from the table comes back when the node re-read
   t.is(cache.communityCreatedAt(id_), T);
 
   // E.g. a failed insert: the node rejects posts to the community...
-  db.prepare(`DELETE FROM communities WHERE id = ?`).run(id_);
+  forgetCommunity(owner.address);
   const post = await signPost(owner, id_, T + 1);
   await t.throwsAsync(() => add(trie, post), {
     message: "add: Didn't find the community of the post",
   });
 
   // ...until launch.mjs puts the trie's communities into the table again.
-  cache.insertCommunities(
+  await cache.insertCommunities(
     await store.posts(trie, null, null, JSON.parse, null, {}, null, "community"),
   );
   t.is(cache.communityCreatedAt(id_), T);
@@ -467,9 +608,7 @@ test.serial("a peer drops a post whose community it lacks, and takes it once the
 
   // NOTE: Both "nodes" share this process's SQLite cache; the target's must
   // not know the community yet.
-  db.prepare(`DELETE FROM communities WHERE id = ?`).run(
-    communities.communityId(owner.address, "AI"),
-  );
+  forgetCommunity(owner.address);
   const target = await freshTrie(t);
   await put(target, serialize([post]), {});
   t.is((await store.leaves(target, null, null, JSON.parse, null, null, "amplify")).length, 0);
@@ -546,6 +685,17 @@ test("a cache from before communities gets the column and the table", (t) => {
   );
   // Running it again, as every start does, changes nothing.
   t.notThrows(() => cache.initializeCommunities(old));
+});
+
+test("a communities table from the first 13.0.0 release is replaced", (t) => {
+  const node = new Database(":memory:");
+  node.exec(
+    `CREATE TABLE communities (id TEXT PRIMARY KEY NOT NULL, owner TEXT NOT NULL, name TEXT NOT NULL, about TEXT NOT NULL, rules TEXT NOT NULL, icon TEXT NOT NULL, color TEXT NOT NULL, created INTEGER NOT NULL, timestamp INTEGER NOT NULL, message TEXT NOT NULL, signer TEXT NOT NULL)`,
+  );
+  cache.initializeCommunities(node);
+  const columns = node.prepare(`PRAGMA table_info(communities)`).all().map(({ name }) => name);
+  t.true(columns.includes("key"));
+  t.false(columns.includes("owner"));
 });
 
 test("a fresh cache gets the communities table before the submissions table exists", (t) => {
