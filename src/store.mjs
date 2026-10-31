@@ -31,6 +31,8 @@ import {
   insertMessage,
   isReactionComment,
   communityCreatedAt,
+  insertCommunity,
+  restoreCommunity,
 } from "./cache.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
@@ -319,7 +321,7 @@ export function upvoteID(identity, link, type) {
 }
 
 let messagesAdded = 0;
-async function atomicPut(trie, message, identity, delegations) {
+async function atomicPut(trie, message, identity, delegations, signer) {
   // NOTE: Only amplifies have a marker; a community has no href.
   const marker =
     message.type === "amplify"
@@ -374,6 +376,15 @@ async function atomicPut(trie, message, identity, delegations) {
         throw new Error(err);
       }
     }
+  }
+
+  // NOTE: Posts to a community are judged with the communities table, so a
+  // community goes into it before the trie: if that write fails, the message
+  // isn't stored and a peer offers it again. If the trie write fails, the row
+  // is restored.
+  let community;
+  if (message.type === "community") {
+    community = insertCommunity({ ...message, index, signer });
   }
 
   try {
@@ -465,6 +476,7 @@ async function atomicPut(trie, message, identity, delegations) {
     }
     // No in-memory comment count incrementing; SQLite holds canonical counts
   } catch (err) {
+    if (community) restoreCommunity(community);
     if (message.type !== "amplify") {
       throw new Error(
         `atomicPut: putting to trie failed with error "${err.toString()}" for message "${JSON.stringify(
@@ -573,7 +585,7 @@ async function _add({
   }
 
   if (message.type === "amplify" && message.community !== undefined) {
-    const created = communityCreatedAt(message.community);
+    const created = communityCreatedAt(message.community, delegations);
     if (created === undefined) {
       throw new Error("add: Didn't find the community of the post");
     }
@@ -610,6 +622,7 @@ async function _add({
     message,
     identity,
     delegations,
+    address,
   );
 
   if (!libp2p) {
@@ -703,9 +716,10 @@ export async function posts(
   const concurrency = piscina.options.maxThreads * ENHANCE_TASKS_PER_THREAD;
   await Promise.all(Array.from({ length: concurrency }, runner));
 
+  // NOTE: A node whose enhancement failed has no value.
   const posts = results
     .map(({ value }) => value)
-    .filter((elem) => elem !== null);
+    .filter((elem) => elem !== null && elem !== undefined);
   return posts;
 }
 

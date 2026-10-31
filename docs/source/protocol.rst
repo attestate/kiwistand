@@ -85,13 +85,14 @@ IDs and updates
 - A name's key is the name in lowercase with spaces as hyphens: "Agent Builders" has the key ``agent-builders``.
 - A community's ID is ``<owner address>/<name key>``, e.g. ``0x0f6a79a579658e401e0b81c6dde1f2cd51d97176/agent-builders``.
 - Signing a ``Community`` under a name key you already use updates that community. Every version stays in the trie. Readers show the newest one: the greatest timestamp, and of equal timestamps the greatest message ID.
+- A node resolves a version's signer to its owner with the delegations it knows when it judges a post or shows the community, not when it stored the version. A delegation that reaches a node later (they take a minute or two to be indexed) then still makes the community its account's. Versions signed by an account and by its delegated keys under the same name are one community.
 - There's no deleting or transferring a community, and no membership or moderation on the protocol. Whoever loses the owning account can't change the community anymore.
 
 Posting to a community
 ......................
 
 - A post to a community is an amplify with ``community`` set to the community's ID. The address part may be in any case.
-- A node accepts it only if it has a version of that community older than the post, as a comment's story must be older than the comment. Otherwise the node drops it. When the community arrives later, set reconciliation offers the post again.
+- A node accepts it only if it has a version of that community older than the post, as a comment's story must be older than the comment. Otherwise the node drops it. When the community arrives later, set reconciliation offers the post again. So a client posting to a community it just created uses a timestamp at least one second after the community's.
 - If the link already is a story, the post counts as an upvote of that story, wherever the story lives.
 - Upvotes and comments don't name a community. A story stays in the community of its first submission.
 

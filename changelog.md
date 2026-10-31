@@ -7,6 +7,21 @@
 
 ## Unreleased
 
+### Fixes (communities, no protocol change)
+
+- A community's owner is resolved through the delegations when a post is
+  judged or the community is read, not when the node stored it. Before, a node
+  that stored a community before it knew the signer's delegation kept it under
+  the delegated key, and nodes could judge posts to it differently forever.
+  The communities table is now keyed by signer and name; the old table is
+  dropped on start and refilled from the trie.
+- A node loads its delegations before it takes messages over p2p or the API.
+- A community goes into the table before the trie, and is taken out again if
+  the trie write fails, so a failed cache write can't leave a node rejecting
+  its posts.
+- Refilling the communities table at startup runs in batches and yields, and
+  skips broken entries.
+
 ## 0.16.0
 
 **BREAKING CHANGE**: User communities
