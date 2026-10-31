@@ -807,9 +807,10 @@ export async function leaves(
       if (parsed.timestamp < startDatetime) {
         continue;
       }
-      // NOTE: The type is checked first as communities have no href.
+      // NOTE: The type is checked first as communities have no href. It is
+      // always set: the check at the top of the function throws otherwise.
       if (
-        (type && type !== parsed.type) ||
+        type !== parsed.type ||
         (href && (parsed.href.startsWith('data:') || href.startsWith('data:')
           ? parsed.href !== href
           : normalizeUrl(parsed.href) !== normalizeUrl(href)))
