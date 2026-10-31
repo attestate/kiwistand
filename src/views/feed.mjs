@@ -22,10 +22,8 @@ import {
   countShares,
   getLastComment,
   listNewest,
-  countComments,
   countCommentsBatch,
   countEngagements,
-  getBest,
   inCommunity,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
@@ -35,7 +33,6 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
-import TopStoriesCarousel from "./components/top-stories.mjs";
 import NewsletterCard from "./components/newsletter-card.mjs";
 
 // Import twitterFrontends for checking Twitter/X links
@@ -819,60 +816,6 @@ export async function index(
   };
 }
 
-async function fetchTopStories(feedStoryHrefs) {
-  const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  let topRaw = getBest(80, 0, null, "", weekAgo);
-
-  // Apply moderation
-  const policy = await moderation.getLists();
-  topRaw = moderation.moderate(topRaw, policy, "/");
-
-  // Filter out stories already in the main feed (keep more to account for image filtering)
-  const filtered = topRaw.filter(
-    (story) => !feedStoryHrefs.has(story.href),
-  ).slice(0, 40);
-
-  if (filtered.length === 0) return [];
-
-  const enriched = await Promise.all(
-    filtered.map(async (story) => {
-      const [ensData, meta] = await Promise.all([
-        ens.resolve(story.identity),
-        cachedMetadata(story.href),
-      ]);
-
-      // Resolve a few upvoter avatars (up to 3, excluding submitter)
-      const otherUpvoters = (story.upvoters || [])
-        .filter((addr) => addr !== story.identity)
-        .slice(0, 3);
-
-      const upvoterResults = await Promise.allSettled(
-        otherUpvoters.map((addr) => ens.resolve(addr)),
-      );
-
-      const upvoterAvatars = upvoterResults
-        .filter((r) => r.status === "fulfilled" && r.value.safeAvatar)
-        .map((r) => r.value.safeAvatar);
-
-      const commentCnt = countComments(`kiwi:0x${story.index}`, policy.addresses || []);
-
-      return {
-        ...story,
-        metadata: meta || {},
-        submitter: ensData,
-        displayName: ensData.displayName,
-        upvoterAvatars,
-        commentCount: commentCnt,
-      };
-    }),
-  );
-
-  // Only show stories that have an OG image
-  return enriched
-    .filter((story) => story.metadata?.image && story.metadata.image.startsWith("https://"))
-    .slice(0, 8);
-}
-
 // NOTE: `communities` (communities-api.mjs communityRefs) tags community
 // stories: this renders in a worker thread without the delegations that
 // resolve a community's owner.
@@ -900,18 +843,6 @@ export default async function (trie, theme, page, domain, identity, hash, varian
     : [content.pinnedStory];
   // The pinned story takes position 1, so ranked stories start after it.
   const storiesStart = start + (pinnedStory ? 1 : 0);
-
-  // Fetch top stories for the carousel (only on page 0, no domain filter)
-  let topStories = [];
-  if (page === 0 && !domain) {
-    const feedHrefs = new Set(stories.map((s) => s.href));
-    if (pinnedStory) feedHrefs.add(pinnedStory.href);
-    try {
-      topStories = await fetchTopStories(feedHrefs);
-    } catch (err) {
-      log(`Error fetching top stories for carousel: ${err.message}`);
-    }
-  }
 
   let currentQuery = "";
   if (page && domain) {
@@ -993,7 +924,6 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                 ${SecondHeader(theme, "top")}
               </tr>
               ${TestFlightCard()}
-              ${topStories.length > 0 ? TopStoriesCarousel(topStories) : ""}
               ${
                 // Render pinned story only if it exists
                 pinnedStory &&
