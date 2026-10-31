@@ -94,6 +94,10 @@ export function invalidateActivityCaches(message) {
     invalidateUpvoteActivityCaches(message);
   } else if (message.type === "comment") {
     invalidateCommentActivityCaches(message);
+  } else if (message.type === "join" || message.type === "leave") {
+    // NOTE: A community's ID starts with its owner's address, who sees who
+    // joined in their notifications.
+    invalidateNotifications(message.community.split("/")[0]);
   }
 }
 

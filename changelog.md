@@ -7,6 +7,56 @@
 
 ## Unreleased
 
+### BREAKING CHANGE: Community membership (protocol 14.0.0)
+
+Joining and leaving a community are signed messages now, so every node knows
+who is a member: communities you joined follow you to every device, a
+community's owner learns who joined, and member counts are real. See
+"Membership" in the protocol docs.
+
+#### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `13.0.0 → 14.0.0`
+  - Protocols (leaves/levels): `16.0.0 → 17.0.0`
+- **New message types `join` and `leave`**, signed as
+  `Membership(string type,string community,uint256 timestamp)`, with
+  `community` a community's ID. Nodes accept one only if the community exists
+  in a version older than the message, like a post to it, whatever the
+  signer's earlier joins and leaves.
+- A person's newest join or leave per community decides (of equal
+  timestamps, the greater message ID). Joins signed with a delegated key
+  count for the account. A community's owner is always a member.
+
+#### Cache
+
+- New `memberships` table: per signing key and community, the newest join or
+  leave. Members are resolved through the delegations when they're read. A
+  join or leave goes into it before the trie and is taken out again if the
+  trie write fails; at startup the primary puts every join and leave of the
+  trie into it again (one walk of the trie for communities, joins and
+  leaves).
+- `store.leaves` and `store.posts` take a list of types.
+
+#### API
+
+- `POST /api/v1/list` takes `type: "join"` and `type: "leave"`.
+- Community objects have `members` (the owner included).
+  `GET /api/v1/communities?member=<address>` lists the communities someone
+  joined or owns; it isn't cached.
+- When the node's API takes a join, the community's owner gets a push
+  notification ("New member", `<name> joined <community>`) and a Farcaster mini
+  app notification, with the rules of upvote notifications. Leaves, the
+  owner's own joins and joining again within a day don't notify.
+- `GET /api/v1/activity` has `joins`: who joined your communities. The
+  notifications page shows them grouped per community.
+
+#### Migration
+
+All nodes must upgrade together. A 14.0.0 node will not sync with a 13.0.0
+node. The website and the apps still keep joined communities locally until
+they sign joins and leaves.
+
 ### Communities: read API and feeds (no protocol change)
 
 - `GET /api/v1/communities` (`q`, `owner`, `limit`) lists communities, most
