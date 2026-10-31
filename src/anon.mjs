@@ -6,7 +6,7 @@
 //    a Semaphore identity commitment. Joining is public.
 // 2. Every node builds the same group (a Lean incremental Merkle tree) from
 //    the accepted joins, ordered by (timestamp, index). An identity has one
-//    leaf; a newer join replaces its commitment in place.
+//    leaf: its first join. Later joins are ignored.
 // 3. A member upvotes a story with an "anon-upvote" message: no signature, no
 //    address, just a Semaphore proof that some member of the group upvoted
 //    this story. Its scope is the hash of the story id, so the proof's
@@ -147,7 +147,13 @@ export function checkJoin(message, identity) {
   if (commitment === 0n || commitment >= SNARK_FIELD) {
     throw new Error("anon-join: commitment isn't in the SNARK field");
   }
-  if (getAnonMember(identity)) {
+  // NOTE: Only an *earlier* join (by timestamp) of the same identity rules a
+  // new one out. replay() keeps the first join by (timestamp, id), so a join
+  // that is older than what this node has seen must still be accepted: else
+  // nodes that saw the joins in a different order would end up with different
+  // groups. Later duplicates are ignored by replay().
+  const existing = getAnonMember(identity);
+  if (existing && existing.timestamp < message.timestamp) {
     throw new Error(`anon-join: identity "${identity}" has already joined`);
   }
   const karma = karmaAt(identity, message.timestamp);
