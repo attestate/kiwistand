@@ -74,10 +74,10 @@ Fields
 - ``about``: up to 100 characters on one line.
 - ``rules``: up to 5 house rules of 1 to 140 characters, each on one line.
 - ``icon``: a `Phosphor Icons <https://phosphoricons.com>`_ 2.1.1 name, as listed in ``src/phosphor-icons.mjs``. Clients draw the icon from their own copy of the set.
-- ``color``: one of ``violet``, ``teal``, ``coral``, ``blue``, ``amber``, ``rose``, ``slate`` and ``brown``. Clients map each to their light and dark shades.
+- ``color``: any hex colour, ``#RRGGBB``. The protocol has no opinion on it: clients may offer a palette and decide how to show other colours, e.g. in dark mode.
 - ``timestamp``: as for every message.
 
-Adding icons or colours is a protocol change, as nodes with the older lists reject the new values.
+Adding icons is a protocol change, as nodes with the older list reject the new names.
 
 IDs and updates
 ...............

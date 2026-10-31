@@ -80,7 +80,7 @@ The schemas are ``upvote``, ``comment`` and ``community`` in
     "about": "...",            // up to 100 characters, one line
     "rules": ["..."],          // up to 5, each 1 to 140 characters, one line
     "icon": "robot",           // a Phosphor Icons 2.1.1 name
-    "color": "violet",         // violet, teal, coral, blue, amber, rose, slate or brown
+    "color": "#6E56CF",        // any hex colour, #RRGGBB
     "signature": "0x..."
   }
 

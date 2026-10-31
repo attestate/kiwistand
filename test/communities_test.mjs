@@ -20,7 +20,6 @@ import {
   EIP712_MESSAGE,
   EIP712_COMMUNITY,
   EIP712_COMMUNITY_MESSAGE,
-  COMMUNITY_COLORS,
 } from "../src/constants.mjs";
 import { PHOSPHOR_ICONS } from "../src/phosphor-icons.mjs";
 
@@ -57,7 +56,7 @@ function draft(overrides = {}) {
     about: "Links about building with AI.",
     rules: ["Link to the original source.", "No price talk."],
     icon: "robot",
-    color: "violet",
+    color: "#6E56CF",
     timestamp: T,
     ...overrides,
   });
@@ -107,21 +106,11 @@ test("a community's ID is the owner's address and the name key", (t) => {
   );
 });
 
-test("the icons are Phosphor 2.1.1 and the colours the designer's palette", (t) => {
+test("the icons are Phosphor 2.1.1", (t) => {
   t.is(PHOSPHOR_ICONS.length, 1512);
   t.is(new Set(PHOSPHOR_ICONS).size, 1512);
   t.true(PHOSPHOR_ICONS.includes("robot"));
   t.false(PHOSPHOR_ICONS.some((name) => /-(thin|light|bold|fill|duotone)$/.test(name)));
-  t.deepEqual(COMMUNITY_COLORS, [
-    "violet",
-    "teal",
-    "coral",
-    "blue",
-    "amber",
-    "rose",
-    "slate",
-    "brown",
-  ]);
 });
 
 // --- Schema and signatures ------------------------------------------------
@@ -156,7 +145,8 @@ const valid = [
   ["an empty description", { about: "" }],
   ["a 100 character description", { about: "a".repeat(100) }],
   ["unicode in texts", { about: "Für alle 🥝", rules: ["Kein Spam ✋"] }],
-  ["every colour", { color: "brown" }],
+  ["a hex colour outside the designer's palette", { color: "#123ABC" }],
+  ["a lowercase hex colour", { color: "#6e56cf" }],
 ];
 for (const [title, overrides] of valid) {
   test(`a community with ${title} is valid`, async (t) => {
@@ -169,8 +159,11 @@ const invalid = [
   ["an icon that isn't in Phosphor", { icon: "not-an-icon" }],
   ["an icon with a weight suffix", { icon: "robot-bold" }],
   ["no icon", { icon: "" }],
-  ["a colour outside the palette", { color: "red" }],
-  ["a hex colour", { color: "#6E56CF" }],
+  ["a colour name", { color: "violet" }],
+  ["a 3-digit hex colour", { color: "#FFF" }],
+  ["a hex colour with alpha", { color: "#6E56CF80" }],
+  ["a hex colour without #", { color: "6E56CF" }],
+  ["a colour that isn't hex", { color: "#GGGGGG" }],
   ["six rules", { rules: Array(6).fill("rule") }],
   ["a rule of 141 characters", { rules: ["r".repeat(141)] }],
   ["an empty rule", { rules: [""] }],
@@ -279,9 +272,9 @@ test.serial("another owner's community of the same name is a different community
   const alice = Wallet.createRandom();
   const bob = Wallet.createRandom();
   await add(trie, await signCommunity(alice));
-  await add(trie, await signCommunity(bob, { color: "teal" }));
-  t.is(cache.getCommunity(communities.communityId(alice.address, "AI")).color, "violet");
-  t.is(cache.getCommunity(communities.communityId(bob.address, "AI")).color, "teal");
+  await add(trie, await signCommunity(bob, { color: "#1F8A7A" }));
+  t.is(cache.getCommunity(communities.communityId(alice.address, "AI")).color, "#6E56CF");
+  t.is(cache.getCommunity(communities.communityId(bob.address, "AI")).color, "#1F8A7A");
   // Bob's community doesn't make a post to a community Carol never created valid.
   const carol = Wallet.createRandom();
   await t.throwsAsync(async () => add(trie, await signPost(bob, `${carol.address}/ai`, T + 1)), {

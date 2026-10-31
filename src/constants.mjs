@@ -78,18 +78,10 @@ export const EIP712_COMMUNITY = {
   ],
 };
 
-// The designer's community palette. Clients map each name to its light and
-// dark shades.
-export const COMMUNITY_COLORS = [
-  "violet",
-  "teal",
-  "coral",
-  "blue",
-  "amber",
-  "rose",
-  "slate",
-  "brown",
-];
+// A community's colour: any hex colour. The protocol has no opinion on it;
+// clients may offer a palette (the Kiwi apps offer the designer's) and decide
+// how to show colours outside of it, e.g. in dark mode.
+export const COMMUNITY_COLOR_PATTERN = "^#[0-9a-fA-F]{6}$";
 
 // Words of letters and digits, separated by single spaces or hyphens, so the
 // name key (lowercase, spaces as hyphens) is unambiguous: "Agent Builders"
@@ -231,8 +223,9 @@ const community = {
       enum: PHOSPHOR_ICONS,
     },
     color: {
+      $comment: "A hex colour, #RRGGBB",
       type: "string",
-      enum: COMMUNITY_COLORS,
+      pattern: COMMUNITY_COLOR_PATTERN,
     },
     signature: {
       type: "string",

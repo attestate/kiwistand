@@ -24,7 +24,7 @@ docs.
 - **New message type `community`**, signed as
   `Community(string type,string name,string about,string[] rules,string icon,string color,uint256 timestamp)`:
   a name (24 characters), a one-line description (100), up to 5 house rules
-  (140 each), a Phosphor Icons 2.1.1 icon and one of 8 palette colours.
+  (140 each), a Phosphor Icons 2.1.1 icon and a hex colour (`#RRGGBB`).
   Signing one again under the same name updates it.
 - **Amplify gets an optional `community`** (`<owner address>/<name key>`).
   With it, the message is signed as the 5-field
