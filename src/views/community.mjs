@@ -46,6 +46,14 @@ export { communityPath };
 export const FEEDS = ["hot", "new", "best"];
 const PERIODS = ["all", "year", "month", "week", "day"];
 
+// NOTE: A community's feeds are cached exactly like Kiwi News' own /, /new
+// and /best (src/http.mjs), so a new post shows up in its New right away.
+export const CACHE_CONTROL = {
+  hot: "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
+  new: "no-cache",
+  best: "public, s-maxage=3600, max-age=0, stale-while-revalidate=2592000",
+};
+
 function storyCount(count) {
   return count === 1 ? "1 story" : `${count} stories`;
 }
@@ -490,10 +498,7 @@ export function handler({ getStories, ...deps }) {
         .send(renderNotFound(reply.locals?.theme, path));
     }
 
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=60, max-age=0, stale-while-revalidate=86400",
-    );
+    reply.header("Cache-Control", CACHE_CONTROL[feed]);
     const { via } = query;
     if (feed === "hot" && isAddress(via)) {
       const resolve = deps.resolve || ((address) => ens.resolve(address));

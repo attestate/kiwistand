@@ -366,21 +366,57 @@ test.serial("a community's feeds have only its stories", async (t) => {
   t.deepEqual(hrefs(top).sort(), hrefs(mine).sort());
 });
 
-test.serial("a community's Hot has Kiwi News' rules; its New has every story", async (t) => {
+test.serial("a community's Hot lists stories that miss Kiwi News' rules below the others; its New has every story", async (t) => {
   const id = community(address(), { name: "Brand New" });
   const old = story({ community: id, age: 30 * DAY });
   const lonely = story({ community: id, age: 60 });
   const liked = story({ community: id, upvotes: 3 });
+  // Older, so it may rank lower than `lonely`, but it meets the rules.
+  const earlier = story({ community: id, upvotes: 2, age: 2 * DAY - 3600 });
 
   // As /api/v1/communities/:owner/:key/feeds/hot asks for it, without ENS.
   const { stories } = await index(
     null, 0, undefined, sub(new Date(), { weeks: 3 }), false, false, "control", false, true,
     { community: id },
   );
-  t.deepEqual(hrefs(stories), [liked.href]);
+  const hot = hrefs(stories);
+  t.deepEqual(hot.slice(0, 2).sort(), [liked.href, earlier.href].sort());
+  t.deepEqual(hot.slice(2), [lonely.href]);
+  t.false(stories.some((story) => "belowRules" in story));
+
+  // Kiwi News' Hot still hides the lonely story.
+  const { stories: kiwi } = await index(
+    null, 0, undefined, sub(new Date(), { weeks: 3 }), false, false, "control", false, true,
+  );
+  t.false(hrefs(kiwi).includes(lonely.href));
+  t.true(hrefs(kiwi).includes(liked.href));
 
   const fresh = await newest.getCommunityStories(id);
-  t.deepEqual(hrefs(fresh), [liked.href, lonely.href, old.href]);
+  t.deepEqual(hrefs(fresh), [liked.href, lonely.href, earlier.href, old.href]);
+});
+
+test.serial("a community's endless Hot rows keep its single-upvote stories", async (t) => {
+  const id = community(address(), { name: "Endless" });
+  const quiet = story({ community: id, age: 5 * DAY });
+  const loved = story({ community: id, upvotes: 4, age: 5 * DAY });
+
+  // As /api/v1/communities/:owner/:key/feed/rows asks for it.
+  const rows = async (options) =>
+    hrefs(
+      (
+        await index(
+          null, 999, undefined, sub(new Date(), { weeks: 6 }), false, false, "control", true, true,
+          options,
+        )
+      ).stories,
+    );
+  const mine = await rows({ community: id });
+  t.deepEqual(mine, [loved.href, quiet.href]);
+
+  // Kiwi News' rows still need karma for a single-upvote story.
+  const kiwi = await rows();
+  t.true(kiwi.includes(loved.href));
+  t.false(kiwi.includes(quiet.href));
 });
 
 test.serial("a community's Best works per period", async (t) => {
