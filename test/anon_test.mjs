@@ -217,7 +217,7 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
     await joinGroup(member, identityOf(member).commitment, base + 100 + i);
   }
   t.is(countAnonJoins(), 3);
-  await t.throwsAsync(() => joinGroup(members[0], identityOf(members[0]).commitment, base + 100), {
+  await t.throwsAsync(() => joinGroup(members[0], identityOf(members[0]).commitment, base + 101), {
     message: /already joined/,
   });
   // Swapping the commitment would mint a fresh nullifier, so it's rejected.
