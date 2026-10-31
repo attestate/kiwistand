@@ -2,7 +2,7 @@
 // The read side of communities (protocol 13.0.0, src/communities.mjs):
 // GET /api/v1/communities and /api/v1/communities/:owner/:key, the
 // `community` query of the feeds, and the `community` object on stories. See
-// "Communities" in docs/source/http-api.rst.
+// "Reading communities" in docs/src/pages/http-api.mdx.
 //
 // NOTE: Communities are read through cache.listCommunities and
 // cache.getCommunity only, with the delegations, which resolve a community's

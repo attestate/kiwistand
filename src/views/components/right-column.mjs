@@ -54,12 +54,10 @@ export const SideFooter = () => html`
   <div class="kn-side-footer">
     <nav class="kn-side-links" aria-label="Footer">
       <div class="kn-side-row">
-        <a href="https://kiwistand.github.io/kiwi-docs/" target="_blank"
-          >About</a
-        >
+        <a href="/docs/">About</a>
         <a href="/guidelines">Guidelines</a>
         <a href="/privacy-policy">Privacy</a>
-        <a href="https://attestate.com/kiwistand/main/" target="_blank">API</a>
+        <a href="/docs/http-api">API</a>
       </div>
       <div class="kn-side-row">
         <a href="/newsletter">Newsletter</a>
