@@ -161,7 +161,6 @@ export default async function (theme) {
                       <ul>
                         <li>Farcaster account</li>
                         <li>ENS name</li>
-                        <li>Lens profile</li>
                       </ul>
                     </li>
                     <li>

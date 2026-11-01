@@ -20,6 +20,11 @@ test("a Kiwi nickname counts as a name", (t) => {
   t.false(hasName(undefined));
 });
 
+test("a cached Lens profile is no longer a name", (t) => {
+  // NOTE: Lens' v2 API is gone; profiles cached before keep a `lens` field.
+  t.false(hasName({ lens: { id: "0x01", username: "lens/alice" } }));
+});
+
 test("a named submitter is always shown", async (t) => {
   t.true(await showInHot({ submitter: named, upvoters: [] }, resolve));
 });

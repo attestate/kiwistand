@@ -1,5 +1,5 @@
 // NOTE: Hot only shows stories from people with a name, to keep out
-// throwaway accounts. A name is ENS, Lens, Farcaster or a Kiwi nickname
+// throwaway accounts. A name is ENS, Farcaster or a Kiwi nickname
 // (profiles.mjs, applied by ens.overlay). A story from someone without one
 // still shows once enough other people with a name have upvoted it.
 export const MIN_NAMED_UPVOTERS = 2;
@@ -8,7 +8,6 @@ export function hasName(profile) {
   return !!(
     profile &&
     (profile.ens ||
-      profile.lens ||
       profile.farcaster ||
       profile.kiwiProfile?.name)
   );

@@ -437,9 +437,9 @@ export default async function (
     }
     
     const profile = await ens.resolve(upvoter.identity);
-    // Only include profiles with proper names (ENS, Farcaster, or Lens) AND high Neynar scores
+    // Only include profiles with proper names (ENS or Farcaster) AND high Neynar scores
     if (profile && 
-        (profile.ens || profile.farcaster || profile.lens) && 
+        (profile.ens || profile.farcaster) && 
         profile.neynarScore && 
         profile.neynarScore >= 0.6) { // Only show curators with score >= 0.6
       upvoterProfiles.push({

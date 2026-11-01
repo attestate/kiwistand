@@ -127,75 +127,6 @@ async function fetchNeynarData(address, forceFetch) {
   }
 }
 
-async function fetchLensData(address, forceFetch) {
-  try {
-    utils.getAddress(address);
-  } catch (err) {
-    return;
-  }
-  const query = `
-     query {
-       profiles(request: {
-         where: {
-           ownedBy: ["${address}"]
-         }
-       }) {
-         items {
-           id,
-           handle {
-             fullHandle
-           },
-           metadata {
-             bio,
-             displayName,
-             picture {
-               ... on ImageSet {
-                 optimized {
-                   uri
-                 }
-               }
-             }
-           }
-         }
-       }
-     }
-   `;
-
-  let response;
-  try {
-    const signal = AbortSignal.timeout(5000);
-    const fetchFn = forceFetch ? fetch : fetchStaleWhileRevalidate;
-    response = await fetchFn("https://api-v2.lens.dev/", {
-      signal,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ query }),
-    });
-  } catch (err) {
-    return;
-  }
-
-  let data;
-  try {
-    const result = await response.json();
-    data = result.data;
-  } catch (err) {
-    return;
-  }
-  if (!data || !data.profiles.items.length) return;
-
-  const { id, handle, metadata } = data.profiles.items[0];
-  return {
-    id,
-    username: handle?.fullHandle,
-    bio: metadata?.bio,
-    displayName: metadata?.displayName,
-    avatar: metadata?.picture?.optimized?.uri,
-  };
-}
-
 export async function fetchENSData(address, forceFetch) {
   const endpoint = "https://api.ensdata.net/";
 
@@ -313,7 +244,7 @@ export async function fetchENSData(address, forceFetch) {
   }
 }
 
-// NOTE: Avatars come from ENS, Farcaster and Lens profiles, which anyone can
+// NOTE: Avatars come from ENS and Farcaster profiles, which anyone can
 // set to any string, e.g. a "javascript:" URL. We link and embed them, so we
 // only keep https URLs.
 export function httpsURL(value) {
@@ -391,7 +322,6 @@ export function overlay(address, profile) {
 
 export async function _resolve(normalizedAddress, forceFetch) {
   const ensProfile = await fetchENSData(normalizedAddress, forceFetch);
-  const lensProfile = await fetchLensData(normalizedAddress, forceFetch);
 
   // If ENS failed and didn't return Neynar data, try Neynar independently
   let neynarProfile = null;
@@ -419,9 +349,6 @@ export async function _resolve(normalizedAddress, forceFetch) {
   if (!safeAvatar && neynarProfile?.farcaster?.avatar) {
     safeAvatar = neynarProfile.farcaster.avatar;
   }
-  if (!safeAvatar && lensProfile?.avatar) {
-    safeAvatar = lensProfile.avatar;
-  }
 
   let displayName = DOMPurify.sanitize(ensProfile.ens);
   if (!displayName && ensProfile?.farcaster?.username) {
@@ -429,9 +356,6 @@ export async function _resolve(normalizedAddress, forceFetch) {
   }
   if (!displayName && neynarProfile?.farcaster?.username) {
     displayName = `@${DOMPurify.sanitize(neynarProfile.farcaster.username)}`;
-  }
-  if (!displayName && lensProfile?.username) {
-    displayName = `${DOMPurify.sanitize(lensProfile.username)}`;
   }
   if (!displayName) {
     displayName = ensProfile.truncatedAddress;
@@ -441,7 +365,6 @@ export async function _resolve(normalizedAddress, forceFetch) {
     safeAvatar: httpsURL(DOMPurify.sanitize(safeAvatar)),
     ...ensProfile,
     ...(neynarProfile && { neynar: neynarProfile }),
-    lens: lensProfile,
     displayName,
     neynarScore,
   };
@@ -458,7 +381,7 @@ export async function resolve(address, forceFetch = false) {
   // Check if we have complete data in cache (not just minimal profile)
   if (!forceFetch) {
     const cached = await cache.get(cacheKey);
-    if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
+    if (cached && (cached.ens || cached.farcaster || cached.neynar)) {
       checkAvatarLater(cacheKey, cached);
       return overlay(normalizedAddress, cached);
     }
@@ -509,7 +432,7 @@ export async function resolveForBatch(address) {
   const cacheKey = `${ENS_CACHE_PREFIX}${normalizedAddress}`;
 
   const cached = await cache.get(cacheKey);
-  if (cached && (cached.ens || cached.farcaster || cached.lens || cached.neynar)) {
+  if (cached && (cached.ens || cached.farcaster || cached.neynar)) {
     checkAvatarLater(cacheKey, cached);
     return overlay(normalizedAddress, cached);
   }

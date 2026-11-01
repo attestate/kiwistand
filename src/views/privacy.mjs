@@ -23,7 +23,7 @@ export default async function (theme) {
     body: html`<article class="n2-doc n2-privacy">
                   <div class="n2-doc-title" aria-hidden="true">Privacy Policy</div>
                   <h1>Privacy Policy for Kiwi News</h1>
-                  <p>Last updated: 2026-10-10</p>
+                  <p>Last updated: 2026-11-01</p>
 
                   <h2>1. Introduction</h2>
                   <p>
@@ -90,10 +90,6 @@ export default async function (theme) {
                       <strong>Farcaster Data:</strong> We fetch Farcaster
                       profile information through ENS data integration to
                       enhance user profiles.
-                    </li>
-                    <li>
-                      <strong>Lens Protocol Data:</strong> We retrieve Lens
-                      Protocol profile data to display in our user interface.
                     </li>
                     <li>
                       <strong>NFT Data:</strong> We record NFT minting
@@ -246,8 +242,8 @@ export default async function (theme) {
                       distributed nature of the system.
                     </li>
                     <li>
-                      <strong>Cached Profile Data:</strong> ENS, Farcaster, and
-                      Lens profile data is cached temporarily to improve
+                      <strong>Cached Profile Data:</strong> ENS and Farcaster
+                      profile data is cached temporarily to improve
                       performance.
                     </li>
                     <li>

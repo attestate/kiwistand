@@ -69,7 +69,7 @@ export default async function (trie, theme, identity, tab = "submissions") {
   const path = "/upvotes";
   const name = ensData.displayName;
 
-  // NOTE: Like the apps: Website, X, GitHub, Telegram, Farcaster (and Lens,
+  // NOTE: Like the apps: Website, X, GitHub, Telegram, Farcaster (and
   // Discord, which only the website shows); missing ones are skipped.
   const social = [
     ensData.url && ensData.url.startsWith("https://")
@@ -83,9 +83,6 @@ export default async function (trie, theme, identity, tab = "submissions") {
       : null,
     ensData.farcaster && ensData.farcaster.username
       ? ["Farcaster", `https://farcaster.xyz/${ensData.farcaster.username}`]
-      : null,
-    ensData.lens && ensData.lens.id
-      ? ["Lens", `https://hey.xyz/profile/${ensData.lens.id}`]
       : null,
   ].filter(Boolean);
 
