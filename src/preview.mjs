@@ -66,7 +66,7 @@ export function shortAddress(address) {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-// The name shown for a person: their ENS/Farcaster/Lens name, else the
+// The name shown for a person: their ENS/Farcaster name, else the
 // shortened address. Long names end in "…".
 export function displayName(name, address) {
   let value = (name || "").trim();

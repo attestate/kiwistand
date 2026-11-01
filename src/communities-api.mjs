@@ -89,7 +89,7 @@ async function bannedAddresses(getLists) {
 }
 
 // The owner's display name, like a story's submitter's, or null without a
-// name (ENS, Farcaster, Lens or a Kiwi nickname, see hotnames.mjs).
+// name (ENS, Farcaster or a Kiwi nickname, see hotnames.mjs).
 async function ownerName(owner, resolve) {
   try {
     const profile = await resolve(owner);

@@ -531,13 +531,12 @@ const row = (
 
     // Condition for displaying comment preview:
     // - Must have a last comment
-    // - Last comment must have a resolved identity (ens/fc/lens)
+    // - Last comment must have a resolved identity (ens/fc)
     // - Must not be inverted
     const displayCommentPreview =
       story.lastComment &&
       (story.lastComment.identity.ens ||
-        story.lastComment.identity.farcaster ||
-        story.lastComment.identity.lens) &&
+        story.lastComment.identity.farcaster) &&
       !invert;
 
     // NOTE: NEU 2 story card. Every part is a direct child of .content-row
