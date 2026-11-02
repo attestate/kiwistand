@@ -141,7 +141,7 @@ export function karmaAt(identity, timestamp) {
 // timestamp. Nodes that synced different amounts of history may disagree for
 // a while, but karma only grows as older messages arrive, so a node that
 // rejected a join accepts it on a later sync round.
-export function checkJoin(message, identity) {
+export function checkJoin(message, identity, synching = false) {
   if (!identity) throw new Error("anon-join: missing identity");
   const commitment = BigInt(message.commitment);
   if (commitment === 0n || commitment >= SNARK_FIELD) {
@@ -152,6 +152,17 @@ export function checkJoin(message, identity) {
   // that is older than what this node has seen must still be accepted: else
   // nodes that saw the joins in a different order would end up with different
   // groups. Later duplicates are ignored by replay().
+  // NOTE: A live join can't be back-dated past the settle window. Else an
+  // identity could sign a second join with another commitment and a timestamp
+  // before its first one: replay() would make that the identity's leaf, and
+  // the fresh nullifier would allow another vote on a story it already voted
+  // for. Synced joins are old by nature, so only live ones are bounded.
+  if (
+    !synching &&
+    message.timestamp < Math.floor(Date.now() / 1000) - ANON_ROOT_SETTLE_SECS
+  ) {
+    throw new Error("anon-join: timestamp is too far in the past");
+  }
   const existing = getAnonMember(identity);
   if (existing && existing.timestamp < message.timestamp) {
     throw new Error(`anon-join: identity "${identity}" has already joined`);
