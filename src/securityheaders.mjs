@@ -105,15 +105,20 @@ export const SCRIPT_POLICY = [
   `report-uri ${CSP_REPORT_PATH}`,
 ].join("; ");
 
-// HTML pages get the script policy as Content-Security-Policy-Report-Only:
-// the templates' inline on…= handlers still have to move into the bundle
-// before it can be enforced. Not the docs at /docs: their build inlines
-// scripts (theme, router payload) that change with every build, and they
-// only show the text of the repo's docs/ folder.
+// HTML pages get the script policy, enforced. Not:
+// - the docs at /docs: their build inlines scripts (theme, router payload)
+//   that change with every build, and they only show the text of the repo's
+//   docs/ folder.
+// - Private RPC's boot page (public/anon-rpc-iframe.html), a static file in a
+//   sandboxed iframe: it starts the anon-rpc worker from blob: URLs, which
+//   the policy doesn't allow (src/web/src/anon-transport.mjs).
 function isPage(req, res) {
   const path = String(req.originalUrl || req.url || "").split("?")[0];
   const type = String(res.getHeader("Content-Type") || "");
-  return /^text\/html/i.test(type) && !/^\/docs(\/|$)/i.test(path);
+  return (
+    /^text\/html/i.test(type) &&
+    !/^\/(docs(\/|$)|anon-rpc-iframe\.html$)/i.test(path)
+  );
 }
 
 // An upstream CSP replaces ours when http-proxy copies the upstream headers
@@ -134,8 +139,12 @@ export function securityHeaders(req, res, next) {
   res.writeHead = function (...args) {
     if (!res.headersSent) {
       let csp = mergeFrameAncestors(res.getHeader("Content-Security-Policy"));
+      // The script policy joins our frame-ancestors. Next to an upstream
+      // policy it's a second one: appended there, a script-src could loosen
+      // its default-src.
       if (isPage(req, res)) {
-        res.setHeader("Content-Security-Policy-Report-Only", SCRIPT_POLICY);
+        csp += csp === FRAME_ANCESTORS_DIRECTIVE ? "; " : ", ";
+        csp += SCRIPT_POLICY;
       }
       res.setHeader("Content-Security-Policy", csp);
     }
@@ -144,9 +153,9 @@ export function securityHeaders(req, res, next) {
   next();
 }
 
-// NOTE: Browsers POST what the script policy blocked (or would have, while
-// report-only) to CSP_REPORT_PATH: one application/csp-report per violation
-// for report-uri, or a batch as application/reports+json (Reporting API).
+// NOTE: Browsers POST what the script policy blocked to CSP_REPORT_PATH: one
+// application/csp-report per violation for report-uri, or a batch as
+// application/reports+json (Reporting API).
 // Each violation is one log line: the directive, where the script came from
 // (an origin, or "inline", "eval"…) and the page's path. No query strings
 // (they can carry tokens or search terms), no IPs.

@@ -87,6 +87,9 @@ function bootWorker(network) {
     address: network.specifier,
     config: network.config,
     preExisting: { rpcProvider: bootstrapProvider },
+    // NOTE: The harness's default iframe (srcdoc, inline script) inherits our
+    // script policy and wouldn't run. This page is the same, as files.
+    iframeUrl: "/anon-rpc-iframe.html",
   });
   if (!network.anonymizes) {
     console.warn(`anon-rpc: using ${network.label}; requests are NOT anonymized`);
