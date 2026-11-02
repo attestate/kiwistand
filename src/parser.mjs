@@ -254,67 +254,6 @@ function withoutGenericImage(entry) {
   return rest;
 }
 
-function withPlainText(object, keys) {
-  if (!object || typeof object !== "object") return object;
-  const copy = { ...object };
-  for (const key of keys) {
-    if (typeof copy[key] === "string") copy[key] = plainText(copy[key]);
-  }
-  return copy;
-}
-
-function withPlainPost(post, keys, authorKeys) {
-  if (!post || typeof post !== "object") return post;
-  const copy = withPlainText(post, keys);
-  if (copy.author) copy.author = withPlainText(copy.author, authorKeys);
-  return copy;
-}
-
-// The texts of a link preview are plain text (see plaintext.mjs): metadata()
-// converts them once before they're cached, and every view and API escapes
-// them once. Entries cached before that hold DOMPurify's serialization (a
-// quote line "> …" as "&gt; …", line breaks as <br>), so they're converted
-// when read. `plainText: true` marks a converted entry: converting it again
-// would decode a literal "&lt;" in a post a second time.
-// NOTE: paragraphPost.content is HTML; ParagraphFullPost sanitizes it.
-export function plainMetadata(entry) {
-  if (!entry || typeof entry !== "object" || entry.failed || entry.plainText) {
-    return entry;
-  }
-  if (Object.keys(entry).length === 0) return entry;
-  const plain = withPlainText(entry, [
-    "ogTitle",
-    "ogDescription",
-    "twitterCreator",
-  ]);
-  if (entry.farcasterCast) {
-    plain.farcasterCast = withPlainPost(entry.farcasterCast, ["text"], [
-      "username",
-      "displayName",
-    ]);
-  }
-  if (entry.blueskyPost) {
-    plain.blueskyPost = withPlainPost(entry.blueskyPost, ["text"], [
-      "handle",
-      "displayName",
-    ]);
-  }
-  if (entry.paragraphPost) {
-    plain.paragraphPost = withPlainPost(
-      entry.paragraphPost,
-      ["title", "description"],
-      ["username", "displayName"],
-    );
-  }
-  if (entry.interfaceTake) {
-    plain.interfaceTake = withPlainPost(entry.interfaceTake, ["content"], [
-      "displayName",
-    ]);
-  }
-  plain.plainText = true;
-  return plain;
-}
-
 const filtered = [
   "kiwistand.com",
   "kiwinews.xyz",
@@ -1184,7 +1123,7 @@ export const cachedMetadata = async (
     if (cached.result !== undefined) {
       // not a processed entry — fall through
     } else {
-      return plainMetadata(withoutGenericImage(cached));
+      return withoutGenericImage(cached);
     }
   }
 
@@ -1205,11 +1144,7 @@ export const metadata = async (
   url,
   generateTitle = false,
   submittedTitle = undefined,
-) => plainMetadata(await fetchMetadata(url, generateTitle, submittedTitle));
-
-// NOTE: The texts it collects (og:title, og:description, the tweet, cast,
-// post or take) are raw here; metadata() makes them plain text.
-const fetchMetadata = async (url, generateTitle, submittedTitle) => {
+) => {
   let urlObj;
   try {
     urlObj = new URL(url);
@@ -1496,19 +1431,19 @@ const fetchMetadata = async (url, generateTitle, submittedTitle) => {
             output.twitterAuthorAvatar = DOMPurify.sanitize(apiData.tweet.author.avatar_url);
           }
           if (apiData?.tweet?.author?.screen_name) {
-            output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
+            output.twitterCreator = plainText(`@${apiData.tweet.author.screen_name}`);
           }
           // NOTE: The feed renders a tweet card only when ogDescription is set.
           // fxtwitter's HTML fetch often times out (~4.6s); the JSON text is enough.
           if (apiData?.tweet?.text && !result?.ogDescription) {
-            output.ogDescription = apiData.tweet.text;
+            output.ogDescription = plainText(apiData.tweet.text);
           }
           if (apiData?.tweet?.article) {
             isXArticle = true;
             output.isXArticle = true;
             const articleTitle = apiData.tweet.article.title || result?.ogTitle;
             if (articleTitle) {
-              output.ogTitle = articleTitle;
+              output.ogTitle = plainText(articleTitle);
             }
             const coverUrl = apiData.tweet.article.cover_media?.media_info?.original_img_url;
             if (coverUrl && coverUrl.startsWith("https://")) {
@@ -1604,7 +1539,7 @@ const fetchMetadata = async (url, generateTitle, submittedTitle) => {
       }
       if (paragraphPost.description) {
         ogDescription = paragraphPost.description;
-        output.ogDescription = paragraphPost.description;
+        output.ogDescription = plainText(paragraphPost.description);
       }
 
       // Generate better title if requested
@@ -1629,7 +1564,7 @@ const fetchMetadata = async (url, generateTitle, submittedTitle) => {
       // Override ogDescription with the actual take content
       if (interfaceTake.content) {
         ogDescription = interfaceTake.content;
-        output.ogDescription = interfaceTake.content;
+        output.ogDescription = plainText(interfaceTake.content);
       }
 
       // Generate better title if requested
@@ -1715,7 +1650,7 @@ const fetchMetadata = async (url, generateTitle, submittedTitle) => {
     }
   }
   if (!output.twitterCreator && result?.twitterCreator) {
-    output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
+    output.twitterCreator = plainText(result.twitterCreator);
   }
   // Forward useful media hints to the UI layer
   if (hasVideoContent) {
@@ -1723,7 +1658,7 @@ const fetchMetadata = async (url, generateTitle, submittedTitle) => {
   }
   if (ogDescription) {
     // Store the original, potentially longer description in the output object
-    output.ogDescription = ogDescription;
+    output.ogDescription = plainText(ogDescription);
   }
   if (canonicalLink) {
     output.canonicalLink = DOMPurify.sanitize(canonicalLink);
@@ -1774,7 +1709,8 @@ function safeExtractDomain(link) {
   return tld;
 }
 const empty = html``;
-// NOTE: The texts from metadata() are plain text; vhtml escapes them.
+// NOTE: All inputs into render from metadata are XSS-sanitized by the metadata
+// function.
 export const render = (ogTitle, domain, ogDescription, image) => html`
   <div
     data-copy-text="${ogTitle}"
