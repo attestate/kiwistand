@@ -167,7 +167,7 @@ const ParagraphFullPost = ({ post }) => {
     <div class="paragraph-full-post-container" style="padding: 20px; background-color: rgba(255,255,255,0.4);">
       <div class="paragraph-post-header" style="margin-bottom: 24px;">
         <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 12px 0; line-height: 1.3;">
-          ${DOMPurify.sanitize(post.title)}
+          ${post.title}
         </h2>
         
         <div style="display: flex; align-items: center; gap: 16px; color: var(--text-tertiary); font-size: 14px;">
@@ -181,9 +181,9 @@ const ParagraphFullPost = ({ post }) => {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="currentColor"/>
             </svg>
             <span>
-              @${DOMPurify.sanitize(post.author.username)}
+              @${post.author.username}
               ${post.author.displayName && post.author.displayName !== post.author.username 
-                ? ` (${DOMPurify.sanitize(post.author.displayName)})`
+                ? ` (${post.author.displayName})`
                 : ''}
             </span>
           </div>
@@ -219,7 +219,7 @@ const ParagraphFullPost = ({ post }) => {
         
         ${post.description ? html`
           <div style="margin-top: 16px; font-size: 16px; color: var(--text-muted); line-height: 1.5; font-style: italic;">
-            ${DOMPurify.sanitize(post.description)}
+            ${post.description}
           </div>
         ` : null}
       </div>
