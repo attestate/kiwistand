@@ -1,7 +1,9 @@
 // @format
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { toHex } from "ethereum-cryptography/utils.js";
-import { encode } from "cbor-x";
+// NOTE: The no-eval build: the default one probes `new Function("")` on
+// load, which a script CSP without 'unsafe-eval' reports on every page.
+import { encode } from "cbor-x/index-no-eval";
 import canonicalize from "canonicalize";
 
 import { getCookie, setCookie } from "./session.mjs";
