@@ -405,27 +405,6 @@ test("HTML pages get the script policy as report-only", async (t) => {
   }
 });
 
-test.serial("CSP_ENFORCE=true enforces the script policy", async (t) => {
-  const { request } = await boot(t);
-  const before = process.env.CSP_ENFORCE;
-  process.env.CSP_ENFORCE = "true";
-  try {
-    const { headers } = await request("/");
-    t.is(
-      headers["content-security-policy"],
-      `${SECURITY_HEADERS["Content-Security-Policy"]}; ${SCRIPT_POLICY}`,
-    );
-    t.is(headers["content-security-policy-report-only"], undefined);
-    t.is(
-      (await request("/api/v1/feeds/hot")).headers["content-security-policy"],
-      SECURITY_HEADERS["Content-Security-Policy"],
-    );
-  } finally {
-    if (before === undefined) delete process.env.CSP_ENFORCE;
-    else process.env.CSP_ENFORCE = before;
-  }
-});
-
 test("script-src allows no inline script and no eval", (t) => {
   const policy = Object.fromEntries(
     SCRIPT_POLICY.split("; ").map((d) => [

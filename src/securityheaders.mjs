@@ -105,8 +105,9 @@ export const SCRIPT_POLICY = [
   `report-uri ${CSP_REPORT_PATH}`,
 ].join("; ");
 
-// HTML pages get the script policy, as Content-Security-Policy-Report-Only
-// unless CSP_ENFORCE=true (.env). Not the docs at /docs: their build inlines
+// HTML pages get the script policy as Content-Security-Policy-Report-Only:
+// the templates' inline on…= handlers still have to move into the bundle
+// before it can be enforced. Not the docs at /docs: their build inlines
 // scripts (theme, router payload) that change with every build, and they
 // only show the text of the repo's docs/ folder.
 function isPage(req, res) {
@@ -134,9 +135,7 @@ export function securityHeaders(req, res, next) {
     if (!res.headersSent) {
       let csp = mergeFrameAncestors(res.getHeader("Content-Security-Policy"));
       if (isPage(req, res)) {
-        if (env.CSP_ENFORCE === "true") csp = `${csp}; ${SCRIPT_POLICY}`;
-        else
-          res.setHeader("Content-Security-Policy-Report-Only", SCRIPT_POLICY);
+        res.setHeader("Content-Security-Policy-Report-Only", SCRIPT_POLICY);
       }
       res.setHeader("Content-Security-Policy", csp);
     }

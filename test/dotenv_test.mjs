@@ -76,7 +76,6 @@ test("that repo contains a .env-copy file with all possible configuration option
     "ONESIGNAL_API_KEY",
     "DAILY_PUSH",
     "IMAGE_UPLOAD_DAILY_LIMIT",
-    "CSP_ENFORCE",
   ];
   try {
     await access(envPath, constants.F_OK);
