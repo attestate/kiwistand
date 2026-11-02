@@ -1,34 +1,9 @@
 import htm from "htm";
 import vhtml from "vhtml";
-import DOMPurify from "isomorphic-dompurify";
 
 const html = htm.bind(vhtml);
 
 const defaultIconStyle = "width: 16px;";
-
-export function SocialButton(url, icon, text, isImg) {
-  url = DOMPurify.sanitize(url);
-  return html`<a 
-    target="_blank" 
-    href="javascript:void(0);"
-    data-url="${url}"
-    onclick="if (window.ReactNativeWebView || window !== window.parent) { window.sdk.actions.openUrl(this.dataset.url); } else { window.open(this.dataset.url, '_blank'); }"
-  >
-    <button
-      class="feed-button"
-      style="display: flex; align-items: center; gap: 5px;  font-size: 0.9rem; border-radius: 2px; cursor: pointer; padding: 5px 10px; background-color: transparent; border: 1px solid var(--text-secondary); color: var(--text-secondary);"
-    >
-      ${isImg
-        ? html`<img
-            src="${icon}"
-            alt=""
-            style="display: inline; ${defaultIconStyle}"
-          />`
-        : icon}
-      ${text}
-    </button></a
-  >`;
-}
 
 export const heySvg = (iconStyle = defaultIconStyle) => html`
   <svg

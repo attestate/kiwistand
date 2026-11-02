@@ -502,32 +502,6 @@ test("the load balancer answers CSP reports, 60 a minute per IP", async (t) => {
   t.is((await request("/api/v1/csp-report", report)).status, 429);
 });
 
-// NOTE: The on…= attributes the templates still have. They stop working once
-// the script policy is enforced, so they move into the bundle first; until
-// then this list can only shrink.
-const HANDLERS_LEFT = {
-  "src/lib/listen/article.mjs": 1,
-  "src/parser.mjs": 1,
-  "src/views/activity.mjs": 2,
-  "src/views/app-testflight.mjs": 1,
-  "src/views/best.mjs": 1,
-  "src/views/comment-debug.mjs": 2,
-  "src/views/communities.mjs": 1,
-  "src/views/community.mjs": 1,
-  "src/views/components/header.mjs": 3,
-  "src/views/components/n2.mjs": 1,
-  "src/views/components/nav.mjs": 1,
-  "src/views/components/row.mjs": 11,
-  "src/views/components/secondheader.mjs": 3,
-  "src/views/components/socialNetworkIcons.mjs": 1,
-  "src/views/feed.mjs": 1,
-  "src/views/frame-subscribe.mjs": 1,
-  "src/views/new.mjs": 1,
-  "src/views/saved.mjs": 1,
-  "src/views/story.mjs": 2,
-  "src/views/submit.mjs": 2,
-};
-
 function sources(dir = "src") {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = `${dir}/${entry.name}`;
@@ -540,7 +514,10 @@ function sources(dir = "src") {
   });
 }
 
-test("templates have no inline scripts and no new on…= attributes", (t) => {
+// NOTE: The script policy runs no inline script. Templates name what a click
+// does in data-action (src/web/src/dataActions.mjs) instead of on…=
+// attributes and javascript: URLs.
+test("templates have no inline scripts, on…= attributes or javascript: URLs", (t) => {
   for (const path of sources()) {
     const code = readFileSync(path, "utf8");
     for (const [tag] of code.matchAll(/<script\b[^>]*>/g)) {
@@ -549,10 +526,21 @@ test("templates have no inline scripts and no new on…= attributes", (t) => {
         `${path}: inline script ${tag}`,
       );
     }
-    const handlers = code.match(/(^|\s)on[a-z]+=["'$]/gm) || [];
-    t.true(
-      handlers.length <= (HANDLERS_LEFT[path] || 0),
-      `${path}: ${handlers.map((h) => h.trim()).join(" ")}`,
+    const handlers = [
+      ...(code.match(/(^|\s)on[a-z]+=["'$]/gim) || []),
+      // As attributes for a renderer, e.g. linkify-html's.
+      ...(code.match(
+        /[\s{,"']on(click|error|load|submit|paste|touch[a-z]+|mouse[a-z]+)["']?\s*:/g,
+      ) || []),
+    ];
+    t.deepEqual(
+      handlers.map((h) => h.trim()),
+      [],
+      path,
+    );
+    t.false(
+      /["'`]javascript:(?!["'`])/i.test(code),
+      `${path}: javascript: URL`,
     );
   }
 });
