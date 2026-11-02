@@ -587,7 +587,7 @@ async function _add({
   }
 
   if (message.type === "anon-join") {
-    anon.checkJoin(message, identity);
+    anon.checkJoin(message, identity, synching);
   }
   if (message.type === "anon-upvote") {
     anon.checkStory(message.href);

@@ -147,14 +147,14 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
     const signed = await id.sign(signer, message, EIP712_MESSAGE);
     return await store.add(trie, signed, null, delegations);
   };
-  const joinGroup = async (signer, commitment, timestamp) => {
+  const joinGroup = async (signer, commitment, timestamp, synching = true) => {
     const message = {
       commitment: commitment.toString(),
       type: "anon-join",
       timestamp,
     };
     const signed = await id.sign(signer, message, EIP712_ANON_JOIN);
-    return await store.add(trie, signed, null, delegations);
+    return await store.add(trie, signed, null, delegations, synching);
   };
   const identityOf = (wallet) =>
     identityFromSecret(secretFromKey(wallet.privateKey));
@@ -225,6 +225,12 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
   await t.throwsAsync(() => joinGroup(members[0], swapped, base + 200), {
     message: /already joined/,
   });
+  t.is(countAnonJoins(), 3);
+  // A live join can't be back-dated to displace an identity's first join.
+  await t.throwsAsync(
+    () => joinGroup(members[0], swapped, base + 50, false),
+    { message: /too far in the past/ },
+  );
   t.is(countAnonJoins(), 3);
 
   // Every node builds the same group from the joins.
