@@ -354,6 +354,13 @@ function applyDeletion(targetId, identity, timestamp) {
     return null;
   }
 
+  // NOTE: Only upvotes of the link that predate the deletion go with the
+  // story. A cache rebuilt from the trie inserts a later re-submission of the
+  // link as an upvote of the not yet deleted story and applies deletions last;
+  // without the bound it would silently erase other people's later posts.
+  // Clamped to now, so a future-dated deletion can't reach further.
+  const cutoff = Math.min(timestamp, Math.floor(Date.now() / 1000));
+
   // NOTE: Rows go children first: reactions reference comments, comments and
   // upvotes reference the story.
   db.transaction(() => {
@@ -368,15 +375,18 @@ function applyDeletion(targetId, identity, timestamp) {
       // A deleted story takes its whole thread with it. Its upvoters are
       // returned so their upvote markers can be freed (store.mjs).
       target.upvoters = db
-        .prepare(`SELECT identity FROM upvotes WHERE href = ?`)
-        .all(target.href)
+        .prepare(`SELECT identity FROM upvotes WHERE href = ? AND timestamp < ?`)
+        .all(target.href, cutoff)
         .map(({ identity }) => identity);
       db.prepare(
         `DELETE FROM reactions WHERE comment_id IN
            (SELECT id FROM comments WHERE submission_id = ?)`,
       ).run(targetId);
       db.prepare(`DELETE FROM comments WHERE submission_id = ?`).run(targetId);
-      db.prepare(`DELETE FROM upvotes WHERE href = ?`).run(target.href);
+      db.prepare(`DELETE FROM upvotes WHERE href = ? AND timestamp < ?`).run(
+        target.href,
+        cutoff,
+      );
       db.prepare(`DELETE FROM submissions WHERE id = ?`).run(targetId);
       // Upvotes of the link signed before the deletion that sync in later
       // mustn't bring the story back; a new submission after it may.
