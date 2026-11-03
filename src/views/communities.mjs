@@ -45,7 +45,6 @@ function Page({ theme, path, title, description, right, body, cls = "" }) {
         class="cm-page ${cls}"
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)} ${right}

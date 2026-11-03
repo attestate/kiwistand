@@ -917,7 +917,6 @@ export default async function (trie, theme, page, domain, identity, hash, varian
       <body
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}

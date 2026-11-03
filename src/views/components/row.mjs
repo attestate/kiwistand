@@ -168,17 +168,6 @@ const expandSVG = html`
 `;
 
 
-const spinnerOnclick =
-  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-const shareOnclick = "event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const href = this.getAttribute('data-story-href'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; if (typeof window.kiwiTrackShare === 'function') { window.kiwiTrackShare(href, 'native'); } if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}).catch(function(){}); } else { const doCopy = async () => { try { await navigator.clipboard.writeText(url); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (err) { try { const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (e2) { if (window.toast && window.toast.error) { window.toast.error('Could not copy link'); } } } }; doCopy(); }";
-const commentOnclick = "event.preventDefault(); var si=this.dataset.storyIdx; this.classList.toggle('comment-button-active'); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var commentPreview = document.querySelector('.comment-preview-0x'+si); if (commentPreview) { commentPreview.style.opacity = 1; } var borderElem = document.querySelector('.without-comment-preview-0x'+si); if (borderElem) { borderElem.classList.toggle('no-border'); }";
-
-// NOTE: The comment preview under a feed row opens the comments inline, like
-// the chat bubble, and lands on the previewed comment (the last one):
-// scrolled to and highlighted via its #0x anchor. Cmd/Ctrl/Shift/middle
-// click keeps the link to the story page.
-const previewOnclick = "if(event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) return; event.preventDefault(); var si=this.dataset.storyIdx; history.replaceState(null, '', location.pathname + location.search + '#0x' + this.dataset.commentIdx); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'comment-preview' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var cb=document.getElementById('chat-bubble-'+si); if (cb) cb.classList.add('comment-button-active');";
-
 const commentsSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
     <rect width="256" height="256" fill="none" />
@@ -530,15 +519,10 @@ const row = (
         path === "/best" ||
         (debugMode && path === "/debug"));
 
-    // Condition for displaying comment preview:
-    // - Must have a last comment
-    // - Last comment must have a resolved identity (ens/fc)
-    // - Must not be inverted
-    const displayCommentPreview =
-      story.lastComment &&
-      (story.lastComment.identity.ens ||
-        story.lastComment.identity.farcaster) &&
-      !invert;
+    // NOTE: Every last comment gets a preview, also from people without an
+    // ENS or Farcaster name or avatar: the name falls back to the Kiwi
+    // nickname or the short address, the avatar to the user icon.
+    const displayCommentPreview = story.lastComment && !invert;
 
     // NOTE: NEU 2 story card. Every part is a direct child of .content-row
     // (a flex column), so CSS can put the picture first on phones (like the
@@ -552,54 +536,9 @@ const row = (
       canRenderFarcasterPreview ||
       canRenderBlueskyPreview;
     const storyPath = `/stories/${getSlug(story.title)}?index=0x${story.index}`;
-    const outboundOnclick = `var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                    (function() {
-                      var targetUrl = el.dataset.href;
-                      var canIframe = el.dataset.canIframe === 'true';
-
-                      try {
-                        var urlObj = new window.URL(targetUrl);
-                        var hostname = urlObj.hostname.toLowerCase();
-
-                        // Domains that should always use openUrl
-                        var alwaysOpenDomains = [
-                          'x.com',
-                          'twitter.com',
-                          'www.x.com',
-                          'www.twitter.com',
-                          'farcaster.xyz',
-                          'warpcast.com'
-                        ];
-
-                        // Check if it's a Substack domain
-                        var isSubstack = hostname.endsWith('.substack.com');
-
-                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
-                          return hostname === domain || hostname.endsWith('.' + domain);
-                        });
-
-                        if (shouldAlwaysOpen) {
-                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                            window.sdk.actions.openUrl(targetUrl);
-                          } else {
-                            window.open(targetUrl, '_blank');
-                          }
-                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                          window.sdk.actions.openUrl(targetUrl);
-                        } else {
-                          if (window.openEmbedDrawer) {
-                            window.openEmbedDrawer(targetUrl);
-                          } else {
-                            // Fallback if drawer not ready yet
-                            window.open(targetUrl, '_blank');
-                          }
-                        }
-                      } catch (e) {
-                        // Fallback to embed on error
-                        window.openEmbedDrawer(targetUrl);
-                      }
-                    })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`;
+    // NOTE: The title of an uploaded picture or a text post links to the
+    // story page; other titles are outbound links (see dataActions.mjs).
+    const titleToStory = Boolean((isCloudflare || isTextPost) && story.index);
     const embedBlock = canRenderTweetPreview
               ? html`<a
                   class="tweet-preview-container"
@@ -608,58 +547,7 @@ const row = (
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
                   data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                  onclick="var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                    (function() {
-                      var targetUrl = el.dataset.href;
-                      var canIframe = el.dataset.canIframe === 'true';
-                      
-                      try {
-                        var urlObj = new window.URL(targetUrl);
-                        var hostname = urlObj.hostname.toLowerCase();
-                        
-                        // Domains that should always use openUrl
-                        var alwaysOpenDomains = [
-                          'x.com',
-                          'twitter.com',
-                          'www.x.com',
-                          'www.twitter.com',
-                          'farcaster.xyz',
-                          'warpcast.com'
-                        ];
-                        
-                        // Check if it's a Substack domain
-                        var isSubstack = hostname.endsWith('.substack.com');
-                        
-                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
-                          return hostname === domain || hostname.endsWith('.' + domain);
-                        });
-                        
-                        if (shouldAlwaysOpen) {
-                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                            window.sdk.actions.openUrl(targetUrl);
-                          } else {
-                            window.open(targetUrl, '_blank');
-                          }
-                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                          window.sdk.actions.openUrl(targetUrl);
-                        } else {
-                          if (window.openEmbedDrawer) {
-                            window.openEmbedDrawer(targetUrl);
-                          } else {
-                            // Fallback if drawer not ready yet
-                            window.open(targetUrl, '_blank');
-                          }
-                        }
-                      } catch (e) {
-                        // Fallback to embed on error
-                        if (window.openEmbedDrawer) {
-                          window.openEmbedDrawer(targetUrl);
-                        } else {
-                          window.open(targetUrl, '_blank');
-                        }
-                      }
-                    })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
+                  data-action="outbound"
                   style="text-decoration:none; color:inherit; display:block;"
                   aria-label="${DOMPurify.sanitize(story.title)}"
                 >
@@ -768,58 +656,7 @@ const row = (
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
                   data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                  onclick="var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                    (function() {
-                      var targetUrl = el.dataset.href;
-                      var canIframe = el.dataset.canIframe === 'true';
-                      
-                      try {
-                        var urlObj = new window.URL(targetUrl);
-                        var hostname = urlObj.hostname.toLowerCase();
-                        
-                        // Domains that should always use openUrl
-                        var alwaysOpenDomains = [
-                          'x.com',
-                          'twitter.com',
-                          'www.x.com',
-                          'www.twitter.com',
-                          'farcaster.xyz',
-                          'warpcast.com'
-                        ];
-                        
-                        // Check if it's a Substack domain
-                        var isSubstack = hostname.endsWith('.substack.com');
-                        
-                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
-                          return hostname === domain || hostname.endsWith('.' + domain);
-                        });
-                        
-                        if (shouldAlwaysOpen) {
-                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                            window.sdk.actions.openUrl(targetUrl);
-                          } else {
-                            window.open(targetUrl, '_blank');
-                          }
-                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                          window.sdk.actions.openUrl(targetUrl);
-                        } else {
-                          if (window.openEmbedDrawer) {
-                            window.openEmbedDrawer(targetUrl);
-                          } else {
-                            // Fallback if drawer not ready yet
-                            window.open(targetUrl, '_blank');
-                          }
-                        }
-                      } catch (e) {
-                        // Fallback to embed on error
-                        if (window.openEmbedDrawer) {
-                          window.openEmbedDrawer(targetUrl);
-                        } else {
-                          window.open(targetUrl, '_blank');
-                        }
-                      }
-                    })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
+                  data-action="outbound"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="farcaster-embed-container">
@@ -915,7 +752,7 @@ const row = (
                   href="${DOMPurify.sanitize(story.href)}"
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href)); window.open(this.dataset.href, '_blank');"
+                  data-action="outbound-tab"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="bluesky-embed-container">
@@ -1025,9 +862,7 @@ const row = (
         href="${DOMPurify.sanitize(story.href)}"
         data-href="${DOMPurify.sanitize(story.href)}"
         data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-        onclick="${isCloudflare
-          ? `event.preventDefault(); if(window.openImageViewer) { window.openImageViewer(this.dataset.href); }`
-          : outboundOnclick}"
+        data-action="${isCloudflare ? "image-viewer" : "outbound"}"
       >
         <div class="kn-media-box">
           <img
@@ -1078,7 +913,7 @@ const row = (
         ? html`<a
             href="${profileHref}"
             class="kn-byline-person"
-            onclick="${spinnerOnclick}"
+            data-action="spinner"
             >${avatar}<span class="kn-by">submitted by</span><span class="meta-link submitter-name"
               >${story.displayName}</span
             ></a
@@ -1098,7 +933,7 @@ const row = (
         : ""}
       <span class="kn-dot" aria-hidden="true"></span>
       ${story.index
-        ? html`<a class="meta-link kn-age${isStoryNew ? " kn-age-new" : ""}" href="${storyPath}" onclick="${spinnerOnclick}">${age}</a>`
+        ? html`<a class="meta-link kn-age${isStoryNew ? " kn-age-new" : ""}" href="${storyPath}" data-action="spinner">${age}</a>`
         : html`<span class="kn-age${isStoryNew ? " kn-age-new" : ""}">${age}</span>`}
       <span
         class="story-analytics meta-item"
@@ -1140,7 +975,7 @@ const row = (
               id="chat-bubble-${story.index}"
               href="${path === "/stories" ? "#comments" : storyPath}"
               data-story-idx="${story.index}"
-              onclick="${path === "/stories" ? "" : commentOnclick}"
+              data-action="${path === "/stories" ? null : "comments"}"
             >
               ${commentsSVG}
               ${commentCount > 0
@@ -1158,7 +993,7 @@ const row = (
         data-story-slug="${getSlug(story.title)}"
         data-story-index="0x${story.index}"
         data-story-href="${DOMPurify.sanitize(story.href)}"
-        onclick="${shareOnclick}"
+        data-action="share"
       >
         ${shareSVG}
       </button>
@@ -1195,7 +1030,7 @@ const row = (
             data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
             target="_blank"
             rel="noopener"
-            onclick="${outboundOnclick}"
+            data-action="outbound"
             >${ms("arrow-up-right", 16)}<span>Read original article</span></a
           >`
         : "";
@@ -1266,7 +1101,7 @@ const row = (
                       href="${storyPath}#0x${story.lastComment.index}"
                       data-story-idx="${story.index}"
                       data-comment-idx="${story.lastComment.index}"
-                      onclick="${previewOnclick}"
+                      data-action="comment-preview"
                     >
                       <span class="kn-cp-avatar">
                         ${story.lastComment.identity.safeAvatar
@@ -1343,7 +1178,7 @@ const row = (
                       <a
                         data-no-instant
                         href="${path === "/submit" || path === "/demonstration"
-                          ? "javascript:void(0);"
+                          ? null
                           : (isCloudflare || isTextPost) && story.index
                           ? `/stories/${getSlug(story.title)}?index=0x${
                               story.index
@@ -1351,54 +1186,9 @@ const row = (
                           : DOMPurify.sanitize(story.href)}"
                         data-href="${DOMPurify.sanitize(story.href)}"
                         data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                        onclick="${(isCloudflare || isTextPost) && story.index
-                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${isTextPost ? '' : `navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href));`} }`
-                          : `var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                              (function() {
-                                var targetUrl = el.dataset.href;
-                                var canIframe = el.dataset.canIframe === 'true';
-                                
-                                try {
-                                  var urlObj = new window.URL(targetUrl);
-                                  var hostname = urlObj.hostname.toLowerCase();
-                                  
-                                  // Domains that should always use openUrl
-                                  var alwaysOpenDomains = [
-                                    'x.com',
-                                    'twitter.com',
-                                    'www.x.com',
-                                    'www.twitter.com'
-                                  ];
-                                  
-                                  var shouldAlwaysOpen = alwaysOpenDomains.some(function(domain) {
-                                    return hostname === domain || hostname.endsWith('.' + domain);
-                                  });
-                                  
-                                  if (shouldAlwaysOpen) {
-                                    if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                                      window.sdk.actions.openUrl(targetUrl);
-                                    } else {
-                                      window.open(targetUrl, '_blank');
-                                    }
-                                  } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                                    window.sdk.actions.openUrl(targetUrl);
-                                  } else {
-                                    if (window.openEmbedDrawer) {
-                                      window.openEmbedDrawer(targetUrl);
-                                    } else {
-                                      window.open(targetUrl, '_blank');
-                                    }
-                                  }
-                                } catch (e) {
-                                  // Fallback to embed on error
-                                  if (window.openEmbedDrawer) {
-                                    window.openEmbedDrawer(targetUrl);
-                                  } else {
-                                    window.open(targetUrl, '_blank');
-                                  }
-                                }
-                              })();
-                            } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`}"
+                        data-action="${titleToStory ? "spinner" : "outbound"}"
+                        data-beacon="${titleToStory && !isTextPost}"
+                        data-app-hosts="${titleToStory ? null : "x"}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"

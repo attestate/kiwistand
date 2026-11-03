@@ -64,7 +64,7 @@ export default async function (theme) {
         )}
         <meta name="robots" content="noindex" />
       </head>
-      <body ontouchstart="">
+      <body>
         <div class="container">
           ${Sidebar(path)}
           ${RightColumn({ newsletter: false, children: ReadingListBox() })}

@@ -258,7 +258,6 @@ async function renderPage(theme) {
       <body
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}

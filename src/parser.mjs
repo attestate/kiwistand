@@ -1714,7 +1714,7 @@ const empty = html``;
 export const render = (ogTitle, domain, ogDescription, image) => html`
   <div
     data-copy-text="${ogTitle}"
-    onclick="navigator.clipboard.writeText(this.dataset.copyText)"
+    data-action="copy"
     style="cursor:pointer; display: flex; flex-direction: column; border: 1px solid #828282;
   border-radius: 2px; overflow: hidden;"
   >

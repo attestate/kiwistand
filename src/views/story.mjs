@@ -53,13 +53,18 @@ const isInternalLink = (href) =>
   href.startsWith("https://news.kiwistand.com") ||
   href.startsWith("https://staging.kiwistand.com");
 
+// data-* attributes are stripped from comment HTML: the page's document-level
+// data-action listeners (src/web/src/dataActions.mjs) would otherwise run for
+// markup a commenter wrote (e.g. a full-page <a data-action="copy">).
+const COMMENT_SANITIZE = { ALLOW_DATA_ATTR: false };
+
 // NOTE: A mention (web/src/mentions.mjs) is a link to the person's profile
 // with their name in `names`, made by vhtml, which escapes both.
 function lineHTML(text, names) {
   return split(text, names)
     .map((part) =>
       typeof part === "string"
-        ? DOMPurify.sanitize(part)
+        ? DOMPurify.sanitize(part, COMMENT_SANITIZE)
         : html`<a class="kn-mention" href="/upvotes?address=${part.address}"
             >@${part.name}</a
           >`,
@@ -89,9 +94,7 @@ export function linkifyComment(title, names) {
     target: (href) => (isInternalLink(href) ? "_self" : "_blank"),
     attributes: (href) => ({
       "data-url": href,
-      onclick: isInternalLink(href)
-        ? ""
-        : `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl(this.dataset.url); }`,
+      ...(isInternalLink(href) ? {} : { "data-action": "app-link" }),
     }),
     // Keep the old regex's scope: explicit http(s) only, no bare domains and
     // no mailto: harvesting of addresses typed into comments.
@@ -689,7 +692,6 @@ export default async function (
       <body
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}
@@ -850,7 +852,7 @@ export default async function (
                                         data-share-url="${baseUrl}/stories/${getSlug(
                                           value.title,
                                         )}?index=0x${index}&commentIndex=${comment.index}"
-                                        onclick="event.preventDefault(); navigator.share({url: this.dataset.shareUrl});"
+                                        data-action="share-url"
                                       >
                                         ${ShareIcon(
                                           "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
