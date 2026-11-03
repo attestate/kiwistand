@@ -179,9 +179,6 @@ export const fireSVG = html`
   </svg>
 `;
 
-const spinner =
-  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-
 const periods = [
   ["all", "All", "All time"],
   ["year", "Year", "This year"],
@@ -278,7 +275,7 @@ const secondheader = (theme, site, period, domain, query, community) => {
       href="${href}"
       class="kn-seg feed-button${active ? " kn-seg-active active" : ""}"
       aria-current="${active ? "page" : "false"}"
-      onclick="${spinner}"
+      data-action="spinner"
       >${label}</a
     >
   `;
@@ -311,7 +308,7 @@ const secondheader = (theme, site, period, domain, query, community) => {
                       href="${periodHref(key)}"
                       class="kn-period${key === period ? " kn-period-active" : ""}"
                       aria-current="${key === period ? "page" : "false"}"
-                      onclick="${spinner}"
+                      data-action="spinner"
                       >${label}</a
                     >`,
                   )}
@@ -336,7 +333,7 @@ const secondheader = (theme, site, period, domain, query, community) => {
                   class="kn-dropdown-item${key === current[0]
                     ? " kn-dropdown-item-active"
                     : ""}"
-                  onclick="${spinner}"
+                  data-action="spinner"
                   >${long}${key === current[0] ? ms("check", 18) : null}</a
                 >`,
               )}

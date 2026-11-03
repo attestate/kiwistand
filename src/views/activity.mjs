@@ -110,9 +110,6 @@ export function href(activity) {
     : linkFromComment(activity);
 }
 
-const spinnerOnClick =
-  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-
 const profileLink = (address) => `/upvotes?address=${address}`;
 
 // NOTE: Mobile shows the apps' marks (heart with "+1 🥝", the commenter's
@@ -153,7 +150,7 @@ function Row({ isNew, href, i, mark, headline, comment, timestamp }) {
       class="n2-notif-link notification"
       href="${href}"
       data-no-instant="${i < 3}"
-      onclick="${spinnerOnClick}"
+      data-action="spinner"
     >
       ${mark}
       <span class="n2-notif-body">
@@ -219,7 +216,7 @@ function GroupRow({
         href="${href}"
         aria-label="${label}"
         data-no-instant="${i < 3}"
-        onclick="${spinnerOnClick}"
+        data-action="spinner"
       ></a>
       ${mark || Mark(kind)}
       <span class="n2-notif-body">

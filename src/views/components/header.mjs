@@ -38,10 +38,6 @@ export const KiwiWordmark = (heightPx = 18.55) => html`
   </svg>
 `;
 
-// NOTE: Shows the spinner on a plain left click, like every other in-app link.
-const spinner =
-  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-
 const discoverPaths = ["/", "/new", "/best", "/stories"];
 const isCommunities = (path) => /^\/(communities(\/|$)|c\/)/.test(path || "");
 
@@ -49,7 +45,7 @@ export const Logo = (className = "") => html`
   <a
     class="kn-logo${className ? ` ${className}` : ""}"
     href="/"
-    onclick="${spinner}"
+    data-action="spinner"
     aria-label="Kiwi News"
   >
     ${KiwiWordmark()}
@@ -74,7 +70,7 @@ const header = (theme, path) => {
       href="${href}"
       class="kn-navlink${active ? " kn-navlink-active" : ""}"
       aria-current="${active ? "page" : "false"}"
-      onclick="${spinner}"
+      data-action="spinner"
       >${label}</a
     >
   `;
@@ -127,7 +123,7 @@ const header = (theme, path) => {
           class="kn-btn kn-btn-accent kn-only-desktop"
           href="/submit"
           data-no-instant
-          onclick="${spinner}"
+          data-action="spinner"
         >
           ${ms("plus-bold", 16)}<span>Submit</span>
         </a>

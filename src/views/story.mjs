@@ -51,6 +51,11 @@ const isInternalLink = (href) =>
 // Never build the anchors by hand here. DOMPurify serializes text nodes, so it
 // leaves quotes unencoded, and a URL like `https://x"onmouseover="alert(1)`
 // interpolated into href="" injects attributes. linkify-html escapes them.
+// data-* attributes are stripped from comment HTML: the page's document-level
+// data-action listeners (src/web/src/dataActions.mjs) would otherwise run for
+// markup a commenter wrote (e.g. a full-page <a data-action="copy">).
+const COMMENT_SANITIZE = { ALLOW_DATA_ATTR: false };
+
 function linkifyComment(title) {
   const body = title
     .split("\n")
@@ -58,9 +63,10 @@ function linkifyComment(title) {
       if (line.startsWith(">")) {
         return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${DOMPurify.sanitize(
           line.substring(2),
+          COMMENT_SANITIZE,
         )}</div>`;
       }
-      return line.trim() ? `<div>${DOMPurify.sanitize(line)}</div>` : "<br/>";
+      return line.trim() ? `<div>${DOMPurify.sanitize(line, COMMENT_SANITIZE)}</div>` : "<br/>";
     })
     .join("");
 
@@ -69,9 +75,7 @@ function linkifyComment(title) {
     target: (href) => (isInternalLink(href) ? "_self" : "_blank"),
     attributes: (href) => ({
       "data-url": href,
-      onclick: isInternalLink(href)
-        ? ""
-        : `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl(this.dataset.url); }`,
+      ...(isInternalLink(href) ? {} : { "data-action": "app-link" }),
     }),
     // Keep the old regex's scope: explicit http(s) only, no bare domains and
     // no mailto: harvesting of addresses typed into comments.
@@ -659,7 +663,6 @@ export default async function (
       <body
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}
@@ -820,7 +823,7 @@ export default async function (
                                         data-share-url="${baseUrl}/stories/${getSlug(
                                           value.title,
                                         )}?index=0x${index}&commentIndex=${comment.index}"
-                                        onclick="event.preventDefault(); navigator.share({url: this.dataset.shareUrl});"
+                                        data-action="share-url"
                                       >
                                         ${ShareIcon(
                                           "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
