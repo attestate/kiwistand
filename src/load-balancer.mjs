@@ -23,6 +23,7 @@ if (env.NODE_ENV === "reconcile") {
 // Routes that should be handled by worker processes
 const workerRoutes = [
   "/api/v1/activity",
+  "/api/v1/mentions",
   "/friends",
   "/api/v1/karma",
   "/api/v1/feeds",

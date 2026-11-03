@@ -39,6 +39,7 @@ import NewsletterCard from "./components/newsletter-card.mjs";
 import { twitterFrontends } from "../parser.mjs";
 import { hasName, showInHot } from "../hotnames.mjs";
 import { withCommunities } from "../communities-api.mjs";
+import { names as mentionNames } from "../web/src/mentions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -516,6 +517,11 @@ export async function index(
       const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
       if (lastComment && lastComment.identity) {
         lastComment.identity = await ens.resolve(lastComment.identity);
+        // NOTE: The names of the people it mentions (row.mjs).
+        lastComment.names = await mentionNames(
+          [lastComment.title],
+          ens.resolve,
+        );
         const uniqueIdentities = new Set(
           lastComment.previousParticipants
             .map((p) => p.identity)
@@ -715,6 +721,10 @@ export async function index(
                 if (lastComment && lastComment.identity) {
                   lastComment.identity = await ens.resolve(
                     lastComment.identity,
+                  );
+                  lastComment.names = await mentionNames(
+                    [lastComment.title],
+                    ens.resolve,
                   );
                   // Resolve participants if needed (simplified here)
                 }

@@ -41,6 +41,11 @@ import * as isoweek from "../isoweek.mjs";
 import { isIndexableStory, robotsMeta } from "../indexable.mjs";
 import { indexableSourcePath } from "../sources.mjs";
 import { withCommunities } from "../communities-api.mjs";
+import {
+  names as mentionNames,
+  split,
+  render,
+} from "../web/src/mentions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -48,25 +53,39 @@ const isInternalLink = (href) =>
   href.startsWith("https://news.kiwistand.com") ||
   href.startsWith("https://staging.kiwistand.com");
 
-// Never build the anchors by hand here. DOMPurify serializes text nodes, so it
-// leaves quotes unencoded, and a URL like `https://x"onmouseover="alert(1)`
-// interpolated into href="" injects attributes. linkify-html escapes them.
 // data-* attributes are stripped from comment HTML: the page's document-level
 // data-action listeners (src/web/src/dataActions.mjs) would otherwise run for
 // markup a commenter wrote (e.g. a full-page <a data-action="copy">).
 const COMMENT_SANITIZE = { ALLOW_DATA_ATTR: false };
 
-function linkifyComment(title) {
+// NOTE: A mention (web/src/mentions.mjs) is a link to the person's profile
+// with their name in `names`, made by vhtml, which escapes both.
+function lineHTML(text, names) {
+  return split(text, names)
+    .map((part) =>
+      typeof part === "string"
+        ? DOMPurify.sanitize(part, COMMENT_SANITIZE)
+        : html`<a class="kn-mention" href="/upvotes?address=${part.address}"
+            >@${part.name}</a
+          >`,
+    )
+    .join("");
+}
+
+// Never build the anchors by hand here. DOMPurify serializes text nodes, so it
+// leaves quotes unencoded, and a URL like `https://x"onmouseover="alert(1)`
+// interpolated into href="" injects attributes. linkify-html escapes them.
+export function linkifyComment(title, names) {
   const body = title
     .split("\n")
     .map((line) => {
       if (line.startsWith(">")) {
-        return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${DOMPurify.sanitize(
+        return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${lineHTML(
           line.substring(2),
-          COMMENT_SANITIZE,
+          names,
         )}</div>`;
       }
-      return line.trim() ? `<div>${DOMPurify.sanitize(line, COMMENT_SANITIZE)}</div>` : "<br/>";
+      return line.trim() ? `<div>${lineHTML(line, names)}</div>` : "<br/>";
     })
     .join("");
 
@@ -213,6 +232,9 @@ function previewComment(comment, address, commenter, submission, submitter, with
 }
 
 async function generateCommentPreviews(fileName, comment, address, commenter, submission, submitter) {
+  // NOTE: Mentions read as "@<name>" (web/src/mentions.mjs).
+  const names = await mentionNames([comment.title], ens.resolve);
+  comment = { ...comment, title: render(comment.title, names) };
   for (const isFrame of [false, true]) {
     try {
       await preview.generate(
@@ -422,6 +444,12 @@ export default async function (
         .filter(Boolean),
     }));
   }
+  // NOTE: The names of the people the comments mention.
+  const names = await mentionNames(
+    story.comments.map((comment) => comment.title),
+    ens.resolve,
+  );
+
   // NOTE: store.post returns upvoters as objects of "identity" and "timestamp"
   // property so that we can zip them with tipping actions. But the row component
   // expects upvoters to be a string array of Ethereum addresses.
@@ -529,9 +557,10 @@ export default async function (
       
       // Use comment text as description, truncated
       const maxLength = 160;
-      ogDescription = comment.title.length > maxLength 
-        ? comment.title.substring(0, maxLength) + "..."
-        : comment.title;
+      const text = render(comment.title, names);
+      ogDescription = text.length > maxLength 
+        ? text.substring(0, maxLength) + "..."
+        : text;
       
       // Update title to indicate it's a comment
       ogTitle = `Comment on: ${value.title}`;
@@ -607,7 +636,7 @@ export default async function (
     ...(story.comments.length > 0 ? {
       "comment": story.comments.slice(0, 5).map((c) => ({
         "@type": "Comment",
-        "text": c.title,
+        "text": render(c.title, names),
         // Google's forum markup requires datePublished on every Comment.
         "datePublished": new Date(c.timestamp * 1000).toISOString(),
         ...(c.index ? { "url": `${storyUrl}#0x${c.index}` } : {}),
@@ -846,6 +875,7 @@ export default async function (
                                           dangerouslySetInnerHTML=${{
                                             __html: linkifyComment(
                                               comment.title,
+                                              names,
                                             ),
                                           }}
                                         ></span>

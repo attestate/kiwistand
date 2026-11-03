@@ -109,6 +109,8 @@ import * as bookmarks from "./bookmarks.mjs";
 import * as imageuploads from "./imageuploads.mjs";
 import * as shares from "./shares.mjs";
 import * as profiles from "./profiles.mjs";
+import * as mentions from "./mentions.mjs";
+import { names as mentionNames, render } from "./web/src/mentions.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { timingSafeEqual } from "crypto";
@@ -2472,10 +2474,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     if (comments.length > 0) {
+      const names = await mentionNames(
+        comments.map((comment) => comment.title),
+        ens.resolve,
+      );
       md += `\n## Comments\n\n`;
       comments.forEach((comment, i) => {
         const name = profiles[i]?.displayName || profiles[i]?.truncatedAddress || comment.identity;
-        md += `**${name}**: ${comment.title}\n\n`;
+        md += `**${name}**: ${render(comment.title, names)}\n\n`;
       });
     }
 
@@ -2692,6 +2698,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
       // NOTE: Who joined your communities (protocol 14.0.0), newest first.
       // Separate from `notifications`, which the apps render.
       joins: data.joins,
+      // NOTE: Comments that mention you (src/web/src/mentions.mjs), newest
+      // first, separate like `joins`.
+      mentions: data.mentions,
       lastServerValue: data.latestValue,
     });
   });
@@ -2718,6 +2727,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(200).send();
   });
 
+  app.get("/api/v1/mentions", mentions.handler());
+
   app.get("/activity", async (request, reply) => {
     // Query param version - cacheable, no cookies
     if (request.query.address) {
@@ -2738,6 +2749,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         data.feed,
         parseInt(request.query.lastUpdate, 10),
         true, // isQueryParamVersion
+        data.names,
       );
 
       reply.header(
@@ -2774,6 +2786,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       data.feed,
       parseInt(request.cookies.lastUpdate, 10),
       false,
+      data.names,
     );
 
     if (data && data.lastUpdate) {

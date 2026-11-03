@@ -1288,6 +1288,48 @@ export function getComments(identity) {
   );
 }
 
+// Comments since `since` (unix seconds) that may mention `identity`
+// (web/src/mentions.mjs), newest first, with their story's title, without
+// the person's own comments. LIKE ignores the case of ASCII letters, so any
+// spelling of the address is found; whether it's a mention is up to the
+// caller.
+export function getMentions(identity, since) {
+  const address = identity.toLowerCase();
+  return db
+    .prepare(
+      `
+     SELECT c.id, c.submission_id, c.timestamp, c.title, c.identity,
+       s.title AS submission_title
+     FROM comments c
+     JOIN submissions s ON c.submission_id = s.id
+     WHERE c.timestamp >= ? AND c.title LIKE ? AND lower(c.identity) != ?
+     ORDER BY c.timestamp DESC
+     LIMIT 100
+   `,
+    )
+    .all(since, `%@${address}%`, address);
+}
+
+// Who posted the story with `index` (0x…), then who commented on it, most
+// recent first: the people a comment on it most likely mentions. Empty for
+// a story this node doesn't have.
+export function getStoryPeople(index) {
+  const id = `kiwi:${index}`;
+  const story = db
+    .prepare(`SELECT identity FROM submissions WHERE id = ?`)
+    .get(id);
+  if (!story) return [];
+  const commenters = db
+    .prepare(
+      `
+     SELECT identity FROM comments WHERE submission_id = ?
+     GROUP BY identity ORDER BY MAX(timestamp) DESC
+   `,
+    )
+    .all(id);
+  return [story.identity, ...commenters.map(({ identity }) => identity)];
+}
+
 export function getThreadParticipants(submissionId, lastCommentTimestamp) {
   const participants = db
     .prepare(

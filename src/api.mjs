@@ -26,6 +26,7 @@ import { getSubmission, isReactionComment } from "./cache.mjs";
 import {
   triggerUpvoteNotification,
   triggerJoinNotification,
+  triggerMentionNotification,
 } from "./subscriptions.mjs";
 import * as indexnow from "./indexnow.mjs";
 import { securityHeaders } from "./securityheaders.mjs";
@@ -165,6 +166,7 @@ export function handleMessage(
   libp2p,
   getDelegations,
   notifyJoin = triggerJoinNotification,
+  notifyMention = triggerMentionNotification,
 ) {
   return async (request, reply) => {
     const message = request.body;
@@ -306,6 +308,17 @@ export function handleMessage(
       setImmediate(() => {
         notifyJoin(message, delegations).catch((err) => {
           log(`Failed to trigger join notification: ${err}`);
+        });
+      });
+    }
+
+    // NOTE: The people a comment this node took mentions are told, like the
+    // owner about a join: only here, so a comment synced from a peer doesn't
+    // notify again.
+    if (message.type === "comment") {
+      setImmediate(() => {
+        notifyMention(message, index, delegations).catch((err) => {
+          log(`Failed to trigger mention notification: ${err}`);
         });
       });
     }
