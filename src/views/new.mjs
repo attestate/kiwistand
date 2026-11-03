@@ -25,6 +25,7 @@ import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import { withCommunities } from "../communities-api.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
+import { names as mentionNames } from "../web/src/mentions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -101,6 +102,11 @@ async function enrich(counts, previousStoriesByIndex = new Map()) {
       const lastComment = getLastComment(`kiwi:0x${story.index}`, config.addresses || []);
       if (lastComment && lastComment.identity) {
         lastComment.identity = await ens.resolveForBatch(lastComment.identity);
+        // NOTE: The names of the people it mentions (row.mjs).
+        lastComment.names = await mentionNames(
+          [lastComment.title],
+          ens.resolveForBatch,
+        );
         const uniqueIdentities = new Set(
           lastComment.previousParticipants
             .map((p) => p.identity)

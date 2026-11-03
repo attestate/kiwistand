@@ -194,3 +194,14 @@ export function get(identity) {
 export function byName(name) {
   return prepared().byName.get(name.toLowerCase())?.identity;
 }
+
+// Who has a Kiwi nickname, most recently set first, at most `limit`.
+export function named(limit) {
+  return open()
+    .prepare(
+      `SELECT identity FROM profiles WHERE name IS NOT NULL
+       ORDER BY timestamp DESC LIMIT ?`,
+    )
+    .all(limit)
+    .map(({ identity }) => identity);
+}

@@ -200,6 +200,14 @@ export const LOAD_BALANCER_RULES = [
       (req.method !== "OPTIONS" && path === "/api/v1/search") ||
       (req.method === "GET" && path === "/search" && !!req.query?.q),
   },
+  {
+    // The comment box asks while someone types after "@" (src/mentions.mjs).
+    name: "mentions",
+    limit: 60,
+    windowMs: MINUTE,
+    match: (req, path) =>
+      req.method !== "OPTIONS" && path === "/api/v1/mentions",
+  },
 ];
 
 export const API_RULES = [

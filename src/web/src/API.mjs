@@ -180,12 +180,18 @@ export async function fetchNotifications(address) {
     return [];
   }
 
+  // NOTE: Mentions (src/mentions.mjs) count like the other notifications.
+  const notifications = [
+    ...(data?.data?.notifications || []),
+    ...(data?.data?.mentions || []),
+  ].sort((a, b) => b.timestamp - a.timestamp);
+
   // Always set lastUpdate cookie on /activity page
   if (
     window.location.pathname === "/activity" &&
-    data?.data?.notifications?.length > 0
+    notifications.length > 0
   ) {
-    const latestNotification = data.data.notifications[0];
+    const latestNotification = notifications[0];
     const timestamp = latestNotification.timestamp;
     console.log("Setting lastUpdate on activity page to:", timestamp);
     setCookie("lastUpdate", timestamp);
@@ -212,7 +218,7 @@ export async function fetchNotifications(address) {
     setCookie("lastUpdate", value);
   }
 
-  return data.data.notifications;
+  return notifications;
 }
 
 export async function fetchStory(id, commentCount) {

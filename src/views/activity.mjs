@@ -8,6 +8,7 @@ import DOMPurify from "isomorphic-dompurify";
 
 import * as ens from "../ens.mjs";
 import * as registry from "../chainstate/registry.mjs";
+import * as moderation from "./moderation.mjs";
 import { custom } from "./components/head.mjs";
 import { Tile, communityPath } from "./components/communities.mjs";
 import { Page, EmptyState, Icon, timeAgo } from "./components/n2.mjs";
@@ -25,9 +26,15 @@ import {
   getComments,
   getReactionsToComments,
   getJoins,
+  getMentions,
   getTimestamp,
   setTimestamp,
 } from "../cache.mjs";
+import {
+  notified,
+  names as mentionNames,
+  render,
+} from "../web/src/mentions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -101,10 +108,17 @@ function linkFromJoin(activity) {
   return communityPath(activity.message.community.id);
 }
 
+// NOTE: A comment that mentions you, like a comment notification.
+function linkFromMention(activity) {
+  const slug = getSlug(activity.story.title);
+  return `/stories/${slug}?index=0x${activity.story.index}#0x${activity.message.index}`;
+}
+
 export function href(activity) {
   if (activity.verb === "joined" || activity.verb === "joins") {
     return linkFromJoin(activity);
   }
+  if (activity.verb === "mentioned") return linkFromMention(activity);
   return activity.verb === "liked"
     ? linkFromLike(activity)
     : linkFromComment(activity);
@@ -241,7 +255,9 @@ function GroupRow({
 
 const Quote = (text) => html`<span class="n2-q">${text}</span>`;
 
-function generateRow(lastUpdate) {
+// NOTE: `names` are the names of the people the comments mention
+// (data()'s `names`).
+function generateRow(lastUpdate, names) {
   return (activity, i) => {
     const isNew = lastUpdate < activity.timestamp;
 
@@ -255,7 +271,26 @@ function generateRow(lastUpdate) {
         headline: html`${identity.displayName} commented on${" "}${Quote(
             DOMPurify.sanitize(activity.message.submission_title),
           )}`,
-        comment: DOMPurify.sanitize(truncateComment(activity.message.title)),
+        comment: DOMPurify.sanitize(
+          truncateComment(render(activity.message.title, names)),
+        ),
+        timestamp: activity.timestamp,
+      });
+    }
+
+    if (activity.verb === "mentioned") {
+      const identity = activity.identities[0];
+      return Row({
+        isNew,
+        i,
+        href: linkFromMention(activity),
+        mark: Mark("comment", identity),
+        headline: html`${identity.displayName} mentioned you in${" "}${Quote(
+            DOMPurify.sanitize(activity.story.title),
+          )}`,
+        comment: DOMPurify.sanitize(
+          truncateComment(render(activity.message.title, names)),
+        ),
         timestamp: activity.timestamp,
       });
     }
@@ -270,7 +305,7 @@ function generateRow(lastUpdate) {
         predicate: "reacted to your comment",
         extra: activity.emojis.join(" "),
         text: DOMPurify.sanitize(
-          truncateComment(activity.message.comment_title),
+          truncateComment(render(activity.message.comment_title, names)),
         ),
       });
     }
@@ -317,13 +352,15 @@ const Heading = html`<header class="n2-page-head">
 </header>`;
 
 // NOTE: `notifications` is data()'s `feed`: likes grouped per story,
-// reactions grouped per comment and joins grouped per community.
+// reactions grouped per comment and joins grouped per community. `names`
+// is data()'s `names`.
 export async function page(
   theme,
   identity,
   notifications,
   lastUpdate,
   isQueryParamVersion,
+  names = {},
 ) {
   identity = DOMPurify.sanitize(identity);
   const newCount = notifications.filter(
@@ -333,7 +370,7 @@ export async function page(
     notifications.length === 0
       ? EmptyState({ icon: "bell", text: "No notifications yet" })
       : html`<ol class="n2-notif-list">
-          ${notifications.map(generateRow(lastUpdate))}
+          ${notifications.map(generateRow(lastUpdate, names))}
         </ol>`;
   const preloadNotifs = notifications.slice(0, 3).map(href);
   return Page({
@@ -458,6 +495,49 @@ export async function data(
         },
         timestamp: join.timestamp,
         identities: [join.identity],
+      });
+    }
+  }
+
+  // NOTE: Comments from the last three weeks that mention this person
+  // (web/src/mentions.mjs), like comments. They're `mentions`, not in
+  // `notifications`, like joins. Like the push notifications
+  // (subscriptions.mjs), only a comment's first five mentions count, a
+  // comment already in the notifications (on their story or in a thread
+  // they're in) isn't one again, and banned profiles neither send nor
+  // receive.
+  const mentionActivities = [];
+  if (!skipDetails) {
+    const threeWeeksAgo = Math.floor(Date.now() / 1000) - 1814400;
+    const self = identity.toLowerCase();
+    const listed = new Set(comments.map(({ id }) => id));
+    const rows = getMentions(identity, threeWeeksAgo).filter(
+      (comment) =>
+        !listed.has(comment.id) && notified(comment.title).includes(self),
+    );
+    let bannedAddresses = [];
+    if (rows.length > 0) {
+      try {
+        const getLists = options.getLists ?? moderation.getListsForStory;
+        bannedAddresses = (await getLists()).addresses || [];
+      } catch (err) {}
+    }
+    for (const comment of bannedAddresses.includes(self) ? [] : rows) {
+      if (bannedAddresses.includes(comment.identity.toLowerCase())) continue;
+      mentionActivities.push({
+        verb: "mentioned",
+        timestamp: comment.timestamp,
+        message: {
+          index: comment.id.split("0x")[1],
+          title: comment.title,
+          href: comment.submission_id,
+          identity: comment.identity,
+        },
+        story: {
+          index: comment.submission_id.split("0x")[1],
+          title: comment.submission_title,
+        },
+        identities: [comment.identity],
       });
     }
   }
@@ -596,6 +676,9 @@ export async function data(
   const joins = (
     await Promise.all(joinActivities.slice(0, 20).map(enrich))
   ).filter(Boolean);
+  const mentions = (
+    await Promise.all(mentionActivities.slice(0, 20).map(enrich))
+  ).filter(Boolean);
 
   // NOTE: The page's rows (`feed`): likes and comments as in
   // `notifications`, reactions grouped per comment. The API keeps
@@ -610,6 +693,7 @@ export async function data(
       ...activities.filter((activity) => activity.verb !== "reacted"),
       ...groups,
       ...groupJoins(joinActivities, identity),
+      ...mentionActivities,
     ]
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 20);
@@ -626,10 +710,21 @@ export async function data(
     ).filter(Boolean);
   }
 
+  // NOTE: The names of the people the page's comments mention.
+  const names = await mentionNames(
+    feed.flatMap(({ message }) =>
+      [message?.title, message?.comment_title].filter(
+        (text) => typeof text === "string",
+      ),
+    ),
+    options.resolve ?? ens.resolve,
+  );
+
   let lastUpdate = "0";
   const newest = Math.max(
     notifications[0]?.timestamp ?? 0,
     joins[0]?.timestamp ?? 0,
+    mentions[0]?.timestamp ?? 0,
   );
   if (newest > 0) {
     lastUpdate = newest;
@@ -637,7 +732,9 @@ export async function data(
   return {
     notifications: notifications,
     joins,
+    mentions,
     feed,
+    names,
     lastUpdate,
     latestValue,
   };

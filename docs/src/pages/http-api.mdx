@@ -302,6 +302,39 @@ Since protocol 14.0.0, the notifications of `GET /api/v1/activity?address=<addre
 }
 ```
 
+## Mentions
+
+A comment mentions someone with `@` and their address, e.g. `@0x0f6A79A579658E401E0B81c6dde1F2cd51d97176`. It's part of the comment's text; the protocol doesn't change. A mention starts the text or follows whitespace, and no letter, digit or underscore follows it, so an email address or URL with `@0x…` in it isn't one. Any case counts; the website posts the checksummed address. Clients show each mention as `@<name>`, the person's current display name without a leading `@` (short address if they have none), linked to their profile (`/upvotes?address=<address>`).
+
+When this node's API takes a comment, the first five people it mentions get a push notification ("New mention", "&lt;name&gt; mentioned you: …", opening the comment), except its author, banned profiles and who the comment already notifies (the story's author and everyone who commented on it). Banned authors and moderated stories don't notify, like comments.
+
+### GET /api/v1/mentions
+
+The people to suggest after `@`. `q` is what was typed after the `@` (0 to 32 characters, else 400) and the optional `index` the story's index (`0x` and 72 hex digits, else 400). Without `q`: who posted the story, then who commented on it, most recent first. With `q`: those whose name starts with `q` (case doesn't matter), then other people with a name (ENS, Farcaster or Kiwi nickname) whose name starts with it. At most 8, without banned profiles, not cached (`Cache-Control: no-cache`), and limited to 60 requests per minute.
+
+```js
+{ "people": [{ "address": "0xA1…", "name": "alice.eth", "avatar": "https://…" }] } // avatar can be null
+```
+
+### Mentions: GET /api/v1/activity
+
+`GET /api/v1/activity?address=<address>` has `mentions` next to `notifications`: comments from the last three weeks that mention that person, newest first, at most 20, by the same rules as the push notification (a comment that's already in `notifications` isn't repeated). They're separate from `notifications` like `joins`.
+
+```js
+{
+  "verb": "mentioned",
+  "timestamp": 1700000000,
+  "message": {
+    "index": "…",               // the comment's ID, without 0x
+    "title": "thanks @0xA1…!",  // the comment's text
+    "href": "kiwi:0x…",         // the story
+    "identity": "0xB2…"         // who mentioned them
+  },
+  "story": { "index": "…", "title": "…" }, // the story's ID, without 0x
+  "identities": [{ "address": "0xB2…", "displayName": "bob.eth", … }]
+}
+```
+
 ## Karma
 
 Karma counts what an identity contributed: one point for every story it

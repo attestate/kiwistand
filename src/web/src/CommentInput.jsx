@@ -17,6 +17,8 @@ import { getLocalAccount } from "./session.mjs";
 import { chains, client, useProvider, useSigner, useIsMiniApp, isInIOSApp } from "./client.mjs";
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 import LoginModal from "./LoginModal.jsx";
+import { useMentions } from "./Mentions.jsx";
+import { encode } from "./mentions.mjs";
 
 // Configure slugify extension
 slugify.extend({ "′": "", "'": "" });
@@ -99,6 +101,7 @@ const MobileComposer = ({
   isLoading,
   characterLimit,
   isMiniApp,
+  mention,
 }) => {
   const [viewportHeight, setViewportHeight] = useState(
     window.visualViewport ? window.visualViewport.height : window.innerHeight,
@@ -219,6 +222,7 @@ const MobileComposer = ({
           {isLoading ? "Submitting..." : "Submit"}
         </button>
       </div>
+      {mention.list && <div className="kn-mentions-inline">{mention.list}</div>}
       <textarea
         autoFocus
         onPaste={(e) => {
@@ -243,7 +247,13 @@ const MobileComposer = ({
         }}
         onTouchMove={(e) => e.stopPropagation()}
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          mention.track(e);
+        }}
+        onSelect={mention.track}
+        onKeyDown={mention.onKeyDown}
+        onBlur={mention.close}
       />
       <div
         style={{
@@ -290,6 +300,7 @@ const DockComposer = ({
   canPost,
   onBeforeFocus,
   placeholder,
+  mention,
 }) => {
   const fieldRef = useRef(null);
   const [typing, setTyping] = useState(false);
@@ -338,6 +349,7 @@ const DockComposer = ({
         if (ready) onSubmit(e);
       }}
     >
+      {mention.list}
       <textarea
         ref={fieldRef}
         className="kn-dock-field"
@@ -345,7 +357,12 @@ const DockComposer = ({
         placeholder={placeholder}
         aria-label="Post your reply"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          mention.track(e);
+        }}
+        onSelect={mention.track}
+        onKeyDown={mention.onKeyDown}
         onFocus={(e) => {
           if (onBeforeFocus && onBeforeFocus() === false) {
             e.target.blur();
@@ -353,7 +370,10 @@ const DockComposer = ({
           }
           setTyping(true);
         }}
-        onBlur={() => setTyping(false)}
+        onBlur={() => {
+          setTyping(false);
+          mention.close();
+        }}
         disabled={isLoading}
       ></textarea>
       <button
@@ -481,6 +501,28 @@ const CommentInput = (props) => {
     localStorage.setItem(`-kiwi-news-comment-${address}-${getIndex()}`, text);
   }, [text]);
 
+  // NOTE: The people the box put in the draft as "@<name>" ({name:
+  // address}, see mentions.mjs), kept with the draft so they're still
+  // posted as addresses after a reload.
+  const mentionsKey = `-kiwi-news-mentions-${address}-${getIndex()}`;
+  const [inserted, setInserted] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(mentionsKey)) || {};
+    } catch (err) {
+      return {};
+    }
+  });
+  useEffect(() => {
+    localStorage.setItem(mentionsKey, JSON.stringify(inserted));
+  }, [inserted]);
+  const mention = useMentions({
+    text,
+    setText,
+    storyIndex: getIndex(),
+    inserted,
+    setInserted,
+  });
+
   // Fetch story title on component load for slug generation
   useEffect(() => {
     const fetchStoryTitle = async () => {
@@ -593,9 +635,11 @@ const CommentInput = (props) => {
     }
 
     // --- Validation ---
+    // NOTE: Mentions the box inserted are posted as addresses.
+    const posted = encode(text, inserted);
     const validMiladyTexts = ["Milady.", "milady.", "milady", "Milady"];
-    const isValidMilady = validMiladyTexts.includes(text);
-    if ((text.length < 15 || text.length > 10_000) && !isValidMilady) {
+    const isValidMilady = validMiladyTexts.includes(posted);
+    if ((posted.length < 15 || posted.length > 10_000) && !isValidMilady) {
       toast.error("Comment must be between 15 and 10000 characters.");
       setIsLoading(false);
       haptic.trigger("error");
@@ -604,7 +648,7 @@ const CommentInput = (props) => {
 
     // --- Message Creation ---
     const type = "comment";
-    const value = API.messageFab(text, `kiwi:${index}`, type);
+    const value = API.messageFab(posted, `kiwi:${index}`, type);
 
     // --- Conditional Handling ---
     if (props.setComments && typeof props.setComments === 'function') {
@@ -619,7 +663,7 @@ const CommentInput = (props) => {
       const currentComments = Array.isArray(props.comments) ? props.comments : [];
       const newComment = {
         index: commentId,
-        title: text,
+        title: posted,
         identity: {
           address: address,
           displayName: preResolvedName, // Use pre-resolved data
@@ -634,7 +678,9 @@ const CommentInput = (props) => {
 
       // Clear input
       setText("");
+      setInserted({});
       localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
+      localStorage.removeItem(mentionsKey);
 
       if (showMobileComposer) {
         setShowMobileComposer(false);
@@ -688,6 +734,8 @@ const CommentInput = (props) => {
         posthog.capture("comment_created", { variant: getFeedVariant() });
         localStorage.removeItem(`-kiwi-news-comment-${address}-${index}`);
         setText(""); // Clear input
+        setInserted({});
+        localStorage.removeItem(mentionsKey);
 
         // Construct reload URL using pre-fetched story title
         let path = `/stories?index=${index}`; // fallback
@@ -827,6 +875,7 @@ const CommentInput = (props) => {
           onSubmit={handleSubmit}
           isLoading={isLoading}
           canPost={canPost}
+          mention={mention}
           placeholder="Post your reply…"
           onBeforeFocus={() => {
             if (isDelegationModalNeeded(address)) {
@@ -856,6 +905,7 @@ const CommentInput = (props) => {
             isLoading={isLoading}
             characterLimit={characterLimit}
             isMiniApp={isMiniApp}
+            mention={mention}
           />,
           document.body,
         )
@@ -952,14 +1002,23 @@ const CommentInput = (props) => {
                   onFocus={(e) => {
                     toggleNavigationItems();
                   }}
-                  onBlur={toggleNavigationItems}
+                  onBlur={() => {
+                    toggleNavigationItems();
+                    mention.close();
+                  }}
                   rows="1"
                   placeholder={props.placeholder || "Add a comment…"}
                   aria-label="Add a comment"
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={(e) => {
+                    setText(e.target.value);
+                    mention.track(e);
+                  }}
+                  onSelect={mention.track}
+                  onKeyDown={mention.onKeyDown}
                   disabled={isLoading || !address || !isEligible}
                 ></textarea>
+                {mention.list}
                 <button
                   type="submit"
                   className="kn-composer-post"

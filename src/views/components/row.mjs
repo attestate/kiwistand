@@ -26,6 +26,7 @@ import {
 } from "../../quote.mjs";
 import { ms } from "./icons.mjs";
 import { Tag } from "./communities.mjs";
+import { render } from "../../web/src/mentions.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -1293,7 +1294,12 @@ const row = (
                         </span>
                         <span
                           class="comment-preview-text kn-cp-text"
-                          >${truncateComment(story.lastComment.title)}</span
+                          >${truncateComment(
+                            render(
+                              story.lastComment.title,
+                              story.lastComment.names,
+                            ),
+                          )}</span
                         >
                       </span>
                       <span class="kn-cp-expand">${expandSVG}</span>
