@@ -1,7 +1,7 @@
 // @format
 // The order of all messages, committed to Ethereum mainnet (protocol 15.0.0).
 //
-// Sync stays set reconciliation; Ethereum orders and verifies. Once a day,
+// Sync stays set reconciliation; Ethereum orders and verifies. Once an hour,
 // the sequencer (src/sequencer.mjs) sends commit k to the inbox contract
 // (contracts/Inbox.sol). Its calldata, kept forever:
 //

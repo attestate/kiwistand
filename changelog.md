@@ -35,7 +35,7 @@ ETH. See "Order" in the protocol docs and the Delegation page.
 #### Order
 
 - The sequencer (`SEQUENCER_PRIVATE_KEY`) notes every message it takes and
-  sends one type-3 transaction a day at `COMMIT_HOUR_UTC` to the inbox
+  sends one type-3 transaction an hour to the inbox
   (`contracts/Inbox.sol`), unless nothing is new or the base fee is above 20
   gwei. Calldata:
   `commit(uint8 version, uint256 k, bytes32 prev, bytes32 root, uint256 n, bytes32[] ids)`;
@@ -68,7 +68,7 @@ ETH. See "Order" in the protocol docs and the Delegation page.
 #### Configuration
 
 `ETHEREUM_RPC_URL`, `INBOX_ADDRESS`, `INBOX_BLOCK`, `SEQUENCER_ADDRESS`,
-`SEQUENCER_PRIVATE_KEY`, `COMMIT_HOUR_UTC` and `SMART_WALLET_RPC_URL` in
+`SEQUENCER_PRIVATE_KEY` and `SMART_WALLET_RPC_URL` in
 `.env-copy`.
 
 #### Open questions

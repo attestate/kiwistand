@@ -6,7 +6,7 @@
 //   node -r dotenv/config scripts/commit.mjs --dry-run
 //   node -r dotenv/config scripts/commit.mjs
 //
-// After the genesis, the node sends a commit every day at COMMIT_HOUR_UTC.
+// After the genesis, the node sends a commit every hour with something new.
 import { argv, exit } from "process";
 
 import * as store from "../src/store.mjs";

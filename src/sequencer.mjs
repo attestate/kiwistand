@@ -1,9 +1,9 @@
 // @format
 // The sequencer: the one node with an Ethereum key (SEQUENCER_PRIVATE_KEY)
 // that orders the messages. It notes every message it takes, in order, and
-// once a day at COMMIT_HOUR_UTC sends the ones since the last commit as the
-// next commit (src/commits.mjs): one blob transaction to the inbox. Nothing
-// new, no commit; fees too high, the commit waits. scripts/commit.mjs sends
+// once an hour sends the ones since the last commit as the next commit
+// (src/commits.mjs): one blob transaction to the inbox. Nothing new, no
+// commit; fees too high, the commit waits. scripts/commit.mjs sends
 // the genesis and can show any commit without sending it (--dry-run).
 import { env } from "process";
 import { appendFileSync, readFileSync, writeFileSync, existsSync } from "fs";
@@ -186,21 +186,14 @@ export async function send(commit, rpc = commits.client()) {
   return hash;
 }
 
-// Sends the day's commit once it's COMMIT_HOUR_UTC, if there's something new.
-// `chain` are the commits so far (commits.refresh read them).
-export async function tick(trie, chain, rpc) {
+// Sends the hour's commit, if there's something new: at the first tick (every
+// 10 minutes, src/commits.mjs) of a UTC hour without a commit yet. `chain`
+// are the commits so far (commits.refresh read them).
+export async function tick(trie, chain, rpc, now = Date.now()) {
   const last = chain.at(-1);
   if (!enabled() || !last) return null;
-  const hour = parseInt(env.COMMIT_HOUR_UTC, 10);
-  if (Number.isNaN(hour)) {
-    log("sequencer: COMMIT_HOUR_UTC isn't set, not committing");
-    return null;
-  }
-  const now = new Date();
-  const due =
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour) /
-    1000;
-  if (now.getTime() / 1000 < due || last.time >= due) return null;
+  const hour = Math.floor(now / 1000 / 3600) * 3600;
+  if (last.time >= hour) return null;
   const commit = await next(await commits.held(trie), chain);
   if (!commit) return null;
   return await send(commit, rpc);

@@ -112,10 +112,10 @@ and verifies, it doesn't carry the messages to nodes.
 
 One node is the sequencer. It has an Ethereum key, and nodes know its address
 and its inbox contract ([`contracts/Inbox.sol`](https://github.com/attestate/kiwistand/blob/main/contracts/Inbox.sol)).
-The sequencer notes every message it takes, in order. Once a day, at a fixed
-UTC hour, it sends the messages it took since its last commit as the next
-commit: one type-3 (blob) transaction to the inbox. Without new messages,
-there's no commit that day; while fees are high, the commit waits.
+The sequencer notes every message it takes, in order. Once an hour, it sends
+the messages it took since its last commit as the next commit: one type-3
+(blob) transaction to the inbox. Without new messages, there's no commit that
+hour; while fees are high, the commit waits.
 
 A commit's calldata is kept forever:
 
@@ -143,8 +143,8 @@ The transaction's blob, which the network keeps about 18 days, holds the n
 messages themselves: the trie's encodings, in order, in one CBOR list,
 compressed with Brotli.
 
-At about 21 messages a day, that's about 7.7 KB a day, and a commit costs
-about 35,000 gas, about one euro cent a day at current fees.
+At about 21 messages a day, that's about 7.7 KB a day. A commit costs about
+35,000 gas, about one euro cent at current fees, so at most 24 cents a day.
 
 ### Genesis
 
