@@ -5,6 +5,88 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.18.0
+
+### BREAKING CHANGE: One order on Ethereum, delegations on the protocol (protocol 15.0.0)
+
+All messages now have one shared order, and Ethereum mainnet proves it: once
+a day, the sequencer commits the messages it took to an inbox contract.
+Delegations are protocol messages, so signing up needs no transaction and no
+ETH. See "Order" in the protocol docs and the Delegation page.
+
+#### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `14.0.0 → 15.0.0`
+  - Protocols (leaves/levels): `17.0.0 → 18.0.0`
+- **New message type `delegation`**, signed by the account as
+  `Delegation(string type,address key,bytes authorization,bool authorize,uint256 timestamp)`,
+  with `account` (the signer, not signed itself) and `authorization`, the
+  key's signature of `Authorization(address from,bool authorize)` for the
+  account in the protocol's domain. A revocation has `authorize: false` and
+  `authorization: "0x"`. Smart wallets' signatures (ERC-1271, ERC-6492) are
+  checked over `SMART_WALLET_RPC_URL`; EOAs need no RPC.
+- **The order decides whom a key's message counts for**: the account of the
+  key's latest delegation before it, or the key itself after a revocation
+  (signed by that account). Nothing is deleted; messages before a revocation
+  stay the account's. Pending messages (no commit lists them yet) come after
+  committed ones, by timestamp.
+
+#### Order
+
+- The sequencer (`SEQUENCER_PRIVATE_KEY`) notes every message it takes and
+  sends one type-3 transaction a day at `COMMIT_HOUR_UTC` to the inbox
+  (`contracts/Inbox.sol`), unless nothing is new or the base fee is above 20
+  gwei. Calldata:
+  `commit(uint8 version, uint256 k, bytes32 prev, bytes32 root, uint256 n, bytes32[] ids)`;
+  the blob holds the n messages (CBOR list, Brotli).
+- Commit 0, the genesis, is every message up to its block, and names the
+  delegations snapshot's hash. `scripts/commit.mjs` sends it and shows any
+  commit with `--dry-run`.
+- Every node with `ETHEREUM_RPC_URL` reads the commits, walks their chain and
+  checks each ID and root against its messages, when a commit lands (it looks
+  every ten minutes) and after syncing. A root that differs: the node names the commit, ignores the peer
+  and stops offering its messages until the check passes.
+
+#### Delegations
+
+- `src/chainstate/delegations.json`, the snapshot of OP Mainnet's
+  delegations at the cutover (`scripts/delegations-snapshot.mjs`), replaces
+  crawling OP Mainnet. Until it's in the repo, nodes crawl as before.
+- New `delegations` table (one row per delegation message), filled again
+  from the trie at startup; `commits` and `positions` tables for the order.
+  A key's stories, upvotes and comments are credited again when its
+  delegations or their order change.
+
+#### API
+
+- `GET /api/v1/commits`: how far the node verified the order.
+- `POST /api/v1/list` and `POST /api/v1/messages` take `type: "delegation"`.
+- `GET /api/v1/delegations` is the delegations as of now (a revoked key isn't
+  in it), and has a new delegation as soon as the node took it.
+
+#### Configuration
+
+`ETHEREUM_RPC_URL`, `INBOX_ADDRESS`, `INBOX_BLOCK`, `SEQUENCER_ADDRESS`,
+`SEQUENCER_PRIVATE_KEY`, `COMMIT_HOUR_UTC` and `SMART_WALLET_RPC_URL` in
+`.env-copy`.
+
+#### Open questions
+
+- Should every node check smart wallets' delegations, or trust the sequencer
+  once a commit lists them?
+- Which submission of a link came first, and whether a community or story
+  existed before a message naming it, are still judged by arrival and
+  timestamps: acceptance must stay the same on nodes with and without an
+  Ethereum RPC.
+
+#### Migration
+
+All nodes must upgrade together. A 15.0.0 node will not sync with a 14.0.0
+node. Until the website and the apps sign delegation messages, sign-ups on OP
+Mainnet keep working as long as nodes crawl it, i.e. until the snapshot is
+in the repo.
+
 ## 0.17.0
 
 ### BREAKING CHANGE: Community membership (protocol 14.0.0)

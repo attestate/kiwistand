@@ -116,10 +116,12 @@ function forgetCommunity(signer, name = "AI") {
 // --- Protocol version -----------------------------------------------------
 
 test("membership bumps the protocol versions", (t) => {
-  t.is(PROTOCOL.pubsub.topics.roots.version, "14.0.0");
-  t.is(PROTOCOL.pubsub.topics.messages.version, "14.0.0");
-  t.is(PROTOCOL.protocols.leaves.version, "17.0.0");
-  t.is(PROTOCOL.protocols.levels.version, "17.0.0");
+  // NOTE: 14.0.0 and 17.0.0 brought membership; the order (test/commits_test.mjs)
+  // bumped them again.
+  t.is(PROTOCOL.pubsub.topics.roots.version, "15.0.0");
+  t.is(PROTOCOL.pubsub.topics.messages.version, "15.0.0");
+  t.is(PROTOCOL.protocols.leaves.version, "18.0.0");
+  t.is(PROTOCOL.protocols.levels.version, "18.0.0");
 });
 
 // --- Signatures -------------------------------------------------------------

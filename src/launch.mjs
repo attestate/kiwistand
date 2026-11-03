@@ -20,6 +20,8 @@ import * as store from "./store.mjs";
 import * as cache from "./cache.mjs";
 import delegateCrawlPath from "./chainstate/delegate.config.crawler.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import * as commits from "./commits.mjs";
+import * as sequencer from "./sequencer.mjs";
 import * as newest from "./views/new.mjs";
 import * as best from "./views/best.mjs";
 import * as email from "./email.mjs";
@@ -63,6 +65,8 @@ if (cluster.isPrimary) {
   // go into the memberships table.
   cache.initializeCommunities();
   cache.initializeMemberships();
+  cache.initializeDelegations();
+  cache.initializeCommits();
 
   // Run cache cleanup in background (non-blocking)
   const cleanupProcess = fork("./scripts/cleanup-cache.mjs", [], {
@@ -194,9 +198,27 @@ if (cluster.isPrimary) {
   // WebSocket coordinators are stopped (e.g., via SIGINT). We intentionally
   // don't await them so the server can continue starting up while the
   // crawlers run in the background with their persistent WebSocket connections.
-  crawl(delegateCrawlPath).catch((err) =>
-    log(`Delegate crawler error: ${err.message}`),
-  );
+  // NOTE: With the delegations snapshot, delegations are protocol messages
+  // and OP Mainnet isn't crawled anymore (src/delegations.mjs).
+  if (!registry.snapshot()) {
+    crawl(delegateCrawlPath).catch((err) =>
+      log(`Delegate crawler error: ${err.message}`),
+    );
+  }
+
+  // NOTE: Reads and checks the order's commits on Ethereum mainnet; on the
+  // sequencer, also sends them (src/commits.mjs, src/sequencer.mjs). It
+  // walks the whole trie, so it waits a minute, like the sitemaps.
+  if (commits.enabled()) {
+    setTimeout(
+      () =>
+        commits.run(trie, registry.snapshot()?.hash, async (added) => {
+          if (added.length) await registry.reattribute();
+          await sequencer.tick(trie, commits.commits());
+        }),
+      60 * 1000,
+    ).unref();
+  }
 
   // NOTE: We're passing in the trie here as we don't want to make it globally
   // available to run more than one node in the tests
@@ -324,11 +346,16 @@ if (cluster.isPrimary) {
       startDatetime,
       delegations,
       href,
-      ["community", "join", "leave"],
+      ["community", "join", "leave", "delegation"],
     )
     .then(async (result) => {
       const versions = result.filter(({ type }) => type === "community");
-      const memberships = result.filter(({ type }) => type !== "community");
+      const memberships = result.filter(({ type }) =>
+        ["join", "leave"].includes(type),
+      );
+      cache.insertDelegations(
+        result.filter(({ type }) => type === "delegation"),
+      );
       await cache.insertCommunities(versions);
       log(`Loaded ${versions.length} community versions`);
       await cache.insertMemberships(memberships);

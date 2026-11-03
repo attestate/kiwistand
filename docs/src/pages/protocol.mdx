@@ -1,6 +1,6 @@
 ---
 showAskAi: false
-description: The Kiwi News Protocol specification, including message IDs, message types, communities and membership.
+description: The Kiwi News Protocol specification, including message IDs, message types, communities, membership, delegations and the order committed to Ethereum.
 ---
 
 # Protocol
@@ -23,13 +23,14 @@ description is the implementation of the attestate/kiwistand client.
 
 ### Message types
 
-Messages are signed with EIP-712 in the domain `{name: "kiwinews", version: "1.0.0", salt: keccak256("kiwinews domain separator salt")}`. There are five kinds:
+Messages are signed with EIP-712 in the domain `{name: "kiwinews", version: "1.0.0", salt: keccak256("kiwinews domain separator salt")}`. There are six kinds:
 
 - **amplify**: a submission or an upvote. The first amplify of a link is its submission; later ones are upvotes. Signed as `Message(string title,string href,string type,uint256 timestamp)`.
 - **amplify with** `community` (since protocol 13.0.0): a submission to a community, see [Communities](#communities). Signed as `Message(string title,string href,string type,uint256 timestamp,string community)`. The fifth field gives it its own type hash, so a signature can't move between the two.
 - **comment**: `href` is `kiwi:0x<index of the story>`. Signed as the 4-field `Message`.
 - **community** (since protocol 13.0.0): a user community, written by its owner, see [Communities](#communities). Signed as `Community(string type,string name,string about,string[] rules,string icon,string color,uint256 timestamp)`.
 - **join** and **leave** (since protocol 14.0.0): joining or leaving a community, see [Membership](#membership). Signed as `Membership(string type,string community,uint256 timestamp)`.
+- **delegation** (since protocol 15.0.0): an account lets a key sign for it, or revokes that, see [Delegation](/delegation). Signed by the account as `Delegation(string type,address key,bytes authorization,bool authorize,uint256 timestamp)`.
 
 ### Process
 
@@ -100,3 +101,98 @@ Since protocol 14.0.0, joining and leaving a community are signed messages, so e
 ### Reference implementation
 
 - [`src/communities.mjs`](https://github.com/attestate/kiwistand/blob/main/src/communities.mjs), [`src/memberships.mjs`](https://github.com/attestate/kiwistand/blob/main/src/memberships.mjs), [`src/constants.mjs`](https://github.com/attestate/kiwistand/blob/main/src/constants.mjs) (`EIP712_COMMUNITY`, `EIP712_COMMUNITY_MESSAGE`, `EIP712_MEMBERSHIP`, the `community` and `membership` schemas) and [`src/store.mjs`](https://github.com/attestate/kiwistand/blob/main/src/store.mjs) (`_add`).
+
+## Order
+
+Since protocol 15.0.0, all messages have one shared order, and Ethereum
+mainnet proves it. Nodes still sync with set reconciliation; Ethereum orders
+and verifies, it doesn't carry the messages to nodes.
+
+### Sequencer and commits
+
+One node is the sequencer. It has an Ethereum key, and nodes know its address
+and its inbox contract ([`contracts/Inbox.sol`](https://github.com/attestate/kiwistand/blob/main/contracts/Inbox.sol)).
+The sequencer notes every message it takes, in order. Once a day, at a fixed
+UTC hour, it sends the messages it took since its last commit as the next
+commit: one type-3 (blob) transaction to the inbox. Without new messages,
+there's no commit that day; while fees are high, the commit waits.
+
+A commit's calldata is kept forever:
+
+```solidity
+commit(uint8 version, uint256 k, bytes32 prev, bytes32 root, uint256 n, bytes32[] ids)
+```
+
+- `version`: 1.
+- `k`: the commit's number, 0, 1, 2, ...
+- `prev`: the keccak-256 of commit k-1's calldata, so commits form a chain.
+- `root`: the root of the Merkle Patricia trie over every message committed
+  through k, keyed and stored as nodes store messages. It's the root a node's
+  trie has when it holds exactly these messages.
+- `n` and `ids`: the IDs of the n messages since commit k-1, in the order the
+  sequencer took them. A message's ID is the keccak-256 of the signed message
+  as the trie stores it (canonical CBOR), the hash in its
+  [index](#message-id-generation).
+
+ABI-encoded, that's a 4-byte selector, five 32-byte words, the array's offset
+and length, and 32 bytes per ID. The contract only lets the sequencer commit
+and emits `Commit(uint256 k, bytes32 root, uint256 n)`, so nodes find commits
+with `eth_getLogs`; it stores nothing.
+
+The transaction's blob, which the network keeps about 18 days, holds the n
+messages themselves: the trie's encodings, in order, in one CBOR list,
+compressed with Brotli.
+
+At about 21 messages a day, that's about 7.7 KB a day, and a commit costs
+about 35,000 gas, about one euro cent a day at current fees.
+
+### Genesis
+
+Commit 0 freezes everything before it. It lists no IDs; it is every message
+with a timestamp up to its block's that no later commit lists, `n` of them,
+under `root`. Its `prev` is the keccak-256 of the delegations snapshot,
+[`src/chainstate/delegations.json`](/delegation#from-op-mainnet-to-the-protocol),
+which nodes load and check against it.
+
+### A message's place
+
+A message's place in the order is (commit, position): its commit's `k` and
+its position in that commit's `ids`. Messages of the genesis come before all
+others, among themselves by timestamp. A message no commit lists yet is
+pending: nodes take and show it at once, it comes after all committed ones,
+among the pending ones by timestamp, and rules that depend on the order are
+provisional for it. When a commit lists it, nodes place it again.
+
+The order decides whom a key's messages count for: see
+[Delegation](/delegation#the-order-decides). Timestamps stay what they were:
+for display and ranking, with the checks above. Which submission of a link
+came first, and whether a community or a story existed before a message
+naming it, are still judged as before this version (see the open questions
+in the changelog).
+
+### Verification
+
+Every node with an Ethereum RPC (`ETHEREUM_RPC_URL`) looks for new commits
+every ten minutes, and checks the order when one lands and after syncing:
+
+1. It reads all commits with `eth_getLogs` on the inbox and their calldata
+   with `eth_getTransactionByHash`, and walks the chain: each commit must be
+   number k+1 and name commit k's hash.
+2. For each commit, it must hold every listed ID, and the trie root over the
+   messages committed so far must be the commit's `root`. As an ID is the
+   hash of the signed message, a changed or left out message shows up as a
+   missing ID or a different root.
+3. A missing ID makes the commit "missing": the node keeps syncing, as peers
+   may still send the message. A message no commit lists stays pending.
+4. A root that differs makes the commit a "mismatch": the node logs which
+   commit failed, ignores the peer whose messages made it differ, and stops
+   offering its messages to peers until the check passes again.
+
+[`GET /api/v1/commits`](/http-api#get-apiv1commits) shows how far a node
+verified the order.
+
+### Reference implementation
+
+- [`src/commits.mjs`](https://github.com/attestate/kiwistand/blob/main/src/commits.mjs): the calldata and blob, roots, reading the chain, verification and a message's place.
+- [`src/sequencer.mjs`](https://github.com/attestate/kiwistand/blob/main/src/sequencer.mjs): the batch and the blob transaction.
+- [`contracts/Inbox.sol`](https://github.com/attestate/kiwistand/blob/main/contracts/Inbox.sol), [`scripts/deploy-inbox.mjs`](https://github.com/attestate/kiwistand/blob/main/scripts/deploy-inbox.mjs) and [`scripts/commit.mjs`](https://github.com/attestate/kiwistand/blob/main/scripts/commit.mjs) (the genesis, and any commit with `--dry-run`).

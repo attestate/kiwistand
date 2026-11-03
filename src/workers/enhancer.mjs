@@ -1,8 +1,15 @@
+import { utils } from "ethers";
+
 import { ecrecover, toDigest, messageTypes } from "../id.mjs";
 
 async function enhance({ node }) {
   const cacheEnabled = false;
-  const signer = ecrecover(node, messageTypes(node), cacheEnabled);
+  // NOTE: A delegation is signed by its account, maybe a smart wallet, whose
+  // signature store.add checked (src/delegations.mjs).
+  const signer =
+    node.type === "delegation"
+      ? utils.getAddress(node.account)
+      : ecrecover(node, messageTypes(node), cacheEnabled);
 
   const { index } = toDigest(node);
 

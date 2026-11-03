@@ -10,6 +10,7 @@ import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import * as commits from "./commits.mjs";
 import { SCHEMATA, PROTOCOL } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 
@@ -527,6 +528,11 @@ export function handleLevels(trie, peerFab) {
       );
       return;
     }
+    if (commits.distrusted.has(peer.toString())) {
+      log(`handle levels: Ignoring distrusted peer "${peer}"`);
+      peerFab.set();
+      return;
+    }
 
     let comparisons;
     try {
@@ -553,6 +559,12 @@ export function handleLeaves(trie, peerFab) {
       return;
     }
 
+    if (commits.distrusted.has(peer.toString())) {
+      log(`handle leaves: Ignoring distrusted peer "${peer}"`);
+      peerFab.set();
+      return;
+    }
+
     log("handleLeaves: Received leaves and storing them in db");
 
     try {
@@ -561,6 +573,8 @@ export function handleLeaves(trie, peerFab) {
       // the databases.
       const delegations = await registry.delegations();
       await put(trie, message, delegations);
+      // NOTE: Checks the Ethereum commits again with the new messages.
+      commits.synced(trie, peer);
     } catch (err) {
       elog(err, "handleLeaves: Unexpected error");
       peerFab.set();
