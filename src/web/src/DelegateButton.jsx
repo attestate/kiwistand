@@ -1,45 +1,15 @@
-import {
-  useSimulateContract,
-  useWriteContract,
-  useAccount,
-  useChainId,
-  useSwitchChain,
-} from "wagmi";
+import { useAccount } from "wagmi";
 import posthog from "posthog-js";
 import React, { useEffect, useState } from "react";
 import { Wallet } from "@ethersproject/wallet";
-import { optimism } from "wagmi/chains";
-import { create } from "@attestate/delegator2";
 import useLocalStorageState from "use-local-storage-state";
 import { getAddress } from "@ethersproject/address";
 
-import { useProvider } from "./client.mjs";
+import { useProvider, useSigner } from "./client.mjs";
 import { ConnectedConnectButton } from "./Navigation.jsx";
-import { fetchDelegations } from "./API.mjs";
+import { fetchDelegations, send } from "./API.mjs";
+import { create } from "./delegation.mjs";
 import { getLocalAccount } from "./session.mjs";
-
-const abi = [
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "bytes32[3]",
-        name: "data",
-        type: "bytes32[3]",
-      },
-    ],
-    name: "Delegate",
-    type: "event",
-  },
-  {
-    inputs: [{ internalType: "bytes32[3]", name: "data", type: "bytes32[3]" }],
-    name: "etch",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-];
 
 const SparkleIcon = () => (
   <svg viewBox="0 0 256 256" width="1.2em" height="1.2em" style={{ width: "18px", height: "18px" }}>
@@ -79,7 +49,7 @@ const ConnectionDialogue = (props) => {
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
             {pathname === "/settings"
-              ? "Allow your browser to seamlessly interact on your behalf on the Optimism network"
+              ? "Allow your browser to seamlessly interact on your behalf"
               : props.account && props.account.isConnected
               ? "Add an application key to interact without wallet prompts"
               : "Connect the wallet that received the Kiwi Pass NFT"
@@ -90,8 +60,6 @@ const ConnectionDialogue = (props) => {
     </div>
   );
 };
-
-const address = "0x418910fef46896eb0bfe38f656e2f7df3eca7198"; // Delegator3
 
 // NOTE: This is a performance optimization as `createRandom` causes a notable
 // occupation of the main thread of JavaScript to generate the randomness.
@@ -104,15 +72,15 @@ function getNewKey() {
   }
   return newKey;
 }
-// NOTE: The delegation itself: a new app key, the "etch" transaction on
-// Optimism and waiting until the key is indexed. Shared by DelegateButton and
-// the onboarding (onboarding/Onboarding.jsx). With `onIndexed` the caller
-// decides what happens once the key is indexed; otherwise `callback` runs and
-// the page goes to "/" as before.
+// NOTE: The delegation itself: a new app key, one signature in the wallet
+// (src/web/src/delegation.mjs) sent to the node, and waiting until the key is
+// in the delegations. Shared by DelegateButton and the onboarding
+// (onboarding/Onboarding.jsx). With `onIndexed` the caller decides what
+// happens once the key is indexed; otherwise `callback` runs and the page
+// goes to "/" as before.
 export function useDelegation(props) {
-  const chainId = useChainId();
   const from = useAccount();
-  const { switchChain, switchChainAsync } = useSwitchChain();
+  const signer = useSigner();
   const [keyName, setKeyName] = useState(null);
 
   useEffect(() => {
@@ -131,70 +99,28 @@ export function useDelegation(props) {
     },
   );
 
-  const [confirmation, setConfirmation] = useState("");
   const provider = useProvider();
-
-  const [payload, setPayload] = useState(null);
   const [indexedDelegation, setIndexedDelegation] = useState(false);
 
-  useEffect(() => {
-    const generate = async () => {
-      const authorize = true;
-      const payload = await create(
-        getNewKey(),
-        from.address,
-        getNewKey().address,
-        authorize,
-      );
-      setPayload(payload);
-    };
-    if (from.address) generate();
-  }, [from.address]);
-
-  const prepArgs = {
-    address,
-    abi,
-    functionName: "etch",
-    args: [payload],
-    chainId: optimism.id,
-  };
-
-  const { data: config, error, isError } = useSimulateContract(prepArgs);
-
-  const {
-    data: writeData,
-    writeContract,
-    writeContractAsync,
-    isPending: isWriteLoading,
-    isSuccess: isWriteContractSuccess,
-  } = useWriteContract();
-
-  // NOTE: One tap: switch the wallet to Optimism if needed, then send the
-  // etch transaction. The button used to wait for (and only work with) the
-  // simulation's result, `config`. When that read hadn't come back (e.g. a
-  // WalletConnect wallet whose connector client wasn't ready, or a slow or
-  // failing RPC), the tap was a silent no-op, and wallet errors were never
-  // shown. Now it falls back to sending the call itself (the wallet estimates
-  // the gas) and every failure ends up in `delegateError`.
-  const [isSwitching, setIsSwitching] = useState(false);
+  // NOTE: One tap: the wallet signs the delegation, the node takes it, and
+  // only then the key is stored. Every failure ends up in `delegateError`.
+  const [isLoading, setIsLoading] = useState(false);
   const [delegateError, setDelegateError] = useState("");
   const delegate = async () => {
-    if (!payload || !from.address) return;
+    if (!signer || !from.address) return;
     setDelegateError("");
+    setIsLoading(true);
     try {
-      if (chainId !== optimism.id) {
-        setIsSwitching(true);
-        try {
-          await switchChainAsync({ chainId: optimism.id });
-        } finally {
-          setIsSwitching(false);
-        }
+      const { message, signature } = await create(
+        getNewKey(),
+        signer,
+        from.address,
+      );
+      const response = await send(message, signature);
+      if (response.status !== "success") {
+        throw new Error(response.details || "The node didn't take it.");
       }
-      const request =
-        config && config.request
-          ? config.request
-          : { ...prepArgs, account: from.address };
-      await writeContractAsync({ ...request, chainId: optimism.id });
+      setKey(getNewKey().privateKey);
     } catch (err) {
       console.error("Delegation failed", err);
       const message = err?.shortMessage || err?.message || String(err);
@@ -203,15 +129,12 @@ export function useDelegation(props) {
           ? "You cancelled it in your wallet."
           : message,
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const isLoading = isWriteLoading || isSwitching;
-  const data = writeData;
-  const isSuccess = isWriteContractSuccess && data;
-  if (isSuccess) {
-    setKey(getNewKey().privateKey);
-  }
+  const isSuccess = Boolean(key);
 
   const handleClick = () => {
     removeItem();
@@ -258,19 +181,14 @@ export function useDelegation(props) {
   }, [key, wallet, from.address, props]);
 
   return {
-    chainId,
     from,
-    switchChain,
     key,
     wallet,
     isPersistent,
     indexedDelegation,
     isLoading,
-    isError,
     isSuccess,
-    config,
-    writeContract,
-    payload,
+    ready: Boolean(signer),
     delegate,
     delegateError,
   };
@@ -278,19 +196,14 @@ export function useDelegation(props) {
 
 const DelegateButton = (props) => {
   const {
-    chainId,
     from,
-    switchChain,
     key,
     wallet,
     isPersistent,
     indexedDelegation,
     isLoading,
-    isError,
     isSuccess,
-    config,
-    writeContract,
-    payload,
+    ready,
     delegate,
     delegateError,
   } = useDelegation(props);
@@ -374,7 +287,7 @@ const DelegateButton = (props) => {
                 <div style={{ fontSize: "15px", color: "var(--text-primary)", lineHeight: "22px" }}>
                   {!indexedDelegation ? (
                     <>
-                      Thanks! Your key is being added to Optimism (1-2 min).
+                      Thanks! Your key is being added (a few seconds).
                       This allows you to interact without wallet prompts.
                       <br /><br />
                       Redirecting when complete...
@@ -396,7 +309,7 @@ const DelegateButton = (props) => {
   let activity;
   let handler;
   content = isLoading ? "Please sign in wallet" : <span>Enable</span>;
-  activity = !payload || isLoading || isSuccess;
+  activity = !ready || isLoading || isSuccess;
   handler = delegate;
   // Notify parent that we're not in indexing state (showing delegation button)
   if (props.onIndexingStateChange) {

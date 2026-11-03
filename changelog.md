@@ -65,6 +65,13 @@ ETH. See "Order" in the protocol docs and the Delegation page.
 - `GET /api/v1/delegations` is the delegations as of now (a revoked key isn't
   in it), and has a new delegation as soon as the node took it.
 
+#### Website
+
+- "Enable one-tap actions" asks the wallet for one signature of a
+  `delegation` message and sends it to the node: no network switch to OP
+  Mainnet, no transaction, no ETH. The key is in the delegations within
+  seconds. The iOS app follows separately.
+
 #### Configuration
 
 `ETHEREUM_RPC_URL`, `INBOX_ADDRESS`, `INBOX_BLOCK`, `SEQUENCER_ADDRESS`,
