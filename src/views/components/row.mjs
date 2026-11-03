@@ -529,15 +529,10 @@ const row = (
         path === "/best" ||
         (debugMode && path === "/debug"));
 
-    // Condition for displaying comment preview:
-    // - Must have a last comment
-    // - Last comment must have a resolved identity (ens/fc)
-    // - Must not be inverted
-    const displayCommentPreview =
-      story.lastComment &&
-      (story.lastComment.identity.ens ||
-        story.lastComment.identity.farcaster) &&
-      !invert;
+    // NOTE: Every last comment gets a preview, also from people without an
+    // ENS or Farcaster name or avatar: the name falls back to the Kiwi
+    // nickname or the short address, the avatar to the user icon.
+    const displayCommentPreview = story.lastComment && !invert;
 
     // NOTE: NEU 2 story card. Every part is a direct child of .content-row
     // (a flex column), so CSS can put the picture first on phones (like the
