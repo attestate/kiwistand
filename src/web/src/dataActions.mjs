@@ -17,7 +17,7 @@ const click = {
     if (modified(e)) return;
     const overlay = win.document.getElementById("spinner-overlay");
     if (overlay) overlay.style.display = "block";
-    if (el.dataset.beacon) beacon(win, el.dataset.href);
+    if (el.dataset.beacon === "true") beacon(win, el.dataset.href);
   },
 
   // A story's link: in the apps the embed drawer or the system browser,

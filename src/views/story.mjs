@@ -51,6 +51,11 @@ const isInternalLink = (href) =>
 // Never build the anchors by hand here. DOMPurify serializes text nodes, so it
 // leaves quotes unencoded, and a URL like `https://x"onmouseover="alert(1)`
 // interpolated into href="" injects attributes. linkify-html escapes them.
+// data-* attributes are stripped from comment HTML: the page's document-level
+// data-action listeners (src/web/src/dataActions.mjs) would otherwise run for
+// markup a commenter wrote (e.g. a full-page <a data-action="copy">).
+const COMMENT_SANITIZE = { ALLOW_DATA_ATTR: false };
+
 function linkifyComment(title) {
   const body = title
     .split("\n")
@@ -58,9 +63,10 @@ function linkifyComment(title) {
       if (line.startsWith(">")) {
         return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${DOMPurify.sanitize(
           line.substring(2),
+          COMMENT_SANITIZE,
         )}</div>`;
       }
-      return line.trim() ? `<div>${DOMPurify.sanitize(line)}</div>` : "<br/>";
+      return line.trim() ? `<div>${DOMPurify.sanitize(line, COMMENT_SANITIZE)}</div>` : "<br/>";
     })
     .join("");
 
