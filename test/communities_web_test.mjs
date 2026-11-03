@@ -330,6 +330,14 @@ test("a community's page: header card, rules, feeds and its colours", (t) => {
   // Breadcrumbs, and the feeds under the community.
   t.true(html.includes('<a href="/">Kiwi News</a>'));
   t.true(html.includes('<a href="/communities">Communities</a>'));
+  // Names are unique per owner only: the owner is in the trail.
+  t.true(
+    html.includes(
+      `<a href="/upvotes?address=${community().owner}">0x6e56...fFeE</a>`,
+    ),
+  );
+  const named = page.render(undefined, community({ ownerName: "sam.eth" }), "hot", []);
+  t.true(named.includes(`<a href="/upvotes?address=${community().owner}">sam.eth</a>`));
   t.true(html.includes(`href="/c/${community().id}/new"`));
   t.true(html.includes(`href="/c/${community().id}/best"`));
   t.true(html.includes("AGENT BUILDERS · 3 STORIES"));
