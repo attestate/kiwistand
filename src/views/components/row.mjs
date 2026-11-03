@@ -564,9 +564,7 @@ const row = (
                                 src="${DOMPurify.sanitize(
                                   story.metadata.twitterAuthorAvatar,
                                 )}"
-                                alt="${DOMPurify.sanitize(
-                                  story.metadata.twitterCreator || "Author",
-                                )}"
+                                alt="${story.metadata.twitterCreator || "Author"}"
                                 width="20"
                                 height="20"
                                 loading="${getImageLoading(isAboveFold, story.metadata.twitterAuthorAvatar)}"
@@ -595,7 +593,7 @@ const row = (
                           const { replyTo } = splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()));
                           if (!replyTo) return "";
                           return html`<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">
-                            Replying to ${DOMPurify.sanitize(replyTo.join(" "))}
+                            Replying to ${replyTo.join(" ")}
                           </div>`;
                         })()}
                         <p style="white-space: pre-wrap;">
@@ -605,14 +603,14 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
+                                  return html`<span style="text-decoration:underline;">${display}</span>`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return part;
                               });
                             };
                             const desc = splitQuote(splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim())).text).text;
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
+                              return html`<span style="text-decoration:underline;">${desc}</span>`;
                             }
                             const nodes = linkifyNodes(desc);
                             return html`${nodes}`;
@@ -625,9 +623,9 @@ const row = (
                             style="margin-top: 10px; padding: 10px; border: 1px solid color-mix(in srgb, var(--embed-twitter-text) 28%, transparent); background: color-mix(in srgb, var(--embed-twitter-text) 5%, transparent); border-radius: 4px;"
                           >
                             <div style="font-weight: 600; font-size: 13px; color: var(--embed-twitter-text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                              ${DOMPurify.sanitize(quote.author)}
+                              ${quote.author}
                             </div>
-                            <p style="white-space: pre-wrap; margin: 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">${DOMPurify.sanitize(quote.text)}</p>
+                            <p style="white-space: pre-wrap; margin: 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">${quote.text}</p>
                           </div>`;
                         })()}
                         ${story.metadata.image
@@ -673,9 +671,7 @@ const row = (
                               src="${DOMPurify.sanitize(
                                 sizedImageUrl(story.metadata.farcasterCast.author.pfp, 72),
                               )}"
-                              alt="${DOMPurify.sanitize(
-                                story.metadata.farcasterCast.author.username || "farcaster",
-                              )}"
+                              alt="${story.metadata.farcasterCast.author.username || "farcaster"}"
                               width="20"
                               height="20"
                               loading="${getImageLoading(isAboveFold, story.metadata.farcasterCast.author.pfp)}"
@@ -709,22 +705,22 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
+                                  return html`<span style="text-decoration:underline;">${display}</span>`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return part;
                               });
                             };
 
                             if (story.metadata.farcasterCast?.text) {
                               const text = story.metadata.farcasterCast.text.trim();
                               if (/^https?:\/\/\S+$/i.test(text)) {
-                                return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(text)}</span>`;
+                                return html`<span style="text-decoration:underline;">${text}</span>`;
                               }
                               return html`${linkifyNodes(text)}`;
                             }
                             const desc = (story.metadata.ogDescription || "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
+                              return html`<span style="text-decoration:underline;">${desc}</span>`;
                             }
                             if (desc.length <= 280) {
                               const nodes = linkifyNodes(desc);
@@ -771,10 +767,8 @@ const row = (
                               src="${DOMPurify.sanitize(
                                 story.metadata.blueskyPost.author.avatar,
                               )}"
-                              alt="${DOMPurify.sanitize(
-                                story.metadata.blueskyPost.author.handle ||
-                                  "bluesky",
-                              )}"
+                              alt="${story.metadata.blueskyPost.author.handle ||
+                              "bluesky"}"
                               width="20"
                               height="20"
                               loading="${getImageLoading(isAboveFold, story.metadata.blueskyPost.author.avatar)}"
@@ -793,10 +787,8 @@ const row = (
                               />
                             </svg>`}
                         <span style="font-weight: 600; color: var(--embed-farcaster-text); font-size: 14px;">
-                          @${DOMPurify.sanitize(
-                            story.metadata.blueskyPost.author.handle ||
-                              "bluesky",
-                          )}
+                          @${story.metadata.blueskyPost.author.handle ||
+                          "bluesky"}
                         </span>
                       </div>
                       <div class="bluesky-embed-body">
@@ -812,10 +804,10 @@ const row = (
                                       : part;
                                   return html`<span
                                     style="text-decoration:underline;"
-                                    >${DOMPurify.sanitize(display)}</span
+                                    >${display}</span
                                   >`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return part;
                               });
                             };
                             const text = (
@@ -824,7 +816,7 @@ const row = (
                             if (/^https?:\/\/\S+$/i.test(text)) {
                               return html`<span
                                 style="text-decoration:underline;"
-                                >${DOMPurify.sanitize(text)}</span
+                                >${text}</span
                               >`;
                             }
                             const sliced = text.slice(0, 300);
@@ -1131,9 +1123,7 @@ const row = (
                       <span class="kn-cp-body">
                         <span class="kn-cp-head">
                           <span class="kn-cp-name"
-                            >${DOMPurify.sanitize(
-                              story.lastComment.identity.displayName,
-                            )}</span
+                            >${story.lastComment.identity.displayName}</span
                           >
                           <span class="kn-cp-when"
                             >· ${formatDistanceToNowStrict(
@@ -1143,9 +1133,7 @@ const row = (
                         </span>
                         <span
                           class="comment-preview-text kn-cp-text"
-                          >${truncateComment(
-                            DOMPurify.sanitize(story.lastComment.title),
-                          )}</span
+                          >${truncateComment(story.lastComment.title)}</span
                         >
                       </span>
                       <span class="kn-cp-expand">${expandSVG}</span>
@@ -1231,9 +1219,9 @@ const row = (
                           return story.isOriginal
                             ? html`<mark
                                 style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
-                                >${truncateLongWords(DOMPurify.sanitize(displayTitle))}</mark
+                                >${truncateLongWords(displayTitle)}</mark
                               >`
-                            : html`${truncateLongWords(DOMPurify.sanitize(displayTitle))}`;
+                            : html`${truncateLongWords(displayTitle)}`;
                         })()}
                       </a>
               </span>
@@ -1254,7 +1242,7 @@ const row = (
                   style="padding: 12px 20px; margin-top: 8px;"
                 >
                   <div style="white-space: pre-wrap; word-break: break-word; line-height: 1.6; font-size: 13px; color: var(--text-primary); opacity: 0.85;">
-                    ${DOMPurify.sanitize(textPostContent)}
+                    ${textPostContent}
                   </div>
                 </div>`
               : null}
