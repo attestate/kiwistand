@@ -1,12 +1,15 @@
 import { env } from "process";
+import { join } from "path";
 
 import test from "ava";
+import Database from "better-sqlite3";
 import { Wallet } from "ethers";
 import { Trie } from "@ethereumjs/trie";
 
 import { sign, toDigest } from "../src/id.mjs";
 import * as commits from "../src/commits.mjs";
-import { EIP712_MESSAGE, PROTOCOL } from "../src/constants.mjs";
+import * as cache from "../src/cache.mjs";
+import { EIP712_MESSAGE, PROTOCOL, COMMITS } from "../src/constants.mjs";
 
 const T = 1800000000;
 const story = (href, timestamp) =>
@@ -138,6 +141,79 @@ test("checking commits against the messages a node holds", async (t) => {
   invalid[2].root = good[2].root;
   result = await commits.check(messages, invalid, hash("aa"));
   t.is(result[2].status, "verified");
+});
+
+test.serial("whether a message was witnessed in time", (t) => {
+  cache.initializeCommits();
+  const { inbox } = COMMITS;
+  const rpc = env.ETHEREUM_RPC_URL;
+  COMMITS.inbox = `0x${"11".repeat(20)}`;
+  env.ETHEREUM_RPC_URL = "http://127.0.0.1:8545";
+  t.teardown(() => {
+    COMMITS.inbox = inbox;
+    if (rpc === undefined) delete env.ETHEREUM_RPC_URL;
+    else env.ETHEREUM_RPC_URL = rpc;
+    new Database(join(env.CACHE_DIR, "database.db")).exec(
+      "DELETE FROM commits; DELETE FROM listings;",
+    );
+  });
+  const H = commits.WINDOW;
+  const index = (byte, timestamp) =>
+    `${timestamp.toString(16)}${byte.repeat(32)}`;
+  const messages = {
+    early: index("0a", T - 100),
+    listed: index("0b", T + 10),
+    unlisted: index("0c", T + 20),
+    byDeadline: index("0d", T + 30),
+    afterDeadline: index("0e", T + 40),
+    includedLast: index("0f", T + 50),
+    includedLate: index("1a", T + 60),
+    includedEarly: index("1b", T + 70),
+    includedTooEarly: index("1c", T + 80),
+  };
+  const id = (name) => `0x${messages[name].slice(-64)}`;
+  const commit = (k, time, sequencer, ids) => ({
+    k,
+    tx: hash(`0${k}`),
+    block: k,
+    time,
+    sequencer,
+    root: hash("00"),
+    status: "verified",
+    reason: null,
+    ids,
+  });
+  // NOTE: The deadline of the messages dated T + 10 to T + 80 is commit 6,
+  // the first sequencer commit after their timestamp + an hour.
+  const chain = [
+    commit(0, T, true, [hash("aa")]),
+    commit(1, T + 10, false, [id("includedEarly")]),
+    commit(2, T + 19, false, [id("includedTooEarly")]),
+    commit(3, T + 600, true, [id("listed")]),
+    commit(4, T + 50 + H, false, [id("includedLast")]),
+    commit(5, T + 61 + H, false, [id("includedLate")]),
+    commit(6, T + 100 + H, true, [id("byDeadline")]),
+    commit(7, T + 200 + H, true, [id("afterDeadline")]),
+  ];
+  const late = (name) => commits.late(messages[name]);
+
+  // Without a sequencer commit after its timestamp + an hour, a message is
+  // pending.
+  cache.saveCommits(chain.slice(0, 6));
+  t.false(late("unlisted"));
+  t.false(late("afterDeadline"));
+
+  cache.saveCommits(chain);
+  t.false(late("early"));
+  t.false(late("listed"));
+  t.true(late("unlisted"));
+  t.false(late("byDeadline"));
+  t.true(late("afterDeadline"));
+  t.false(late("includedLast"));
+  t.true(late("includedLate"));
+  // An include() may be a little before the timestamp: the usual skew.
+  t.false(late("includedEarly"));
+  t.true(late("includedTooEarly"));
 });
 
 test("the sequencer commits at most once per UTC hour", async (t) => {

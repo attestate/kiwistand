@@ -104,7 +104,11 @@ test("timestamps decide whom a signer's messages count for", (t) => {
     { index: at(T + 50), signer, identity: carol, authorize: 1 },
     { index: at(T + 40), signer: old, identity: alice, authorize: 0 },
   ];
-  const delegations = build({ [old]: alice }, rows);
+  // A message the signer's stolen key signed after the revocation, dated
+  // before it, that wasn't witnessed in time (src/commits.mjs).
+  const stolen = at(T + 25, "cd");
+  const late = (index) => index === stolen;
+  const delegations = build({ [old]: alice }, rows, late);
   const of = (address, timestamp) =>
     resolve(delegations, address, at(timestamp, "ef"));
 
@@ -121,6 +125,8 @@ test("timestamps decide whom a signer's messages count for", (t) => {
   // A snapshot signer counts for its identity until revoked.
   t.is(of(old, T), alice);
   t.is(of(old, T + 41), old);
+  // The backdated message counts for the signer, not for Alice.
+  t.is(resolve(delegations, signer, stolen), signer);
 
   t.deepEqual(Object.fromEntries(Object.entries(delegations)), {
     [signer]: carol,

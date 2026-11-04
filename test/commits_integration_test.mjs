@@ -1,6 +1,6 @@
 // The commits on a local Ethereum chain (anvil, from Foundry): node A, the
 // sequencer, commits; B catches up from A with set reconciliation, reads
-// include()s, verifies, and credits by timestamp; C
+// include()s, verifies, and credits by timestamp with the finality rule; C
 // and D catch up from A after A tampered with a committed message and must
 // name the commit. Each node is its own process with its own DATA_DIR and
 // CACHE_DIR (test/fixtures/commits-node.mjs).
@@ -123,11 +123,11 @@ const now = () => Math.floor(Date.now() / 1000);
 const id = (message) => `0x${toDigest(message).digest}`;
 
 (hasAnvil ? test.serial : test.skip)(
-  "commits on Ethereum: nodes verify them, take include()s and report tampering",
+  "commits on Ethereum: nodes verify them, take include()s, apply the finality rule and report tampering",
   async (t) => {
     // NOTE: kzg-wasm takes about 20 seconds to load for the blob.
     t.timeout(300_000);
-    const { rpc, address, call } = await chain(t);
+    const { rpc, client, address, call } = await chain(t);
     const dir = await mkdtemp(join(tmpdir(), "kiwi-commits-"));
     const nodes = [];
     t.teardown(async () => {
@@ -156,7 +156,9 @@ const id = (message) => `0x${toDigest(message).digest}`;
     const alice = Wallet.createRandom();
     const bob = Wallet.createRandom();
     const carol = Wallet.createRandom();
+    const dave = Wallet.createRandom();
     const signer = Wallet.createRandom();
+    const signer2 = Wallet.createRandom();
     const genesis = [
       await story(alice, "https://alice.example", now() - 100),
       await story(bob, "https://bob.example", now() - 90),
@@ -167,9 +169,9 @@ const id = (message) => `0x${toDigest(message).digest}`;
     t.deepEqual((await a.call("calldata", zero.hash)).ids, [SNAPSHOT]);
     const time = zero.status.latest.time;
 
-    // 2. Alice delegates to a signer and revokes it. The sequencer takes the
-    // signer's story dated before the revocation after it: timestamps
-    // decide, not the order.
+    // 2. Alice delegates to a signer and revokes it; Dave delegates to
+    // another. The sequencer takes the signer's story dated before the
+    // revocation after it: timestamps decide, not the order.
     const delegation = (identity, key, authorize, timestamp) =>
       delegations.authorization(key, identity.address).then((authorization) =>
         sign(
@@ -191,6 +193,7 @@ const id = (message) => `0x${toDigest(message).digest}`;
       await delegation(alice, signer, false, time + 4),
       before,
       after,
+      await delegation(dave, signer2, true, time + 1),
     ];
     t.deepEqual(await a.call("add", batch), []);
     const one = await a.call("commit");
@@ -231,7 +234,62 @@ const id = (message) => `0x${toDigest(message).digest}`;
     ]);
     t.log("B:", JSON.stringify(status));
 
-    // 5. A censoring sequencer leaves a forced story out of its next commit.
+    // 5. Two hours later, the signer's stolen key signs a story dated before
+    // the revocation. While no sequencer commit is an hour after its
+    // timestamp, it's pending and counts for Alice. The sequencer's next
+    // commit doesn't list it: it wasn't witnessed in time and counts for the
+    // signer.
+    await client.request({ method: "evm_increaseTime", params: [2 * 3600] });
+    const stolen = await story(signer, "https://stolen.example", time + 3);
+    t.deepEqual(await b.call("add", [stolen]), []);
+    t.true(
+      (await b.call("credited", alice.address)).includes(
+        "https://stolen.example",
+      ),
+    );
+    t.deepEqual(
+      await a.call("add", [await story(bob, "https://later.example", now())]),
+      [],
+    );
+    await a.call("commit");
+    await a.call("push", await b.call("addr"));
+    status = await b.call("refresh");
+    t.deepEqual(status.verified, [0, 4]);
+    t.false(
+      (await b.call("credited", alice.address)).includes(
+        "https://stolen.example",
+      ),
+    );
+    t.true(
+      (await b.call("credited", signer.address)).includes(
+        "https://stolen.example",
+      ),
+    );
+    t.true(
+      (await b.call("credited", alice.address)).includes(
+        "https://before.example",
+      ),
+    );
+
+    // 6. An include() more than an hour after a message's timestamp doesn't
+    // make it final: Dave's signer's story counts for the signer, also once
+    // the sequencer lists it.
+    const late = await story(signer2, "https://late.example", now());
+    await include(late);
+    await b.call("refresh");
+    t.deepEqual(await b.call("credited", signer2.address), [
+      "https://late.example",
+    ]);
+    t.deepEqual(await b.call("credited", dave.address), []);
+    const four = await a.call("commit");
+    t.deepEqual((await a.call("calldata", four.hash)).ids, [id(late)]);
+    status = await b.call("refresh");
+    t.deepEqual(status.verified, [0, 6]);
+    t.deepEqual(await b.call("credited", signer2.address), [
+      "https://late.example",
+    ]);
+
+    // 7. A censoring sequencer leaves a forced story out of its next commit.
     // B took it from the calldata, so the commit's root differs, and B
     // reports the commit.
     const censored = await story(carol, "https://censored.example", now());
@@ -246,15 +304,15 @@ const id = (message) => `0x${toDigest(message).digest}`;
     t.false((await a.call("calldata", five.hash)).ids.includes(id(censored)));
     await a.call("push", await b.call("addr"));
     status = await b.call("refresh");
-    t.deepEqual(status.verified, [0, 3]);
+    t.deepEqual(status.verified, [0, 6]);
     t.deepEqual(
       { k: status.failed.k, status: status.failed.status },
-      { k: 5, status: "mismatch" },
+      { k: 8, status: "mismatch" },
     );
     t.is(status.failed.tx, five.hash);
     t.log("B, censored:", JSON.stringify(status));
 
-    // 6. A swaps a committed message for another validly signed one: C
+    // 8. A swaps a committed message for another validly signed one: C
     // misses it in commit 1. With a genesis message gone, D's root of the
     // genesis differs. Both report it and keep syncing.
     const fake = await story(signer, "https://fake.example", time + 2);

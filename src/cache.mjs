@@ -754,7 +754,8 @@ export function listDelegations(database = db) {
 }
 
 // The Ethereum mainnet commits (src/commits.mjs) as a node read and checked
-// them, sequencer commits and include()s.
+// them, sequencer commits and include()s, and the commits that list each
+// message.
 export function initializeCommits(database = db) {
   database.exec(`
      CREATE TABLE IF NOT EXISTS commits (
@@ -767,6 +768,11 @@ export function initializeCommits(database = db) {
          status TEXT NOT NULL,
          reason TEXT
      );
+     CREATE TABLE IF NOT EXISTS listings (
+         id TEXT NOT NULL,
+         k INTEGER NOT NULL,
+         PRIMARY KEY (id, k)
+     );
    `);
 }
 
@@ -777,7 +783,10 @@ export function saveCommits(commits, database = db) {
          (k, tx, block, time, sequencer, root, status, reason)
        VALUES (@k, @tx, @block, @time, @sequencer, @root, @status, @reason)`,
     );
-    for (const row of commits) {
+    const listing = database.prepare(
+      `INSERT OR IGNORE INTO listings (id, k) VALUES (?, ?)`,
+    );
+    for (const { ids, ...row } of commits) {
       const { k, tx, block, time, sequencer, root, status, reason } = row;
       commit.run({
         k,
@@ -789,6 +798,7 @@ export function saveCommits(commits, database = db) {
         status,
         reason,
       });
+      for (const id of ids) listing.run(id, k);
     }
   });
   save();
@@ -797,6 +807,36 @@ export function saveCommits(commits, database = db) {
 export function getCommits(database = db) {
   try {
     return database.prepare(`SELECT * FROM commits ORDER BY k`).all();
+  } catch (err) {
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+}
+
+// The first sequencer commit with a block time after `time`.
+export function sequencerCommitAfter(time, database = db) {
+  try {
+    return database
+      .prepare(
+        `SELECT k, time FROM commits WHERE sequencer = 1 AND time > ?
+         ORDER BY k LIMIT 1`,
+      )
+      .get(time);
+  } catch (err) {
+    if (err.message.includes("no such table")) return undefined;
+    throw err;
+  }
+}
+
+// The commits that list the message `id`.
+export function getListings(id, database = db) {
+  try {
+    return database
+      .prepare(
+        `SELECT commits.k, time, sequencer FROM listings
+         JOIN commits ON commits.k = listings.k WHERE id = ?`,
+      )
+      .all(id);
   } catch (err) {
     if (err.message.includes("no such table")) return [];
     throw err;
@@ -815,21 +855,35 @@ export function delegationsVersion(database = db) {
   }
 }
 
-// Credits a signer's stories, upvotes, comments and reactions again, after
-// its delegations changed. `identityOf` maps a message's index
-// to its identity.
-export function reattribute(signer, identityOf) {
-  const address = utils.getAddress(signer);
+// Credits stories, upvotes, comments and reactions again. `identityOf` maps
+// a message's signer and index to its identity.
+function credit(where, params, identityOf) {
   for (const table of ["submissions", "upvotes", "comments", "reactions"]) {
     const rows = db
-      .prepare(`SELECT id, identity FROM ${table} WHERE signer = ?`)
-      .all(address);
+      .prepare(`SELECT id, signer, identity FROM ${table} WHERE ${where}`)
+      .all(...params);
     const update = db.prepare(`UPDATE ${table} SET identity = ? WHERE id = ?`);
-    for (const { id, identity } of rows) {
-      const next = identityOf(id.replace("kiwi:0x", ""));
+    for (const { id, signer, identity } of rows) {
+      const next = identityOf(signer, id.replace("kiwi:0x", ""));
       if (next !== identity) update.run(next, id);
     }
   }
+}
+
+// A signer's messages, after its delegations changed.
+export function reattribute(signer, identityOf) {
+  credit("signer = ?", [utils.getAddress(signer)], identityOf);
+}
+
+// The messages dated from `from` to before `to` that count for an identity,
+// after commits decided that some weren't witnessed in time
+// (src/commits.mjs): they count for their signers.
+export function recredit(from, to, identityOf) {
+  credit(
+    "lower(identity) != lower(signer) AND timestamp >= ? AND timestamp < ?",
+    [from, to],
+    identityOf,
+  );
 }
 
 // How many stories each community has and when the newest one came in, by

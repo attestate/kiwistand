@@ -15,7 +15,9 @@
 // was a revocation. A revocation only counts if the signer's identity at that
 // point signed it. Messages a signer signed before its first delegation count
 // for that delegation's identity. Delegations from OP Mainnet (the snapshot)
-// come before every message.
+// come before every message. On a node that checks the commits on Ethereum
+// (src/commits.mjs), a message that wasn't witnessed in time counts for its
+// signer.
 import { env } from "process";
 
 import { utils } from "ethers";
@@ -144,9 +146,10 @@ export const HISTORY = Symbol("history");
 // The delegations as nodes pass them around: signers to their identities now,
 // for resolveIdentity of @attestate/delegator2. Under HISTORY, every signer's
 // delegations by timestamp, for `resolve`. `base` are signers to identities
-// from before the protocol's delegations and `rows` the delegation messages
-// ({index, signer, identity, authorize}).
-export function build(base, rows) {
+// from before the protocol's delegations, `rows` the delegation messages
+// ({index, signer, identity, authorize}) and `late` tells whether a message
+// (its index) wasn't witnessed in time.
+export function build(base, rows, late = () => false) {
   const signers = new Map();
   for (const [signer, identity] of Object.entries(base)) {
     signers.set(utils.getAddress(signer), [
@@ -173,7 +176,7 @@ export function build(base, rows) {
     const identity = attribute(entries, Infinity);
     if (identity) delegations[signer] = identity;
   }
-  delegations[HISTORY] = { signers };
+  delegations[HISTORY] = { signers, late };
   return delegations;
 }
 
@@ -185,6 +188,7 @@ export function resolve(delegations, signer, index) {
   if (!entries || index === undefined) {
     return resolveIdentity(delegations, address);
   }
+  if (history.late(index)) return address;
   if (entries.length === 1 && entries[0].authorize) {
     return entries[0].identity;
   }

@@ -11,6 +11,7 @@ import { keccak256 } from "viem";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
 import * as cache from "../cache.mjs";
+import { late } from "../commits.mjs";
 import { build, resolve as attribute } from "../delegations.mjs";
 
 const baseURL = `https://news.kiwistand.com:8443`;
@@ -43,7 +44,7 @@ export function snapshot() {
 
 function rebuild() {
   version = cache.delegationsVersion();
-  cachedDelegations = build(base, cache.listDelegations());
+  cachedDelegations = build(base, cache.listDelegations(), late);
 }
 
 // Simple initialization function
@@ -78,8 +79,15 @@ function calculateCanonicalChecksum(data) {
 export async function reattribute(signers) {
   const all = await delegations();
   for (const signer of signers) {
-    cache.reattribute(signer, (index) => attribute(all, signer, index));
+    cache.reattribute(signer, (signer, index) => attribute(all, signer, index));
   }
+}
+
+// Credits the messages dated from `from` to before `to` again, after commits
+// decided whether they were witnessed in time (src/commits.mjs).
+export async function recredit(from, to) {
+  const all = await delegations();
+  cache.recredit(from, to, (signer, index) => attribute(all, signer, index));
 }
 
 // The delegations: signers to identities now, and every signer's delegations

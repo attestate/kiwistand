@@ -18,7 +18,15 @@
 // commits' order is the order of those events on Ethereum.
 //
 // The genesis is the sequencer's first commit: its root covers every message
-// up to its block, and its one ID is the delegations snapshot's hash.
+// up to its block, and its one ID is the delegations snapshot's hash. Every
+// message dated up to it is final.
+//
+// A message dated t is witnessed in time if a sequencer commit at or before
+// the first one after t + WINDOW lists it, or an include() in a block
+// between t and t + WINDOW carries it. One that isn't counts for its signer,
+// never for an identity (`late`). Until there's a sequencer commit after
+// t + WINDOW, a message is pending and counts by its timestamp.
+import { env } from "process";
 import { brotliCompressSync, brotliDecompressSync } from "zlib";
 
 import { Trie } from "@ethereumjs/trie";
@@ -39,6 +47,8 @@ import { COMMITS } from "./constants.mjs";
 import * as cache from "./cache.mjs";
 
 export const VERSION = 1;
+// How long after its timestamp a message can still be witnessed in time.
+export const WINDOW = 60 * 60;
 
 export const abi = parseAbi([
   "function commit(uint8 version, bytes32 root, bytes32[] ids)",
@@ -234,6 +244,32 @@ export async function check(messages, commits, snapshot) {
   return commits;
 }
 
+// Whether the message `index` (a trie key: timestamp and ID) wasn't
+// witnessed in time: there's a sequencer commit after its timestamp +
+// WINDOW, but neither that commit nor an earlier one lists it, and no
+// include() with a block time from its timestamp to WINDOW after it carries
+// it. The lower end allows the usual skew of timestamps,
+// MAX_TIMESTAMP_DELTA_SECS. Messages dated up to the genesis are final, and
+// without an RPC nothing is late.
+let genesisTime;
+export function late(index) {
+  if (!enabled()) return false;
+  const id = `0x${index.slice(-64)}`;
+  const timestamp = parseInt(index.slice(0, -64), 16);
+  genesisTime ??= cache.sequencerCommitAfter(0)?.time;
+  if (genesisTime === undefined || timestamp <= genesisTime) return false;
+  const deadline = cache.sequencerCommitAfter(timestamp + WINDOW);
+  if (!deadline) return false;
+  const skew = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10) || 0;
+  return !cache
+    .getListings(id)
+    .some(({ k, time, sequencer }) =>
+      sequencer
+        ? k <= deadline.k
+        : time >= timestamp - skew && time <= timestamp + WINDOW,
+    );
+}
+
 // What GET /api/v1/commits answers: how far this node verified the commits.
 export function status() {
   const commits = cache.getCommits();
@@ -287,6 +323,10 @@ export function refresh(trie, rpc = client(), snapshot, recheck = false) {
   return queue;
 }
 
+// The newest sequencer commit's block time.
+const newest = (commits) =>
+  commits.filter(({ sequencer }) => sequencer).at(-1)?.time;
+
 async function update(trie, rpc, recheck) {
   const from = state.block === null ? COMMITS.block : state.block + 1;
   const { commits, latest } = await read(rpc, from, state.commits.length);
@@ -300,6 +340,7 @@ async function update(trie, rpc, recheck) {
   if (!commits.length && !changed) return commits;
   state.root = root;
 
+  const before = newest(cache.getCommits());
   await check(await held(trie), state.commits, state.snapshot);
   cache.saveCommits(state.commits);
   const failed = state.commits.find(
@@ -308,6 +349,19 @@ async function update(trie, rpc, recheck) {
   if (failed) {
     const { k, status, reason } = failed;
     log(`commits: Commit ${k} is ${status}: ${reason}`);
+  }
+
+  // NOTE: A new sequencer commit decides whether the messages dated up to
+  // WINDOW before it were witnessed in time; the ones that weren't count for
+  // their signers from now on. Those dated up to the genesis are final.
+  const after = newest(state.commits);
+  if (after !== undefined && after !== before) {
+    const registry = await import("./chainstate/registry.mjs");
+    const from =
+      before === undefined
+        ? state.commits.find(({ sequencer }) => sequencer).time
+        : before - WINDOW;
+    await registry.recredit(from, after - WINDOW);
   }
   return commits;
 }
