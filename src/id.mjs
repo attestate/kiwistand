@@ -22,6 +22,7 @@ import {
   EIP712_COMMUNITY_MESSAGE,
   EIP712_COMMUNITY,
   EIP712_MEMBERSHIP,
+  EIP712_DELEGATION,
 } from "./constants.mjs";
 import log from "./logger.mjs";
 
@@ -81,8 +82,8 @@ export function create(title, href, type, timestamp, community) {
 }
 
 // The EIP-712 types a protocol message is signed with: a community, joining
-// or leaving one, a post to a community (an amplify with `community`), or any
-// other message.
+// or leaving one, a delegation, a post to a community (an amplify with
+// `community`), or any other message.
 //
 // NOTE: Memberships have a `community` too, so they're told apart by type
 // first.
@@ -91,6 +92,7 @@ export function messageTypes(message) {
   if (message.type === "join" || message.type === "leave") {
     return EIP712_MEMBERSHIP;
   }
+  if (message.type === "delegation") return EIP712_DELEGATION;
   if (message.community !== undefined) return EIP712_COMMUNITY_MESSAGE;
   return EIP712_MESSAGE;
 }
@@ -141,7 +143,7 @@ export function ecrecover(message, types, enableCache = false) {
 }
 
 const messageValidator = ajv.compile(SCHEMATA.message);
-export function verify(message) {
+export function validate(message) {
   const result = messageValidator(message);
   if (!result) {
     const errMessage = `Wrongly formatted message: ${JSON.stringify(
@@ -150,6 +152,11 @@ export function verify(message) {
     log(errMessage);
     throw new Error(errMessage);
   }
+}
 
+// NOTE: A delegation is signed by its `identity`, which may be a smart
+// wallet; store.add checks it with delegations.verify.
+export function verify(message) {
+  validate(message);
   return ecrecover(message, messageTypes(message));
 }

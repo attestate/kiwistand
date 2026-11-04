@@ -19,11 +19,11 @@ export default cache;
 import Database from "better-sqlite3";
 import normalizeUrl from "normalize-url";
 import { utils } from "ethers";
-import { resolveIdentity } from "@attestate/delegator2";
 
 import log from "./logger.mjs";
 import { toDigest } from "./id.mjs";
 import { nameKey, normalizeId } from "./communities.mjs";
+import { resolve, keysOf } from "./delegations.mjs";
 
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
@@ -357,8 +357,10 @@ export async function insertCommunities(messages, database = db) {
   }
 }
 
-function ownerOf(signer, delegations) {
-  return resolveIdentity(delegations, signer).toLowerCase();
+// NOTE: `index` is the message the row keeps (its newest), as a revoked
+// signer signs for itself from its revocation on (src/delegations.mjs).
+function ownerOf(signer, delegations, index) {
+  return resolve(delegations, signer, index).toLowerCase();
 }
 
 // The rows that make up the community `<owner>/<key>`: every key that signed
@@ -376,7 +378,9 @@ function rowsOf(id, delegations, database) {
     if (err.message.includes("no such table")) return [];
     throw err;
   }
-  return rows.filter((row) => ownerOf(row.signer, delegations) === owner);
+  return rows.filter(
+    (row) => ownerOf(row.signer, delegations, row.message) === owner,
+  );
 }
 
 // When the community was first created (its oldest version's timestamp), or
@@ -419,7 +423,7 @@ export function getCommunity(id, delegations = {}, database = db) {
 export function listCommunities(delegations = {}, database = db) {
   const groups = new Map();
   for (const row of database.prepare(`SELECT * FROM communities`).all()) {
-    const owner = ownerOf(row.signer, delegations);
+    const owner = ownerOf(row.signer, delegations, row.message);
     const id = `${owner}/${row.key}`;
     if (!groups.has(id)) groups.set(id, { owner, rows: [] });
     groups.get(id).rows.push(row);
@@ -535,17 +539,24 @@ function readMemberships(sql, params, database) {
   }
 }
 
-// The signing keys that resolve to `identity`: itself and the keys it
-// delegated to, in lowercase.
+// The signers that resolve to `identity`: itself and the signers it
+// delegated to, also revoked ones (their rows are resolved one by one), in
+// lowercase.
 function signersOf(identity, delegations) {
   const target = identity.toLowerCase();
   const signers = new Set([target]);
   for (const [to, from] of Object.entries(delegations)) {
     if (String(from).toLowerCase() === target) signers.add(to.toLowerCase());
   }
-  return [...signers].filter(
-    (signer) => utils.isAddress(signer) && ownerOf(signer, delegations) === target,
+  const delegated = keysOf(delegations, target).map((signer) =>
+    signer.toLowerCase(),
   );
+  return [...signers]
+    .filter(
+      (signer) =>
+        utils.isAddress(signer) && ownerOf(signer, delegations) === target,
+    )
+    .concat(delegated.filter((signer) => !signers.has(signer)));
 }
 
 // The rows of the given communities (IDs in lowercase), or of all of them.
@@ -578,7 +589,7 @@ function newestMemberships(rows, delegations) {
   for (const row of rows) {
     let identity;
     try {
-      identity = ownerOf(row.signer, delegations);
+      identity = ownerOf(row.signer, delegations, row.message);
     } catch (err) {
       continue;
     }
@@ -616,6 +627,7 @@ export function memberCounts(ids, delegations = {}, database = db) {
 // The IDs of the communities `identity` joined and hasn't left since. The
 // ones it owns aren't in it unless it joined them: see memberCounts.
 export function joinedCommunities(identity, delegations = {}, database = db) {
+  const target = identity.toLowerCase();
   const signers = signersOf(identity, delegations);
   if (!signers.length) return new Set();
   const rows = readMemberships(
@@ -627,7 +639,7 @@ export function joinedCommunities(identity, delegations = {}, database = db) {
   );
   return new Set(
     newestMemberships(rows, delegations)
-      .filter(({ type }) => type === "join")
+      .filter(({ type, identity: id }) => type === "join" && id === target)
       .map(({ community }) => community),
   );
 }
@@ -655,6 +667,7 @@ export function getJoins(owner, delegations = {}, since = 0, database = db) {
   }
   const byKey = new Map();
   for (const row of rows) {
+    if (ownerOf(row.signer, delegations, row.message) !== target) continue;
     if (!byKey.has(row.key)) byKey.set(row.key, []);
     byKey.get(row.key).push(row);
   }
@@ -679,6 +692,198 @@ export function getJoins(owner, delegations = {}, since = 0, database = db) {
       index: message,
     }))
     .sort((a, b) => b.timestamp - a.timestamp || (a.index < b.index ? 1 : -1));
+}
+
+// Delegations (protocol 15.0.0, src/delegations.mjs). One row per delegation
+// message; registry.mjs builds the delegations from them, so every process
+// sees the same ones. Runs before the node takes messages.
+export function initializeDelegations(database = db) {
+  database.exec(`
+     CREATE TABLE IF NOT EXISTS delegations (
+         message TEXT PRIMARY KEY NOT NULL,
+         signer TEXT NOT NULL,
+         identity TEXT NOT NULL,
+         authorize INTEGER NOT NULL
+     );
+   `);
+}
+
+// Stores a delegation: the message plus its `index`. Returns what
+// restoreDelegation needs to undo it.
+export function insertDelegation(message, database = db) {
+  const { index, signer, identity, authorize } = message;
+  const { changes } = database
+    .prepare(
+      `INSERT OR IGNORE INTO delegations (message, signer, identity, authorize)
+       VALUES (?, ?, ?, ?)`,
+    )
+    .run(
+      index,
+      utils.getAddress(signer),
+      utils.getAddress(identity),
+      +authorize,
+    );
+  return { index, inserted: changes > 0 };
+}
+
+export function restoreDelegation({ index, inserted }, database = db) {
+  if (!inserted) return;
+  database.prepare(`DELETE FROM delegations WHERE message = ?`).run(index);
+}
+
+// Puts every delegation of the trie into the table again, at startup.
+export function insertDelegations(messages, database = db) {
+  const insert = database.transaction((rows) => {
+    for (const message of rows) insertDelegation(message, database);
+  });
+  insert(messages.filter((message) => message?.index && message.signer));
+}
+
+export function listDelegations(database = db) {
+  try {
+    return database
+      .prepare(
+        `SELECT message AS "index", signer, identity, authorize
+         FROM delegations`,
+      )
+      .all();
+  } catch (err) {
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+}
+
+// The Ethereum mainnet commits (src/commits.mjs) as a node read and checked
+// them, sequencer commits and include()s, and the commits that list each
+// message.
+export function initializeCommits(database = db) {
+  database.exec(`
+     CREATE TABLE IF NOT EXISTS commits (
+         k INTEGER PRIMARY KEY NOT NULL,
+         tx TEXT NOT NULL,
+         block INTEGER NOT NULL,
+         time INTEGER NOT NULL,
+         sequencer INTEGER NOT NULL,
+         root TEXT NOT NULL,
+         status TEXT NOT NULL,
+         reason TEXT
+     );
+     CREATE TABLE IF NOT EXISTS listings (
+         id TEXT NOT NULL,
+         k INTEGER NOT NULL,
+         PRIMARY KEY (id, k)
+     );
+   `);
+}
+
+export function saveCommits(commits, database = db) {
+  const save = database.transaction(() => {
+    const commit = database.prepare(
+      `INSERT OR REPLACE INTO commits
+         (k, tx, block, time, sequencer, root, status, reason)
+       VALUES (@k, @tx, @block, @time, @sequencer, @root, @status, @reason)`,
+    );
+    const listing = database.prepare(
+      `INSERT OR IGNORE INTO listings (id, k) VALUES (?, ?)`,
+    );
+    for (const { ids, ...row } of commits) {
+      const { k, tx, block, time, sequencer, root, status, reason } = row;
+      commit.run({
+        k,
+        tx,
+        block,
+        time,
+        sequencer: +sequencer,
+        root,
+        status,
+        reason,
+      });
+      for (const id of ids) listing.run(id, k);
+    }
+  });
+  save();
+}
+
+export function getCommits(database = db) {
+  try {
+    return database.prepare(`SELECT * FROM commits ORDER BY k`).all();
+  } catch (err) {
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+}
+
+// The first sequencer commit with a block time after `time`.
+export function sequencerCommitAfter(time, database = db) {
+  try {
+    return database
+      .prepare(
+        `SELECT k, time FROM commits WHERE sequencer = 1 AND time > ?
+         ORDER BY k LIMIT 1`,
+      )
+      .get(time);
+  } catch (err) {
+    if (err.message.includes("no such table")) return undefined;
+    throw err;
+  }
+}
+
+// The commits that list the message `id`.
+export function getListings(id, database = db) {
+  try {
+    return database
+      .prepare(
+        `SELECT commits.k, time, sequencer FROM listings
+         JOIN commits ON commits.k = listings.k WHERE id = ?`,
+      )
+      .all(id);
+  } catch (err) {
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+}
+
+// Changes when a delegation comes in, so registry.mjs knows when to build
+// the delegations again.
+export function delegationsVersion(database = db) {
+  try {
+    return database.prepare(`SELECT COUNT(*) AS version FROM delegations`).get()
+      .version;
+  } catch (err) {
+    if (err.message.includes("no such table")) return "";
+    throw err;
+  }
+}
+
+// Credits stories, upvotes, comments and reactions again. `identityOf` maps
+// a message's signer and index to its identity.
+function credit(where, params, identityOf) {
+  for (const table of ["submissions", "upvotes", "comments", "reactions"]) {
+    const rows = db
+      .prepare(`SELECT id, signer, identity FROM ${table} WHERE ${where}`)
+      .all(...params);
+    const update = db.prepare(`UPDATE ${table} SET identity = ? WHERE id = ?`);
+    for (const { id, signer, identity } of rows) {
+      const next = identityOf(signer, id.replace("kiwi:0x", ""));
+      if (next !== identity) update.run(next, id);
+    }
+  }
+}
+
+// A signer's messages, after its delegations changed.
+export function reattribute(signer, identityOf) {
+  credit("signer = ?", [utils.getAddress(signer)], identityOf);
+}
+
+// The messages dated from `from` to before `to` that count for an identity,
+// after commits decided that some weren't witnessed in time
+// (src/commits.mjs): they count for their signers.
+export function recredit(from, to, identityOf) {
+  credit(
+    "lower(identity) != lower(signer) AND timestamp >= ? AND timestamp < ?",
+    [from, to],
+    identityOf,
+  );
 }
 
 // How many stories each community has and when the newest one came in, by
