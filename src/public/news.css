@@ -3904,6 +3904,7 @@ html[data-signed-out] .comment-input-loggedout-ssr {
   display: flex !important;
 }
 .kn-composer {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 12px;
@@ -3918,6 +3919,83 @@ html[data-signed-out] .comment-input-loggedout-ssr {
 }
 .kn-composer:focus-within {
   border-color: var(--kn-text-muted);
+}
+/* -- Mentions (src/web/src/Mentions.jsx) ----------------------------------
+   "@<name>" in a comment links to the person's profile. After "@" the
+   comment box lists people to mention above its field (in the phones'
+   full-screen composer: under its bar). */
+a.kn-mention,
+a.kn-mention:visited {
+  color: var(--kn-text-primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+a.kn-mention:hover {
+  text-decoration: underline;
+}
+.kn-mentions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  z-index: 1001;
+  box-sizing: border-box;
+  max-width: 360px;
+  max-height: 264px;
+  overflow-y: auto;
+  margin: 0 0 4px;
+  padding: 4px 0;
+  list-style: none;
+  border: 1px solid var(--kn-border);
+  border-radius: var(--kn-radius);
+  background: var(--kn-card);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+.kn-dock .kn-mentions {
+  left: 12px;
+  right: 12px;
+}
+.kn-mentions-inline .kn-mentions {
+  position: static;
+  max-width: none;
+  margin: 0;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.kn-mention-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--kn-text-primary);
+  font-family: var(--kn-font);
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+.kn-mention-option:hover,
+.kn-mentions [aria-selected="true"] .kn-mention-option {
+  background: var(--bg-hover);
+}
+.kn-mention-option img,
+.kn-mention-avatar {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--bg-hover);
+}
+.kn-mention-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .kn-composer-field {
   display: block;

@@ -126,10 +126,14 @@ function Actions(community) {
   </div>`;
 }
 
+// NOTE: Names are only unique per owner (/c/<owner>/<key>), so the owner is
+// part of the trail: Kiwi News / Communities / <owner> / <name>.
 function Crumbs(community) {
   return html`<nav class="cm-crumbs" aria-label="Breadcrumbs">
     <a href="/">Kiwi News</a><span aria-hidden="true">/</span
     ><a href="/communities">Communities</a><span aria-hidden="true">/</span
+    ><a href="/upvotes?address=${community.owner}">${creatorName(community)}</a
+    ><span aria-hidden="true">/</span
     ><span aria-current="page">${community.name}</span>
   </nav>`;
 }
@@ -306,7 +310,6 @@ function Page({ theme, path, head, title, right, body, cls = "" }) {
         class="cm-page ${cls}"
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)} ${right}

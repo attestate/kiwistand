@@ -8,6 +8,7 @@ import {
   isReactionComment,
 } from "./cache.mjs";
 import { getSlug } from "./utils.mjs";
+import { notified } from "./web/src/mentions.mjs";
 
 /**
  * Purges Cloudflare cache for the specified URL.
@@ -195,6 +196,12 @@ function invalidateCommentActivityCaches(message) {
         }
       });
     }
+
+    // NOTE: And the people it mentions (web/src/mentions.mjs).
+    const known = new Set([...addresses].map((a) => a.toLowerCase()));
+    notified(message.title)
+      .filter((address) => !known.has(address))
+      .forEach((address) => addresses.add(address));
 
     addresses.forEach((address) => invalidateNotifications(address));
   } catch (error) {

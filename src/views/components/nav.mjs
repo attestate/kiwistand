@@ -5,9 +5,6 @@ import { ms } from "./icons.mjs";
 
 const html = htm.bind(vhtml);
 
-const spinner =
-  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-
 // The phone tab bar of the NEU 2 design (same as the iOS app): a floating
 // glass bar with Home, New, Submit and Notifications. Bell.jsx mounts the
 // Notifications (or Log in) tab into .mobile-bell-container; until then the
@@ -22,7 +19,7 @@ const tab = (href, icon, label, active, dataIcon) => html`
     href="${href}"
     class="kn-tab${active ? " kn-tab-active" : ""}"
     aria-current="${active ? "page" : "false"}"
-    onclick="${spinner}"
+    data-action="spinner"
   >
     <span class="kn-tab-icon">${ms(active ? `${icon}-bold` : icon, 24)}</span>
     <span>${label}</span>

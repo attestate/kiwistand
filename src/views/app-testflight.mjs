@@ -16,7 +16,7 @@ export default async function (theme) {
       <head>
         ${custom()}
       </head>
-      <body ontouchstart="">
+      <body>
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain" style="border: 1px solid rgba(219, 105, 141, 0.5);">

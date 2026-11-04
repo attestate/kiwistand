@@ -42,7 +42,7 @@ export default async function submit(theme, url = "", title = "", community = nu
       <form
                       id="n2-submit-form"
                       class="n2-submit-form"
-                      onsubmit="event.preventDefault(); return false;"
+                      data-action="no-submit"
                     >
                       <header class="n2-page-head n2-submit-head">
                         <h1 class="n2-title">
@@ -78,10 +78,7 @@ export default async function submit(theme, url = "", title = "", community = nu
                           required
                           wrap="soft"
                           data-placeholder="Enter title"
-                          onpaste="
-                            event.preventDefault();
-                            const text = event.clipboardData.getData('text/plain');
-                            document.execCommand('insertText', false, text);"
+                          data-action="plain-paste"
                         >${title}</div>
                         <div class="n2-hint-row">
                           <span class="n2-hint n2-d"

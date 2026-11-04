@@ -13,6 +13,11 @@ import { getSlug } from "./utils.mjs";
 import { sendNotification, getFidsFromAddresses } from "./neynar.mjs";
 import * as moderation from "./views/moderation.mjs";
 import { sendPushNotification } from "./onesignal.mjs";
+import {
+  notified,
+  names as mentionNames,
+  render,
+} from "./web/src/mentions.mjs";
 
 export async function triggerUpvoteNotification(message) {
   if (message.type !== "amplify") return;
@@ -148,6 +153,8 @@ export async function triggerNotification(message) {
   const maxChars = 140;
   const slug = getSlug(submission.title);
   const url = `https://news.kiwistand.com/stories/${slug}?index=0x${submission.index}#0x${message.index}`;
+  // NOTE: Mentions (web/src/mentions.mjs) read as "@<name>".
+  const text = render(message.title, await mentionNames([message.title], resolve));
 
   // Get FIDs for Neynar notifications
   let targetFids = [];
@@ -161,7 +168,7 @@ export async function triggerNotification(message) {
   if (targetFids.length > 0 && env.NODE_ENV === "production") {
     try {
       const fcTitle = "New comment"; // Max 32 chars
-      const fcBody = `${ensData.displayName}: ${truncateComment(message.title, 128 - ensData.displayName.length - 2)}`; // Max 128 chars total
+      const fcBody = `${ensData.displayName}: ${truncateComment(text, 128 - ensData.displayName.length - 2)}`; // Max 128 chars total
       
       await sendNotification(
         url,
@@ -179,7 +186,7 @@ export async function triggerNotification(message) {
   try {
     await sendPushNotification(uniqueReceivers, {
       title: `${ensData.displayName} replied`,
-      body: truncateComment(message.title, maxChars),
+      body: truncateComment(text, maxChars),
       url: url,
     });
   } catch (err) {
@@ -191,7 +198,7 @@ export async function triggerNotification(message) {
       await email.send(receiver, {
         sender: ensData.displayName,
         title: `New comment in: ${submission.title}`,
-        message: message.title,
+        message: text,
         data: { url },
       });
     }),
@@ -317,6 +324,119 @@ export async function triggerJoinNotification(message, delegations = {}, deps = 
     return { sent: { receivers, title, body, url }, reason: null };
   } catch (err) {
     log(`Error in triggerJoinNotification: ${err}`);
+    return { sent: null, reason: err.toString() };
+  }
+}
+
+const mentionDefaults = {
+  getSubmission: (index) => getSubmission(index),
+  getLists: () => moderation.getLists(),
+  isModerated: (submission, policy) =>
+    moderation.isModerated(submission, policy),
+  resolve: (address) => resolve(address),
+  getFids: (addresses) => getFidsFromAddresses(addresses),
+  sendNeynar: (url, body, title, fids) =>
+    sendNotification(url, body, title, fids),
+  sendPush: (addresses, notification) =>
+    sendPushNotification(addresses, notification),
+};
+
+// Tells the people a comment mentions (web/src/mentions.mjs), with a
+// Farcaster mini app notification and a push notification to the iOS app,
+// like a comment tells the story's author and thread (triggerNotification):
+// banned profiles neither send nor receive and a moderated story doesn't
+// notify. Only the comment's first MAX_NOTIFIED mentions count, not its
+// author, and not who triggerNotification already tells (the story's author
+// and everyone who commented on it), so nobody gets two notifications for
+// one comment. Called by the node's API (api.mjs) for a comment it took, so
+// a comment synced from a peer doesn't notify again. The in-app
+// notification is computed from the comments table (views/activity.mjs).
+//
+// `index` is the comment's index without 0x. Returns the notification it
+// sent, or null and why it didn't.
+export async function triggerMentionNotification(
+  message,
+  index,
+  delegations = {},
+  deps = {},
+) {
+  const d = { ...mentionDefaults, ...deps };
+  const skip = (reason) => {
+    log(`Skipping mention notification: ${reason}`);
+    return { sent: null, reason };
+  };
+  if (message?.type !== "comment") return skip("not a comment");
+  const mentioned = notified(message.title);
+  if (mentioned.length === 0) return skip("no mentions");
+
+  try {
+    const identity = resolveIdentity(delegations, verify(message));
+    const author = identity.toLowerCase();
+    const [, storyIndex] = message.href.split("kiwi:");
+    const submission = d.getSubmission(storyIndex);
+
+    let policy;
+    try {
+      policy = await d.getLists();
+    } catch (err) {
+      log(`Failed to get banned addresses for mention notification filtering: ${err}`);
+    }
+    const bannedAddresses = policy?.addresses || [];
+    if (bannedAddresses.includes(author)) return skip("the author is banned");
+    if (policy && d.isModerated(submission, policy)) {
+      return skip("the story is moderated");
+    }
+
+    const ensData = await d.resolve(identity);
+    if (!ensData?.displayName) return skip("the author has no name");
+
+    const told = new Set(
+      [
+        submission.identity,
+        ...submission.comments.map((comment) => comment.identity),
+      ].map((address) => address.toLowerCase()),
+    );
+    const receivers = mentioned.filter(
+      (address) =>
+        address !== author &&
+        !bannedAddresses.includes(address) &&
+        !told.has(address),
+    );
+    if (receivers.length === 0) return skip("nobody else to tell");
+
+    const text = render(
+      message.title,
+      await mentionNames([message.title], d.resolve),
+    );
+    const slug = getSlug(submission.title);
+    const url = `https://news.kiwistand.com/stories/${slug}?index=0x${submission.index}&commentIndex=${index}#0x${index}`;
+    const title = "New mention"; // Max 32 chars for Farcaster
+    const prefix = `${ensData.displayName} mentioned you: `;
+    const body = `${prefix}${truncateComment(text, 140)}`;
+
+    let targetFids = [];
+    try {
+      targetFids = await d.getFids(receivers);
+    } catch (err) {
+      log(`Failed to get FIDs for mention Neynar notifications: ${err}`);
+    }
+    if (targetFids.length > 0 && env.NODE_ENV === "production") {
+      try {
+        const fcBody = `${prefix}${truncateComment(text, 128 - prefix.length)}`; // Max 128 chars total
+        await d.sendNeynar(url, fcBody, title, targetFids);
+      } catch (err) {
+        log(`Failed to send mention Neynar notification: ${err}`);
+      }
+    }
+
+    try {
+      await d.sendPush(receivers, { title, body, url });
+    } catch (err) {
+      log(`Failed to send mention OneSignal notification: ${err}`);
+    }
+    return { sent: { receivers, title, body, url }, reason: null };
+  } catch (err) {
+    log(`Error in triggerMentionNotification: ${err}`);
     return { sent: null, reason: err.toString() };
   }
 }

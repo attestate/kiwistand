@@ -1,12 +1,15 @@
 //@format
 import test from "ava";
 import http from "http";
+import { readdirSync, readFileSync } from "fs";
 import express from "express";
 
 import { createLoadBalancerApp } from "../src/load-balancer.mjs";
 import {
   SECURITY_HEADERS,
+  SCRIPT_POLICY,
   checkAdminKey,
+  cspReport,
   mergeFrameAncestors,
 } from "../src/securityheaders.mjs";
 import {
@@ -33,6 +36,8 @@ function upstream(name) {
   });
   app.get("/", (req, res) => res.type("html").send(`<p>${name}</p>`));
   app.get("/new", (req, res) => res.type("html").send(`<p>${name}</p>`));
+  app.get("/docs/", (req, res) => res.type("html").send("docs"));
+  app.get("/anon-rpc-iframe.html", (req, res) => res.type("html").send(""));
   app.get("/api/v1/feeds/:name", (req, res) => res.json({ name }));
   app.get("/api/v1/parse", (req, res) => res.type("html").send("ok"));
   app.get("/api/v1/metadata", (req, res) => res.json({ ok: true }));
@@ -68,7 +73,7 @@ async function boot(t) {
     worker.close();
   });
   const port = lb.address().port;
-  const request = (path, { method = "GET", ip, headers = {} } = {}) =>
+  const request = (path, { method = "GET", ip, headers = {}, body } = {}) =>
     new Promise((resolve, reject) => {
       const req = http.request(
         {
@@ -88,7 +93,7 @@ async function boot(t) {
         },
       );
       req.on("error", reject);
-      req.end();
+      req.end(body);
     });
   return { request, clock };
 }
@@ -102,7 +107,7 @@ function assertSecurityHeaders(t, headers) {
   t.is(headers["referrer-policy"], "strict-origin-when-cross-origin");
   t.is(headers["permissions-policy"], SECURITY_HEADERS["Permissions-Policy"]);
   t.true(
-    headers["content-security-policy"].endsWith(
+    headers["content-security-policy"].includes(
       SECURITY_HEADERS["Content-Security-Policy"],
     ),
   );
@@ -125,14 +130,15 @@ test("security headers on an HTML page, an API route, AASA and a 404", async (t)
   }
   t.is(
     (await request("/")).headers["content-security-policy"],
-    SECURITY_HEADERS["Content-Security-Policy"],
+    `${SECURITY_HEADERS["Content-Security-Policy"]}; ${SCRIPT_POLICY}`,
   );
-  // express's default 404 keeps its own CSP and gets frame-ancestors added.
+  // express's default 404 keeps its own CSP and gets frame-ancestors added,
+  // and the script policy as a second policy.
   const notFound = await request("/does-not-exist");
   t.is(notFound.status, 404);
   t.is(
     notFound.headers["content-security-policy"],
-    `default-src 'none'; ${SECURITY_HEADERS["Content-Security-Policy"]}`,
+    `default-src 'none'; ${SECURITY_HEADERS["Content-Security-Policy"]}, ${SCRIPT_POLICY}`,
   );
   t.is((await request("/api/v1/feeds/hot")).body, '{"name":"worker"}');
 });
@@ -382,4 +388,168 @@ test("normalizePath matches the way express routes", (t) => {
   t.is(normalizePath("/api/v1/%63ache"), "/api/v1/cache");
   t.is(normalizePath("/"), "/");
   t.is(normalizePath("/%E0%A4%A"), "/%e0%a4%a");
+});
+
+test("HTML pages get the script policy, enforced", async (t) => {
+  const { request } = await boot(t);
+  const frameAncestors = SECURITY_HEADERS["Content-Security-Policy"];
+  const { headers } = await request("/new");
+  t.is(
+    headers["content-security-policy"],
+    `${frameAncestors}; ${SCRIPT_POLICY}`,
+  );
+  t.is(headers["content-security-policy-report-only"], undefined);
+  // Not JSON, not the docs, not Private RPC's boot page (see isPage).
+  for (const path of ["/api/v1/feeds/hot", "/docs/", "/anon-rpc-iframe.html"]) {
+    const { headers } = await request(path);
+    t.is(headers["content-security-policy"], frameAncestors, path);
+  }
+});
+
+test("script-src allows no inline script and no eval", (t) => {
+  const policy = Object.fromEntries(
+    SCRIPT_POLICY.split("; ").map((d) => [
+      d.split(" ")[0],
+      d.split(" ").slice(1),
+    ]),
+  );
+  t.true(policy["script-src"].includes("'self'"));
+  for (const unsafe of [
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "'unsafe-hashes'",
+    "*",
+    "https:",
+    "http:",
+    "data:",
+    "blob:",
+  ]) {
+    t.false(policy["script-src"].includes(unsafe), unsafe);
+  }
+  t.deepEqual(policy["object-src"], ["'none'"]);
+  t.deepEqual(policy["base-uri"], ["'self'"]);
+  t.deepEqual(policy["report-uri"], ["/api/v1/csp-report"]);
+});
+
+async function reportServer(t) {
+  const lines = [];
+  const app = express();
+  app.post("/api/v1/csp-report", cspReport({ write: (l) => lines.push(l) }));
+  const server = await listen(app);
+  t.teardown(() => server.close());
+  const url = `http://127.0.0.1:${server.address().port}/api/v1/csp-report`;
+  const post = async (type, body) =>
+    (
+      await fetch(url, {
+        method: "POST",
+        headers: { "content-type": type },
+        body: typeof body === "string" ? body : JSON.stringify(body),
+      })
+    ).status;
+  return { post, lines };
+}
+
+test("CSP reports in both formats are logged without query strings", async (t) => {
+  const { post, lines } = await reportServer(t);
+  const report = {
+    "csp-report": {
+      "document-uri":
+        "https://news.kiwistand.com/stories/kiwi?index=0xab&t=secret",
+      "violated-directive": "script-src-elem",
+      "blocked-uri": "https://evil.example/x.js?session=secret",
+    },
+  };
+  t.is(await post("application/csp-report", report), 204);
+  const batch = [
+    {
+      type: "csp-violation",
+      url: "https://news.kiwistand.com/new?cursor=secret",
+      body: {
+        documentURL: "https://news.kiwistand.com/new?cursor=secret#c",
+        effectiveDirective: "script-src-attr",
+        blockedURL: "inline",
+        sample: "event.preventDefault();",
+      },
+    },
+    { type: "deprecation", body: { id: "x" } },
+  ];
+  t.is(await post("application/reports+json", batch), 204);
+  t.deepEqual(lines, [
+    "CSP report: script-src-elem https://evil.example on /stories/kiwi",
+    'CSP report: script-src-attr inline on /new "event.preventDefault();"',
+  ]);
+});
+
+test("the CSP report endpoint refuses big bodies and other types", async (t) => {
+  const { post, lines } = await reportServer(t);
+  const big = { "csp-report": { "script-sample": "x".repeat(20000) } };
+  t.is(await post("application/csp-report", big), 413);
+  t.is(await post("text/plain", "hi"), 415);
+  t.is(await post("application/csp-report", "{nope"), 400);
+  t.deepEqual(lines, []);
+});
+
+test("the load balancer answers CSP reports, 60 a minute per IP", async (t) => {
+  const { request } = await boot(t);
+  const report = {
+    method: "POST",
+    ip: "203.0.113.6",
+    headers: { "content-type": "application/csp-report" },
+    body: JSON.stringify({ "csp-report": { "blocked-uri": "inline" } }),
+  };
+  for (let i = 0; i < 60; i++) {
+    t.is((await request("/api/v1/csp-report", report)).status, 204);
+  }
+  t.is((await request("/api/v1/csp-report", report)).status, 429);
+});
+
+function sources(dir = "src") {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      return ["node_modules", "public"].includes(entry.name)
+        ? []
+        : sources(path);
+    }
+    return /\.(mjs|jsx)$/.test(path) ? [path] : [];
+  });
+}
+
+// NOTE: The script policy runs no inline script. Templates name what a click
+// does in data-action (src/web/src/dataActions.mjs) instead of on…=
+// attributes and javascript: URLs.
+test("templates have no inline scripts, on…= attributes or javascript: URLs", (t) => {
+  for (const path of sources()) {
+    const code = readFileSync(path, "utf8");
+    for (const [tag] of code.matchAll(/<script\b[^>]*>/g)) {
+      t.true(
+        /\ssrc=/.test(tag) || /type="application\/ld\+json"/.test(tag),
+        `${path}: inline script ${tag}`,
+      );
+    }
+    const handlers = [
+      ...(code.match(/(^|\s)on[a-z]+=["'$]/gim) || []),
+      // As attributes for a renderer, e.g. linkify-html's.
+      ...(code.match(
+        /[\s{,"']on(click|error|load|submit|paste|touch[a-z]+|mouse[a-z]+)["']?\s*:/g,
+      ) || []),
+    ];
+    t.deepEqual(
+      handlers.map((h) => h.trim()),
+      [],
+      path,
+    );
+    t.false(
+      /["'`]javascript:(?!["'`])/i.test(code),
+      `${path}: javascript: URL`,
+    );
+  }
+});
+
+// NOTE: public/anon-rpc-iframe.js is the harness's boot code, copied.
+test("Private RPC's boot code matches the harness version", (t) => {
+  const { dependencies } = JSON.parse(readFileSync("src/web/package.json"));
+  const version = dependencies["@anon-rpc/browser-harness"];
+  const boot = readFileSync("src/public/anon-rpc-iframe.js", "utf8");
+  t.true(boot.startsWith(`// @anon-rpc/browser-harness@${version} `));
 });
