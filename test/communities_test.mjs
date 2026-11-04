@@ -99,7 +99,7 @@ function submissionCommunity(href) {
 
 test("communities bump the protocol versions", (t) => {
   // NOTE: 13.0.0 and 16.0.0 brought communities; membership (14.0.0 and
-  // 17.0.0, test/memberships_test.mjs) and the order (15.0.0 and 18.0.0,
+  // 17.0.0, test/memberships_test.mjs) and the commits (15.0.0 and 18.0.0,
   // test/commits_test.mjs) bumped them again.
   t.is(PROTOCOL.pubsub.topics.roots.version, "15.0.0");
   t.is(PROTOCOL.pubsub.topics.messages.version, "15.0.0");

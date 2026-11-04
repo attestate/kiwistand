@@ -115,11 +115,10 @@ export const EIP712_AUTHORIZATION = {
   ],
 };
 
-// The Ethereum mainnet commits (src/commits.mjs): the sequencer that sends
-// them and the inbox contract (contracts/Inbox.sol) they go to, from the
-// block it was deployed in. Empty until the inbox is deployed.
+// The Ethereum mainnet commits (src/commits.mjs): the inbox contract
+// (contracts/Inbox.sol) they go to, from the block it was deployed in. Empty
+// until the inbox is deployed.
 export const COMMITS = {
-  sequencer: env.SEQUENCER_ADDRESS || "",
   inbox: env.INBOX_ADDRESS || "",
   block: parseInt(env.INBOX_BLOCK || "0", 10),
 };

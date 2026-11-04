@@ -425,7 +425,7 @@ export async function launch(trie, libp2p) {
   );
   api.get("/delegations", listDelegations(registry.delegations));
   api.get("/commits", (request, reply) =>
-    sendStatus(reply, 200, "OK", "The order's commits", commits.status()),
+    sendStatus(reply, 200, "OK", "The commits on Ethereum", commits.status()),
   );
   api.post(
     "/messages",

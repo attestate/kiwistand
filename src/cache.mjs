@@ -754,7 +754,7 @@ export function listDelegations(database = db) {
 }
 
 // The Ethereum mainnet commits (src/commits.mjs) as a node read and checked
-// them.
+// them, sequencer commits and include()s.
 export function initializeCommits(database = db) {
   database.exec(`
      CREATE TABLE IF NOT EXISTS commits (
@@ -762,9 +762,8 @@ export function initializeCommits(database = db) {
          tx TEXT NOT NULL,
          block INTEGER NOT NULL,
          time INTEGER NOT NULL,
-         prev TEXT NOT NULL,
+         sequencer INTEGER NOT NULL,
          root TEXT NOT NULL,
-         n INTEGER NOT NULL,
          status TEXT NOT NULL,
          reason TEXT
      );
@@ -775,12 +774,21 @@ export function saveCommits(commits, database = db) {
   const save = database.transaction(() => {
     const commit = database.prepare(
       `INSERT OR REPLACE INTO commits
-         (k, tx, block, time, prev, root, n, status, reason)
-       VALUES (@k, @tx, @block, @time, @prev, @root, @n, @status, @reason)`,
+         (k, tx, block, time, sequencer, root, status, reason)
+       VALUES (@k, @tx, @block, @time, @sequencer, @root, @status, @reason)`,
     );
     for (const row of commits) {
-      const { k, tx, block, time, prev, root, n, status, reason } = row;
-      commit.run({ k, tx, block, time, prev, root, n, status, reason });
+      const { k, tx, block, time, sequencer, root, status, reason } = row;
+      commit.run({
+        k,
+        tx,
+        block,
+        time,
+        sequencer: +sequencer,
+        root,
+        status,
+        reason,
+      });
     }
   });
   save();

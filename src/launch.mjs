@@ -206,13 +206,14 @@ if (cluster.isPrimary) {
     );
   }
 
-  // NOTE: Reads and checks the order's commits on Ethereum mainnet; on the
-  // sequencer, also sends them (src/commits.mjs, src/sequencer.mjs). It
-  // walks the whole trie, so it waits a minute, like the sitemaps.
+  // NOTE: Reads and checks the commits on Ethereum mainnet and takes the
+  // messages of include()s; on the sequencer, also sends the commits
+  // (src/commits.mjs, src/sequencer.mjs). It walks the whole trie, so it
+  // waits a minute, like the sitemaps.
   if (commits.enabled()) {
     setTimeout(
       () =>
-        commits.run(trie, registry.snapshot()?.hash, () =>
+        commits.run(trie, node, registry.snapshot()?.hash, () =>
           sequencer.tick(trie, commits.commits()),
         ),
       60 * 1000,
