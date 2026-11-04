@@ -30,7 +30,7 @@ Messages are signed with EIP-712 in the domain `{name: "kiwinews", version: "1.0
 - **comment**: `href` is `kiwi:0x<index of the story>`. Signed as the 4-field `Message`.
 - **community** (since protocol 13.0.0): a user community, written by its owner, see [Communities](#communities). Signed as `Community(string type,string name,string about,string[] rules,string icon,string color,uint256 timestamp)`.
 - **join** and **leave** (since protocol 14.0.0): joining or leaving a community, see [Membership](#membership). Signed as `Membership(string type,string community,uint256 timestamp)`.
-- **delegation** (since protocol 15.0.0): an account lets a key sign for it, or revokes that, see [Delegation](/delegation). Signed by the account as `Delegation(string type,address key,bytes authorization,bool authorize,uint256 timestamp)`.
+- **delegation** (since protocol 15.0.0): an identity lets a signer sign for it, or revokes that, see [Delegation](/delegation). Signed by the identity as `Delegation(string type,address signer,bytes authorization,bool authorize,uint256 timestamp)`.
 
 ### Process
 
@@ -163,7 +163,7 @@ pending: nodes take and show it at once, it comes after all committed ones,
 among the pending ones by timestamp, and rules that depend on the order are
 provisional for it. When a commit lists it, nodes place it again.
 
-The order decides whom a key's messages count for: see
+The order decides whom a signer's messages count for: see
 [Delegation](/delegation#the-order-decides). Timestamps stay what they were:
 for display and ranking, with the checks above. Which submission of a link
 came first, and whether a community or a story existed before a message

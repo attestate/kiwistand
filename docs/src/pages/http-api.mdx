@@ -89,13 +89,13 @@ The schemas are `upvote`, `comment`, `community`, `membership` and
   "signature": "0x..."
 }
 
-// delegation (protocol 15.0.0), signed by the account
+// delegation (protocol 15.0.0), signed by the identity
 {
   "timestamp": 1700000000,
   "type": "delegation",
-  "account": "0x...",        // the account that signs it, not signed itself
-  "key": "0x...",            // the key it lets sign for it
-  "authorization": "0x...",  // the key's signature for the account; "0x" to revoke
+  "identity": "0x...",       // the identity that signs it, not signed itself
+  "signer": "0x...",         // the signer it lets sign for it
+  "authorization": "0x...",  // the signer's signature for the identity; "0x" to revoke
   "authorize": true,         // false revokes
   "signature": "0x..."
 }
@@ -117,7 +117,7 @@ is part of our move towards better API versioning.
 Retrieves an object of valid delegations in the form of `to:from`, where
 `from` is the user's "identity" (the address messages are attributed to),
 whereas `to` can be any delegated Ethereum address. It's the delegations as
-of now: a revoked key isn't in it.
+of now: a revoked signer isn't in it.
 
 What makes a delegation valid, how to create one and how nodes resolve them
 is on the [Delegation](/delegation#reading-delegations) page. Since protocol
@@ -226,10 +226,10 @@ Request body:
 9. A join or leave must name a community the node has, in a version older
    than the message (see [Membership](/protocol#membership)). The signer's
    earlier joins and leaves don't matter.
-10. A delegation must be signed by its `account` and, unless it revokes,
-    hold the key's signature for that account (see
-    [Delegation](/delegation#creating-a-delegation)). Its `signer` and
-    `identity` in `/api/v1/list` are the account.
+10. A delegation must be signed by its `identity` and, unless it revokes,
+    hold the signer's signature for that identity (see
+    [Delegation](/delegation#creating-a-delegation)). In `/api/v1/list`, its
+    `signer` and `identity` are its own fields.
 
 When the node takes a join, it notifies the community's owner (a push
 notification to the iOS app and a Farcaster mini app notification), unless the

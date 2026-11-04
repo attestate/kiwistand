@@ -1,19 +1,21 @@
 // @format
 // Delegations (protocol 15.0.0).
 //
-// An account lets a key sign for it with one `Delegation` message that the
-// account signs (EIP712_DELEGATION in src/constants.mjs). It holds the key's
-// signature of `Authorization(address from,bool authorize)` for the account,
-// so nobody can claim a key without its consent. No transaction, no ETH. A
-// revocation is the same message with `authorize` false and no key
-// signature.
+// An identity (the user's wallet, which owns profile and karma) lets a signer
+// (a key on a device, which signs stories, upvotes and comments) sign for it
+// with one `Delegation` message that the identity signs (EIP712_DELEGATION in
+// src/constants.mjs). It holds the signer's signature of
+// `Authorization(address identity,bool authorize)` for the identity, so
+// nobody can claim a signer without its consent. No transaction, no ETH. A
+// revocation is the same message with `authorize` false and no signature of
+// the signer.
 //
-// The order of the messages (src/commits.mjs) decides whom a key's message
-// counts for: the account of the key's latest delegation before it, or the
-// key itself if that was a revocation. A revocation only counts if the key's
-// account at that point signed it. Messages a key signed before its first
-// delegation count for that delegation's account. Delegations from OP
-// Mainnet (the snapshot) come before every message.
+// The order of the messages (src/commits.mjs) decides whom a signer's message
+// counts for: the identity of the signer's latest delegation before it, or
+// the signer itself if that was a revocation. A revocation only counts if the
+// signer's identity at that point signed it. Messages a signer signed before
+// its first delegation count for that delegation's identity. Delegations from
+// OP Mainnet (the snapshot) come before every message.
 import { env } from "process";
 
 import { utils } from "ethers";
@@ -27,50 +29,64 @@ import {
 } from "./constants.mjs";
 import { validate } from "./id.mjs";
 
-export function create({ account, key, authorization, authorize, timestamp }) {
+export function create({
+  identity,
+  signer,
+  authorization,
+  authorize,
+  timestamp,
+}) {
   return {
     type: "delegation",
-    account,
-    key,
+    identity,
+    signer,
     authorization: authorize ? authorization : "0x",
     authorize,
     timestamp,
   };
 }
 
-// The key's half: its signature of the account's address.
-export async function authorization(key, account) {
-  const value = { from: utils.getAddress(account), authorize: true };
-  return await key._signTypedData(EIP712_DOMAIN, EIP712_AUTHORIZATION, value);
+// The signer's half: its signature of the identity's address.
+export async function authorization(signer, identity) {
+  const value = { identity: utils.getAddress(identity), authorize: true };
+  return await signer._signTypedData(
+    EIP712_DOMAIN,
+    EIP712_AUTHORIZATION,
+    value,
+  );
 }
 
-// The account that signed a delegation, or throws. EOAs are checked locally;
+// The identity that signed a delegation, or throws. EOAs are checked locally;
 // a smart wallet's signature (ERC-1271, or ERC-6492 before it's deployed)
 // needs an RPC of the chain it lives on (SMART_WALLET_RPC_URL).
 export async function verify(message, rpc = env.SMART_WALLET_RPC_URL) {
   validate(message);
-  const account = utils.getAddress(message.account);
-  const key = utils.getAddress(message.key);
-  if (account === key) throw new Error("A key can't be its own account");
+  const identity = utils.getAddress(message.identity);
+  const signer = utils.getAddress(message.signer);
+  if (identity === signer) {
+    throw new Error("A signer can't be its own identity");
+  }
 
   const { type, authorization, authorize, timestamp, signature } = message;
   if (authorize) {
-    const value = { from: account, authorize: true };
-    const signer = utils.verifyTypedData(
+    const value = { identity, authorize: true };
+    const recovered = utils.verifyTypedData(
       EIP712_DOMAIN,
       EIP712_AUTHORIZATION,
       value,
       authorization,
     );
-    if (signer !== key) throw new Error("The key didn't sign the account");
+    if (recovered !== signer) {
+      throw new Error("The signer didn't sign the identity");
+    }
   } else if (authorization !== "0x") {
     throw new Error("A revocation has no authorization");
   }
 
-  const value = { type, key, authorization, authorize, timestamp };
-  let signer;
+  const value = { type, signer, authorization, authorize, timestamp };
+  let recovered;
   try {
-    signer = utils.verifyTypedData(
+    recovered = utils.verifyTypedData(
       EIP712_DOMAIN,
       EIP712_DELEGATION,
       value,
@@ -79,20 +95,20 @@ export async function verify(message, rpc = env.SMART_WALLET_RPC_URL) {
   } catch (err) {
     // NOTE: Not an ECDSA signature, e.g. a smart wallet's.
   }
-  if (signer === account) return account;
-  if (!rpc) throw new Error("The account didn't sign the delegation");
+  if (recovered === identity) return identity;
+  if (!rpc) throw new Error("The identity didn't sign the delegation");
 
   const client = createPublicClient({ transport: http(rpc) });
   const valid = await client.verifyTypedData({
-    address: account,
+    address: identity,
     domain: EIP712_DOMAIN,
     types: EIP712_DELEGATION,
     primaryType: "Delegation",
     message: value,
     signature,
   });
-  if (!valid) throw new Error("The account didn't sign the delegation");
-  return account;
+  if (!valid) throw new Error("The identity didn't sign the delegation");
+  return identity;
 }
 
 // Places in the order are arrays compared element by element (see
@@ -105,53 +121,58 @@ export function compare(a, b) {
   return 0;
 }
 
-// The account a key signs for at place `at` among its delegations (sorted by
-// place), or null if it signs for itself.
+// The identity a signer signs for at place `at` among its delegations (sorted
+// by place), or null if it signs for itself.
 function attribute(entries, at) {
-  let account;
+  let identity;
   for (const entry of entries) {
     if (compare(entry.at, at) >= 0) break;
-    if (entry.authorize) account = entry.account;
-    else if (account === entry.account) account = null;
+    if (entry.authorize) identity = entry.identity;
+    else if (identity === entry.identity) identity = null;
   }
-  if (account === undefined) {
-    account = entries.find(({ authorize }) => authorize)?.account ?? null;
+  if (identity === undefined) {
+    identity = entries.find(({ authorize }) => authorize)?.identity ?? null;
   }
-  return account;
+  return identity;
 }
 
 export const HISTORY = Symbol("history");
 const LAST = [Infinity, Infinity];
 
-// The delegations as nodes pass them around: keys to their accounts now, for
-// resolveIdentity of @attestate/delegator2. Under HISTORY, every key's
-// delegations in order, for `resolve`. `base` are keys to accounts from
+// The delegations as nodes pass them around: signers to their identities now,
+// for resolveIdentity of @attestate/delegator2. Under HISTORY, every signer's
+// delegations in order, for `resolve`. `base` are signers to identities from
 // before the protocol's delegations, `rows` the delegation messages
-// ({index, key, account, authorize}) and `position` gives an index's place.
+// ({index, signer, identity, authorize}) and `position` gives an index's
+// place.
 export function build(base, rows, position) {
-  const keys = new Map();
-  for (const [key, account] of Object.entries(base)) {
-    keys.set(utils.getAddress(key), [
-      { account: utils.getAddress(account), authorize: true, at: [-Infinity] },
+  const signers = new Map();
+  for (const [signer, identity] of Object.entries(base)) {
+    signers.set(utils.getAddress(signer), [
+      {
+        identity: utils.getAddress(identity),
+        authorize: true,
+        at: [-Infinity],
+      },
     ]);
   }
   for (const row of rows) {
-    const key = utils.getAddress(row.key);
-    if (!keys.has(key)) keys.set(key, []);
-    keys.get(key).push({
-      account: utils.getAddress(row.account),
+    const signer = utils.getAddress(row.signer);
+    if (!signers.has(signer)) signers.set(signer, []);
+    signers.get(signer).push({
+      identity: utils.getAddress(row.identity),
       authorize: Boolean(row.authorize),
       at: position(row.index),
     });
   }
 
   const delegations = {};
-  for (const [key, entries] of keys) {
+  for (const [signer, entries] of signers) {
     entries.sort((a, b) => compare(a.at, b.at));
-    const account = attribute(entries, LAST);
-    if (account) delegations[key] = account;
+    const identity = attribute(entries, LAST);
+    if (identity) delegations[signer] = identity;
   }
-  delegations[HISTORY] = { keys, position };
+  delegations[HISTORY] = { signers, position };
   return delegations;
 }
 
@@ -159,22 +180,24 @@ export function build(base, rows, position) {
 export function resolve(delegations, signer, index) {
   const address = utils.getAddress(signer);
   const history = delegations[HISTORY];
-  const entries = history?.keys.get(address);
+  const entries = history?.signers.get(address);
   if (!entries || index === undefined) {
     return resolveIdentity(delegations, address);
   }
-  if (entries.length === 1 && entries[0].authorize) return entries[0].account;
+  if (entries.length === 1 && entries[0].authorize) {
+    return entries[0].identity;
+  }
   return attribute(entries, history.position(index)) ?? address;
 }
 
-// The keys that ever signed for `identity`.
+// The signers that ever signed for `identity`.
 export function keysOf(delegations, identity) {
   const target = identity.toLowerCase();
-  const keys = [];
-  for (const [key, entries] of delegations[HISTORY]?.keys ?? []) {
-    if (entries.some(({ account }) => account.toLowerCase() === target)) {
-      keys.push(key);
+  const signers = [];
+  for (const [signer, entries] of delegations[HISTORY]?.signers ?? []) {
+    if (entries.some((entry) => entry.identity.toLowerCase() === target)) {
+      signers.push(signer);
     }
   }
-  return keys;
+  return signers;
 }

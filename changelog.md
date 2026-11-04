@@ -19,18 +19,20 @@ ETH. See "Order" in the protocol docs and the Delegation page.
 - **Protocol versions bumped**:
   - Pubsub topics (roots/messages): `14.0.0 → 15.0.0`
   - Protocols (leaves/levels): `17.0.0 → 18.0.0`
-- **New message type `delegation`**, signed by the account as
-  `Delegation(string type,address key,bytes authorization,bool authorize,uint256 timestamp)`,
-  with `account` (the signer, not signed itself) and `authorization`, the
-  key's signature of `Authorization(address from,bool authorize)` for the
-  account in the protocol's domain. A revocation has `authorize: false` and
-  `authorization: "0x"`. Smart wallets' signatures (ERC-1271, ERC-6492) are
-  checked over `SMART_WALLET_RPC_URL`; EOAs need no RPC.
-- **The order decides whom a key's message counts for**: the account of the
-  key's latest delegation before it, or the key itself after a revocation
-  (signed by that account). Nothing is deleted; messages before a revocation
-  stay the account's. Pending messages (no commit lists them yet) come after
-  committed ones, by timestamp.
+- **New message type `delegation`**: an identity (the user's wallet, which
+  owns profile and karma) lets a signer (the key on the device that signs
+  stories, upvotes and comments) sign for it. Signed by the identity as
+  `Delegation(string type,address signer,bytes authorization,bool authorize,uint256 timestamp)`,
+  with `identity` (who signed it, not signed itself) and `authorization`, the
+  signer's signature of `Authorization(address identity,bool authorize)` for
+  the identity in the protocol's domain. A revocation has `authorize: false`
+  and `authorization: "0x"`. Smart wallets' signatures (ERC-1271, ERC-6492)
+  are checked over `SMART_WALLET_RPC_URL`; EOAs need no RPC.
+- **The order decides whom a signer's message counts for**: the identity of
+  the signer's latest delegation before it, or the signer itself after a
+  revocation (signed by that identity). Nothing is deleted; messages before a
+  revocation stay the identity's. Pending messages (no commit lists them yet)
+  come after committed ones, by timestamp.
 
 #### Order
 
@@ -55,15 +57,16 @@ ETH. See "Order" in the protocol docs and the Delegation page.
   crawling OP Mainnet. Until it's in the repo, nodes crawl as before.
 - New `delegations` table (one row per delegation message), filled again
   from the trie at startup; `commits` and `positions` tables for the order.
-  A key's stories, upvotes and comments are credited again when its
+  A signer's stories, upvotes and comments are credited again when its
   delegations or their order change.
 
 #### API
 
 - `GET /api/v1/commits`: how far the node verified the order.
 - `POST /api/v1/list` and `POST /api/v1/messages` take `type: "delegation"`.
-- `GET /api/v1/delegations` is the delegations as of now (a revoked key isn't
-  in it), and has a new delegation as soon as the node took it.
+  In the list, a delegation's `signer` and `identity` are its own fields.
+- `GET /api/v1/delegations` is the delegations as of now (a revoked signer
+  isn't in it), and has a new delegation as soon as the node took it.
 
 #### Configuration
 

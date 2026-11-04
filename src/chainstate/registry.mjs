@@ -23,8 +23,8 @@ export const SNAPSHOT_PATH = resolve(
   process.cwd(),
   "src/chainstate/delegations.json",
 );
-// Keys to accounts before the protocol's delegations: the snapshot's, or
-// those crawled from OP Mainnet.
+// Signers to identities before the protocol's delegations: the snapshot's,
+// or those crawled from OP Mainnet.
 let base = {};
 let cachedDelegations = {};
 let version = null;
@@ -75,24 +75,24 @@ function calculateCanonicalChecksum(data) {
   return hash.digest("hex");
 }
 
-// Credits the messages of `keys` again after their delegations changed; by
-// default of every key whose delegations' order matters (more than one),
-// e.g. after a commit placed them.
-export async function reattribute(keys) {
+// Credits the messages of `signers` again after their delegations changed;
+// by default of every signer whose delegations' order matters (more than
+// one), e.g. after a commit placed them.
+export async function reattribute(signers) {
   const all = await delegations();
-  const history = all[HISTORY].keys;
+  const history = all[HISTORY].signers;
   const targets =
-    keys ??
+    signers ??
     [...history]
       .filter(([, entries]) => entries.length > 1)
-      .map(([key]) => key);
-  for (const key of targets) {
-    cache.reattribute(key, (index) => attribute(all, key, index));
+      .map(([signer]) => signer);
+  for (const signer of targets) {
+    cache.reattribute(signer, (index) => attribute(all, signer, index));
   }
 }
 
-// The delegations: keys to accounts now, and every key's delegations in
-// order for delegations.resolve. Built again when a delegation or a commit
+// The delegations: signers to identities now, and every signer's delegations
+// in order for delegations.resolve. Built again when a delegation or a commit
 // came in.
 export async function delegations() {
   if (cache.delegationsVersion() !== version) rebuild();

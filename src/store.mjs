@@ -419,7 +419,7 @@ async function atomicPut(trie, message, identity, delegations, signer) {
     try {
       sequencer.take(`0x${index.slice(-64)}`);
       if (delegation) {
-        await registry.reattribute([utils.getAddress(message.key)]);
+        await registry.reattribute([utils.getAddress(message.signer)]);
         purgeCache(
           "https://news.kiwistand.com:8443/api/v1/delegations?cached=true",
         ).catch((err) => log(`Failed to purge delegations: ${err}`));
@@ -800,9 +800,13 @@ function enhance(delegations, cacheEnabled) {
     const result = cacheEnabled
       ? await cacheResultAsync(canonicalize(node), computeFunc)
       : await computeFunc();
+    // NOTE: A delegation names its identity itself (src/delegations.mjs).
     return {
       ...result,
-      identity: attribute(delegations, result.signer, result.index),
+      identity:
+        result.type === "delegation"
+          ? result.identity
+          : attribute(delegations, result.signer, result.index),
     };
   };
 }

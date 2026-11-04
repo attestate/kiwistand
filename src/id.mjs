@@ -154,8 +154,8 @@ export function validate(message) {
   }
 }
 
-// NOTE: A delegation's signer is its `account`, which may be a smart wallet;
-// store.add checks it with delegations.verify.
+// NOTE: A delegation is signed by its `identity`, which may be a smart
+// wallet; store.add checks it with delegations.verify.
 export function verify(message) {
   validate(message);
   return ecrecover(message, messageTypes(message));
