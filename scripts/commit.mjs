@@ -1,7 +1,8 @@
-// Builds the next commit of the order (src/commits.mjs), prints it and, unless
-// --dry-run, sends it. Without commits on the inbox, that's the genesis:
-// every message up to now, and the delegations snapshot's hash. Run it on the
-// sequencer, next to the node (it reads the node's trie):
+// Builds the sequencer's next commit (src/commits.mjs), prints it and,
+// unless --dry-run, sends it. Without a commit of the sequencer on the inbox,
+// that's the genesis: every message up to now, and the delegations
+// snapshot's hash. Run it on the sequencer, next to the node (it reads the
+// node's trie):
 //
 //   node -r dotenv/config scripts/commit.mjs --dry-run
 //   node -r dotenv/config scripts/commit.mjs
@@ -19,7 +20,7 @@ const dry = argv.includes("--dry-run");
 const rpc = commits.client();
 const { commits: chain } = await commits.read(rpc, COMMITS.block);
 const snapshot = registry.snapshot()?.hash;
-if (!chain.length && !snapshot) {
+if (!chain.some(({ sequencer }) => sequencer) && !snapshot) {
   console.error("The genesis needs src/chainstate/delegations.json");
   exit(1);
 }
@@ -30,12 +31,10 @@ if (!commit) {
   console.log("Nothing new to commit");
   exit(0);
 }
-const { k, prev, root, n, ids, blob } = commit;
+const { root, ids, blob } = commit;
 console.log({
-  k,
-  prev,
+  genesis: Boolean(commit.genesis),
   root,
-  n,
   ids,
   blob: blob ? `${blob.length} bytes` : null,
 });

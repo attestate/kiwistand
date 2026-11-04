@@ -1,6 +1,7 @@
 // A kiwistand node in its own process, for test/commits_integration_test.mjs:
 // its own DATA_DIR and CACHE_DIR (the parent sets them), a libp2p node that
-// takes set reconciliation (levels and leaves) and commands over IPC.
+// takes set reconciliation (levels and leaves) and commands over IPC. It
+// reads include()s' messages, but doesn't gossip them (no pubsub here).
 import { mkdirSync } from "fs";
 
 mkdirSync(process.env.DATA_DIR, { recursive: true });
@@ -51,8 +52,7 @@ await node.handle(
 
 const snapshot = process.env.TEST_SNAPSHOT_HASH;
 async function refresh() {
-  const added = await commits.refresh(trie, commits.client(), snapshot);
-  if (added.length) await registry.reattribute();
+  await commits.refresh(trie, commits.client(), snapshot);
   return commits.status();
 }
 
@@ -104,6 +104,11 @@ const commands = {
     const { index: next, canonical } = toDigest(message);
     await trie.put(Buffer.from(next, "hex"), canonical);
     return next;
+  },
+  // Drops a stored message, as a censoring sequencer could.
+  drop: async (index) => {
+    await trie.del(Buffer.from(index, "hex"));
+    return trie.root().toString("hex");
   },
 };
 

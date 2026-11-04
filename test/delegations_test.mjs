@@ -88,46 +88,45 @@ test("a listed delegation keeps its own identity and signer", async (t) => {
   t.is(listed.signer, signer.address);
 });
 
-test("the order decides whom a signer's messages count for", (t) => {
+test("timestamps decide whom a signer's messages count for", (t) => {
   const [alice, bob, carol, old, signer] = Array.from(
     { length: 5 },
     () => Wallet.createRandom().address,
   );
-  // NOTE: Indexes stand for messages here; `places` gives their place.
-  const places = {
-    authorize: [1, 1],
-    stranger: [1, 2],
-    revoke: [1, 3],
-    revokeOld: [1, 5],
-    redelegate: [2, 0],
-  };
-  const position = (index) => places[index];
+  // NOTE: A message's index is its timestamp in hex and its ID.
+  const at = (timestamp, byte = "ab") =>
+    `${timestamp.toString(16)}${byte.repeat(32)}`;
+  // In the order a node took them, which doesn't matter.
   const rows = [
-    { index: "revoke", signer, identity: alice, authorize: 0 },
-    { index: "authorize", signer, identity: alice, authorize: 1 },
-    { index: "stranger", signer, identity: bob, authorize: 0 },
-    { index: "redelegate", signer, identity: carol, authorize: 1 },
-    { index: "revokeOld", signer: old, identity: alice, authorize: 0 },
+    { index: at(T + 30), signer, identity: alice, authorize: 0 },
+    { index: at(T + 10), signer, identity: alice, authorize: 1 },
+    { index: at(T + 20), signer, identity: bob, authorize: 0 },
+    { index: at(T + 50), signer, identity: carol, authorize: 1 },
+    { index: at(T + 40), signer: old, identity: alice, authorize: 0 },
   ];
-  const delegations = build({ [old]: alice }, rows, position);
-  const at = (address, place) => {
-    places.message = place;
-    return resolve(delegations, address, "message");
-  };
+  // A message the signer's stolen key signed after the revocation, dated
+  // before it, that wasn't witnessed in time (src/commits.mjs).
+  const stolen = at(T + 25, "cd");
+  const late = (index) => index === stolen;
+  const delegations = build({ [old]: alice }, rows, late);
+  const of = (address, timestamp) =>
+    resolve(delegations, address, at(timestamp, "ef"));
 
-  // Before its first delegation, after it, after a stranger's revocation.
-  t.is(at(signer, [0, 7]), alice);
-  t.is(at(signer, [1, 2]), alice);
-  t.is(at(signer, [1, 3]), alice);
-  // After the revocation: the signer itself. Delegated again: the new
+  // Before its first delegation, after it, after a stranger's revocation, and
+  // dated the same second as the revocation.
+  t.is(of(signer, T), alice);
+  t.is(of(signer, T + 11), alice);
+  t.is(of(signer, T + 25), alice);
+  t.is(of(signer, T + 30), alice);
+  // Dated after the revocation: the signer itself. Delegated again: the new
   // identity.
-  t.is(at(signer, [1, 4]), signer);
-  t.is(at(signer, [2, 1]), carol);
+  t.is(of(signer, T + 31), signer);
+  t.is(of(signer, T + 51), carol);
   // A snapshot signer counts for its identity until revoked.
-  t.is(at(old, [0, 1]), alice);
-  t.is(at(old, [1, 6]), old);
-  // Pending messages come after every commit.
-  t.is(at(signer, [Infinity, T]), carol);
+  t.is(of(old, T), alice);
+  t.is(of(old, T + 41), old);
+  // The backdated message counts for the signer, not for Alice.
+  t.is(resolve(delegations, signer, stolen), signer);
 
   t.deepEqual(Object.fromEntries(Object.entries(delegations)), {
     [signer]: carol,

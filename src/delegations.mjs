@@ -10,12 +10,14 @@
 // revocation is the same message with `authorize` false and no signature of
 // the signer.
 //
-// The order of the messages (src/commits.mjs) decides whom a signer's message
-// counts for: the identity of the signer's latest delegation before it, or
-// the signer itself if that was a revocation. A revocation only counts if the
-// signer's identity at that point signed it. Messages a signer signed before
-// its first delegation count for that delegation's identity. Delegations from
-// OP Mainnet (the snapshot) come before every message.
+// Timestamps decide whom a signer's message counts for: the identity of the
+// signer's latest delegation dated before it, or the signer itself if that
+// was a revocation. A revocation only counts if the signer's identity at that
+// point signed it. Messages a signer signed before its first delegation count
+// for that delegation's identity. Delegations from OP Mainnet (the snapshot)
+// come before every message. On a node that checks the commits on Ethereum
+// (src/commits.mjs), a message that wasn't witnessed in time counts for its
+// signer.
 import { env } from "process";
 
 import { utils } from "ethers";
@@ -111,9 +113,9 @@ export async function verify(message, rpc = env.SMART_WALLET_RPC_URL) {
   return identity;
 }
 
-// Places in the order are arrays compared element by element (see
-// commits.position).
-export function compare(a, b) {
+// Delegations are sorted by [timestamp, index], arrays compared element by
+// element.
+function compare(a, b) {
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     if (a[i] === b[i]) continue;
     return a[i] < b[i] ? -1 : 1;
@@ -121,12 +123,15 @@ export function compare(a, b) {
   return 0;
 }
 
-// The identity a signer signs for at place `at` among its delegations (sorted
-// by place), or null if it signs for itself.
-function attribute(entries, at) {
+// A trie key's timestamp.
+const timestampOf = (index) => parseInt(index.slice(0, -64), 16);
+
+// The identity a signer signs for at `timestamp` among its delegations
+// (sorted), or null if it signs for itself.
+function attribute(entries, timestamp) {
   let identity;
   for (const entry of entries) {
-    if (compare(entry.at, at) >= 0) break;
+    if (entry.at[0] >= timestamp) break;
     if (entry.authorize) identity = entry.identity;
     else if (identity === entry.identity) identity = null;
   }
@@ -137,15 +142,14 @@ function attribute(entries, at) {
 }
 
 export const HISTORY = Symbol("history");
-const LAST = [Infinity, Infinity];
 
 // The delegations as nodes pass them around: signers to their identities now,
 // for resolveIdentity of @attestate/delegator2. Under HISTORY, every signer's
-// delegations in order, for `resolve`. `base` are signers to identities from
-// before the protocol's delegations, `rows` the delegation messages
-// ({index, signer, identity, authorize}) and `position` gives an index's
-// place.
-export function build(base, rows, position) {
+// delegations by timestamp, for `resolve`. `base` are signers to identities
+// from before the protocol's delegations, `rows` the delegation messages
+// ({index, signer, identity, authorize}) and `late` tells whether a message
+// (its index) wasn't witnessed in time.
+export function build(base, rows, late = () => false) {
   const signers = new Map();
   for (const [signer, identity] of Object.entries(base)) {
     signers.set(utils.getAddress(signer), [
@@ -162,17 +166,17 @@ export function build(base, rows, position) {
     signers.get(signer).push({
       identity: utils.getAddress(row.identity),
       authorize: Boolean(row.authorize),
-      at: position(row.index),
+      at: [timestampOf(row.index), row.index],
     });
   }
 
   const delegations = {};
   for (const [signer, entries] of signers) {
     entries.sort((a, b) => compare(a.at, b.at));
-    const identity = attribute(entries, LAST);
+    const identity = attribute(entries, Infinity);
     if (identity) delegations[signer] = identity;
   }
-  delegations[HISTORY] = { signers, position };
+  delegations[HISTORY] = { signers, late };
   return delegations;
 }
 
@@ -184,10 +188,11 @@ export function resolve(delegations, signer, index) {
   if (!entries || index === undefined) {
     return resolveIdentity(delegations, address);
   }
+  if (history.late(index)) return address;
   if (entries.length === 1 && entries[0].authorize) {
     return entries[0].identity;
   }
-  return attribute(entries, history.position(index)) ?? address;
+  return attribute(entries, timestampOf(index)) ?? address;
 }
 
 // The signers that ever signed for `identity`.

@@ -1,10 +1,11 @@
 // @format
-// The sequencer: the one node with an Ethereum key (SEQUENCER_PRIVATE_KEY)
-// that orders the messages. It notes every message it takes, in order, and
-// once an hour sends the ones since the last commit as the next commit
-// (src/commits.mjs): one blob transaction to the inbox. Nothing new, no
-// commit; fees too high, the commit waits. scripts/commit.mjs sends
-// the genesis and can show any commit without sending it (--dry-run).
+// The sequencer: the one node with the inbox's sequencer key
+// (SEQUENCER_PRIVATE_KEY) that witnesses the messages. It notes every
+// message it takes, in order, also those of include()s, and once an hour
+// sends the ones since its last commit as the next commit (src/commits.mjs):
+// one blob transaction to the inbox. Nothing new, no commit; fees too high,
+// the commit waits. scripts/commit.mjs sends the genesis and can show any
+// commit without sending it (--dry-run).
 import { env } from "process";
 import { appendFileSync, readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
@@ -49,22 +50,27 @@ export function take(id) {
 }
 
 // The next commit from the messages held (commits.held) and the commits so
-// far, or null if nothing is new. Without commits, it's the genesis: every
-// message up to now. Else it's every message no commit has yet, in the order
-// the sequencer took them; ones it didn't note (e.g. from before it ran) come
-// after those, by timestamp.
+// far, sequencer commits and include()s, or null if nothing is new. Without
+// a sequencer commit, it's the genesis: every message up to now, and the
+// delegations snapshot's hash. Else it's every message no sequencer commit
+// has listed yet, in the order the sequencer took them; ones it didn't note
+// (e.g. from before it ran) come after those, by timestamp. Its root also
+// covers the messages of include()s.
 export async function next(messages, chain, snapshot) {
   const trie = await Trie.create();
   const all = [...messages.values()];
-  if (!chain.length) {
+  const [first, ...sequenced] = chain.filter(({ sequencer }) => sequencer);
+  const included = new Set(
+    chain.filter(({ sequencer }) => !sequencer).flatMap(({ ids }) => ids),
+  );
+  if (!first) {
     const now = Math.floor(Date.now() / 1000);
-    const entries = all.filter(({ timestamp }) => timestamp <= now);
+    const entries = all.filter(
+      ({ id, timestamp }) => timestamp <= now || included.has(id),
+    );
     return {
-      k: 0,
-      prev: snapshot,
       root: await commits.root(trie, entries),
-      n: entries.length,
-      ids: [],
+      ids: [snapshot],
       genesis: entries.map(({ id }) => id),
     };
   }
@@ -74,15 +80,15 @@ export async function next(messages, chain, snapshot) {
   let genesis = lines("genesis.ids");
   if (!genesis.length)
     genesis = commits.genesis(messages, chain).map(({ id }) => id);
-  const committed = new Set([...genesis, ...chain.flatMap(({ ids }) => ids)]);
+  const listed = new Set([...genesis, ...sequenced.flatMap(({ ids }) => ids)]);
   await commits.root(
     trie,
-    all.filter(({ id }) => committed.has(id)),
+    all.filter(({ id }) => listed.has(id) || included.has(id)),
   );
   const order = new Map(lines("sequence.ids").map((id, i) => [id, i]));
   const place = ({ id }) => order.get(id) ?? Infinity;
   const batch = all
-    .filter(({ id }) => !committed.has(id))
+    .filter(({ id }) => !listed.has(id))
     .sort(
       (a, b) =>
         place(a) - place(b) ||
@@ -91,12 +97,8 @@ export async function next(messages, chain, snapshot) {
     );
   if (!batch.length) return null;
 
-  const last = chain.at(-1);
   return {
-    k: last.k + 1,
-    prev: last.hash,
     root: await commits.root(trie, batch),
-    n: batch.length,
     ids: batch.map(({ id }) => id),
     blob: commits.pack(batch.map(({ canonical }) => canonical)),
   };
@@ -121,9 +123,7 @@ export async function send(commit, rpc = commits.client()) {
   const data = commits.encodeCommit(commit);
   const { baseFeePerGas } = await rpc.getBlock();
   if (baseFeePerGas > MAX_BASE_FEE) {
-    log(
-      `sequencer: Base fee ${baseFeePerGas} too high, commit ${commit.k} waits`,
-    );
+    log(`sequencer: Base fee ${baseFeePerGas} too high, the commit waits`);
     return null;
   }
   const to = COMMITS.inbox;
@@ -179,18 +179,19 @@ export async function send(commit, rpc = commits.client()) {
   }
   const receipt = await rpc.waitForTransactionReceipt({ hash });
   if (receipt.status !== "success")
-    throw new Error(`Commit ${commit.k} reverted: ${hash}`);
+    throw new Error(`The commit reverted: ${hash}`);
   if (commit.genesis)
     writeFileSync(path("genesis.ids"), `${commit.genesis.join("\n")}\n`);
-  log(`sequencer: Sent commit ${commit.k} with ${commit.n} messages: ${hash}`);
+  log(`sequencer: Sent a commit with ${commit.ids.length} IDs: ${hash}`);
   return hash;
 }
 
 // Sends the hour's commit, if there's something new: at the first tick (every
 // 10 minutes, src/commits.mjs) of a UTC hour without a commit yet. `chain`
-// are the commits so far (commits.refresh read them).
+// are the commits so far (commits.refresh read them and took the messages of
+// include()s).
 export async function tick(trie, chain, rpc, now = Date.now()) {
-  const last = chain.at(-1);
+  const last = chain.filter(({ sequencer }) => sequencer).at(-1);
   if (!enabled() || !last) return null;
   const hour = Math.floor(now / 1000 / 3600) * 3600;
   if (last.time >= hour) return null;

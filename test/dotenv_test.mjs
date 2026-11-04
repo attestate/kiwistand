@@ -31,7 +31,6 @@ test("that repo contains a .env-copy file with all possible configuration option
     "ETHEREUM_RPC_URL",
     "INBOX_ADDRESS",
     "INBOX_BLOCK",
-    "SEQUENCER_ADDRESS",
     "SEQUENCER_PRIVATE_KEY",
     "SMART_WALLET_RPC_URL",
     "DEBUG",

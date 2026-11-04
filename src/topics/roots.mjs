@@ -6,7 +6,6 @@ import { decode } from "cbor-x";
 
 import log from "../logger.mjs";
 import { initiate } from "../sync.mjs";
-import * as commits from "../commits.mjs";
 import { PROTOCOL } from "../constants.mjs";
 import { elog } from "../utils.mjs";
 
@@ -35,13 +34,6 @@ export const handlers = {
       const remoteRoot = Buffer.from(message.root, "hex");
       if (Buffer.compare(trie.root(), remoteRoot) === 0) {
         log("Received remote root that is equal to local root");
-        return;
-      }
-
-      // NOTE: A node whose messages differ from a commit doesn't send them
-      // on (src/commits.mjs).
-      if (commits.failed()?.status === "mismatch") {
-        log(`Not syncing: commit ${commits.failed().k} differs`);
         return;
       }
 

@@ -754,7 +754,8 @@ export function listDelegations(database = db) {
 }
 
 // The Ethereum mainnet commits (src/commits.mjs) as a node read and checked
-// them, and each committed message's place: commit k, position i.
+// them, sequencer commits and include()s, and the commits that list each
+// message.
 export function initializeCommits(database = db) {
   database.exec(`
      CREATE TABLE IF NOT EXISTS commits (
@@ -762,16 +763,15 @@ export function initializeCommits(database = db) {
          tx TEXT NOT NULL,
          block INTEGER NOT NULL,
          time INTEGER NOT NULL,
-         prev TEXT NOT NULL,
+         sequencer INTEGER NOT NULL,
          root TEXT NOT NULL,
-         n INTEGER NOT NULL,
          status TEXT NOT NULL,
          reason TEXT
      );
-     CREATE TABLE IF NOT EXISTS positions (
-         id TEXT PRIMARY KEY NOT NULL,
+     CREATE TABLE IF NOT EXISTS listings (
+         id TEXT NOT NULL,
          k INTEGER NOT NULL,
-         i INTEGER NOT NULL
+         PRIMARY KEY (id, k)
      );
    `);
 }
@@ -780,16 +780,25 @@ export function saveCommits(commits, database = db) {
   const save = database.transaction(() => {
     const commit = database.prepare(
       `INSERT OR REPLACE INTO commits
-         (k, tx, block, time, prev, root, n, status, reason)
-       VALUES (@k, @tx, @block, @time, @prev, @root, @n, @status, @reason)`,
+         (k, tx, block, time, sequencer, root, status, reason)
+       VALUES (@k, @tx, @block, @time, @sequencer, @root, @status, @reason)`,
     );
-    const position = database.prepare(
-      `INSERT OR IGNORE INTO positions (id, k, i) VALUES (?, ?, ?)`,
+    const listing = database.prepare(
+      `INSERT OR IGNORE INTO listings (id, k) VALUES (?, ?)`,
     );
     for (const { ids, ...row } of commits) {
-      const { k, tx, block, time, prev, root, n, status, reason } = row;
-      commit.run({ k, tx, block, time, prev, root, n, status, reason });
-      ids.forEach((id, i) => position.run(id.slice(2), k, i));
+      const { k, tx, block, time, sequencer, root, status, reason } = row;
+      commit.run({
+        k,
+        tx,
+        block,
+        time,
+        sequencer: +sequencer,
+        root,
+        status,
+        reason,
+      });
+      for (const id of ids) listing.run(id, k);
     }
   });
   save();
@@ -804,46 +813,77 @@ export function getCommits(database = db) {
   }
 }
 
-export function getPosition(id, database = db) {
+// The first sequencer commit with a block time after `time`.
+export function sequencerCommitAfter(time, database = db) {
   try {
-    return database.prepare(`SELECT k, i FROM positions WHERE id = ?`).get(id);
+    return database
+      .prepare(
+        `SELECT k, time FROM commits WHERE sequencer = 1 AND time > ?
+         ORDER BY k LIMIT 1`,
+      )
+      .get(time);
   } catch (err) {
     if (err.message.includes("no such table")) return undefined;
     throw err;
   }
 }
 
-// Changes when a delegation or a commit comes in, so registry.mjs knows when
-// to build the delegations again.
-export function delegationsVersion(database = db) {
+// The commits that list the message `id`.
+export function getListings(id, database = db) {
   try {
     return database
       .prepare(
-        `SELECT (SELECT COUNT(*) FROM delegations) || '|' ||
-                (SELECT COUNT(*) FROM positions) AS version`,
+        `SELECT commits.k, time, sequencer FROM listings
+         JOIN commits ON commits.k = listings.k WHERE id = ?`,
       )
-      .get().version;
+      .all(id);
+  } catch (err) {
+    if (err.message.includes("no such table")) return [];
+    throw err;
+  }
+}
+
+// Changes when a delegation comes in, so registry.mjs knows when to build
+// the delegations again.
+export function delegationsVersion(database = db) {
+  try {
+    return database.prepare(`SELECT COUNT(*) AS version FROM delegations`).get()
+      .version;
   } catch (err) {
     if (err.message.includes("no such table")) return "";
     throw err;
   }
 }
 
-// Credits a signer's stories, upvotes, comments and reactions again, after
-// its delegations or their order changed. `identityOf` maps a message's index
-// to its identity.
-export function reattribute(signer, identityOf) {
-  const address = utils.getAddress(signer);
+// Credits stories, upvotes, comments and reactions again. `identityOf` maps
+// a message's signer and index to its identity.
+function credit(where, params, identityOf) {
   for (const table of ["submissions", "upvotes", "comments", "reactions"]) {
     const rows = db
-      .prepare(`SELECT id, identity FROM ${table} WHERE signer = ?`)
-      .all(address);
+      .prepare(`SELECT id, signer, identity FROM ${table} WHERE ${where}`)
+      .all(...params);
     const update = db.prepare(`UPDATE ${table} SET identity = ? WHERE id = ?`);
-    for (const { id, identity } of rows) {
-      const next = identityOf(id.replace("kiwi:0x", ""));
+    for (const { id, signer, identity } of rows) {
+      const next = identityOf(signer, id.replace("kiwi:0x", ""));
       if (next !== identity) update.run(next, id);
     }
   }
+}
+
+// A signer's messages, after its delegations changed.
+export function reattribute(signer, identityOf) {
+  credit("signer = ?", [utils.getAddress(signer)], identityOf);
+}
+
+// The messages dated from `from` to before `to` that count for an identity,
+// after commits decided that some weren't witnessed in time
+// (src/commits.mjs): they count for their signers.
+export function recredit(from, to, identityOf) {
+  credit(
+    "lower(identity) != lower(signer) AND timestamp >= ? AND timestamp < ?",
+    [from, to],
+    identityOf,
+  );
 }
 
 // How many stories each community has and when the newest one came in, by

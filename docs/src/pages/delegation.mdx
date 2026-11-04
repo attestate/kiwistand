@@ -1,6 +1,6 @@
 ---
 showAskAi: false
-description: How an identity lets a signer, a second key, sign Kiwi News messages in its name with one signed message, how revoking works, and how nodes resolve delegations in the order of all messages.
+description: How an identity lets a signer, a second key, sign Kiwi News messages in its name with one signed message, how revoking works, and how nodes resolve delegations by timestamp, with the commits on Ethereum making them final.
 ---
 
 # Delegation
@@ -120,7 +120,7 @@ them, is an open question.
 
 A revocation is the same message with `authorize` set to `false` and
 `authorization` set to `"0x"`: the identity signs it alone. It counts only if
-it's signed by the identity the signer signs for at that point in the order.
+it's signed by the identity the signer signs for at its timestamp.
 
 Nothing is deleted. A revoked signer's messages are still taken and stored,
 but from the revocation on, they count for the signer itself, like an
@@ -128,22 +128,34 @@ undelegated signer's. What it signed before stays the identity's.
 
 The website doesn't offer revoking yet.
 
-## The order decides
+## Timestamps decide
 
-Whom a signer's message counts for depends on where it is in the order of
-all messages (see [Order](/protocol#order)), not on timestamps:
+Whom a signer's message counts for depends on the timestamps of the message
+and of the signer's delegations:
 
-- A signer's message counts for the identity of the signer's latest
-  delegation before it in the order. If that's a revocation, it counts for
-  the signer.
+- A signer's message counts for the identity whose latest delegation is
+  dated before the message. After a revocation dated T, the signer's
+  messages dated after T count for the signer itself.
 - Messages a signer signed before its first delegation count for that
   delegation's identity.
 - A signer delegated again after a revocation, to the same or another
   identity, signs for that identity from then on.
 
-As long as a commit doesn't list a message, its place is provisional: pending
-messages come after all committed ones, by timestamp. When a commit lands,
-nodes credit the messages of signers with more than one delegation again.
+When a node takes a delegation or a revocation, it credits the signer's
+messages again.
+
+**Finality on top.** A node with `ETHEREUM_RPC_URL` reads the commits on
+Ethereum (see [Commits on Ethereum](/protocol#commits-on-ethereum)). A
+message that wasn't [witnessed in time](/protocol#witnessed-in-time), that
+is, listed by the first sequencer commit after its timestamp + 1 hour or an
+earlier one, or included with `include()` in a block within an hour after
+its timestamp, counts for its signer, never for an identity. That stops a
+stolen key: it can sign messages dated before its revocation, but they
+aren't witnessed in time, and they count for the key. Until a sequencer
+commit after the message's timestamp + 1 hour exists, the message is pending
+and counts by its timestamp; when that commit lands, the node credits the
+messages that weren't witnessed in time to their signers. Messages dated up
+to the genesis are final. A node without the RPC goes by timestamps only.
 
 A node resolves the signer of a message when it adds it, when it lists
 messages ([`POST /api/v1/list`](/http-api#post-apiv1list) returns each
@@ -166,8 +178,7 @@ At the cutover, all of those delegations go into a snapshot,
 delegations with `scripts/delegations-snapshot.mjs`. None are dropped. The
 genesis commit holds its keccak-256, and nodes check the file against it. With
 the snapshot in place, nodes stop crawling OP Mainnet: the snapshot's
-delegations come before every message in the order, and delegation messages
-follow. Until the snapshot is in the repository, nodes still crawl OP
+delegations come before every message, and delegation messages follow. Until the snapshot is in the repository, nodes still crawl OP
 Mainnet.
 
 ## Accounts without a delegation
@@ -208,6 +219,6 @@ address with it as of now. To read the delegation messages themselves, use
 
 ## Reference implementation
 
-- [`src/delegations.mjs`](https://github.com/attestate/kiwistand/blob/main/src/delegations.mjs): creating and verifying delegations, and resolving a signer in the order.
+- [`src/delegations.mjs`](https://github.com/attestate/kiwistand/blob/main/src/delegations.mjs): creating and verifying delegations, and resolving a signer by timestamp.
 - [`src/chainstate/registry.mjs`](https://github.com/attestate/kiwistand/blob/main/src/chainstate/registry.mjs): the snapshot (or, before it, OP Mainnet) and the delegation messages.
 - [`src/store.mjs`](https://github.com/attestate/kiwistand/blob/main/src/store.mjs): taking delegations, and resolving the signer when adding and listing messages.

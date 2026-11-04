@@ -793,7 +793,7 @@ const ENHANCE_YIELD_INTERVAL = 10;
 // object to the worker for every node.
 //
 // NOTE: The identity isn't cached with the signer: it depends on the
-// delegations and their order (src/delegations.mjs).
+// delegations and the commits (src/delegations.mjs).
 function enhance(delegations, cacheEnabled) {
   return async (node) => {
     const computeFunc = async () => await piscina.run({ node });

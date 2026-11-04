@@ -1,26 +1,32 @@
 // @format
-// The order of all messages, committed to Ethereum mainnet (protocol 15.0.0).
+// Ethereum mainnet witnesses the protocol's messages (protocol 15.0.0).
 //
-// Sync stays set reconciliation; Ethereum orders and verifies. Once an hour,
-// the sequencer (src/sequencer.mjs) sends commit k to the inbox contract
-// (contracts/Inbox.sol). Its calldata, kept forever:
+// Sync stays set reconciliation, and the protocol's rules go by timestamps.
+// Once an hour, the sequencer (src/sequencer.mjs) commits what it witnessed
+// to the inbox contract (contracts/Inbox.sol). Its calldata, kept forever:
 //
-//   commit(uint8 version, uint256 k, bytes32 prev, bytes32 root, uint256 n,
-//          bytes32[] ids)
+//   commit(uint8 version, bytes32 root, bytes32[] ids)
 //
-// `prev` is the hash of commit k-1's calldata, `root` the trie root over every
-// message committed through k (the root a node's trie has with exactly these
-// messages), and `ids` the IDs (keccak256 of the signed message as the trie
-// stores it) of the n messages the sequencer took since commit k-1, in that
-// order. The transaction's blob (kept about 18 days) has those n messages:
-// `pack` below. Commit 0, the genesis, lists no IDs: it is every message with
-// a timestamp up to its block that no later commit lists, `n` of them, and
-// its `prev` is the hash of the delegations snapshot.
+// `ids` are the IDs (keccak256 of the signed message as the trie stores it)
+// of the messages the sequencer took since its last commit, in that order,
+// and `root` is the trie root over every valid message listed so far, by all
+// commits and include()s up to this one, plus the genesis set. The
+// transaction's blob (kept about 18 days) has those messages: `pack` below.
+// Anyone can put messages on Ethereum with include(bytes[] messages), their
+// encodings in calldata. Both emit
+// Commit(address sender, bool sequencer, bytes32 root, uint256 n), and the
+// commits' order is the order of those events on Ethereum.
 //
-// A message's place in the order is [k, position]; genesis messages are
-// [0, timestamp]. A message no commit lists yet is pending: it comes after
-// all committed ones, by timestamp, and rules that depend on the order are
-// provisional for it.
+// The genesis is the sequencer's first commit: its root covers every message
+// up to its block, and its one ID is the delegations snapshot's hash. Every
+// message dated up to it is final.
+//
+// A message dated t is witnessed in time if a sequencer commit at or before
+// the first one after t + WINDOW lists it, or an include() in a block
+// between t and t + WINDOW carries it. One that isn't counts for its signer,
+// never for an identity (`late`). Until there's a sequencer commit after
+// t + WINDOW, a message is pending and counts by its timestamp.
+import { env } from "process";
 import { brotliCompressSync, brotliDecompressSync } from "zlib";
 
 import { Trie } from "@ethereumjs/trie";
@@ -33,7 +39,7 @@ import {
   parseAbi,
   encodeFunctionData,
   decodeFunctionData,
-  keccak256,
+  bytesToHex,
 } from "viem";
 
 import log from "./logger.mjs";
@@ -41,21 +47,38 @@ import { COMMITS } from "./constants.mjs";
 import * as cache from "./cache.mjs";
 
 export const VERSION = 1;
+// How long after its timestamp a message can still be witnessed in time.
+export const WINDOW = 60 * 60;
 
 export const abi = parseAbi([
-  "function commit(uint8 version, uint256 k, bytes32 prev, bytes32 root, uint256 n, bytes32[] ids)",
-  "event Commit(uint256 k, bytes32 root, uint256 n)",
+  "function commit(uint8 version, bytes32 root, bytes32[] ids)",
+  "function include(bytes[] messages)",
+  "event Commit(address sender, bool sequencer, bytes32 root, uint256 n)",
 ]);
 
-export function encodeCommit({ k, prev, root, n, ids }) {
-  const args = [VERSION, BigInt(k), prev, root, BigInt(n), ids];
+export function encodeCommit({ root, ids }) {
+  const args = [VERSION, root, ids];
   return encodeFunctionData({ abi, functionName: "commit", args });
 }
 
+export function encodeInclude(canonicals) {
+  const args = [canonicals.map((canonical) => bytesToHex(canonical))];
+  return encodeFunctionData({ abi, functionName: "include", args });
+}
+
+// A commit's calldata: a sequencer commit's root and IDs, or an include()'s
+// messages and their IDs.
 export function decodeCommit(input) {
-  const { args } = decodeFunctionData({ abi, data: input });
-  const [version, k, prev, root, n, ids] = args;
-  return { version, k: Number(k), prev, root, n: Number(n), ids: [...ids] };
+  const { functionName, args } = decodeFunctionData({ abi, data: input });
+  if (functionName === "include") {
+    const messages = args[0].map((message) =>
+      Buffer.from(message.slice(2), "hex"),
+    );
+    const ids = messages.map((message) => `0x${toHex(keccak(message))}`);
+    return { messages, ids };
+  }
+  const [version, root, ids] = args;
+  return { version, root, ids: [...ids] };
 }
 
 // The blob's content: the batch's messages as the trie stores them, in
@@ -87,11 +110,13 @@ export async function held(trie) {
   return messages;
 }
 
-// The genesis' messages: a timestamp up to its block's, listed by no commit.
+// The genesis set: the messages dated up to the genesis' block that no later
+// sequencer commit lists.
 export function genesis(messages, commits) {
-  const listed = new Set(commits.flatMap(({ ids }) => ids));
+  const [first, ...rest] = commits.filter(({ sequencer }) => sequencer);
+  const listed = new Set(rest.flatMap(({ ids }) => ids));
   return [...messages.values()].filter(
-    ({ id, timestamp }) => timestamp <= commits[0].time && !listed.has(id),
+    ({ id, timestamp }) => timestamp <= first.time && !listed.has(id),
   );
 }
 
@@ -106,9 +131,10 @@ export function client(url = process.env.ETHEREUM_RPC_URL) {
   return createPublicClient({ transport: http(url), pollingInterval: 1_000 });
 }
 
-// The inbox's commits from block `from` on, as long as they chain: commit k
-// follows k-1 and names its hash. `last` is the newest commit read before.
-export async function read(rpc, from, last, inbox = COMMITS.inbox) {
+// The inbox's commits from block `from` on, in the order of their Commit
+// events, numbered from `k` on. Only transactions to the inbox count: their
+// calldata is the record.
+export async function read(rpc, from, k = 0, inbox = COMMITS.inbox) {
   const latest = Number(await rpc.getBlockNumber());
   const logs = [];
   // NOTE: RPCs limit eth_getLogs' block range differently, so the range
@@ -120,7 +146,7 @@ export async function read(rpc, from, last, inbox = COMMITS.inbox) {
       logs.push(
         ...(await rpc.getLogs({
           address: inbox,
-          event: abi[1],
+          event: abi[2],
           fromBlock: BigInt(start),
           toBlock: BigInt(end),
         })),
@@ -133,67 +159,83 @@ export async function read(rpc, from, last, inbox = COMMITS.inbox) {
   }
 
   const commits = [];
-  for (const { transactionHash, blockNumber } of logs) {
+  for (const { transactionHash, blockNumber, args } of logs) {
     const tx = await rpc.getTransaction({ hash: transactionHash });
-    const commit = decodeCommit(tx.input);
-    const previous = commits.at(-1) ?? last;
-    const k = previous ? previous.k + 1 : 0;
-    if (commit.k !== k || (previous && commit.prev !== previous.hash)) {
-      log(`commits: Skipping ${transactionHash}, it doesn't follow ${k - 1}`);
+    let commit;
+    try {
+      if (tx.to?.toLowerCase() !== inbox.toLowerCase()) {
+        throw new Error("it isn't a transaction to the inbox");
+      }
+      commit = decodeCommit(tx.input);
+    } catch (err) {
+      log(`commits: Skipping ${transactionHash}, ${err.message}`);
       continue;
     }
     const block = await rpc.getBlock({ blockNumber });
     commits.push({
+      root: args.root,
       ...commit,
+      k: k + commits.length,
+      sequencer: args.sequencer,
       tx: transactionHash,
       block: Number(blockNumber),
       time: Number(block.timestamp),
-      hash: keccak256(tx.input),
     });
   }
   return { commits, latest };
 }
 
-// Checks `commits` against the messages a node holds: it must hold every
-// listed ID, and each root must be the trie root over all messages committed
-// through it. Sets each commit's `status`: "verified", "missing" (a listed
-// message isn't here yet, peers may still send it), "mismatch" (the messages
-// here differ from the committed ones) or, after the first that isn't
-// verified, "unverified". `snapshot` is the delegations snapshot's hash.
+// Checks `commits` against the messages a node holds. The messages of an
+// include() that the node holds count from it on. A sequencer commit's IDs
+// must all be here, and its root must be the trie root over the genesis set
+// and every message listed so far that's here. Sets each commit's `status`:
+// "included" for an include(), and for a sequencer commit "verified",
+// "missing" (a listed message isn't here yet, peers may still send it),
+// "mismatch" (the messages here differ from the committed ones) or, after
+// the first that isn't verified, "unverified". `snapshot` is the delegations
+// snapshot's hash.
 export async function check(messages, commits, snapshot) {
-  if (!commits.length) return commits;
+  const first = commits.find(({ sequencer }) => sequencer);
+  const genesisSet = first ? genesis(messages, commits) : [];
+  const here = (ids) =>
+    ids.filter((id) => messages.has(id)).map((id) => messages.get(id));
   const trie = await Trie.create();
-  const genesisSet = genesis(messages, commits);
   let failed = false;
   for (const commit of commits) {
     commit.reason = null;
+    if (!commit.sequencer) {
+      commit.status = "included";
+      await root(trie, here(commit.ids));
+      continue;
+    }
     if (failed) {
       commit.status = "unverified";
       continue;
     }
-    if (commit.k === 0 && snapshot && commit.prev !== snapshot) {
+    if (
+      commit === first &&
+      snapshot &&
+      (commit.ids.length !== 1 || commit.ids[0] !== snapshot)
+    ) {
       commit.status = "mismatch";
       commit.reason = "The delegations snapshot's hash differs";
       failed = true;
       continue;
     }
-    const missing = commit.ids.filter((id) => !messages.has(id));
+    const missing =
+      commit === first ? [] : commit.ids.filter((id) => !messages.has(id));
     if (missing.length) {
       commit.status = "missing";
-      commit.reason = `${missing.length} of ${commit.n} messages missing: ${missing
+      commit.reason = `${missing.length} of ${commit.ids.length} messages missing: ${missing
         .slice(0, 3)
         .join(", ")}`;
       failed = true;
       continue;
     }
-    const entries =
-      commit.k === 0 ? genesisSet : commit.ids.map((id) => messages.get(id));
+    const entries = commit === first ? genesisSet : here(commit.ids);
     if ((await root(trie, entries)) !== commit.root) {
       commit.status = "mismatch";
-      commit.reason =
-        commit.k === 0
-          ? `The root differs (${entries.length} messages here, ${commit.n} committed)`
-          : "The root differs";
+      commit.reason = "The root differs";
       failed = true;
       continue;
     }
@@ -202,49 +244,66 @@ export async function check(messages, commits, snapshot) {
   return commits;
 }
 
-// Where `index` (a trie key: timestamp and ID) is in the order.
+// Whether the message `index` (a trie key: timestamp and ID) wasn't
+// witnessed in time: there's a sequencer commit after its timestamp +
+// WINDOW, but neither that commit nor an earlier one lists it, and no
+// include() with a block time from its timestamp to WINDOW after it carries
+// it. The lower end allows the usual skew of timestamps,
+// MAX_TIMESTAMP_DELTA_SECS. Messages dated up to the genesis are final, and
+// without an RPC nothing is late.
 let genesisTime;
-export function position(index) {
-  const id = index.slice(-64);
+export function late(index) {
+  if (!enabled()) return false;
+  const id = `0x${index.slice(-64)}`;
   const timestamp = parseInt(index.slice(0, -64), 16);
-  const committed = cache.getPosition(id);
-  if (committed) return [committed.k, committed.i, id];
-  genesisTime ??= cache.getCommits()[0]?.time;
-  if (genesisTime !== undefined && timestamp <= genesisTime) {
-    return [0, timestamp, id];
-  }
-  return [Infinity, timestamp, id];
+  genesisTime ??= cache.sequencerCommitAfter(0)?.time;
+  if (genesisTime === undefined || timestamp <= genesisTime) return false;
+  const deadline = cache.sequencerCommitAfter(timestamp + WINDOW);
+  if (!deadline) return false;
+  const skew = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10) || 0;
+  return !cache
+    .getListings(id)
+    .some(({ k, time, sequencer }) =>
+      sequencer
+        ? k <= deadline.k
+        : time >= timestamp - skew && time <= timestamp + WINDOW,
+    );
 }
 
-// What GET /api/v1/commits answers: how far this node verified the order.
+// What GET /api/v1/commits answers: how far this node verified the commits.
 export function status() {
   const commits = cache.getCommits();
-  const verified = commits.filter(({ status }) => status === "verified");
-  const failed = commits.find(({ status }) => status !== "verified");
+  const sequenced = commits.filter(({ sequencer }) => sequencer);
+  const verified = sequenced.filter(({ status }) => status === "verified");
+  const failed = sequenced.find(({ status }) => status !== "verified");
+  const latest = commits.at(-1);
   return {
-    sequencer: COMMITS.sequencer,
     inbox: COMMITS.inbox,
     commits: commits.length,
     verified: verified.length ? [0, verified.at(-1).k] : null,
     failed: failed
-      ? { k: failed.k, status: failed.status, reason: failed.reason }
-      : null,
-    latest: commits.at(-1)
       ? {
-          k: commits.at(-1).k,
-          tx: commits.at(-1).tx,
-          time: commits.at(-1).time,
+          k: failed.k,
+          tx: failed.tx,
+          status: failed.status,
+          reason: failed.reason,
+        }
+      : null,
+    latest: latest
+      ? {
+          k: latest.k,
+          tx: latest.tx,
+          time: latest.time,
+          sequencer: Boolean(latest.sequencer),
         }
       : null,
   };
 }
 
 // The node's state: the commits it read, how far it read the chain, the
-// trie root it last checked, the first commit that failed the check, and the
-// delegations snapshot's hash. `distrusted` are peers whose messages made a
-// root differ.
-const state = { commits: [], block: null, root: null, failed: null };
-export const distrusted = new Set();
+// trie root it last checked, the delegations snapshot's hash and the libp2p
+// node that gossips the messages of include()s.
+const state = { commits: [], block: null, root: null };
 
 export function enabled() {
   return Boolean(process.env.ETHEREUM_RPC_URL && COMMITS.inbox);
@@ -254,13 +313,9 @@ export function commits() {
   return state.commits;
 }
 
-export function failed() {
-  return state.failed;
-}
-
-// Reads new commits and, if there are any, checks them all again; with
-// `recheck` (after a sync), also if the trie changed. Returns the new
-// commits. Runs one at a time.
+// Reads new commits, takes the messages of new include()s and, if there are
+// new commits, checks them all again; with `recheck` (after a sync), also if
+// the trie changed. Returns the new commits. Runs one at a time.
 let queue = Promise.resolve();
 export function refresh(trie, rpc = client(), snapshot, recheck = false) {
   if (snapshot !== undefined) state.snapshot = snapshot;
@@ -268,54 +323,87 @@ export function refresh(trie, rpc = client(), snapshot, recheck = false) {
   return queue;
 }
 
+// The newest sequencer commit's block time.
+const newest = (commits) =>
+  commits.filter(({ sequencer }) => sequencer).at(-1)?.time;
+
 async function update(trie, rpc, recheck) {
   const from = state.block === null ? COMMITS.block : state.block + 1;
-  const { commits, latest } = await read(rpc, from, state.commits.at(-1));
+  const { commits, latest } = await read(rpc, from, state.commits.length);
   state.commits.push(...commits);
   state.block = latest;
+  for (const commit of commits) {
+    if (!commit.sequencer) await take(trie, commit.messages);
+  }
   const root = trie.root().toString("hex");
   const changed = state.root === null || (recheck && root !== state.root);
   if (!commits.length && !changed) return commits;
   state.root = root;
 
+  const before = newest(cache.getCommits());
   await check(await held(trie), state.commits, state.snapshot);
   cache.saveCommits(state.commits);
-  genesisTime = state.commits[0]?.time;
-  state.failed =
-    state.commits.find(({ status }) => status !== "verified") ?? null;
-  if (state.failed) {
-    const { k, status, reason } = state.failed;
+  const failed = state.commits.find(
+    ({ sequencer, status }) => sequencer && status !== "verified",
+  );
+  if (failed) {
+    const { k, status, reason } = failed;
     log(`commits: Commit ${k} is ${status}: ${reason}`);
+  }
+
+  // NOTE: A new sequencer commit decides whether the messages dated up to
+  // WINDOW before it were witnessed in time; the ones that weren't count for
+  // their signers from now on. Those dated up to the genesis are final.
+  const after = newest(state.commits);
+  if (after !== undefined && after !== before) {
+    const registry = await import("./chainstate/registry.mjs");
+    const from =
+      before === undefined
+        ? state.commits.find(({ sequencer }) => sequencer).time
+        : before - WINDOW;
+    await registry.recredit(from, after - WINDOW);
   }
   return commits;
 }
 
+// Takes the messages of an include() through the normal path, with the same
+// checks as messages from a peer, and gossips them. Invalid ones and those
+// the node holds already are dropped.
+async function take(trie, messages) {
+  // NOTE: Imported here, as store.mjs and registry.mjs import this module.
+  const store = await import("./store.mjs");
+  const registry = await import("./chainstate/registry.mjs");
+  const synching = true;
+  for (const canonical of messages) {
+    try {
+      const message = JSON.parse(decodeCbor(canonical));
+      const delegations = await registry.delegations();
+      await store.add(trie, message, state.libp2p, delegations, synching);
+    } catch (err) {
+      log(`commits: Didn't take a message of an include(): ${err.message}`);
+    }
+  }
+}
+
 // After a sync: checks the commits again, a little later so that the rest
-// of the sync's messages are in. A root that differs after messages from
-// `peer` came in makes the node distrust that peer.
+// of the sync's messages are in.
 let timer;
-export function synced(trie, peer) {
+export function synced(trie) {
   if (!enabled()) return;
   clearTimeout(timer);
-  timer = setTimeout(async () => {
-    const before = state.failed;
-    try {
-      await refresh(trie, client(), undefined, true);
-    } catch (err) {
-      log(`commits: Check after sync failed: ${err.message}`);
-      return;
-    }
-    if (!before && state.failed?.status === "mismatch") {
-      distrusted.add(peer.toString());
-      log(`commits: Distrusting ${peer}, commit ${state.failed.k} differs`);
-    }
+  timer = setTimeout(() => {
+    refresh(trie, client(), undefined, true).catch((err) =>
+      log(`commits: Check after sync failed: ${err.message}`),
+    );
   }, 30_000);
   timer.unref();
 }
 
-// Reads and checks the commits every ten minutes; `after` gets the new ones
-// (for the delegations, whose order may have changed, and the sequencer).
-export async function run(trie, snapshot, after) {
+// Reads and checks the commits every ten minutes, gossiping the messages of
+// include()s with `libp2p`; `after` gets the new commits (the sequencer's
+// tick).
+export async function run(trie, libp2p, snapshot, after) {
+  state.libp2p = libp2p;
   const rpc = client();
   for (;;) {
     try {
