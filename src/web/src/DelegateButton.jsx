@@ -80,7 +80,7 @@ function getNewKey() {
 // goes to "/" as before.
 export function useDelegation(props) {
   const from = useAccount();
-  const signer = useSigner();
+  const identityWallet = useSigner();
   const [keyName, setKeyName] = useState(null);
 
   useEffect(() => {
@@ -107,13 +107,13 @@ export function useDelegation(props) {
   const [isLoading, setIsLoading] = useState(false);
   const [delegateError, setDelegateError] = useState("");
   const delegate = async () => {
-    if (!signer || !from.address) return;
+    if (!identityWallet || !from.address) return;
     setDelegateError("");
     setIsLoading(true);
     try {
       const { message, signature } = await create(
         getNewKey(),
-        signer,
+        identityWallet,
         from.address,
       );
       const response = await send(message, signature);
@@ -188,7 +188,7 @@ export function useDelegation(props) {
     indexedDelegation,
     isLoading,
     isSuccess,
-    ready: Boolean(signer),
+    ready: Boolean(identityWallet),
     delegate,
     delegateError,
   };

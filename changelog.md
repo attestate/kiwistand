@@ -72,8 +72,8 @@ ETH. See "Order" in the protocol docs and the Delegation page.
 
 - "Enable one-tap actions" asks the wallet for one signature of a
   `delegation` message and sends it to the node: no network switch to OP
-  Mainnet, no transaction, no ETH. The key is in the delegations within
-  seconds. The iOS app follows separately.
+  Mainnet, no transaction, no ETH. The new signer is in the delegations
+  within seconds. The iOS app follows separately.
 
 #### Configuration
 
