@@ -51,8 +51,7 @@ await node.handle(
 
 const snapshot = process.env.TEST_SNAPSHOT_HASH;
 async function refresh() {
-  const added = await commits.refresh(trie, commits.client(), snapshot);
-  if (added.length) await registry.reattribute();
+  await commits.refresh(trie, commits.client(), snapshot);
   return commits.status();
 }
 

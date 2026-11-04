@@ -212,10 +212,9 @@ if (cluster.isPrimary) {
   if (commits.enabled()) {
     setTimeout(
       () =>
-        commits.run(trie, registry.snapshot()?.hash, async (added) => {
-          if (added.length) await registry.reattribute();
-          await sequencer.tick(trie, commits.commits());
-        }),
+        commits.run(trie, registry.snapshot()?.hash, () =>
+          sequencer.tick(trie, commits.commits()),
+        ),
       60 * 1000,
     ).unref();
   }

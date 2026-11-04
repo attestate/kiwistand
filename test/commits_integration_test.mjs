@@ -105,8 +105,8 @@ const story = (signer, href, timestamp) =>
     };
 
     // 2. Node A, the sequencer: two stories, the genesis, then a delegation,
-    // a story by the signer, its revocation and one more story by the
-    // signer.
+    // its revocation and two stories by the signer, dated before and after
+    // the revocation.
     const a = await start(join(dir, "a"), {
       ...env,
       SEQUENCER_PRIVATE_KEY: SEQUENCER_KEY,
@@ -138,14 +138,14 @@ const story = (signer, href, timestamp) =>
           EIP712_DELEGATION,
         ),
       );
+    // NOTE: The sequencer takes the story dated before the revocation after
+    // it: timestamps decide, not the order.
     const before = await story(signer, "https://before.example", time + 2);
-    // NOTE: Signed before the revocation, but the sequencer takes it after:
-    // the order decides, not the timestamp.
-    const after = await story(signer, "https://after.example", time + 3);
+    const after = await story(signer, "https://after.example", time + 5);
     const batch = [
       await delegation(true, time + 1),
-      before,
       await delegation(false, time + 4),
+      before,
       after,
     ];
     t.deepEqual(await a.call("add", batch), []);

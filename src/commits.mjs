@@ -16,11 +16,6 @@
 // `pack` below. Commit 0, the genesis, lists no IDs: it is every message with
 // a timestamp up to its block that no later commit lists, `n` of them, and
 // its `prev` is the hash of the delegations snapshot.
-//
-// A message's place in the order is [k, position]; genesis messages are
-// [0, timestamp]. A message no commit lists yet is pending: it comes after
-// all committed ones, by timestamp, and rules that depend on the order are
-// provisional for it.
 import { brotliCompressSync, brotliDecompressSync } from "zlib";
 
 import { Trie } from "@ethereumjs/trie";
@@ -202,20 +197,6 @@ export async function check(messages, commits, snapshot) {
   return commits;
 }
 
-// Where `index` (a trie key: timestamp and ID) is in the order.
-let genesisTime;
-export function position(index) {
-  const id = index.slice(-64);
-  const timestamp = parseInt(index.slice(0, -64), 16);
-  const committed = cache.getPosition(id);
-  if (committed) return [committed.k, committed.i, id];
-  genesisTime ??= cache.getCommits()[0]?.time;
-  if (genesisTime !== undefined && timestamp <= genesisTime) {
-    return [0, timestamp, id];
-  }
-  return [Infinity, timestamp, id];
-}
-
 // What GET /api/v1/commits answers: how far this node verified the order.
 export function status() {
   const commits = cache.getCommits();
@@ -280,7 +261,6 @@ async function update(trie, rpc, recheck) {
 
   await check(await held(trie), state.commits, state.snapshot);
   cache.saveCommits(state.commits);
-  genesisTime = state.commits[0]?.time;
   state.failed =
     state.commits.find(({ status }) => status !== "verified") ?? null;
   if (state.failed) {
@@ -314,7 +294,7 @@ export function synced(trie, peer) {
 }
 
 // Reads and checks the commits every ten minutes; `after` gets the new ones
-// (for the delegations, whose order may have changed, and the sequencer).
+// (for the sequencer).
 export async function run(trie, snapshot, after) {
   const rpc = client();
   for (;;) {

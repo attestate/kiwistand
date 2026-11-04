@@ -754,7 +754,7 @@ export function listDelegations(database = db) {
 }
 
 // The Ethereum mainnet commits (src/commits.mjs) as a node read and checked
-// them, and each committed message's place: commit k, position i.
+// them.
 export function initializeCommits(database = db) {
   database.exec(`
      CREATE TABLE IF NOT EXISTS commits (
@@ -768,11 +768,6 @@ export function initializeCommits(database = db) {
          status TEXT NOT NULL,
          reason TEXT
      );
-     CREATE TABLE IF NOT EXISTS positions (
-         id TEXT PRIMARY KEY NOT NULL,
-         k INTEGER NOT NULL,
-         i INTEGER NOT NULL
-     );
    `);
 }
 
@@ -783,13 +778,9 @@ export function saveCommits(commits, database = db) {
          (k, tx, block, time, prev, root, n, status, reason)
        VALUES (@k, @tx, @block, @time, @prev, @root, @n, @status, @reason)`,
     );
-    const position = database.prepare(
-      `INSERT OR IGNORE INTO positions (id, k, i) VALUES (?, ?, ?)`,
-    );
-    for (const { ids, ...row } of commits) {
+    for (const row of commits) {
       const { k, tx, block, time, prev, root, n, status, reason } = row;
       commit.run({ k, tx, block, time, prev, root, n, status, reason });
-      ids.forEach((id, i) => position.run(id.slice(2), k, i));
     }
   });
   save();
@@ -804,25 +795,12 @@ export function getCommits(database = db) {
   }
 }
 
-export function getPosition(id, database = db) {
-  try {
-    return database.prepare(`SELECT k, i FROM positions WHERE id = ?`).get(id);
-  } catch (err) {
-    if (err.message.includes("no such table")) return undefined;
-    throw err;
-  }
-}
-
-// Changes when a delegation or a commit comes in, so registry.mjs knows when
-// to build the delegations again.
+// Changes when a delegation comes in, so registry.mjs knows when to build
+// the delegations again.
 export function delegationsVersion(database = db) {
   try {
-    return database
-      .prepare(
-        `SELECT (SELECT COUNT(*) FROM delegations) || '|' ||
-                (SELECT COUNT(*) FROM positions) AS version`,
-      )
-      .get().version;
+    return database.prepare(`SELECT COUNT(*) AS version FROM delegations`).get()
+      .version;
   } catch (err) {
     if (err.message.includes("no such table")) return "";
     throw err;
@@ -830,7 +808,7 @@ export function delegationsVersion(database = db) {
 }
 
 // Credits a signer's stories, upvotes, comments and reactions again, after
-// its delegations or their order changed. `identityOf` maps a message's index
+// its delegations changed. `identityOf` maps a message's index
 // to its identity.
 export function reattribute(signer, identityOf) {
   const address = utils.getAddress(signer);
