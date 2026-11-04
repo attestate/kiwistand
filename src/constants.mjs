@@ -11,22 +11,22 @@ export const PROTOCOL = {
     topics: {
       roots: {
         id: "roots",
-        version: "14.0.0",
+        version: "15.0.0",
       },
       messages: {
         id: "messages",
-        version: "14.0.0",
+        version: "15.0.0",
       },
     },
   },
   protocols: {
     leaves: {
       id: "leaves",
-      version: "17.0.0",
+      version: "18.0.0",
     },
     levels: {
       id: "levels",
-      version: "17.0.0",
+      version: "18.0.0",
     },
   },
 };
@@ -87,6 +87,40 @@ export const EIP712_MEMBERSHIP = {
     { name: "community", type: "string" },
     { name: "timestamp", type: "uint256" },
   ],
+};
+
+// A delegation (protocol 15.0.0, src/delegations.mjs), signed by the
+// identity. `authorization` is the signer's EIP-712 signature of
+// AUTHORIZATION for the identity, in EIP712_DOMAIN, so a signer can't be
+// claimed without its consent. A revocation has `authorize` false and no
+// authorization ("0x").
+export const EIP712_DELEGATION = {
+  Delegation: [
+    { name: "type", type: "string" },
+    { name: "signer", type: "address" },
+    { name: "authorization", type: "bytes" },
+    { name: "authorize", type: "bool" },
+    { name: "timestamp", type: "uint256" },
+  ],
+};
+
+// What a signer signs for the identity it signs for: Delegator3's type with
+// `identity` for `from`, in the protocol's domain (no chainId, no
+// verifyingContract), so it can't be replayed into Delegator3 on OP Mainnet
+// or back.
+export const EIP712_AUTHORIZATION = {
+  Authorization: [
+    { name: "identity", type: "address" },
+    { name: "authorize", type: "bool" },
+  ],
+};
+
+// The Ethereum mainnet commits (src/commits.mjs): the inbox contract
+// (contracts/Inbox.sol) they go to, from the block it was deployed in. Empty
+// until the inbox is deployed.
+export const COMMITS = {
+  inbox: env.INBOX_ADDRESS || "",
+  block: parseInt(env.INBOX_BLOCK || "0", 10),
 };
 
 // A community's colour: any hex colour. The protocol has no opinion on it;
@@ -281,6 +315,52 @@ const membership = {
   required: ["timestamp", "type", "community", "signature"],
 };
 
+const delegation = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    timestamp: {
+      $comment: "unix timestamp",
+      type: "integer",
+    },
+    type: {
+      const: "delegation",
+    },
+    identity: {
+      $comment:
+        "The identity that signs the message (an EOA or a smart wallet). Not part of the signed struct: smart wallets' signatures can't be recovered, so they're checked against it.",
+      type: "string",
+      pattern: "^0x[a-fA-F0-9]{40}$",
+    },
+    signer: {
+      type: "string",
+      pattern: "^0x[a-fA-F0-9]{40}$",
+    },
+    authorization: {
+      $comment:
+        "The signer's signature of Authorization(address identity,bool authorize) for the identity; '0x' in a revocation.",
+      type: "string",
+      pattern: "^0x([a-fA-F0-9]{130})?$",
+    },
+    authorize: {
+      type: "boolean",
+    },
+    signature: {
+      type: "string",
+      pattern: "0x[a-fA-F0-9]+",
+    },
+  },
+  required: [
+    "timestamp",
+    "type",
+    "identity",
+    "signer",
+    "authorization",
+    "authorize",
+    "signature",
+  ],
+};
+
 export const SCHEMATA = {
   comparison: {
     type: "object",
@@ -318,12 +398,19 @@ export const SCHEMATA = {
         $comment:
           "The type of message that we should filter by in the request.",
         type: "string",
-        enum: ["amplify", "comment", "community", "join", "leave"],
+        enum: [
+          "amplify",
+          "comment",
+          "community",
+          "join",
+          "leave",
+          "delegation",
+        ],
       },
     },
     required: ["from", "amount"],
   },
   message: {
-    oneOf: [upvote, comment, community, membership],
+    oneOf: [upvote, comment, community, membership, delegation],
   },
 };

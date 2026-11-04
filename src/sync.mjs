@@ -10,6 +10,7 @@ import log from "./logger.mjs";
 import * as store from "./store.mjs";
 import * as roots from "./topics/roots.mjs";
 import * as registry from "./chainstate/registry.mjs";
+import * as commits from "./commits.mjs";
 import { SCHEMATA, PROTOCOL } from "./constants.mjs";
 import { elog } from "./utils.mjs";
 
@@ -561,6 +562,8 @@ export function handleLeaves(trie, peerFab) {
       // the databases.
       const delegations = await registry.delegations();
       await put(trie, message, delegations);
+      // NOTE: Checks the Ethereum commits again with the new messages.
+      commits.synced(trie);
     } catch (err) {
       elog(err, "handleLeaves: Unexpected error");
       peerFab.set();

@@ -44,8 +44,9 @@ For news.kiwistand.com it is at 8443.
 
 ### Message
 
-A message is one of four objects, each with `"additionalProperties": false`.
-The schemas are `upvote`, `comment`, `community` and `membership` in
+A message is one of five objects, each with `"additionalProperties": false`.
+The schemas are `upvote`, `comment`, `community`, `membership` and
+`delegation` in
 [src/constants.mjs](https://github.com/attestate/kiwistand/blob/main/src/constants.mjs).
 
 ```javascript
@@ -87,10 +88,22 @@ The schemas are `upvote`, `comment`, `community` and `membership` in
   "community": "0x.../ai",   // the community's ID
   "signature": "0x..."
 }
+
+// delegation (protocol 15.0.0), signed by the identity
+{
+  "timestamp": 1700000000,
+  "type": "delegation",
+  "identity": "0x...",       // the identity that signs it, not signed itself
+  "signer": "0x...",         // the signer it lets sign for it
+  "authorization": "0x...",  // the signer's signature for the identity; "0x" to revoke
+  "authorize": true,         // false revokes
+  "signature": "0x..."
+}
 ```
 
-See [Communities](/protocol#communities) and [Membership](/protocol#membership)
-for what they are and which EIP-712 type each message is signed with.
+See [Communities](/protocol#communities), [Membership](/protocol#membership)
+and [Delegation](/delegation) for what they are and which EIP-712 type each
+message is signed with.
 
 ## API Versioning
 
@@ -103,13 +116,52 @@ is part of our move towards better API versioning.
 
 Retrieves an object of valid delegations in the form of `to:from`, where
 `from` is the user's "identity" (the address messages are attributed to),
-whereas `to` can be any delegated Ethereum address.
+whereas `to` can be any delegated Ethereum address. It's the delegations as
+of now: a revoked signer isn't in it.
 
-What makes a delegation valid, how to create one and how nodes index them is
-on the [Delegation](/delegation#reading-delegations) page.
+What makes a delegation valid, how to create one and how nodes resolve them
+is on the [Delegation](/delegation#reading-delegations) page. Since protocol
+15.0.0, a delegation is in it as soon as the node took the delegation
+message.
 
-Please note that it may take some time for the indexer to pick up a new
-delegation (usually around 1-2 minutes).
+### GET /api/v1/commits
+
+How far this node verified the commits on Ethereum mainnet (see
+[Commits on Ethereum](/protocol#commits-on-ethereum)). Nodes without
+`ETHEREUM_RPC_URL` don't check them and answer with no commits.
+
+```json
+{
+  "status": "success",
+  "code": 200,
+  "message": "OK",
+  "details": "The commits on Ethereum",
+  "data": {
+    "inbox": "0x…",
+    "commits": 14,
+    "verified": [0, 12],
+    "failed": {
+      "k": 13,
+      "tx": "0x…",
+      "status": "mismatch",
+      "reason": "The root differs"
+    },
+    "latest": { "k": 13, "tx": "0x…", "time": 1793740000, "sequencer": true }
+  }
+}
+```
+
+- `k` numbers the commits, sequencer commits and `include()`s, in the order
+  of their `Commit` events on Ethereum, from 0.
+- `commits`: how many the node read.
+- `verified`: the range of commits the node verified, from the first to its
+  last verified sequencer commit, or `null`.
+- `failed`: the first sequencer commit that isn't verified, as
+  `{k, tx, status, reason}`, or `null`. `status` is `"missing"` (a listed
+  message isn't on this node yet), `"mismatch"` (the root or the snapshot's
+  hash differs) or `"unverified"`. A failed check is only reported: the
+  node keeps syncing and serving.
+- `latest`: the newest commit, and whether the sequencer sent it.
 
 ### POST /api/v1/list
 
@@ -122,9 +174,9 @@ Request body:
 - `amount` (integer): The number of entries that the request should contain.
   Must be between 0 and HTTP_MESSAGES_MAX_PAGE_SIZE, as defined in the [.env
   file](https://github.com/attestate/kiwistand/blob/main/.env-copy).
-- `type` (enum: `["amplify", "comment", "community", "join", "leave"]`,
-  defaults to: "amplify" if the parameter is omitted): The type of the
-  message.
+- `type` (enum: `["amplify", "comment", "community", "join", "leave",
+  "delegation"]`, defaults to: "amplify" if the parameter is omitted): The
+  type of the message.
 
 Response body
 
@@ -159,8 +211,8 @@ Request body:
 
 - `timestamp` (integer): Unix timestamp. Must be bigger than
   MIN_TIMESTAMP_SECS (1672527600), as defined in the [.env file](https://github.com/attestate/kiwistand/blob/main/.env-copy).
-- `type` (string): `"amplify"`, `"comment"`, `"community"`, `"join"` or
-  `"leave"`.
+- `type` (string): `"amplify"`, `"comment"`, `"community"`, `"join"`,
+  `"leave"` or `"delegation"`.
 - The other fields of that type, see [Message](#message).
 - `signature` (string): Message signature. Must match the pattern
   "0x[a-fA-F0-9]+".
@@ -184,6 +236,10 @@ Request body:
 9. A join or leave must name a community the node has, in a version older
    than the message (see [Membership](/protocol#membership)). The signer's
    earlier joins and leaves don't matter.
+10. A delegation must be signed by its `identity` and, unless it revokes,
+    hold the signer's signature for that identity (see
+    [Delegation](/delegation#creating-a-delegation)). In `/api/v1/list`, its
+    `signer` and `identity` are its own fields.
 
 When the node takes a join, it notifies the community's owner (a push
 notification to the iOS app and a Farcaster mini app notification), unless the
