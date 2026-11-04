@@ -126,32 +126,42 @@ message.
 
 ### GET /api/v1/commits
 
-How far this node verified the order of all messages against Ethereum
-mainnet (see [Order](/protocol#order)). Nodes without `ETHEREUM_RPC_URL`
-don't check it and answer with no commits.
+How far this node verified the commits on Ethereum mainnet (see
+[Commits on Ethereum](/protocol#commits-on-ethereum)). Nodes without
+`ETHEREUM_RPC_URL` don't check them and answer with no commits.
 
 ```json
 {
   "status": "success",
   "code": 200,
   "message": "OK",
-  "details": "The order's commits",
+  "details": "The commits on Ethereum",
   "data": {
-    "sequencer": "0x…",
     "inbox": "0x…",
-    "commits": 12,
-    "verified": [0, 11],
-    "failed": null,
-    "latest": { "k": 11, "tx": "0x…", "time": 1793740000 }
+    "commits": 14,
+    "verified": [0, 12],
+    "failed": {
+      "k": 13,
+      "tx": "0x…",
+      "status": "mismatch",
+      "reason": "The root differs"
+    },
+    "latest": { "k": 13, "tx": "0x…", "time": 1793740000, "sequencer": true }
   }
 }
 ```
 
-- `verified`: the first and last commit verified, or `null`.
-- `failed`: the first commit that isn't verified, as
-  `{k, status, reason}`, or `null`. `status` is `"missing"` (a listed message
-  isn't on this node yet), `"mismatch"` (the root or the snapshot's hash
-  differs) or `"unverified"`.
+- `k` numbers the commits, sequencer commits and `include()`s, in the order
+  of their `Commit` events on Ethereum, from 0.
+- `commits`: how many the node read.
+- `verified`: the range of commits the node verified, from the first to its
+  last verified sequencer commit, or `null`.
+- `failed`: the first sequencer commit that isn't verified, as
+  `{k, tx, status, reason}`, or `null`. `status` is `"missing"` (a listed
+  message isn't on this node yet), `"mismatch"` (the root or the snapshot's
+  hash differs) or `"unverified"`. A failed check is only reported: the
+  node keeps syncing and serving.
+- `latest`: the newest commit, and whether the sequencer sent it.
 
 ### POST /api/v1/list
 
