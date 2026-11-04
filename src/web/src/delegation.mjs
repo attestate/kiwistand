@@ -4,7 +4,7 @@
 // node takes it like any message. No transaction, no network switch, no ETH.
 import { getAddress } from "@ethersproject/address";
 
-import { EIP712_DOMAIN } from "./API.mjs";
+import { EIP712_DOMAIN } from "./eip712.mjs";
 
 export const EIP712_AUTHORIZATION = {
   Authorization: [

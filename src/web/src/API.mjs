@@ -7,12 +7,9 @@ import { encode } from "cbor-x/index-no-eval";
 import canonicalize from "canonicalize";
 
 import { getCookie, setCookie } from "./session.mjs";
+import { EIP712_DOMAIN } from "./eip712.mjs";
 
-export const EIP712_DOMAIN = {
-  name: "kiwinews",
-  version: "1.0.0",
-  salt: "0xfe7a9d68e99b6942bb3a36178b251da8bd061c20ed1e795207ae97183b590e5b",
-};
+export { EIP712_DOMAIN };
 
 export const EIP712_TYPES = {
   Message: [
