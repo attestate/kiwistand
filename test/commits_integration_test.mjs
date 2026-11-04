@@ -105,14 +105,15 @@ const story = (signer, href, timestamp) =>
     };
 
     // 2. Node A, the sequencer: two stories, the genesis, then a delegation,
-    // a story by the key, its revocation and one more story by the key.
+    // a story by the signer, its revocation and one more story by the
+    // signer.
     const a = await start(join(dir, "a"), {
       ...env,
       SEQUENCER_PRIVATE_KEY: SEQUENCER_KEY,
     });
     nodes.push(a);
     const alice = Wallet.createRandom();
-    const key = Wallet.createRandom();
+    const signer = Wallet.createRandom();
     const now = Math.floor(Date.now() / 1000);
     const genesis = [
       await story(alice, "https://alice.example", now - 100),
@@ -124,12 +125,12 @@ const story = (signer, href, timestamp) =>
     const time = zero.status.latest.time;
 
     const delegation = (authorize, timestamp) =>
-      delegations.authorization(key, alice.address).then((authorization) =>
+      delegations.authorization(signer, alice.address).then((authorization) =>
         sign(
           alice,
           delegations.create({
-            account: alice.address,
-            key: key.address,
+            identity: alice.address,
+            signer: signer.address,
             authorization,
             authorize,
             timestamp,
@@ -137,10 +138,10 @@ const story = (signer, href, timestamp) =>
           EIP712_DELEGATION,
         ),
       );
-    const before = await story(key, "https://before.example", time + 2);
+    const before = await story(signer, "https://before.example", time + 2);
     // NOTE: Signed before the revocation, but the sequencer takes it after:
     // the order decides, not the timestamp.
-    const after = await story(key, "https://after.example", time + 3);
+    const after = await story(signer, "https://after.example", time + 3);
     const batch = [
       await delegation(true, time + 1),
       before,
@@ -168,9 +169,9 @@ const story = (signer, href, timestamp) =>
     t.is(verified.failed, null);
     t.log("B:", JSON.stringify(verified));
 
-    // 5. The key's story before the revocation counts for Alice, the one
-    // after it for the key.
-    t.deepEqual(await b.call("credited", key.address), [
+    // 5. The signer's story before the revocation counts for Alice, the one
+    // after it for the signer.
+    t.deepEqual(await b.call("credited", signer.address), [
       "https://after.example",
     ]);
     t.true(
@@ -182,7 +183,7 @@ const story = (signer, href, timestamp) =>
     // 4. A swaps a committed message for another validly signed one: C
     // misses it in commit 1. With a genesis message gone, D's root of
     // commit 0 differs.
-    const fake = await story(key, "https://fake.example", time + 2);
+    const fake = await story(signer, "https://fake.example", time + 2);
     await a.call("swap", toDigest(before).index, fake);
     const c = await start(join(dir, "c"), env);
     nodes.push(c);

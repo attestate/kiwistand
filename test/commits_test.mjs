@@ -157,3 +157,26 @@ test.serial("a message's place in the order", (t) => {
   t.deepEqual(commits.position(old), [0, T - 100, "ef".repeat(32)]);
   t.deepEqual(commits.position(pending), [Infinity, T + 100, "cd".repeat(32)]);
 });
+
+test("the sequencer commits at most once per UTC hour", async (t) => {
+  const sequencer = await import("../src/sequencer.mjs");
+  const key = env.SEQUENCER_PRIVATE_KEY;
+  env.SEQUENCER_PRIVATE_KEY = `0x${"11".repeat(32)}`;
+  // Reading the trie means it went on to build a commit.
+  const trie = {
+    createReadStream() {
+      throw new Error("read the trie");
+    },
+  };
+  const hour = 1800003600;
+  const now = (hour + 20 * 60) * 1000;
+  try {
+    t.is(await sequencer.tick(trie, [{ time: hour + 5 }], null, now), null);
+    await t.throwsAsync(sequencer.tick(trie, [{ time: hour - 5 }], null, now), {
+      message: "read the trie",
+    });
+  } finally {
+    if (key === undefined) delete env.SEQUENCER_PRIVATE_KEY;
+    else env.SEQUENCER_PRIVATE_KEY = key;
+  }
+});

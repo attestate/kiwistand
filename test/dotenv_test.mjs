@@ -33,7 +33,6 @@ test("that repo contains a .env-copy file with all possible configuration option
     "INBOX_BLOCK",
     "SEQUENCER_ADDRESS",
     "SEQUENCER_PRIVATE_KEY",
-    "COMMIT_HOUR_UTC",
     "SMART_WALLET_RPC_URL",
     "DEBUG",
     "NODE_ENV",

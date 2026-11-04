@@ -1,9 +1,9 @@
 // Writes src/chainstate/delegations.json, the delegations snapshot: every
 // delegation a node has now from OP Mainnet (Delegator2's, from
-// historical-delegations.json, and Delegator3's), keys to accounts. With it
-// in the repo, nodes stop crawling OP Mainnet and delegations are protocol
-// messages (src/delegations.mjs). Run it on the production node right
-// before the cutover; the genesis commits the hash it prints:
+// historical-delegations.json, and Delegator3's), signers to identities.
+// With it in the repo, nodes stop crawling OP Mainnet and delegations are
+// protocol messages (src/delegations.mjs). Run it on the production node
+// right before the cutover; the genesis commits the hash it prints:
 //
 //   node scripts/delegations-snapshot.mjs [url]
 //

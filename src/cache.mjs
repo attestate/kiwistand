@@ -357,8 +357,8 @@ export async function insertCommunities(messages, database = db) {
   }
 }
 
-// NOTE: `index` is the message the row keeps (its newest), as a revoked key
-// signs for itself from its revocation on (src/delegations.mjs).
+// NOTE: `index` is the message the row keeps (its newest), as a revoked
+// signer signs for itself from its revocation on (src/delegations.mjs).
 function ownerOf(signer, delegations, index) {
   return resolve(delegations, signer, index).toLowerCase();
 }
@@ -539,7 +539,7 @@ function readMemberships(sql, params, database) {
   }
 }
 
-// The signing keys that resolve to `identity`: itself and the keys it
+// The signers that resolve to `identity`: itself and the signers it
 // delegated to, also revoked ones (their rows are resolved one by one), in
 // lowercase.
 function signersOf(identity, delegations) {
@@ -548,13 +548,15 @@ function signersOf(identity, delegations) {
   for (const [to, from] of Object.entries(delegations)) {
     if (String(from).toLowerCase() === target) signers.add(to.toLowerCase());
   }
-  const keys = keysOf(delegations, target).map((key) => key.toLowerCase());
+  const delegated = keysOf(delegations, target).map((signer) =>
+    signer.toLowerCase(),
+  );
   return [...signers]
     .filter(
       (signer) =>
         utils.isAddress(signer) && ownerOf(signer, delegations) === target,
     )
-    .concat(keys.filter((key) => !signers.has(key)));
+    .concat(delegated.filter((signer) => !signers.has(signer)));
 }
 
 // The rows of the given communities (IDs in lowercase), or of all of them.
@@ -699,8 +701,8 @@ export function initializeDelegations(database = db) {
   database.exec(`
      CREATE TABLE IF NOT EXISTS delegations (
          message TEXT PRIMARY KEY NOT NULL,
-         key TEXT NOT NULL,
-         account TEXT NOT NULL,
+         signer TEXT NOT NULL,
+         identity TEXT NOT NULL,
          authorize INTEGER NOT NULL
      );
    `);
@@ -709,13 +711,18 @@ export function initializeDelegations(database = db) {
 // Stores a delegation: the message plus its `index`. Returns what
 // restoreDelegation needs to undo it.
 export function insertDelegation(message, database = db) {
-  const { index, key, account, authorize } = message;
+  const { index, signer, identity, authorize } = message;
   const { changes } = database
     .prepare(
-      `INSERT OR IGNORE INTO delegations (message, key, account, authorize)
+      `INSERT OR IGNORE INTO delegations (message, signer, identity, authorize)
        VALUES (?, ?, ?, ?)`,
     )
-    .run(index, utils.getAddress(key), utils.getAddress(account), +authorize);
+    .run(
+      index,
+      utils.getAddress(signer),
+      utils.getAddress(identity),
+      +authorize,
+    );
   return { index, inserted: changes > 0 };
 }
 
@@ -729,14 +736,15 @@ export function insertDelegations(messages, database = db) {
   const insert = database.transaction((rows) => {
     for (const message of rows) insertDelegation(message, database);
   });
-  insert(messages.filter((message) => message?.index && message.key));
+  insert(messages.filter((message) => message?.index && message.signer));
 }
 
 export function listDelegations(database = db) {
   try {
     return database
       .prepare(
-        `SELECT message AS "index", key, account, authorize FROM delegations`,
+        `SELECT message AS "index", signer, identity, authorize
+         FROM delegations`,
       )
       .all();
   } catch (err) {
@@ -821,15 +829,15 @@ export function delegationsVersion(database = db) {
   }
 }
 
-// Credits a key's stories, upvotes, comments and reactions again, after its
-// delegations or their order changed. `identityOf` maps a message's index to
-// its identity.
-export function reattribute(key, identityOf) {
-  const signer = utils.getAddress(key);
+// Credits a signer's stories, upvotes, comments and reactions again, after
+// its delegations or their order changed. `identityOf` maps a message's index
+// to its identity.
+export function reattribute(signer, identityOf) {
+  const address = utils.getAddress(signer);
   for (const table of ["submissions", "upvotes", "comments", "reactions"]) {
     const rows = db
       .prepare(`SELECT id, identity FROM ${table} WHERE signer = ?`)
-      .all(signer);
+      .all(address);
     const update = db.prepare(`UPDATE ${table} SET identity = ? WHERE id = ?`);
     for (const { id, identity } of rows) {
       const next = identityOf(id.replace("kiwi:0x", ""));

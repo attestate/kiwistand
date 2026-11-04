@@ -89,26 +89,28 @@ export const EIP712_MEMBERSHIP = {
   ],
 };
 
-// A delegation (protocol 15.0.0, src/delegations.mjs), signed by the account.
-// `authorization` is the key's EIP-712 signature of AUTHORIZATION for the
-// account, in EIP712_DOMAIN, so a key can't be claimed without its consent.
-// A revocation has `authorize` false and no authorization ("0x").
+// A delegation (protocol 15.0.0, src/delegations.mjs), signed by the
+// identity. `authorization` is the signer's EIP-712 signature of
+// AUTHORIZATION for the identity, in EIP712_DOMAIN, so a signer can't be
+// claimed without its consent. A revocation has `authorize` false and no
+// authorization ("0x").
 export const EIP712_DELEGATION = {
   Delegation: [
     { name: "type", type: "string" },
-    { name: "key", type: "address" },
+    { name: "signer", type: "address" },
     { name: "authorization", type: "bytes" },
     { name: "authorize", type: "bool" },
     { name: "timestamp", type: "uint256" },
   ],
 };
 
-// What a key signs for the account it signs for: Delegator3's type, but in
-// the protocol's domain (no chainId, no verifyingContract), so it can't be
-// replayed into Delegator3 on OP Mainnet or back.
+// What a signer signs for the identity it signs for: Delegator3's type with
+// `identity` for `from`, in the protocol's domain (no chainId, no
+// verifyingContract), so it can't be replayed into Delegator3 on OP Mainnet
+// or back.
 export const EIP712_AUTHORIZATION = {
   Authorization: [
-    { name: "from", type: "address" },
+    { name: "identity", type: "address" },
     { name: "authorize", type: "bool" },
   ],
 };
@@ -325,19 +327,19 @@ const delegation = {
     type: {
       const: "delegation",
     },
-    account: {
+    identity: {
       $comment:
-        "The account that signs the message (an EOA or a smart wallet). Not part of the signed struct: smart wallets' signatures can't be recovered, so they're checked against it.",
+        "The identity that signs the message (an EOA or a smart wallet). Not part of the signed struct: smart wallets' signatures can't be recovered, so they're checked against it.",
       type: "string",
       pattern: "^0x[a-fA-F0-9]{40}$",
     },
-    key: {
+    signer: {
       type: "string",
       pattern: "^0x[a-fA-F0-9]{40}$",
     },
     authorization: {
       $comment:
-        "The key's signature of Authorization(address from,bool authorize) for the account; '0x' in a revocation.",
+        "The signer's signature of Authorization(address identity,bool authorize) for the identity; '0x' in a revocation.",
       type: "string",
       pattern: "^0x([a-fA-F0-9]{130})?$",
     },
@@ -352,8 +354,8 @@ const delegation = {
   required: [
     "timestamp",
     "type",
-    "account",
-    "key",
+    "identity",
+    "signer",
     "authorization",
     "authorize",
     "signature",
