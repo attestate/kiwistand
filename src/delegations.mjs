@@ -100,7 +100,11 @@ export async function verify(message, rpc = env.SMART_WALLET_RPC_URL) {
   if (recovered === identity) return identity;
   if (!rpc) throw new Error("The identity didn't sign the delegation");
 
-  const client = createPublicClient({ transport: http(rpc) });
+  // Short timeout and no retries: this runs inside the single-slot ingestion
+  // queue, so a slow RPC must not be able to stall all message intake.
+  const client = createPublicClient({
+    transport: http(rpc, { timeout: 3000, retryCount: 0 }),
+  });
   const valid = await client.verifyTypedData({
     address: identity,
     domain: EIP712_DOMAIN,
