@@ -232,6 +232,13 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
     { message: /too far in the past/ },
   );
   t.is(countAnonJoins(), 3);
+  // Nor can it be back-dated by a few seconds, inside the settle window.
+  await t.throwsAsync(
+    () =>
+      joinGroup(members[0], swapped, Math.floor(Date.now() / 1000) - 5, false),
+    { message: /already joined/ },
+  );
+  t.is(countAnonJoins(), 3);
 
   // Every node builds the same group from the joins.
   const voteTime = base + 102 + ANON_ROOT_SETTLE_SECS + 10;
