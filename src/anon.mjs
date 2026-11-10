@@ -164,7 +164,11 @@ export function checkJoin(message, identity, synching = false) {
     throw new Error("anon-join: timestamp is too far in the past");
   }
   const existing = getAnonMember(identity);
-  if (existing && existing.timestamp < message.timestamp) {
+  // NOTE: A live join is first-seen-wins: the settle window above still lets
+  // an identity back-date a second join by up to ANON_ROOT_SETTLE_SECS, enough
+  // to displace its first leaf after voting with it. Only synced joins may
+  // precede an existing one (so nodes converge on replay()'s order).
+  if (existing && (!synching || existing.timestamp < message.timestamp)) {
     throw new Error(`anon-join: identity "${identity}" has already joined`);
   }
   const karma = karmaAt(identity, message.timestamp);
