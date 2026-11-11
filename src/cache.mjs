@@ -322,7 +322,16 @@ export function countAnonJoins() {
   return db.prepare(`SELECT COUNT(*) AS count FROM anon_members`).get().count;
 }
 
-// The identity's latest commitment, or null.
+// The distinct commitments an identity has joined with.
+export function getAnonCommitments(identity) {
+  ensureAnonTables();
+  return db
+    .prepare(`SELECT DISTINCT commitment FROM anon_members WHERE identity = ?`)
+    .all(identity)
+    .map((row) => row.commitment);
+}
+
+// The identity's first join, or null.
 export function getAnonMember(identity) {
   ensureAnonTables();
   return (
