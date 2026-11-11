@@ -6,7 +6,8 @@
 //    a Semaphore identity commitment. Joining is public.
 // 2. Every node builds the same group (a Lean incremental Merkle tree) from
 //    the accepted joins, ordered by (timestamp, index). An identity has one
-//    leaf: its first join. Later joins are ignored.
+//    leaf: its first join. An identity that joins with a second commitment
+//    loses its leaf.
 // 3. A member upvotes a story with an "anon-upvote" message: no signature, no
 //    address, just a Semaphore proof that some member of the group upvoted
 //    this story. Its scope is the hash of the story id, so the proof's
@@ -37,6 +38,7 @@ import {
   calculateKarmaFromDB,
   hasNullifier,
   getAnonMember,
+  getAnonCommitments,
   isSubmission,
 } from "./cache.mjs";
 
@@ -73,17 +75,40 @@ export function messageOf(href, timestamp) {
   return keccakBigInt(`${href}|${timestamp}`).toString();
 }
 
+// The identities that signed joins with more than one commitment.
+export function equivocators(joins) {
+  const commitments = new Map();
+  const result = new Set();
+  for (const join of joins) {
+    const commitment = BigInt(join.commitment);
+    if (!commitments.has(join.identity)) {
+      commitments.set(join.identity, commitment);
+    } else if (commitments.get(join.identity) !== commitment) {
+      result.add(join.identity);
+    }
+  }
+  return result;
+}
+
 // Replays the joins (sorted by timestamp, id) into a group, one per identity. Returns the group
 // after the last join and one state per join that changed the root.
 export function replay(joins) {
   const group = new Group();
   const positions = new Map();
   const states = [];
+  // NOTE: An identity that signed joins with two different commitments has no
+  // leaf at all. Timestamps are chosen by the signer, and a synced join can
+  // carry any of them, so "the first join wins" alone would let an identity
+  // sign a second, earlier-dated join after voting: its leaf would become the
+  // new commitment, and the fresh nullifier another vote on the same story.
+  // Dropping the identity doesn't depend on the order or the timestamps of
+  // its joins, so nodes agree, and a swap never pays off.
+  const excluded = equivocators(joins);
   for (const join of joins) {
     const commitment = BigInt(join.commitment);
-    // NOTE: The first join of an identity wins. Letting an identity swap its
-    // commitment would hand it a fresh nullifier, and with it another vote on
-    // the same story, every time.
+    if (excluded.has(join.identity)) continue;
+    // NOTE: The first join of an identity wins; a repeated join changes
+    // nothing.
     if (positions.has(join.identity)) continue;
     group.addMember(commitment);
     positions.set(join.identity, group.size - 1);
@@ -166,10 +191,22 @@ export function checkJoin(message, identity, synching = false) {
   const existing = getAnonMember(identity);
   // NOTE: A live join is first-seen-wins: the settle window above still lets
   // an identity back-date a second join by up to ANON_ROOT_SETTLE_SECS, enough
-  // to displace its first leaf after voting with it. Only synced joins may
-  // precede an existing one (so nodes converge on replay()'s order).
-  if (existing && (!synching || existing.timestamp < message.timestamp)) {
+  // to displace its first leaf after voting with it.
+  if (existing && !synching) {
     throw new Error(`anon-join: identity "${identity}" has already joined`);
+  }
+  // NOTE: Any peer can hand us leaves, so a synced join isn't more trustworthy
+  // than a live one. It is stored if it precedes the identity's first join (so
+  // nodes converge on replay()'s order), or if it is the first one to carry
+  // another commitment: that is the proof of a swap, which every node must
+  // hold to drop the identity from the group (see replay()). Anything else
+  // changes nothing and is rejected.
+  if (existing && existing.timestamp < message.timestamp) {
+    const known = getAnonCommitments(identity);
+    const swap = known.length === 1 && BigInt(known[0]) !== commitment;
+    if (!swap) {
+      throw new Error(`anon-join: identity "${identity}" has already joined`);
+    }
   }
   const karma = karmaAt(identity, message.timestamp);
   if (karma < ANON_MIN_KARMA) {

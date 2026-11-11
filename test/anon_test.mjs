@@ -81,13 +81,17 @@ test("the group is built deterministically from the joins", (t) => {
   // Replaying again gives the same roots.
   t.deepEqual(anon.replay(joins).states, states);
 
-  // A later join of an identity is ignored: swapping commitments would mint a
-  // fresh nullifier, and with it another vote on the same story.
+  // An identity that joins with a second commitment loses its leaf, whatever
+  // the timestamps say: swapping commitments would mint a fresh nullifier, and
+  // with it another vote on the same story.
   const d = new Identity(new Uint8Array(32).fill(4)).commitment;
-  const replaced = anon.replay([...joins, join_("0xA", d, 103)]);
-  t.deepEqual(replaced.group.members, [a, b, c]);
-  t.is(replaced.states.length, 3);
-  t.is(replaced.group.size, 3);
+  for (const timestamp of [103, 99]) {
+    const swap = join_("0xA", d, timestamp);
+    const sorted = [...joins, swap].sort((x, y) => x.timestamp - y.timestamp);
+    const replaced = anon.replay(sorted);
+    t.deepEqual(replaced.group.members, [b, c]);
+    t.is(replaced.states.length, 2);
+  }
   // Registering the same commitment again changes nothing.
   const same = anon.replay([...joins, join_("0xB", b, 104)]);
   t.is(same.states.length, 3);
@@ -220,12 +224,7 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
   await t.throwsAsync(() => joinGroup(members[0], identityOf(members[0]).commitment, base + 101), {
     message: /already joined/,
   });
-  // Swapping the commitment would mint a fresh nullifier, so it's rejected.
   const swapped = new Identity(new Uint8Array(32).fill(9)).commitment;
-  await t.throwsAsync(() => joinGroup(members[0], swapped, base + 200), {
-    message: /already joined/,
-  });
-  t.is(countAnonJoins(), 3);
   // A live join can't be back-dated to displace an identity's first join.
   await t.throwsAsync(
     () => joinGroup(members[0], swapped, base + 50, false),
@@ -363,6 +362,43 @@ test.serial("anonymous upvotes end to end through store.add", async (t) => {
   t.is(newcomerRes.body.data.member, null);
   t.false(newcomerRes.body.data.eligible);
   t.is(newcomerRes.body.data.karma, ANON_MIN_KARMA - 1);
+
+  // Any peer can hand a node leaves, so an identity can get a second join with
+  // another commitment and an earlier timestamp stored after it has voted. It
+  // doesn't get a second vote out of it: it loses its leaf.
+  const swapper = new Identity(new Uint8Array(32).fill(9));
+  await joinGroup(members[0], swapper.commitment, base + 99);
+  t.is(countAnonJoins(), 4);
+  const rest = new Group(members.slice(1).map((m) => identityOf(m).commitment));
+  const afterSwap = anon.settledGroup(voteTime + 20).group;
+  t.is(afterSwap.root, rest.root);
+  t.false(afterSwap.members.includes(swapper.commitment));
+  const swappedIn = new Group([
+    swapper.commitment,
+    ...members.slice(1).map((m) => identityOf(m).commitment),
+  ]);
+  const doubleVote = await prove(swapper, swappedIn, storyId, voteTime + 20);
+  t.not(doubleVote.message.nullifier, vote.message.nullifier);
+  await t.throwsAsync(
+    () => store.add(trie, doubleVote.message, null, delegations),
+    { message: /isn't one of the last/ },
+  );
+  t.is(getSubmission(`0x${storyIndex}`).upvotes, before.upvotes + 2);
+  // The same holds when the second join is the later one, so nodes that get
+  // the two joins in a different order agree.
+  await joinGroup(members[1], swapper.commitment, base + 300);
+  t.is(countAnonJoins(), 5);
+  t.is(anon.settledGroup(voteTime + 400).group.size, 1);
+  // Once the swap is on record, further joins change nothing.
+  await t.throwsAsync(
+    () => joinGroup(members[1], identityOf(newcomer).commitment, base + 301),
+    { message: /already joined/ },
+  );
+  await t.throwsAsync(
+    () => joinGroup(members[1], swapper.commitment, base + 302),
+    { message: /already joined/ },
+  );
+  t.is(countAnonJoins(), 5);
 
   await rm("dbtestAnon", { recursive: true });
 });
