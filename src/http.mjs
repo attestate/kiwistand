@@ -84,6 +84,7 @@ import { toAddress, resolve, ENS_CACHE_PREFIX } from "./ens.mjs";
 import * as ens from "./ens.mjs";
 import * as karma from "./karma.mjs";
 import * as email from "./email.mjs";
+import * as reports from "./reports.mjs";
 import { triggerUpvoteNotification } from "./subscriptions.mjs";
 import * as moderation from "./views/moderation.mjs";
 import {
@@ -1337,6 +1338,17 @@ export async function launch(trie, libp2p, isPrimary = true) {
     } catch (err) {
       console.error("Unsubscribe error:", err);
       res.status(500).send("Error processing unsubscribe request");
+    }
+  });
+
+  // Reports of objectionable content from the iOS app (src/reports.mjs).
+  app.post("/api/v1/reports", async (request, reply) => {
+    try {
+      const { id } = await reports.add(request.body);
+      const details = "Thanks, we review reports within 24 hours";
+      return sendStatus(reply, 200, "OK", details, { id });
+    } catch (err) {
+      return sendError(reply, 400, "Bad Request", err.message);
     }
   });
 
