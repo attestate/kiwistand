@@ -1,9 +1,10 @@
 // @format
 // Reports of objectionable content (App Review Guideline 1.2). The iOS app's
 // "Report post", "Report comment" and "Report user" send them here, so
-// reporting works in the app without a mail account. Each report is kept in
-// reports.db and emailed to the moderators (REPORTS_EMAIL), who act on it
-// within 24 hours, as the community rules (/guidelines) promise.
+// reporting works in the app without a mail account; so does Settings ->
+// "Delete account" (Guideline 5.1.1(v)). Each report is kept in reports.db
+// and emailed to the moderators (REPORTS_EMAIL), who act on it within 24
+// hours, as the community rules (/guidelines) promise.
 import { env } from "process";
 import path from "path";
 
@@ -12,7 +13,7 @@ import postmark from "postmark";
 
 import log from "./logger.mjs";
 
-export const TYPES = ["story", "comment", "user"];
+export const TYPES = ["story", "comment", "user", "account-deletion"];
 const MAX_TARGET = 200;
 const MAX_REASON = 1000;
 
@@ -56,7 +57,9 @@ export function parse(body) {
 // doesn't name its story, so a comment has no link.
 export function link({ type, target }) {
   const base = "https://news.kiwistand.com";
-  if (type === "user") return `${base}/upvotes?address=${target}`;
+  if (type === "user" || type === "account-deletion") {
+    return `${base}/upvotes?address=${target}`;
+  }
   if (type === "comment") return null;
   const index = target.replace(/^kiwi:/, "").replace(/^0x/, "");
   return `${base}/stories?index=0x${index}`;
@@ -86,7 +89,9 @@ async function notify(report) {
     To: to,
     Subject: `Report #${report.id}: ${report.type} ${report.target}`,
     TextBody: [
-      `A ${report.type} was reported. Act on it within 24 hours.`,
+      report.type === "account-deletion"
+        ? "An account deletion was requested. Act on it within 24 hours."
+        : `A ${report.type} was reported. Act on it within 24 hours.`,
       "",
       `Type: ${report.type}`,
       `ID: ${report.target}`,
