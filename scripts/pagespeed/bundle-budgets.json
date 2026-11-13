@@ -19,13 +19,14 @@
     "node_modules/@rainbow-me/rainbowkit/dist/sanko-RHQYXGM5.js": 17700,
     "node_modules/@reown/appkit-scaffold-ui/dist/esm/exports/basic.js": 35400,
     "node_modules/posthog-js/dist/module.js": 61400,
-    "src/API.mjs": 13000,
+    "src/API.mjs": 13500,
     "src/Analytics.jsx": 1100,
     "src/AnalyticsConsent.jsx": 1400,
     "src/Avatar.jsx": 1800,
     "src/BackButton.jsx": 1000,
     "src/Bell.jsx": 3600,
     "src/CommentSection.jsx": 25000,
+    "src/Communities.jsx": 7700,
     "src/DelegateButton.jsx": 4000,
     "src/DelegationModal.jsx": 2600,
     "src/DesktopSearch.jsx": 1000,
@@ -34,17 +35,20 @@
     "src/ImageViewer.jsx": 600,
     "src/Karma.jsx": 500,
     "src/Navigation.jsx": 2200,
-    "src/NewsletterFeedCard.jsx": 1500,
+    "src/NewCommunity.jsx": 4500,
+    "src/NewsletterFeedCard.jsx": 1600,
     "src/NewsletterScrollModal.jsx": 2600,
+    "src/PostTo.jsx": 1900,
     "src/PrivateRpcSetting.jsx": 2200,
     "src/SavedStories.jsx": 2100,
     "src/Search.jsx": 1500,
     "src/SidebarDrawer.jsx": 1800,
-    "src/SubmitButton.jsx": 6600,
+    "src/SubmitButton.jsx": 7200,
     "src/Vote.jsx": 4200,
     "src/anon-transport.mjs": 19200,
     "src/bookmarks.mjs": 1100,
     "src/onboarding/Delegate.jsx": 1400,
+    "src/phosphor.json": 218000,
     "src/reactionBurst.mjs": 1100,
     "ui-vendor": 39400
   },
@@ -57,7 +61,7 @@
   "totals": {
     "eager": 490100,
     "lazyOther": 267700,
-    "lazy": 1326200
+    "lazy": 1560000
   },
   "pages": {
     "home": {

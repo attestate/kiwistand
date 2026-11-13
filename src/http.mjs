@@ -24,6 +24,7 @@ import { sub } from "date-fns";
 import DOMPurify from "isomorphic-dompurify";
 import { getSlug } from "./utils.mjs";
 import { checkAdminKey } from "./securityheaders.mjs";
+import { docs } from "./docs.mjs";
 import Row, { extractDomain } from "./views/components/row.mjs";
 import { createServer as createHttpServer } from "http";
 import { FileSystemCache, getCacheKey } from "node-fetch-cache";
@@ -57,7 +58,6 @@ import privacy from "./views/privacy.mjs";
 import guidelines from "./views/guidelines.mjs";
 import writersPage from "./views/writers.mjs";
 import * as writers from "./writers.mjs";
-import * as featured from "./featured.mjs";
 import saved from "./views/saved.mjs";
 import settings from "./views/settings.mjs";
 import newsletterPage from "./views/newsletter.mjs";
@@ -96,13 +96,21 @@ import {
   storeMiniAppUpvote,
   listNewest,
   countComments,
+  inCommunity,
 } from "./cache.mjs";
+import * as communitiesAPI from "./communities-api.mjs";
+import { suggestHandler } from "./community-suggest.mjs";
+import * as communityView from "./views/community.mjs";
+import { iconFile } from "./views/components/communities.mjs";
+import * as communitiesView from "./views/communities.mjs";
 import normalizeUrl from "normalize-url";
 import * as interactions from "./interactions.mjs";
 import * as bookmarks from "./bookmarks.mjs";
 import * as imageuploads from "./imageuploads.mjs";
 import * as shares from "./shares.mjs";
 import * as profiles from "./profiles.mjs";
+import * as mentions from "./mentions.mjs";
+import { names as mentionNames, render } from "./web/src/mentions.mjs";
 import appCache from "./cache.mjs"; // For LRU cache used by ENS profiles
 import frameSubscribe from "./views/frame-subscribe.mjs";
 import { timingSafeEqual } from "crypto";
@@ -289,6 +297,10 @@ app.use(
   }),
 );
 
+// The docs site (docs/, see src/docs.mjs). Before the Early Hints middleware
+// below, whose preloads are the app's CSS and JS, not the docs'.
+app.use("/docs", docs());
+
 // NOTE: The primary process regenerates the sitemaps hourly (launch.mjs). sirv
 // indexes src/public once at startup (including each file's Content-Length),
 // so it would serve stale lengths for rewritten sitemaps and 404 for new
@@ -332,6 +344,23 @@ for (const name of ["news", "pages"]) {
 // src/public once at startup, so a card made since the last restart was a
 // 404 for every crawler until the next one. Serve them from disk instead.
 const previewFile = /^[0-9a-f]+(-comment-[0-9a-f]+)?(-v\d+)?(-frame)?\.jpg$/;
+// NOTE: A community's icon as an SVG file, for the web client to draw the
+// communities it only knows by name, e.g. the ones your account runs from
+// GET /api/v1/communities (src/web/src/Communities.jsx). The icon set is
+// fixed (Phosphor 2.1.1), so the files never change.
+app.get("/icons/phosphor/:file", (req, res, next) => {
+  const match = /^([a-z0-9-]+)\.svg$/.exec(req.params.file);
+  const svg = match && iconFile(match[1]);
+  if (!svg) return next();
+  if (env.NODE_ENV === "production") {
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=31536000, s-maxage=31536000, immutable",
+    );
+  }
+  res.type("image/svg+xml").send(svg);
+});
+
 app.get("/previews/:file", (req, res, next) => {
   if (!previewFile.test(req.params.file)) return next();
   const headers = {};
@@ -671,6 +700,8 @@ function buildAppleAppSiteAssociation() {
             { "/": "/best*" },
             { "/": "/upvotes*" },
             { "/": "/activity*" },
+            // A community's invite link
+            { "/": "/c/*" },
             // Fallback – match everything under the domain
             { "/": "/*" },
           ],
@@ -682,6 +713,7 @@ function buildAppleAppSiteAssociation() {
             "/best*",
             "/upvotes*",
             "/activity*",
+            "/c/*",
             "/*",
           ],
         },
@@ -843,6 +875,17 @@ export function handleClusterMessage(trie, recompute) {
   };
 }
 
+// The communities that tag the home feed's stories (feed.mjs); none when
+// they can't be read, so the feed still renders.
+async function communityRefs() {
+  try {
+    return await communitiesAPI.communityRefs();
+  } catch (err) {
+    log(`Couldn't read the communities for the feed: ${err.message}`);
+    return {};
+  }
+}
+
 export async function launch(trie, libp2p, isPrimary = true) {
   // NOTE: Warns (doesn't exit) when ADMIN_KEY is set but short; once, from
   // the primary rather than from every worker.
@@ -887,7 +930,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
       console.time("initial-feed-computation");
       // Start with control variant
       currentVariant = 'control';
-      cachedFeed = await feedPiscina.run({ theme, variant: currentVariant });
+      cachedFeed = await feedPiscina.run({
+        theme,
+        variant: currentVariant,
+        communities: await communityRefs(),
+      });
       console.timeEnd("initial-feed-computation");
       log(`Initial cached feed ready (variant: ${currentVariant})`);
     } catch (err) {
@@ -903,7 +950,11 @@ export async function launch(trie, libp2p, isPrimary = true) {
         // Alternate between variants for 50/50 split
         variantCounter++;
         currentVariant = variants[variantCounter % 2];
-        const newFeed = await feedPiscina.run({ theme, variant: currentVariant });
+        const newFeed = await feedPiscina.run({
+          theme,
+          variant: currentVariant,
+          communities: await communityRefs(),
+        });
         cachedFeed = newFeed;
         
         const elapsed = Date.now() - startTime;
@@ -1452,7 +1503,17 @@ export async function launch(trie, libp2p, isPrimary = true) {
     });
   });
   
-  app.get("/api/v1/feeds/:name", async (request, reply) => {
+  // Communities (protocol 13.0.0): see communities-api.mjs.
+  app.get("/api/v1/communities", communitiesAPI.listHandler());
+  // Which of your communities a link fits best (community-suggest.mjs).
+  app.get("/api/v1/communities/suggest", suggestHandler());
+  app.get("/api/v1/communities/:owner/:key", communitiesAPI.detailHandler());
+
+  // NOTE: Kiwi News' feeds, and under /api/v1/communities/:owner/:key/ a
+  // community's: the same feeds with only its stories (communities-api.mjs,
+  // docs/src/pages/http-api.mdx). communityParams answers 400 for an invalid ID.
+  const feedsHandler = async (request, reply) => {
+    const { community } = reply.locals;
     let stories = [];
     
     if (request.params.name === "hot") {
@@ -1483,6 +1544,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
           paginate,
           appCuration,
           config.algorithm, // Pass algorithm selection
+          false, // skipAgeFilter
+          false, // skipResolve
+          { community },
         );
       } catch (err) {
         log(`Error in api/v1/feeds/hot (variant: ${variant || 'control'}): ${err.stack}`);
@@ -1500,7 +1564,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
       reply.header("Cache-Control", "no-cache");
 
       try {
-        stories = newAPI.getStories();
+        stories = community
+          ? await newAPI.getCommunityStories(community)
+          : newAPI.getStories();
       } catch (err) {
         log(`Error in api/v1/feeds/new: ${err.stack}`);
       }
@@ -1522,7 +1588,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
 
       try {
-        stories = await bestAPI.getStories(page, period, request.query.domain || "");
+        stories = await bestAPI.getStories(page, period, request.query.domain || "", {
+          community,
+        });
       } catch (err) {
         log(`error in /api/v1/feeds/best: ${err.stack}`);
       }
@@ -1536,7 +1604,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     // NOTE: Same count the website's story rows show (row.mjs).
-    stories = stories.map((story) => ({
+    stories = (await communitiesAPI.withCommunities(stories)).map((story) => ({
       ...story,
       commentCount: countComments(`kiwi:0x${story.index}`),
     }));
@@ -1569,7 +1637,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
           score: story.score || 0,
           upvotes: story.upvotes || 0,
           timestamp: story.timestamp,
-          age: age
+          age: age,
+          community: story.community,
         };
       });
     }
@@ -1578,7 +1647,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
     const httpMessage = "OK";
     const details = `${request.params.name} feed`;
     return sendStatus(reply, code, httpMessage, details, { stories });
-  });
+  };
+  app.get("/api/v1/feeds/:name", communitiesAPI.kiwiNews, feedsHandler);
+  app.get(
+    "/api/v1/communities/:owner/:key/feeds/:name",
+    communitiesAPI.communityParams,
+    feedsHandler,
+  );
 
   // Cache for endless scroll stories (refreshed every 30s)
   let cachedEndlessStories = null;
@@ -1648,6 +1723,25 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
   }
 
+  // NOTE: A community's endless scroll pages through its Hot the way Kiwi
+  // News' does, computed per request (the cache above is Kiwi News').
+  async function communityEndlessStories(community) {
+    const config = variantConfigs[currentVariant] || variantConfigs.control;
+    const results = await index(
+      trie,
+      999,
+      undefined,
+      sub(new Date(), { weeks: 6 }),
+      false,
+      false,
+      config.algorithm,
+      true,
+      true,
+      { community },
+    );
+    return results.stories;
+  }
+
   async function getEndlessStories() {
     const now = Date.now();
 
@@ -1679,7 +1773,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
   });
 
   // Endless scroll endpoint - returns just HTML rows for a page
-  app.get("/api/v1/feed/rows", async (request, reply) => {
+  // NOTE: Kiwi News' Hot, which has every story, or under
+  // /api/v1/communities/:owner/:key/ that community's.
+  const feedRowsHandler = async (request, reply) => {
+    const { community } = reply.locals;
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 1; // Default to page 1 for endless scroll (page 0 is already loaded)
@@ -1689,7 +1786,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     let allStories;
     try {
-      allStories = await getEndlessStories();
+      allStories = community
+        ? await communityEndlessStories(community)
+        : await getEndlessStories();
     } catch (err) {
       log(`Error in /api/v1/feed/rows: ${err.stack}`);
       return reply.status(500).send("");
@@ -1741,14 +1840,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
         "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
       );
       return reply.json({
-        stories: stories.map((story) => ({
+        stories: (await communitiesAPI.withCommunities(stories)).map((story) => ({
           ...story,
           commentCount: countComments(`kiwi:0x${story.index}`),
         })),
       });
     }
 
-    const rowsHtml = stories.map((story, i) =>
+    // NOTE: Kiwi News' rows show a community story's tag (row.mjs), a
+    // community's own rows don't.
+    const tagged = community
+      ? stories
+      : await communitiesAPI.withCommunities(stories);
+    const rowsHtml = tagged.map((story, i) =>
       Row(
         start,
         "/",
@@ -1768,7 +1872,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(rowsHtml);
-  });
+  };
+  app.get("/api/v1/feed/rows", communitiesAPI.kiwiNews, feedRowsHandler);
+  app.get(
+    "/api/v1/communities/:owner/:key/feed/rows",
+    communitiesAPI.communityParams,
+    feedRowsHandler,
+  );
 
   // Warm the previews of the first scroll-loaded /new pages when someone
   // opens /new (at most once a minute), so the first rows and the page the
@@ -1801,7 +1911,10 @@ export async function launch(trie, libp2p, isPrimary = true) {
   const NEW_ROWS_MAX_PAGE = 50;
 
   // Endless scroll endpoint for /new — returns HTML rows for older stories
-  app.get("/api/v1/new/rows", async (request, reply) => {
+  // NOTE: Kiwi News' New (every story), or under
+  // /api/v1/communities/:owner/:key/ that community's, after its first page.
+  const newRowsHandler = async (request, reply) => {
+    const { community } = reply.locals;
     let page = parseInt(request.query.page);
     if (isNaN(page) || page < 1) {
       page = 1;
@@ -1815,16 +1928,30 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     // Use the oldest story on the initial /new page as the cursor so we
     // never overlap with already-rendered stories.
-    const initialStories = newAPI.getStories();
-    const oldestTimestamp = initialStories.length > 0
-      ? initialStories[initialStories.length - 1].timestamp
-      : Math.floor(Date.now() / 1000);
+    let initialCount, oldestTimestamp;
+    if (community) {
+      oldestTimestamp = newAPI.communityCursor(community);
+      initialCount = oldestTimestamp === undefined ? 0 : newAPI.NEW_STORIES;
+    } else {
+      const initialStories = newAPI.getStories();
+      initialCount = initialStories.length;
+      oldestTimestamp = initialStories.length > 0
+        ? initialStories[initialStories.length - 1].timestamp
+        : undefined;
+    }
+    if (oldestTimestamp === undefined) {
+      oldestTimestamp = Math.floor(Date.now() / 1000);
+    }
 
     // Fetch enough stories older than the initial page to fill this page
     // and the pages whose previews we warm ahead.
     // Over-fetch to account for moderation filtering.
     const fetchLimit = endlessPageSize * page + ENDLESS_WARM_AHEAD + 20;
-    let allStories = listNewest(fetchLimit + initialStories.length);
+    let allStories = listNewest(
+      fetchLimit + initialCount,
+      undefined,
+      community ? inCommunity(community) : undefined,
+    );
 
     // Only keep stories older than the initial page
     allStories = allStories.filter(s => s.timestamp < oldestTimestamp);
@@ -1884,14 +2011,19 @@ export async function launch(trie, libp2p, isPrimary = true) {
         "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
       );
       return reply.json({
-        stories: stories.map((story) => ({
+        stories: (await communitiesAPI.withCommunities(stories)).map((story) => ({
           ...story,
           commentCount: countComments(`kiwi:0x${story.index}`),
         })),
       });
     }
 
-    const rowsHtml = stories.map((story, i) =>
+    // NOTE: Kiwi News' rows show a community story's tag (row.mjs), a
+    // community's own rows don't.
+    const tagged = community
+      ? stories
+      : await communitiesAPI.withCommunities(stories);
+    const rowsHtml = tagged.map((story, i) =>
       Row(
         start,
         "/new",
@@ -1911,7 +2043,13 @@ export async function launch(trie, libp2p, isPrimary = true) {
       "public, s-maxage=20, max-age=0, stale-while-revalidate=86400",
     );
     return reply.status(200).type("text/html").send(rowsHtml);
-  });
+  };
+  app.get("/api/v1/new/rows", communitiesAPI.kiwiNews, newRowsHandler);
+  app.get(
+    "/api/v1/communities/:owner/:key/new/rows",
+    communitiesAPI.communityParams,
+    newRowsHandler,
+  );
 
   app.get("/api/v1/profile/:address", async (request, reply) => {
     let address;
@@ -2081,11 +2219,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
         ? "public, s-maxage=60, max-age=0"
         : "public, s-maxage=86400, max-age=0, stale-while-revalidate=31536000",
     );
+    const [withCommunity] = await communitiesAPI.withCommunities([submission]);
     const code = 200;
     const httpMessage = "OK";
     const details = "Responding with story queried by index";
     return sendStatus(reply, code, httpMessage, details, {
-      ...submission,
+      ...withCommunity,
       metadata,
       comments: enrichedComments,
     });
@@ -2207,6 +2346,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         content = await feedPiscina.run({
           theme: reply.locals.theme,
           variant: currentVariant,
+          communities: await communityRefs(),
           page,
           domain: DOMPurify.sanitize(request.query.domain),
           identity,
@@ -2334,10 +2474,14 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
 
     if (comments.length > 0) {
+      const names = await mentionNames(
+        comments.map((comment) => comment.title),
+        ens.resolve,
+      );
       md += `\n## Comments\n\n`;
       comments.forEach((comment, i) => {
         const name = profiles[i]?.displayName || profiles[i]?.truncatedAddress || comment.identity;
-        md += `**${name}**: ${comment.title}\n\n`;
+        md += `**${name}**: ${render(comment.title, names)}\n\n`;
       });
     }
 
@@ -2551,6 +2695,12 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return sendStatus(reply, code, httpMessage, details, {
       notifications: data.notifications,
+      // NOTE: Who joined your communities (protocol 14.0.0), newest first.
+      // Separate from `notifications`, which the apps render.
+      joins: data.joins,
+      // NOTE: Comments that mention you (src/web/src/mentions.mjs), newest
+      // first, separate like `joins`.
+      mentions: data.mentions,
       lastServerValue: data.latestValue,
     });
   });
@@ -2577,6 +2727,8 @@ export async function launch(trie, libp2p, isPrimary = true) {
     return reply.status(200).send();
   });
 
+  app.get("/api/v1/mentions", mentions.handler());
+
   app.get("/activity", async (request, reply) => {
     // Query param version - cacheable, no cookies
     if (request.query.address) {
@@ -2597,6 +2749,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
         data.feed,
         parseInt(request.query.lastUpdate, 10),
         true, // isQueryParamVersion
+        data.names,
       );
 
       reply.header(
@@ -2633,6 +2786,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
       data.feed,
       parseInt(request.cookies.lastUpdate, 10),
       false,
+      data.names,
     );
 
     if (data && data.lastUpdate) {
@@ -2778,32 +2932,6 @@ export async function launch(trie, libp2p, isPrimary = true) {
     );
     return reply.status(200).type("text/html").send(content.valueOf());
   });
-  // "Featured on Kiwi News" badge for writers' sites (src/featured.mjs).
-  app.get("/badge/:file", async (request, reply) => {
-    const index = featured.parseBadgeParam(request.params.file);
-    if (!index) {
-      return reply.status(404).type("text/plain").send("Badge not found");
-    }
-    let submission;
-    try {
-      submission = await generateStory(index);
-    } catch (err) {
-      return reply.status(404).type("text/plain").send("Badge not found");
-    }
-    const svg = featured.badgeSvg({
-      rank: featured.peakRank(index),
-      upvotes: submission.upvotes,
-    });
-    reply.header("X-Robots-Tag", "noindex");
-    reply.header(
-      "Cache-Control",
-      "public, s-maxage=3600, max-age=600, stale-while-revalidate=86400",
-    );
-    return reply
-      .status(200)
-      .type("image/svg+xml; charset=utf-8")
-      .send(svg);
-  });
   app.get("/privacy-policy", async (request, reply) => {
     const content = await privacy(reply.locals.theme);
     reply.header(
@@ -2945,13 +3073,24 @@ export async function launch(trie, libp2p, isPrimary = true) {
       }
     }
 
+    // NOTE: /submit?community=<id> ("Post the first story") picks the
+    // community in "Post to".
+    let community = null;
+    try {
+      const id = communitiesAPI.parseCommunity(request.query.community);
+      if (id) community = await communitiesAPI.findCommunity(...id.split("/"));
+    } catch (err) {
+      community = null;
+    }
+
     const content = await submit(
       reply.locals.theme,
       DOMPurify.sanitize(link),
       DOMPurify.sanitize(title),
+      community,
     );
 
-    if (url || title) {
+    if (url || title || community) {
       reply.header(
         "Cache-Control",
         "public, s-maxage=18000, max-age=0, must-revalidate",
@@ -2966,6 +3105,39 @@ export async function launch(trie, libp2p, isPrimary = true) {
 
     return reply.status(200).type("text/html").send(content.valueOf());
   });
+  // Communities: browse them, start one and a community's pages, its Hot,
+  // New and Best (views/community.mjs, views/communities.mjs). Its Hot is
+  // computed like Kiwi News' (feed.mjs), New and Best like /new and /best.
+  app.get("/communities", communitiesView.browseHandler());
+  app.get("/communities/new", communitiesView.newHandler());
+  const communityPage = communityView.handler({
+    getStories: async (feed, community, { page, period }) => {
+      if (feed === "new") {
+        return { stories: await newAPI.getCommunityStories(community), start: 0 };
+      }
+      if (feed === "best") {
+        const stories = await bestAPI.getStories(page, period, "", { community });
+        return { stories, start: page * parseInt(env.TOTAL_STORIES, 10) };
+      }
+      const variant = variantConfigs[currentVariant] || variantConfigs.control;
+      const { stories, start } = await index(
+        trie,
+        0,
+        undefined,
+        sub(new Date(), { days: 3 }),
+        true, // paginate
+        false, // appCuration
+        variant.algorithm,
+        false, // skipAgeFilter
+        false, // skipResolve
+        { community },
+      );
+      return { stories, start };
+    },
+  });
+  app.get("/c/:owner/:key", communityPage);
+  app.get("/c/:owner/:key/:feed", communityPage);
+
   app.get("/*", async (request, reply, next) => {
     const name = request.params[0];
     if (!name.endsWith(".eth")) {

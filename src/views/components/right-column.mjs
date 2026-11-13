@@ -4,6 +4,7 @@ import vhtml from "vhtml";
 
 import { NewsletterCardElement } from "./newsletter-card.mjs";
 import { ms } from "./icons.mjs";
+import { Icon } from "./communities.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -43,39 +44,40 @@ const BRAND_ASSETS =
 const TELEGRAM = "https://t.me/+QGAviVT67m00Njc8";
 
 // NOTE: The design's "Side footer" ("Web 2 · Desktop · Home · Hot" →
-// Sidebar → Side footer): three plain rows of links (About Guidelines
-// Privacy API Newsletter / Weekly archive, RSS Hot · New, LLMs / Source
-// code, MCP client, Brand assets), then "Made for the open web." and
-// "Hosted by attestate.com (Kontakt).". Telegram (Tim's ask) follows
-// Newsletter in the first row. "Docs" was the same page as "About".
+// Sidebar → Side footer): rows of plain links, then "Made for the open
+// web." and "Hosted by attestate.com (Kontakt).". Telegram (Tim's ask)
+// follows Newsletter. The links are grouped so the rows set ragged right:
+// at 280px they run 217, 244, 188, 211px, so the right edge flutters
+// gently instead of bulging or leaving a hole after a short row. "Docs"
+// was the same page as "About".
 export const SideFooter = () => html`
   <div class="kn-side-footer">
     <nav class="kn-side-links" aria-label="Footer">
       <div class="kn-side-row">
-        <a href="https://kiwistand.github.io/kiwi-docs/" target="_blank"
-          >About</a
-        >
+        <a href="/docs/">About</a>
         <a href="/guidelines">Guidelines</a>
         <a href="/privacy-policy">Privacy</a>
-        <a href="https://attestate.com/kiwistand/main/" target="_blank">API</a>
+        <a href="/docs/http-api">API</a>
+      </div>
+      <div class="kn-side-row">
         <a href="/newsletter">Newsletter</a>
         <a href="${TELEGRAM}" target="_blank" rel="noopener noreferrer"
           >Telegram</a
         >
-      </div>
-      <div class="kn-side-row">
-        <a href="/weekly">Weekly archive</a>
         <span class="kn-side-pair"
           ><a href="/feed.xml">RSS Hot</a
           ><span aria-hidden="true">${" "}·${" "}</span
           ><a href="/new.xml" aria-label="RSS New">New</a></span
         >
-        <a href="/llms.txt">LLMs</a>
       </div>
       <div class="kn-side-row">
+        <a href="/weekly">Weekly archive</a>
         <a href="https://github.com/attestate/kiwistand" target="_blank"
           >Source code</a
         >
+      </div>
+      <div class="kn-side-row">
+        <a href="/llms.txt">LLMs</a>
         <a
           href="https://github.com/attestate/kiwistand/tree/main/kiwimcp-client"
           target="_blank"
@@ -95,13 +97,34 @@ export const SideFooter = () => html`
   </div>
 `;
 
+// The communities you joined (Communities.jsx lists them from this
+// browser), with links to all of them and to start one.
+export const CommunitiesBox = () => html`
+  <div class="kn-side-box cm-side">
+    <span class="kn-eyebrow">Communities</span>
+    <div class="cm-side-list" data-cm="side">
+      <p class="cm-side-empty">Smaller feeds for one topic, with their own rules.</p>
+    </div>
+    <div class="cm-side-links">
+      <a class="cm-side-all" href="/communities">See all${" "}${Icon("arrow-right", 13)}</a>
+      <a href="/communities/new">+ Start a community</a>
+    </div>
+  </div>
+`;
+
 // The desktop right column (1101px and up): the newsletter sign-up, the
 // iPhone beta and the footer links. A page can opt out of the sign-up
-// (`newsletter: false`) or put its own boxes in (`children`, e.g. the story
-// page's "More from Hot"). anon-rpc lives only on /settings.
-export default function RightColumn({ newsletter = true, children = null } = {}) {
+// (`newsletter: false`), add the communities box (the feeds) or put its own
+// boxes in (`children`, e.g. the story page's "More from Hot"). anon-rpc
+// lives only on /settings.
+export default function RightColumn({
+  newsletter = true,
+  communities = false,
+  children = null,
+} = {}) {
   return html`
     <aside class="right-column kn-right">
+      ${communities ? CommunitiesBox() : null}
       ${newsletter
         ? NewsletterCardElement("sidebar", sidebarCopy)
         : null}

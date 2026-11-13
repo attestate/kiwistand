@@ -49,7 +49,6 @@ export function Page({ theme, path, head, backbar = null, wide = false, bodyClas
         class="${classes}"
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}

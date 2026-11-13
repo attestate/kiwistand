@@ -51,9 +51,9 @@ Kiwi News is built on an open, permissionless, and decentralized peer-to-peer pr
 
 -   **P2P Content Distribution**: User-generated content is distributed across a P2P network. Nodes use a Merkle Patricia Trie to efficiently synchronize and verify data with each other.
 -   **Open participation**: Any Ethereum address can post, upvote and comment in its own name. (Until 0.12.0 this required minting the "Hyperkiwification"/Kiwi Pass NFT on Optimism; that requirement is gone.) Passkey accounts are a browser-held key whose address acts as its own identity.
--   **Key Delegation**: Users can delegate signing authority from their main wallet (the `from` address, their identity) to a temporary, "hot" key (the `to` address). This allows for a smoother user experience without constant wallet confirmations for every action. The logic for this is handled by the `delegator2` smart contract. For full technical details, see the [`delegator2` repository](https://github.com/attestate/delegator2).
+-   **Key Delegation**: Users can delegate signing authority from their main wallet (the `from` address, their identity) to a temporary, "hot" key (the `to` address). This allows for a smoother user experience without constant wallet confirmations for every action. The delegation is a transaction to the Delegator3 contract on OP Mainnet. For how it works, see [Delegation](https://news.kiwistand.com/docs/delegation).
 
-For a deeper dive into the protocol, see the [Protocol Guide](https://github.com/attestate/kiwistand/blob/main/docs/source/protocol-guide.rst).
+For a deeper dive into the protocol, see the docs at [news.kiwistand.com/docs](https://news.kiwistand.com/docs/): the [guide to how the protocol works](https://news.kiwistand.com/docs/guide), the [protocol specification](https://news.kiwistand.com/docs/protocol) and the [HTTP API](https://news.kiwistand.com/docs/http-api). They are also available as plain text for LLMs at [/docs/llms.txt](https://news.kiwistand.com/docs/llms.txt).
 
 ## IMPORTANT: API Architecture
 
@@ -111,6 +111,7 @@ Running a full Kiwi News node requires syncing with the Ethereum blockchain, whi
 
 ## Core Documentation
 
+-   [Docs](https://news.kiwistand.com/docs/): the Kiwi News Protocol, the node's HTTP API, delegation and the changelog.
 -   [CONVENTIONS.md](https://github.com/attestate/kiwistand/blob/main/CONVENTIONS.md): **Crucial Read.** Outlines the coding style, architecture, and conventions. Please adhere to these strictly.
 -   [src/web/src/API.mjs](https://github.com/attestate/kiwistand/blob/main/src/web/src/API.mjs): **Crucial Client Reference.** Contains the frontend API logic, including EIP-712 signing details.
 -   [src/api.mjs](https://github.com/attestate/kiwistand/blob/main/src/api.mjs): Defines the core Express.js API routes for the backend.

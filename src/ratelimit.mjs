@@ -183,6 +183,22 @@ export const LOAD_BALANCER_RULES = [
       req.method !== "OPTIONS" && path === "/api/v1/metadata",
   },
   {
+    // Reads the link's metadata and asks a model, like a title.
+    name: "suggest",
+    limit: 60,
+    windowMs: MINUTE,
+    match: (req, path) =>
+      req.method !== "OPTIONS" && path === "/api/v1/communities/suggest",
+  },
+  {
+    // Browsers' reports of the script policy (securityheaders.mjs).
+    name: "csp-report",
+    limit: 60,
+    windowMs: MINUTE,
+    match: (req, path) =>
+      req.method === "POST" && path === "/api/v1/csp-report",
+  },
+  {
     // Both ask the external search API: the JSON endpoint and the /search
     // page with a query (without one it's the empty search sheet).
     name: "search",
@@ -191,6 +207,14 @@ export const LOAD_BALANCER_RULES = [
     match: (req, path) =>
       (req.method !== "OPTIONS" && path === "/api/v1/search") ||
       (req.method === "GET" && path === "/search" && !!req.query?.q),
+  },
+  {
+    // The comment box asks while someone types after "@" (src/mentions.mjs).
+    name: "mentions",
+    limit: 60,
+    windowMs: MINUTE,
+    match: (req, path) =>
+      req.method !== "OPTIONS" && path === "/api/v1/mentions",
   },
 ];
 

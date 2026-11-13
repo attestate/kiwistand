@@ -203,7 +203,7 @@
 /* Design: 93.47 x 16 on phones, 105.15 x 18 in the desktop side panel. */
 .kob-wordmark {
   display: block;
-  width: 93.47px;
+  width: 90.69px;
   height: 16px;
   overflow: visible;
 }
@@ -215,7 +215,6 @@
 
 .kob-wm-bar {
   fill: var(--kob-wordmark-green);
-  stroke: var(--kob-wordmark-green);
 }
 
 .kob-rules {
@@ -680,7 +679,7 @@
 
   .kob-side .kob-wordmark {
     width: 105.15px;
-    height: 18px;
+    height: 18.55px;
   }
 
   .kob-side-title {

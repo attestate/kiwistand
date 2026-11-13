@@ -3,6 +3,7 @@ import vhtml from "vhtml";
 import DOMPurify from "isomorphic-dompurify";
 
 import { ms } from "./icons.mjs";
+import { Icon } from "./communities.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -178,9 +179,6 @@ export const fireSVG = html`
   </svg>
 `;
 
-const spinner =
-  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-
 const periods = [
   ["all", "All", "All time"],
   ["year", "Year", "This year"],
@@ -219,7 +217,7 @@ function pageHead(site, period) {
   let eyebrow, headline, sub, meta;
   if (site === "top") {
     eyebrow = `${today()} \u00b7 HOT`;
-    headline = "Good stories. Curious people.";
+    headline = "Good links, no hype.";
     sub = "The best of crypto, tech and the open web. Curated by humans.";
     meta = "RANKED BY UPVOTES AND AGE";
   } else if (site === "new") {
@@ -245,27 +243,44 @@ function pageHead(site, period) {
   return { eyebrow, headline, sub, meta };
 }
 
+// Kiwi News' feeds and the communities you joined (Communities.jsx fills
+// them in from this browser's list), then "Browse".
+const CommunityTabs = () => html`
+  <nav class="cm-tabs" aria-label="Communities">
+    <a class="cm-tab cm-tab-active" href="/" aria-current="true">All stories</a>
+    <span class="cm-tabs-joined" data-cm="tabs"></span>
+    <a class="cm-tab" href="/communities">${Icon("compass", 14)}Browse</a>
+  </nav>
+`;
+
 // Hot / New / Best above the feeds, plus Best's time frames: buttons next
 // to the tabs on desktop, a dropdown below them on phones (like the iOS app).
-const secondheader = (theme, site, period, domain, query) => {
+// With `community` ({id, name, stories}), its feeds under /c/<id>.
+const secondheader = (theme, site, period, domain, query, community) => {
   period = DOMPurify.sanitize(period);
   domain = DOMPurify.sanitize(domain);
   const isFeed =
     site === "search" || site === "top" || site === "new" || site === "best";
   if (!isFeed) return html`<td></td>`;
-  const head = pageHead(site, period);
+  const head = community ? null : pageHead(site, period);
+  const base = community ? `/c/${community.id}` : "";
+  const meta = community
+    ? `${community.name} \u00b7 ${community.stories} ${
+        community.stories === 1 ? "story" : "stories"
+      }`.toUpperCase()
+    : head?.meta;
   const tab = (href, label, active) => html`
     <a
       data-no-instant
       href="${href}"
       class="kn-seg feed-button${active ? " kn-seg-active active" : ""}"
       aria-current="${active ? "page" : "false"}"
-      onclick="${spinner}"
+      data-action="spinner"
       >${label}</a
     >
   `;
   const periodHref = (key) =>
-    `/best?period=${key}${domain ? `&domain=${domain}` : ""}`;
+    `${base}/best?period=${key}${domain ? `&domain=${domain}` : ""}`;
   const current = periods.find(([key]) => key === period) || periods[3];
   return html`
     <td class="kn-feedhead">
@@ -276,12 +291,13 @@ const secondheader = (theme, site, period, domain, query) => {
             <p class="kn-sub">${head.sub}</p>
           </div>`
         : null}
+      ${!community && site !== "search" ? CommunityTabs() : null}
       <div class="kn-toolbar">
         <div class="kn-toolbar-left">
           <nav class="kn-segmented" aria-label="Feeds">
-            ${tab("/", "Hot", site === "top")}
-            ${tab("/new?cached=true", "New", site === "new")}
-            ${tab("/best", "Best", site === "best")}
+            ${tab(base || "/", "Hot", site === "top")}
+            ${tab(community ? `${base}/new` : "/new?cached=true", "New", site === "new")}
+            ${tab(`${base}/best`, "Best", site === "best")}
           </nav>
           ${site === "best"
             ? html`<span class="kn-divider kn-only-desktop"></span>
@@ -292,17 +308,15 @@ const secondheader = (theme, site, period, domain, query) => {
                       href="${periodHref(key)}"
                       class="kn-period${key === period ? " kn-period-active" : ""}"
                       aria-current="${key === period ? "page" : "false"}"
-                      onclick="${spinner}"
+                      data-action="spinner"
                       >${label}</a
                     >`,
                   )}
                 </nav>`
             : null}
         </div>
-        ${head
-          ? html`<span class="kn-toolbar-meta kn-only-desktop"
-              >${head.meta}</span
-            >`
+        ${meta
+          ? html`<span class="kn-toolbar-meta kn-only-desktop">${meta}</span>`
           : null}
       </div>
       ${site === "best"
@@ -319,7 +333,7 @@ const secondheader = (theme, site, period, domain, query) => {
                   class="kn-dropdown-item${key === current[0]
                     ? " kn-dropdown-item-active"
                     : ""}"
-                  onclick="${spinner}"
+                  data-action="spinner"
                   >${long}${key === current[0] ? ms("check", 18) : null}</a
                 >`,
               )}
@@ -329,7 +343,7 @@ const secondheader = (theme, site, period, domain, query) => {
       ${site === "best" && domain
         ? html`<div class="kn-filter">
             <span>${domain}</span>
-            <a href="/best?period=${period}">Clear filter</a>
+            <a href="${base}/best?period=${period}">Clear filter</a>
           </div>`
         : null}
     </td>

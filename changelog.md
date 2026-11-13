@@ -5,7 +5,140 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
-## Unreleased
+## 0.17.0
+
+### BREAKING CHANGE: Community membership (protocol 14.0.0)
+
+Joining and leaving a community are signed messages now, so every node knows
+who is a member: communities you joined follow you to every device, a
+community's owner learns who joined, and member counts are real. See
+"Membership" in the protocol docs.
+
+#### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `13.0.0 → 14.0.0`
+  - Protocols (leaves/levels): `16.0.0 → 17.0.0`
+- **New message types `join` and `leave`**, signed as
+  `Membership(string type,string community,uint256 timestamp)`, with
+  `community` a community's ID. Nodes accept one only if the community exists
+  in a version older than the message, like a post to it, whatever the
+  signer's earlier joins and leaves.
+- A person's newest join or leave per community decides (of equal
+  timestamps, the greater message ID). Joins signed with a delegated key
+  count for the account. A community's owner is always a member.
+
+#### Cache
+
+- New `memberships` table: per signing key and community, the newest join or
+  leave. Members are resolved through the delegations when they're read. A
+  join or leave goes into it before the trie and is taken out again if the
+  trie write fails; at startup the primary puts every join and leave of the
+  trie into it again (one walk of the trie for communities, joins and
+  leaves).
+- `store.leaves` and `store.posts` take a list of types.
+
+#### API
+
+- `POST /api/v1/list` takes `type: "join"` and `type: "leave"`.
+- Community objects have `members` (the owner included).
+  `GET /api/v1/communities?member=<address>` lists the communities someone
+  joined or owns; it isn't cached.
+- When the node's API takes a join, the community's owner gets a push
+  notification ("New member", `<name> joined <community>`) and a Farcaster mini
+  app notification, with the rules of upvote notifications. Leaves, the
+  owner's own joins and joining again within a day don't notify.
+- `GET /api/v1/activity` has `joins`: who joined your communities. The
+  notifications page shows them grouped per community.
+
+#### Migration
+
+All nodes must upgrade together. A 14.0.0 node will not sync with a 13.0.0
+node. The website and the apps still keep joined communities locally until
+they sign joins and leaves.
+
+### Communities: read API and feeds (no protocol change)
+
+- `GET /api/v1/communities` (`q`, `owner`, `limit`) lists communities, most
+  active first, and `GET /api/v1/communities/:owner/:key` returns one, or 404.
+- A community's feeds are namespaced by it:
+  `/api/v1/communities/:owner/:key/feeds/hot|new|best` and the rows endpoints
+  under the same path. They're Kiwi News' Hot, New and Best with only the
+  community's stories, ranked with the same rules. An invalid ID is a 400.
+- Kiwi News' feeds (also `/`, `/new` and `/best` on the website) are one
+  feed: they have every story, a community's ones included, ranked as always.
+- Stories in the feeds and from `GET /api/v1/stories` have `community`:
+  `null` or `{id, name, icon, color}`. The cache hands the column on as
+  `communityId`, so the bare ID no longer goes out as `community` anywhere.
+- `/c/*` in the universal links.
+
+### Communities: web UI (no protocol change)
+
+- A community's pages: `/c/<owner>/<key>` (Hot), `/c/<owner>/<key>/new` and
+  `/c/<owner>/<key>/best`, with its header card and house rules; with
+  `?via=<address>`, the page an invite link opens.
+- `/communities` lists them (Discover, most active first, with search, and
+  Joined) and `/communities/new` starts one, or edits yours, with a live
+  preview, icon suggestions from its name and a picker of Phosphor's icons.
+- Joining keeps a community in the browser (it isn't on the protocol): the
+  feeds show the communities you joined as tabs and in the side box.
+- Stories show their community's tag before the domain.
+- Submit: "Post to" picks Kiwi News or one of your communities; a post to a
+  community is signed as the 5-field `Message`.
+- "Communities" in the navigation.
+
+### Fixes (communities, no protocol change)
+
+- A community's owner is resolved through the delegations when a post is
+  judged or the community is read, not when the node stored it. Before, a node
+  that stored a community before it knew the signer's delegation kept it under
+  the delegated key, and nodes could judge posts to it differently forever.
+  The communities table is now keyed by signer and name; the old table is
+  dropped on start and refilled from the trie.
+- A node loads its delegations before it takes messages over p2p or the API.
+- A community goes into the table before the trie, and is taken out again if
+  the trie write fails, so a failed cache write can't leave a node rejecting
+  its posts.
+- Refilling the communities table at startup runs in batches and yields, and
+  skips broken entries.
+
+## 0.16.0
+
+**BREAKING CHANGE**: User communities
+
+Anyone can now run a community and post to it. A community belongs to the
+identity that signs it and lives in its namespace (`<owner address>/<name
+key>`), so creating one needs no consensus. See "Communities" in the protocol
+docs.
+
+### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `12.0.0 → 13.0.0`
+  - Protocols (leaves/levels): `15.0.0 → 16.0.0`
+- **New message type `community`**, signed as
+  `Community(string type,string name,string about,string[] rules,string icon,string color,uint256 timestamp)`:
+  a name (24 characters), a one-line description (100), up to 5 house rules
+  (140 each), a Phosphor Icons 2.1.1 icon and a hex colour (`#RRGGBB`).
+  Signing one again under the same name updates it.
+- **Amplify gets an optional `community`** (`<owner address>/<name key>`).
+  With it, the message is signed as the 5-field
+  `Message(string title,string href,string type,uint256 timestamp,string community)`.
+  Nodes accept it only if the community exists in an older version. Upvotes
+  and comments are unchanged.
+
+### Cache
+
+- New `communities` table (newest version of each community, and when it was
+  first created) and a `community` column on `submissions`, added to existing
+  caches on start.
+- `POST /api/v1/list` takes `type: "community"`.
+
+### Migration
+
+All nodes must upgrade together. A 13.0.0 node will not sync with a 12.0.0
+node. Feeds don't treat community posts differently yet; that comes with the
+clients.
 
 ## 0.15.0
 

@@ -17,6 +17,7 @@ import log from "./logger.mjs";
 import { twitterFrontends } from "./sourcekey.mjs";
 import { resolve as resolveENS } from "./ens.mjs";
 import { safeFetch, discardBody } from "./safefetch.mjs";
+import { plainText } from "./plaintext.mjs";
 import { call, encodeFunctionCall, decodeParameters } from "eth-fun";
 
 const fetchCache = new FileSystemCache({
@@ -260,7 +261,8 @@ const filtered = [
   "instagram.com",
 ];
 
-const anthropic = new Anthropic({
+// NOTE: Also the client of community-suggest.mjs.
+export const anthropic = new Anthropic({
   apiKey: env.ANTHROPIC_API_KEY,
 });
 
@@ -1429,19 +1431,19 @@ export const metadata = async (
             output.twitterAuthorAvatar = DOMPurify.sanitize(apiData.tweet.author.avatar_url);
           }
           if (apiData?.tweet?.author?.screen_name) {
-            output.twitterCreator = DOMPurify.sanitize(`@${apiData.tweet.author.screen_name}`);
+            output.twitterCreator = plainText(`@${apiData.tweet.author.screen_name}`);
           }
           // NOTE: The feed renders a tweet card only when ogDescription is set.
           // fxtwitter's HTML fetch often times out (~4.6s); the JSON text is enough.
           if (apiData?.tweet?.text && !result?.ogDescription) {
-            output.ogDescription = DOMPurify.sanitize(apiData.tweet.text);
+            output.ogDescription = plainText(apiData.tweet.text);
           }
           if (apiData?.tweet?.article) {
             isXArticle = true;
             output.isXArticle = true;
             const articleTitle = apiData.tweet.article.title || result?.ogTitle;
             if (articleTitle) {
-              output.ogTitle = DOMPurify.sanitize(articleTitle);
+              output.ogTitle = plainText(articleTitle);
             }
             const coverUrl = apiData.tweet.article.cover_media?.media_info?.original_img_url;
             if (coverUrl && coverUrl.startsWith("https://")) {
@@ -1537,7 +1539,7 @@ export const metadata = async (
       }
       if (paragraphPost.description) {
         ogDescription = paragraphPost.description;
-        output.ogDescription = DOMPurify.sanitize(paragraphPost.description);
+        output.ogDescription = plainText(paragraphPost.description);
       }
 
       // Generate better title if requested
@@ -1562,7 +1564,7 @@ export const metadata = async (
       // Override ogDescription with the actual take content
       if (interfaceTake.content) {
         ogDescription = interfaceTake.content;
-        output.ogDescription = DOMPurify.sanitize(interfaceTake.content);
+        output.ogDescription = plainText(interfaceTake.content);
       }
 
       // Generate better title if requested
@@ -1648,7 +1650,7 @@ export const metadata = async (
     }
   }
   if (!output.twitterCreator && result?.twitterCreator) {
-    output.twitterCreator = DOMPurify.sanitize(result.twitterCreator);
+    output.twitterCreator = plainText(result.twitterCreator);
   }
   // Forward useful media hints to the UI layer
   if (hasVideoContent) {
@@ -1656,7 +1658,7 @@ export const metadata = async (
   }
   if (ogDescription) {
     // Store the original, potentially longer description in the output object
-    output.ogDescription = DOMPurify.sanitize(ogDescription);
+    output.ogDescription = plainText(ogDescription);
   }
   if (canonicalLink) {
     output.canonicalLink = DOMPurify.sanitize(canonicalLink);
@@ -1712,7 +1714,7 @@ const empty = html``;
 export const render = (ogTitle, domain, ogDescription, image) => html`
   <div
     data-copy-text="${ogTitle}"
-    onclick="navigator.clipboard.writeText(this.dataset.copyText)"
+    data-action="copy"
     style="cursor:pointer; display: flex; flex-direction: column; border: 1px solid #828282;
   border-radius: 2px; overflow: hidden;"
   >

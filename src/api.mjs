@@ -23,7 +23,11 @@ import * as best from "./views/best.mjs";
 let generatePreview = null;
 let summarizeNewStory = null;
 import { getSubmission, isReactionComment } from "./cache.mjs";
-import { triggerUpvoteNotification } from "./subscriptions.mjs";
+import {
+  triggerUpvoteNotification,
+  triggerJoinNotification,
+  triggerMentionNotification,
+} from "./subscriptions.mjs";
 import * as indexnow from "./indexnow.mjs";
 import { securityHeaders } from "./securityheaders.mjs";
 import { rateLimit, API_RULES } from "./ratelimit.mjs";
@@ -161,6 +165,8 @@ export function handleMessage(
   trie,
   libp2p,
   getDelegations,
+  notifyJoin = triggerJoinNotification,
+  notifyMention = triggerMentionNotification,
 ) {
   return async (request, reply) => {
     const message = request.body;
@@ -295,6 +301,28 @@ export function handleMessage(
 
     }
     
+    // NOTE: A join this node took tells the community's owner (protocol
+    // 14.0.0). Only here, like upvotes, so a join synced from a peer doesn't
+    // notify again; leaves don't notify.
+    if (message.type === "join") {
+      setImmediate(() => {
+        notifyJoin(message, delegations).catch((err) => {
+          log(`Failed to trigger join notification: ${err}`);
+        });
+      });
+    }
+
+    // NOTE: The people a comment this node took mentions are told, like the
+    // owner about a join: only here, so a comment synced from a peer doesn't
+    // notify again.
+    if (message.type === "comment") {
+      setImmediate(() => {
+        notifyMention(message, index, delegations).catch((err) => {
+          log(`Failed to trigger mention notification: ${err}`);
+        });
+      });
+    }
+
     // Generate preview for comments (excluding emoji reactions)
     if (message.type === "comment" && !isReactionComment(message.title)) {
       // Use setImmediate to ensure preview generation is non-blocking

@@ -15,7 +15,14 @@ import { utils } from "ethers";
 import canonicalize from "canonicalize";
 
 import { lifetimeCache as cache } from "./cache.mjs";
-import { SCHEMATA, EIP712_DOMAIN, EIP712_MESSAGE } from "./constants.mjs";
+import {
+  SCHEMATA,
+  EIP712_DOMAIN,
+  EIP712_MESSAGE,
+  EIP712_COMMUNITY_MESSAGE,
+  EIP712_COMMUNITY,
+  EIP712_MEMBERSHIP,
+} from "./constants.mjs";
 import log from "./logger.mjs";
 
 const ajv = new Ajv();
@@ -62,14 +69,30 @@ export function toDigest(value) {
   };
 }
 
-export function create(title, href, type, timestamp) {
+export function create(title, href, type, timestamp, community) {
   const message = {
     title,
     href,
     type,
     timestamp,
   };
+  if (community !== undefined) message.community = community;
   return message;
+}
+
+// The EIP-712 types a protocol message is signed with: a community, joining
+// or leaving one, a post to a community (an amplify with `community`), or any
+// other message.
+//
+// NOTE: Memberships have a `community` too, so they're told apart by type
+// first.
+export function messageTypes(message) {
+  if (message.type === "community") return EIP712_COMMUNITY;
+  if (message.type === "join" || message.type === "leave") {
+    return EIP712_MEMBERSHIP;
+  }
+  if (message.community !== undefined) return EIP712_COMMUNITY_MESSAGE;
+  return EIP712_MESSAGE;
 }
 
 export async function sign(signer, message, types) {
@@ -128,5 +151,5 @@ export function verify(message) {
     throw new Error(errMessage);
   }
 
-  return ecrecover(message, EIP712_MESSAGE);
+  return ecrecover(message, messageTypes(message));
 }

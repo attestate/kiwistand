@@ -16,7 +16,7 @@ export default async function frameSubscribe(theme) {
       <head>
         ${custom()}
       </head>
-      <body ontouchstart="">
+      <body>
         <div class="container">
           ${Sidebar(path)}
           <div id="hnmain">

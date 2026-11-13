@@ -4,10 +4,12 @@ import vhtml from "vhtml";
 import { custom } from "./components/head.mjs";
 import * as parser from "../parser.mjs";
 import { Page, Icon } from "./components/n2.mjs";
+import { communityData } from "./community.mjs";
 
 const html = htm.bind(vhtml);
 
-export default async function submit(theme, url = "", title = "") {
+// `community`: the one "Post to" starts on (/submit?community=<id>).
+export default async function submit(theme, url = "", title = "", community = null) {
   if (url && !title) {
     let data;
     try {
@@ -40,7 +42,7 @@ export default async function submit(theme, url = "", title = "") {
       <form
                       id="n2-submit-form"
                       class="n2-submit-form"
-                      onsubmit="event.preventDefault(); return false;"
+                      data-action="no-submit"
                     >
                       <header class="n2-page-head n2-submit-head">
                         <h1 class="n2-title">
@@ -56,6 +58,11 @@ export default async function submit(theme, url = "", title = "") {
                           >
                         </p>
                       </header>
+                      <div
+                        id="n2-post-to"
+                        class="n2-field n2-post-to"
+                        data-community="${community ? communityData(community) : null}"
+                      ></div>
                       <div class="n2-field n2-field-title">
                         <label for="titleInput" class="n2-label"
                           >Title<span class="n2-m">:</span></label
@@ -71,10 +78,7 @@ export default async function submit(theme, url = "", title = "") {
                           required
                           wrap="soft"
                           data-placeholder="Enter title"
-                          onpaste="
-                            event.preventDefault();
-                            const text = event.clipboardData.getData('text/plain');
-                            document.execCommand('insertText', false, text);"
+                          data-action="plain-paste"
                         >${title}</div>
                         <div class="n2-hint-row">
                           <span class="n2-hint n2-d"
@@ -107,6 +111,15 @@ export default async function submit(theme, url = "", title = "") {
                           >
                             Text
                           </button>
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected="false"
+                            class="n2-tab"
+                            disabled
+                          >
+                            Image
+                          </button>
                         </div>
                         <div class="n2-field n2-field-link">
                           <label for="urlInput" class="n2-label n2-d"
@@ -128,17 +141,6 @@ export default async function submit(theme, url = "", title = "") {
                               >Paste the link to the original source.</span
                             >
                           </div>
-                        </div>
-                        <div class="n2-upload-row">
-                          <span class="n2-btn-outline n2-upload" aria-disabled="true"
-                            >${Icon("addPhoto")}<span class="n2-d"
-                              >Upload image</span
-                            ><span class="n2-m">Upload Image</span></span
-                          >
-                          <span class="n2-hint n2-d"
-                            >Optional. Replaces the preview image from the
-                            link.</span
-                          >
                         </div>
                         <div class="n2-actions">
                           <button id="button-onboarding" class="n2-btn" disabled>

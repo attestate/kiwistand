@@ -22,10 +22,9 @@ import {
   countShares,
   getLastComment,
   listNewest,
-  countComments,
   countCommentsBatch,
   countEngagements,
-  getBest,
+  inCommunity,
 } from "../cache.mjs";
 import * as curation from "./curation.mjs";
 import RightColumn from "./components/right-column.mjs";
@@ -34,12 +33,13 @@ import Row, { extractDomain } from "./components/row.mjs";
 import * as karma from "../karma.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
 import { getPredictedEngagement } from "../prediction.mjs";
-import TopStoriesCarousel from "./components/top-stories.mjs";
 import NewsletterCard from "./components/newsletter-card.mjs";
 
 // Import twitterFrontends for checking Twitter/X links
 import { twitterFrontends } from "../parser.mjs";
 import { hasName, showInHot } from "../hotnames.mjs";
+import { withCommunities } from "../communities-api.mjs";
+import { names as mentionNames } from "../web/src/mentions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -390,10 +390,19 @@ export async function index(
   algorithm = 'control',
   skipAgeFilter = false,
   skipResolve = false,
+  // NOTE: With `community` (its ID), the community's Hot: only its stories,
+  // ranked with the same rules as Kiwi News' Hot. Kiwi News' own picks, the
+  // app curation, predictions and the pinned story, don't apply. A story
+  // that misses Kiwi News' engagement rules (upvotes, karma, a known name)
+  // isn't hidden but listed below the ones that meet them, so a small
+  // community's Hot isn't empty. Without it, Kiwi News' Hot, which has every
+  // story, a community's ones included.
+  { community } = {},
 ) {
   const lookbackUnixTime = Math.floor(lookback.getTime() / 1000);
   const limit = -1;
-  let leaves = listNewest(limit, lookbackUnixTime); // Raw leaves for prediction candidates later
+  const scope = community ? inCommunity(community) : undefined;
+  let leaves = listNewest(limit, lookbackUnixTime, scope); // Raw leaves for prediction candidates later
 
   const policy = await moderation.getLists();
   const path = "/";
@@ -407,7 +416,10 @@ export async function index(
   const commentCounts = countCommentsBatch(
     rankedStories.map(({ index }) => `kiwi:0x${index}`),
   );
-  rankedStories = rankedStories.filter(({ index, identity, upvotes, timestamp }) => {
+  // Keep stories > 7 days old out of page 0 initially, but allow them on other pages
+  const inWindow = ({ timestamp }) =>
+    !(page === 0 && itemAge(timestamp) / (60 * 24) > 7);
+  const engaging = ({ index, identity, upvotes, timestamp }) => {
     const storyAgeInDays = itemAge(timestamp) / (60 * 24);
     const commentCount = commentCounts.get(`kiwi:0x${index}`) || 0;
     // Karma only matters for single-upvote stories, so skip the lookup otherwise.
@@ -418,10 +430,6 @@ export async function index(
       return false;
     }
 
-    // Keep stories > 7 days old out of page 0 initially, but allow them on other pages
-    if (page === 0 && storyAgeInDays > 7) {
-      return false;
-    }
     // General engagement filter (applied after ranking)
     if (skipAgeFilter) {
       // For endless scroll: include all stories (no engagement filter)
@@ -435,10 +443,25 @@ export async function index(
         return upvotes + commentCount > 3;
       }
     }
-  });
+  };
+  if (community) {
+    // NOTE: A community lists the stories that miss the rules below the
+    // others (`belowRules`, sorted in step 8) instead of hiding them.
+    rankedStories = rankedStories
+      .filter(inWindow)
+      .map((story) => (engaging(story) ? story : { ...story, belowRules: true }));
+    rankedStories = [
+      ...rankedStories.filter((story) => !story.belowRules),
+      ...rankedStories.filter((story) => story.belowRules),
+    ];
+  } else {
+    rankedStories = rankedStories.filter(
+      (story) => inWindow(story) && engaging(story),
+    );
+  }
 
   // 3. Apply app curation if needed
-  if (appCuration) {
+  if (appCuration && !community) {
     const sheetName = "app";
     let result;
     try {
@@ -494,6 +517,11 @@ export async function index(
       const lastComment = getLastComment(`kiwi:0x${story.index}`, policy.addresses || []);
       if (lastComment && lastComment.identity) {
         lastComment.identity = await ens.resolve(lastComment.identity);
+        // NOTE: The names of the people it mentions (row.mjs).
+        lastComment.names = await mentionNames(
+          [lastComment.title],
+          ens.resolve,
+        );
         const uniqueIdentities = new Set(
           lastComment.previousParticipants
             .map((p) => p.identity)
@@ -559,16 +587,27 @@ export async function index(
 
     // 7. Only people with a name, or enough named upvoters (hotnames.mjs)
     const shown = await Promise.all(
-      stories.map((story) => showInHot(story, (address) => ens.resolve(address))),
+      stories.map((story) =>
+        showInHot(story, (address) => ens.resolve(address)),
+      ),
     );
-    stories = stories.filter((_, i) => shown[i]);
+    stories = community
+      ? stories.map((story, i) =>
+          shown[i] ? story : { ...story, belowRules: true },
+        )
+      : stories.filter((_, i) => shown[i]);
   }
 
-  // 8. FINAL SORT before prediction injection - always by score
-  stories = stories.sort((a, b) => (b.score || 0) - (a.score || 0));
+  // 8. FINAL SORT before prediction injection - always by score, a
+  // community's stories that miss the rules after the others.
+  stories = stories.sort(
+    (a, b) =>
+      (a.belowRules ? 1 : 0) - (b.belowRules ? 1 : 0) ||
+      (b.score || 0) - (a.score || 0),
+  );
 
   // 9. Prediction Injection Logic (Page 0 ONLY - applied AFTER final sort)
-  if (page === 0 && paginate && stories.length > 0) {
+  if (page === 0 && paginate && stories.length > 0 && !community) {
     // --- Find the indices of the N oldest stories in the current list ---
     const storiesWithOriginalIndex = stories.map((story, index) => ({
       ...story,
@@ -683,6 +722,10 @@ export async function index(
                   lastComment.identity = await ens.resolve(
                     lastComment.identity,
                   );
+                  lastComment.names = await mentionNames(
+                    [lastComment.title],
+                    ens.resolve,
+                  );
                   // Resolve participants if needed (simplified here)
                 }
                 // Skip normalization for text posts and kiwi references
@@ -742,7 +785,7 @@ export async function index(
 
   // 10. Handle pinned story (after potential replacements)
   let pinnedStory;
-  if (policy?.pinned?.length > 0 && page === 0) {
+  if (policy?.pinned?.length > 0 && page === 0 && !community) {
     const pinnedUrl = policy.pinned[0];
     const pinnedIndex = stories.findIndex(
       (story) => {
@@ -772,6 +815,8 @@ export async function index(
     );
   }
 
+  if (community) stories = stories.map(({ belowRules, ...story }) => story);
+
   // Return final data
   return {
     pinnedStory, // This will be rendered separately at the top
@@ -781,61 +826,10 @@ export async function index(
   };
 }
 
-async function fetchTopStories(feedStoryHrefs) {
-  const weekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
-  let topRaw = getBest(80, 0, null, "", weekAgo);
-
-  // Apply moderation
-  const policy = await moderation.getLists();
-  topRaw = moderation.moderate(topRaw, policy, "/");
-
-  // Filter out stories already in the main feed (keep more to account for image filtering)
-  const filtered = topRaw.filter(
-    (story) => !feedStoryHrefs.has(story.href),
-  ).slice(0, 40);
-
-  if (filtered.length === 0) return [];
-
-  const enriched = await Promise.all(
-    filtered.map(async (story) => {
-      const [ensData, meta] = await Promise.all([
-        ens.resolve(story.identity),
-        cachedMetadata(story.href),
-      ]);
-
-      // Resolve a few upvoter avatars (up to 3, excluding submitter)
-      const otherUpvoters = (story.upvoters || [])
-        .filter((addr) => addr !== story.identity)
-        .slice(0, 3);
-
-      const upvoterResults = await Promise.allSettled(
-        otherUpvoters.map((addr) => ens.resolve(addr)),
-      );
-
-      const upvoterAvatars = upvoterResults
-        .filter((r) => r.status === "fulfilled" && r.value.safeAvatar)
-        .map((r) => r.value.safeAvatar);
-
-      const commentCnt = countComments(`kiwi:0x${story.index}`, policy.addresses || []);
-
-      return {
-        ...story,
-        metadata: meta || {},
-        submitter: ensData,
-        displayName: ensData.displayName,
-        upvoterAvatars,
-        commentCount: commentCnt,
-      };
-    }),
-  );
-
-  // Only show stories that have an OG image
-  return enriched
-    .filter((story) => story.metadata?.image && story.metadata.image.startsWith("https://"))
-    .slice(0, 8);
-}
-
-export default async function (trie, theme, page, domain, identity, hash, variant) {
+// NOTE: `communities` (communities-api.mjs communityRefs) tags community
+// stories: this renders in a worker thread without the delegations that
+// resolve a community's owner.
+export default async function (trie, theme, page, domain, identity, hash, variant, communities = {}) {
   const path = "/";
   const totalStories = parseInt(env.TOTAL_STORIES, 10);
 
@@ -848,21 +842,17 @@ export default async function (trie, theme, page, domain, identity, hash, varian
   const content = await index(trie, page, domain, sub(new Date(), { days: 3 }), true, false, algorithm);
 
   // Destructure content
-  const { originals, stories, start, pinnedStory } = content;
+  const { start } = content;
+  const deps = {
+    delegations: async () => ({}),
+    getCommunity: (id) => communities[id] || null,
+  };
+  const stories = await withCommunities(content.stories, deps);
+  const [pinnedStory] = content.pinnedStory
+    ? await withCommunities([content.pinnedStory], deps)
+    : [content.pinnedStory];
   // The pinned story takes position 1, so ranked stories start after it.
   const storiesStart = start + (pinnedStory ? 1 : 0);
-
-  // Fetch top stories for the carousel (only on page 0, no domain filter)
-  let topStories = [];
-  if (page === 0 && !domain) {
-    const feedHrefs = new Set(stories.map((s) => s.href));
-    if (pinnedStory) feedHrefs.add(pinnedStory.href);
-    try {
-      topStories = await fetchTopStories(feedHrefs);
-    } catch (err) {
-      log(`Error fetching top stories for carousel: ${err.message}`);
-    }
-  }
 
   let currentQuery = "";
   if (page && domain) {
@@ -927,11 +917,10 @@ export default async function (trie, theme, page, domain, identity, hash, varian
       <body
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}
-          ${RightColumn()}
+          ${RightColumn({ communities: true })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">
               Kiwi News: handpicked crypto news for builders
@@ -944,7 +933,6 @@ export default async function (trie, theme, page, domain, identity, hash, varian
                 ${SecondHeader(theme, "top")}
               </tr>
               ${TestFlightCard()}
-              ${topStories.length > 0 ? TopStoriesCarousel(topStories) : ""}
               ${
                 // Render pinned story only if it exists
                 pinnedStory &&

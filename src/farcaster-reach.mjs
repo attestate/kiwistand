@@ -13,9 +13,7 @@
 //   first check after enabling only records the current top 3, so turning
 //   it on doesn't ping stories that have been there for hours. When the
 //   author is tagged and on this month's /writers leaderboard, their row is
-//   a second embed. Each check also records the best rank of every top 3
-//   story ("peak"), which the "Featured on Kiwi News" badge and story pages
-//   read (src/featured.mjs).
+//   a second embed.
 // - Rising casts (FC_RISING_CASTS=true): at FC_RISING_HOURS_UTC (10,20), the
 //   best ranked hot story of the last 24h that we never cast, with its title,
 //   the first sentence of its AI summary and the story page as embed, posted
@@ -43,7 +41,6 @@ import {
   minUpvotes,
   dueSlot,
 } from "./social-posting.mjs";
-import { statePath as featuredStatePath } from "./featured.mjs";
 
 const HUB_ENV = ["FC_FID", "FC_SIGNER_PRIVATE_KEY", "FC_HUB_URL"];
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -448,10 +445,11 @@ export async function identifyAuthor(story, reader, options = {}) {
 
 // --- State --------------------------------------------------------------
 
-// NOTE: src/featured.mjs reads the "peak" record of the same file for the
-// story page badges.
 export function defaultStatePath(vars = env) {
-  return featuredStatePath(vars);
+  return (
+    vars.FC_REACH_STATE_FILE ||
+    path.resolve(vars.CACHE_DIR || "cache", "farcaster-reach.json")
+  );
 }
 
 export function loadState(file) {
@@ -462,7 +460,6 @@ export function loadState(file) {
       seenTop: state.seenTop || {},
       pings: state.pings || {},
       rising: state.rising || {},
-      peak: state.peak || {},
       lastRisingSlot: state.lastRisingSlot || null,
     };
   } catch (err) {
@@ -471,7 +468,6 @@ export function loadState(file) {
       seenTop: {},
       pings: {},
       rising: {},
-      peak: {},
       lastRisingSlot: null,
     };
   }
@@ -490,7 +486,6 @@ export function saveState(file, state, now = Date.now()) {
     seenTop: prune(state.seenTop, cutoff),
     pings: prune(state.pings, cutoff, (v) => v.at),
     rising: prune(state.rising, cutoff, (v) => v.at),
-    peak: prune(state.peak || {}, cutoff, (v) => v.at),
   };
   mkdirSync(path.dirname(file), { recursive: true });
   const tmp = `${file}.${process.pid}.tmp`;
@@ -505,16 +500,6 @@ export function updateState(file, change, now = Date.now()) {
   change(state);
   saveState(file, state, now);
   return state;
-}
-
-// Remembers the best rank each story reached in the top 3, for badges.
-export function recordPeaks(state, top, now) {
-  state.peak = state.peak || {};
-  top.forEach((story, i) => {
-    const k = storyKey(story);
-    const rank = Math.min(state.peak[k]?.rank || Infinity, i + 1);
-    state.peak[k] = { rank, at: now };
-  });
 }
 
 export function storyKey(story) {
@@ -580,11 +565,7 @@ export async function runAuthorPings(options = {}) {
   const top = (stories || []).filter(valid).slice(0, 3);
   if (top.length === 0) return sent;
 
-  const state = updateState(
-    statePath,
-    (latest) => recordPeaks(latest, top, now()),
-    now(),
-  );
+  const state = loadState(statePath);
   if (!state.initialized) {
     updateState(
       statePath,

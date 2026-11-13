@@ -3,14 +3,16 @@ import { useAccount } from "wagmi";
 import { resolveIdentity } from "@attestate/delegator2";
 
 import { getLocalAccount } from "./session.mjs";
+import { getMiniApp, promptDelegationOnConnect } from "./miniapp.mjs";
 
 // NOTE: A connected wallet without a key in this browser is asked to enable
 // one-tap actions (the delegation). This used to be its own dialog ("Setup
 // delegation", with DelegateButton.jsx); it's now the onboarding's "Enable
 // one-tap actions" step (onboarding/Delegate.jsx), opened on its own, so
 // there is one look and one code path for it. It opens once per wallet on
-// connect ("Not now" or closing it is remembered) and again whenever an
-// action needs the key (openModalForAction, delegationModalManager.js).
+// connect ("Not now" or closing it is remembered; not in the mini app, see
+// promptDelegationOnConnect) and again whenever an action needs the key
+// (openModalForAction, delegationModalManager.js).
 const DelegationPrompt = forwardRef((props, ref) => {
   const account = useAccount();
   const { delegations } = props;
@@ -21,6 +23,7 @@ const DelegationPrompt = forwardRef((props, ref) => {
     // The onboarding already shows this step itself.
     if (window.kiwiOnboardingOpen) return;
     if (!account.isConnected || !account.address) return;
+    if (!forceOpen && !promptDelegationOnConnect(getMiniApp())) return;
 
     // Prompt on its own only on the main pages and story pages.
     if (!forceOpen) {

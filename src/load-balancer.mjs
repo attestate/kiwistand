@@ -7,7 +7,11 @@ import log from "./logger.mjs";
 import https from "https";
 import fs from "fs";
 import { createServer as createHttpServer } from "http";
-import { securityHeaders } from "./securityheaders.mjs";
+import {
+  securityHeaders,
+  cspReport,
+  CSP_REPORT_PATH,
+} from "./securityheaders.mjs";
 import { rateLimit, LOAD_BALANCER_RULES } from "./ratelimit.mjs";
 
 // Exit early in reconcile mode - only API and sync should run
@@ -19,14 +23,18 @@ if (env.NODE_ENV === "reconcile") {
 // Routes that should be handled by worker processes
 const workerRoutes = [
   "/api/v1/activity",
+  "/api/v1/mentions",
   "/friends",
   "/api/v1/karma",
   "/api/v1/feeds",
   "/api/v1/stories",
+  "/api/v1/communities",
   "/",
   "/stories",
   "/best",
   "/community",
+  "/c",
+  "/communities",
 
   "/about",
   "/passkeys",
@@ -49,6 +57,7 @@ const workerRoutes = [
   "/weekly",
   "/whattosubmit",
   "/welcome",
+  "/docs",
   "/profile",
   "/upvotes",
   "/submit",
@@ -69,6 +78,9 @@ function createLoadBalancerApp({
   app.use(securityHeaders);
   // Per-IP limits for the admin and expensive routes (see ratelimit.mjs).
   app.use(rateLimit(LOAD_BALANCER_RULES, { now }));
+  // Violations of the script policy, answered here and logged as "CSP
+  // report: …" (see securityheaders.mjs); they never reach the node.
+  app.post(CSP_REPORT_PATH, cspReport());
 
   // Pre-create proxy instances once (not per-request)
   const workerProxies = [];

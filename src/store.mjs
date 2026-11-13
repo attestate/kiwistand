@@ -27,7 +27,16 @@ import { elog } from "./utils.mjs";
 import * as messages from "./topics/messages.mjs";
 import { newWalk } from "./WalkController.mjs";
 import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
-import { insertMessage, isReactionComment } from "./cache.mjs";
+import {
+  insertMessage,
+  isReactionComment,
+  communityCreatedAt,
+  insertCommunity,
+  restoreCommunity,
+  insertMembership,
+  restoreMembership,
+} from "./cache.mjs";
+import { isMembership, TYPES as MEMBERSHIP_TYPES } from "./memberships.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -315,8 +324,12 @@ export function upvoteID(identity, link, type) {
 }
 
 let messagesAdded = 0;
-async function atomicPut(trie, message, identity, delegations) {
-  const marker = upvoteID(identity, message.href, message.type);
+async function atomicPut(trie, message, identity, delegations, signer) {
+  // NOTE: Only amplifies have a marker; a community has no href.
+  const marker =
+    message.type === "amplify"
+      ? upvoteID(identity, message.href, message.type)
+      : null;
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${JSON.stringify(
@@ -346,13 +359,21 @@ async function atomicPut(trie, message, identity, delegations) {
   //
   // To check whether a comment exists and then aborting the routine now
   // prevents the above from happening.
-  if (message.type === "comment") {
+  // NOTE: The same goes for communities, joins and leaves: a message that's
+  // already stored must not be processed again (nor notify the owner again).
+  if (
+    message.type === "comment" ||
+    message.type === "community" ||
+    isMembership(message)
+  ) {
     const existingLeaf = await trie.get(Buffer.from(index, "hex"));
     if (existingLeaf) {
       const err = `Message with index "${index}" already exists in the trie. Skipping.`;
       log(err);
       throw new Error(err);
     }
+  }
+  if (message.type === "comment") {
     if (isReactionComment(message.title)) {
       const reactionMarker = upvoteID(identity, message.href, "reaction");
       const legit = await passesReaction(reactionMarker);
@@ -362,6 +383,21 @@ async function atomicPut(trie, message, identity, delegations) {
         throw new Error(err);
       }
     }
+  }
+
+  // NOTE: Posts to a community are judged with the communities table, so a
+  // community goes into it before the trie: if that write fails, the message
+  // isn't stored and a peer offers it again. If the trie write fails, the row
+  // is restored.
+  let community;
+  if (message.type === "community") {
+    community = insertCommunity({ ...message, index, signer });
+  }
+  // NOTE: Joins and leaves go into the memberships table the same way, so the
+  // table only ever lacks a message the trie lacks too.
+  let membership;
+  if (isMembership(message)) {
+    membership = insertMembership({ ...message, index, signer });
   }
 
   try {
@@ -440,7 +476,9 @@ async function atomicPut(trie, message, identity, delegations) {
       });
     } catch (err) {
       // NOTE: insertMessage is just a cache, so if this operation fails, we
-      // want the protocol to continue to execute as normally.
+      // want the protocol to continue to execute as normally. For a
+      // community, it means this node rejects posts to it until the next
+      // start puts the trie's communities into the table again (launch.mjs).
       log(
         `Inserting message threw: ${JSON.stringify(
           message,
@@ -451,6 +489,8 @@ async function atomicPut(trie, message, identity, delegations) {
     }
     // No in-memory comment count incrementing; SQLite holds canonical counts
   } catch (err) {
+    if (community) restoreCommunity(community);
+    if (membership) restoreMembership(membership);
     if (message.type !== "amplify") {
       throw new Error(
         `atomicPut: putting to trie failed with error "${err.toString()}" for message "${JSON.stringify(
@@ -558,6 +598,33 @@ async function _add({
     throw new Error(err);
   }
 
+  if (message.type === "amplify" && message.community !== undefined) {
+    const created = communityCreatedAt(message.community, delegations);
+    if (created === undefined) {
+      throw new Error("add: Didn't find the community of the post");
+    }
+    if (created >= message.timestamp) {
+      throw new Error("add: The community must be older than the post");
+    }
+  }
+
+  // NOTE: Joining or leaving follows the same rule as posting: the community
+  // must exist and be older than the message. The signer's earlier joins and
+  // leaves don't matter, so whether a node takes a message doesn't depend on
+  // the order messages arrive in; the newest one per person wins when they're
+  // read (cache.mjs).
+  if (isMembership(message)) {
+    const created = communityCreatedAt(message.community, delegations);
+    if (created === undefined) {
+      throw new Error("add: Didn't find the community to join or leave");
+    }
+    if (created >= message.timestamp) {
+      throw new Error(
+        "add: The community must be older than the join or leave",
+      );
+    }
+  }
+
   if (message.type === "comment") {
     let [_, hash] = message.href.split(":");
     if (!hash) {
@@ -586,6 +653,7 @@ async function _add({
     message,
     identity,
     delegations,
+    address,
   );
 
   if (!libp2p) {
@@ -679,9 +747,10 @@ export async function posts(
   const concurrency = piscina.options.maxThreads * ENHANCE_TASKS_PER_THREAD;
   await Promise.all(Array.from({ length: concurrency }, runner));
 
+  // NOTE: A node whose enhancement failed has no value.
   const posts = results
     .map(({ value }) => value)
-    .filter((elem) => elem !== null);
+    .filter((elem) => elem !== null && elem !== undefined);
   return posts;
 }
 
@@ -728,9 +797,13 @@ export async function leaves(
   type = "amplify",
   root = trie.root(),
 ) {
-  if (type !== "amplify" && type !== "comment") {
+  // NOTE: `type` may be a list, e.g. ["join", "leave"], to read several types
+  // in one walk of the trie.
+  const types = Array.isArray(type) ? type : [type];
+  const known = ["amplify", "comment", "community", ...MEMBERSHIP_TYPES];
+  if (!types.length || !types.every((name) => known.includes(name))) {
     throw new Error(
-      "store leaves: Must be called with type 'amplify' or 'comment'",
+      "store leaves: Must be called with type 'amplify', 'comment', 'community', 'join' or 'leave'",
     );
   }
   const nodes = [];
@@ -754,7 +827,7 @@ export async function leaves(
     if (parser) {
       const parsed = parser(value);
 
-      if (type && type === parsed.type) {
+      if (types.includes(parsed.type)) {
         pointer++;
       }
 
@@ -765,11 +838,14 @@ export async function leaves(
       if (parsed.timestamp < startDatetime) {
         continue;
       }
+      // NOTE: The type is checked first as communities, joins and leaves
+      // have no href. It is always set: the check at the top of the function
+      // throws otherwise.
       if (
+        !types.includes(parsed.type) ||
         (href && (parsed.href.startsWith('data:') || href.startsWith('data:')
           ? parsed.href !== href
-          : normalizeUrl(parsed.href) !== normalizeUrl(href))) ||
-        (type && type !== parsed.type)
+          : normalizeUrl(parsed.href) !== normalizeUrl(href)))
       ) {
         continue;
       }

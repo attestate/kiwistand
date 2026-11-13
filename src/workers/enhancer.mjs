@@ -1,9 +1,8 @@
-import { ecrecover, toDigest } from "../id.mjs";
-import { EIP712_MESSAGE } from "../constants.mjs";
+import { ecrecover, toDigest, messageTypes } from "../id.mjs";
 
 async function enhance({ node }) {
   const cacheEnabled = false;
-  const signer = ecrecover(node, EIP712_MESSAGE, cacheEnabled);
+  const signer = ecrecover(node, messageTypes(node), cacheEnabled);
 
   const { index } = toDigest(node);
 

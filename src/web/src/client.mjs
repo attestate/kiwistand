@@ -28,6 +28,10 @@ import {
   createKiwiEnsActions,
 } from "./rpc.mjs";
 
+// NOTE: Coinbase Wallet's SDK adds its telemetry as an inline script, which
+// the script policy (src/securityheaders.mjs) blocks.
+coinbaseWallet.preference = { options: "all", telemetry: false };
+
 // Setup chains and transports
 // NOTE: The frontend uses public RPCs on purpose. Any API key shipped in the
 // bundle is public and gets abused (e.g. eth_getLogs on mainnet). The browser

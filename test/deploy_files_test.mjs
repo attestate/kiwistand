@@ -37,7 +37,7 @@ function makeRepo() {
   write(root, "package.json", "{}");
   write(root, "src/index.mjs");
   write(root, "test/id_test.mjs");
-  write(root, "docs/readme.md");
+  write(root, "docs/src/pages/index.mdx");
   write(root, ".env-copy", "KEY=");
   git(root, "add", "-A");
 
@@ -47,6 +47,8 @@ function makeRepo() {
   write(root, "src/public/news.min.css");
   write(root, "src/public/pages.min.css");
   write(root, "src/public/assets/index-abc123.js");
+  write(root, "docs/dist/public/index.html");
+  write(root, "docs/dist/public/assets/main-def456.js");
 
   // untracked secrets and server-only files
   write(root, ".env", "SECRET=1");
@@ -67,6 +69,8 @@ test("ships tracked files and build outputs, never untracked files", (t) => {
   const list = deployFiles(root);
   t.deepEqual(list, [
     ".gitignore",
+    "docs/dist/public/assets/main-def456.js",
+    "docs/dist/public/index.html",
     "package.json",
     "src/index.mjs",
     "src/public/.vite/manifest.json",
@@ -82,7 +86,8 @@ test("ships tracked files and build outputs, never untracked files", (t) => {
   t.false(list.some((f) => f.startsWith("staging.kiwistand.com/")));
   t.false(list.includes("src/fingerprint.mjs"));
   t.false(list.includes("data/db"));
-  t.false(list.includes("docs/readme.md"));
+  // The docs ship as their build, not as sources.
+  t.false(list.includes("docs/src/pages/index.mdx"));
 });
 
 test("refuses to deploy a tracked .env", (t) => {
@@ -101,6 +106,14 @@ test("refuses to deploy without build outputs", (t) => {
   rmSync(path.join(root, "src/public/manifest.json"));
 
   t.throws(() => deployFiles(root), { message: /npm run build/ });
+});
+
+test("refuses to deploy without the docs build", (t) => {
+  const root = makeRepo();
+  t.teardown(() => rmSync(root, { recursive: true, force: true }));
+  rmSync(path.join(root, "docs/dist"), { recursive: true });
+
+  t.throws(() => deployFiles(root), { message: /npm run build:docs/ });
 });
 
 test("skips tracked files deleted from the working tree", (t) => {

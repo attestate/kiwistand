@@ -44,6 +44,14 @@ export function loginOptions({ isMiniApp, passkeys }) {
   return { farcasterWallet: false, passkey: !!passkeys, walletPicker: true };
 }
 
+// Whether to ask for one-tap actions (the delegation) as soon as a wallet
+// connects. Not in the mini app: its wallet connects on every load, so every
+// visitor was greeted by the prompt. There it opens only when an action
+// needs the key: a comment (upvotes don't need one, see Vote.jsx).
+export function promptDelegationOnConnect({ isMiniApp }) {
+  return !isMiniApp;
+}
+
 const loadWagmi = () =>
   Promise.all([import("@wagmi/core"), import("./client.mjs")]).then(
     ([{ connect, getAccount }, { client }]) => ({ connect, getAccount, client }),

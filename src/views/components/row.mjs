@@ -25,6 +25,8 @@ import {
   tweetHandle,
 } from "../../quote.mjs";
 import { ms } from "./icons.mjs";
+import { Tag } from "./communities.mjs";
+import { render } from "../../web/src/mentions.mjs";
 
 let domain = "https://news.kiwistand.com";
 if (env.CUSTOM_PROTOCOL && env.CUSTOM_HOST_NAME) {
@@ -165,17 +167,6 @@ const expandSVG = html`
   </svg>
 `;
 
-
-const spinnerOnclick =
-  "if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) {var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block';}";
-const shareOnclick = "event.preventDefault(); const slug = this.getAttribute('data-story-slug'); const index = this.getAttribute('data-story-index'); const href = this.getAttribute('data-story-href'); const url = 'https://news.kiwistand.com/stories/' + slug + '?index=' + index; if (typeof window.kiwiTrackShare === 'function') { window.kiwiTrackShare(href, 'native'); } if (window.innerWidth <= 640 && navigator.share) { navigator.share({url: url}).catch(function(){}); } else { const doCopy = async () => { try { await navigator.clipboard.writeText(url); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (err) { try { const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (window.toast && window.toast.success) { window.toast.success('Link copied!'); } } catch (e2) { if (window.toast && window.toast.error) { window.toast.error('Could not copy link'); } } } }; doCopy(); }";
-const commentOnclick = "event.preventDefault(); var si=this.dataset.storyIdx; this.classList.toggle('comment-button-active'); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'chat-bubble' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var commentPreview = document.querySelector('.comment-preview-0x'+si); if (commentPreview) { commentPreview.style.opacity = 1; } var borderElem = document.querySelector('.without-comment-preview-0x'+si); if (borderElem) { borderElem.classList.toggle('no-border'); }";
-
-// NOTE: The comment preview under a feed row opens the comments inline, like
-// the chat bubble, and lands on the previewed comment (the last one):
-// scrolled to and highlighted via its #0x anchor. Cmd/Ctrl/Shift/middle
-// click keeps the link to the story page.
-const previewOnclick = "if(event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) return; event.preventDefault(); var si=this.dataset.storyIdx; history.replaceState(null, '', location.pathname + location.search + '#0x' + this.dataset.commentIdx); window.dispatchEvent(new CustomEvent('open-comments-0x'+si, { detail: { source: 'comment-preview' } })); window.dispatchEvent(new HashChangeEvent('hashchange')); var cb=document.getElementById('chat-bubble-'+si); if (cb) cb.classList.add('comment-button-active');";
 
 const commentsSVG = html`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" aria-hidden="true">
@@ -528,16 +519,10 @@ const row = (
         path === "/best" ||
         (debugMode && path === "/debug"));
 
-    // Condition for displaying comment preview:
-    // - Must have a last comment
-    // - Last comment must have a resolved identity (ens/fc/lens)
-    // - Must not be inverted
-    const displayCommentPreview =
-      story.lastComment &&
-      (story.lastComment.identity.ens ||
-        story.lastComment.identity.farcaster ||
-        story.lastComment.identity.lens) &&
-      !invert;
+    // NOTE: Every last comment gets a preview, also from people without an
+    // ENS or Farcaster name or avatar: the name falls back to the Kiwi
+    // nickname or the short address, the avatar to the user icon.
+    const displayCommentPreview = story.lastComment && !invert;
 
     // NOTE: NEU 2 story card. Every part is a direct child of .content-row
     // (a flex column), so CSS can put the picture first on phones (like the
@@ -551,54 +536,9 @@ const row = (
       canRenderFarcasterPreview ||
       canRenderBlueskyPreview;
     const storyPath = `/stories/${getSlug(story.title)}?index=0x${story.index}`;
-    const outboundOnclick = `var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                    (function() {
-                      var targetUrl = el.dataset.href;
-                      var canIframe = el.dataset.canIframe === 'true';
-
-                      try {
-                        var urlObj = new window.URL(targetUrl);
-                        var hostname = urlObj.hostname.toLowerCase();
-
-                        // Domains that should always use openUrl
-                        var alwaysOpenDomains = [
-                          'x.com',
-                          'twitter.com',
-                          'www.x.com',
-                          'www.twitter.com',
-                          'farcaster.xyz',
-                          'warpcast.com'
-                        ];
-
-                        // Check if it's a Substack domain
-                        var isSubstack = hostname.endsWith('.substack.com');
-
-                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
-                          return hostname === domain || hostname.endsWith('.' + domain);
-                        });
-
-                        if (shouldAlwaysOpen) {
-                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                            window.sdk.actions.openUrl(targetUrl);
-                          } else {
-                            window.open(targetUrl, '_blank');
-                          }
-                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                          window.sdk.actions.openUrl(targetUrl);
-                        } else {
-                          if (window.openEmbedDrawer) {
-                            window.openEmbedDrawer(targetUrl);
-                          } else {
-                            // Fallback if drawer not ready yet
-                            window.open(targetUrl, '_blank');
-                          }
-                        }
-                      } catch (e) {
-                        // Fallback to embed on error
-                        window.openEmbedDrawer(targetUrl);
-                      }
-                    })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`;
+    // NOTE: The title of an uploaded picture or a text post links to the
+    // story page; other titles are outbound links (see dataActions.mjs).
+    const titleToStory = Boolean((isCloudflare || isTextPost) && story.index);
     const embedBlock = canRenderTweetPreview
               ? html`<a
                   class="tweet-preview-container"
@@ -607,58 +547,7 @@ const row = (
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
                   data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                  onclick="var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                    (function() {
-                      var targetUrl = el.dataset.href;
-                      var canIframe = el.dataset.canIframe === 'true';
-                      
-                      try {
-                        var urlObj = new window.URL(targetUrl);
-                        var hostname = urlObj.hostname.toLowerCase();
-                        
-                        // Domains that should always use openUrl
-                        var alwaysOpenDomains = [
-                          'x.com',
-                          'twitter.com',
-                          'www.x.com',
-                          'www.twitter.com',
-                          'farcaster.xyz',
-                          'warpcast.com'
-                        ];
-                        
-                        // Check if it's a Substack domain
-                        var isSubstack = hostname.endsWith('.substack.com');
-                        
-                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
-                          return hostname === domain || hostname.endsWith('.' + domain);
-                        });
-                        
-                        if (shouldAlwaysOpen) {
-                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                            window.sdk.actions.openUrl(targetUrl);
-                          } else {
-                            window.open(targetUrl, '_blank');
-                          }
-                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                          window.sdk.actions.openUrl(targetUrl);
-                        } else {
-                          if (window.openEmbedDrawer) {
-                            window.openEmbedDrawer(targetUrl);
-                          } else {
-                            // Fallback if drawer not ready yet
-                            window.open(targetUrl, '_blank');
-                          }
-                        }
-                      } catch (e) {
-                        // Fallback to embed on error
-                        if (window.openEmbedDrawer) {
-                          window.openEmbedDrawer(targetUrl);
-                        } else {
-                          window.open(targetUrl, '_blank');
-                        }
-                      }
-                    })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
+                  data-action="outbound"
                   style="text-decoration:none; color:inherit; display:block;"
                   aria-label="${DOMPurify.sanitize(story.title)}"
                 >
@@ -671,9 +560,7 @@ const row = (
                                 src="${DOMPurify.sanitize(
                                   story.metadata.twitterAuthorAvatar,
                                 )}"
-                                alt="${DOMPurify.sanitize(
-                                  story.metadata.twitterCreator || "Author",
-                                )}"
+                                alt="${story.metadata.twitterCreator || "Author"}"
                                 width="20"
                                 height="20"
                                 loading="${getImageLoading(isAboveFold, story.metadata.twitterAuthorAvatar)}"
@@ -702,7 +589,7 @@ const row = (
                           const { replyTo } = splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim()));
                           if (!replyTo) return "";
                           return html`<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">
-                            Replying to ${DOMPurify.sanitize(replyTo.join(" "))}
+                            Replying to ${replyTo.join(" ")}
                           </div>`;
                         })()}
                         <p style="white-space: pre-wrap;">
@@ -712,14 +599,14 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
+                                  return html`<span style="text-decoration:underline;">${display}</span>`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return part;
                               });
                             };
                             const desc = splitQuote(splitReply(convertBrTagsToNewlines((story.metadata.ogDescription || "").trim())).text).text;
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
+                              return html`<span style="text-decoration:underline;">${desc}</span>`;
                             }
                             const nodes = linkifyNodes(desc);
                             return html`${nodes}`;
@@ -732,9 +619,9 @@ const row = (
                             style="margin-top: 10px; padding: 10px; border: 1px solid color-mix(in srgb, var(--embed-twitter-text) 28%, transparent); background: color-mix(in srgb, var(--embed-twitter-text) 5%, transparent); border-radius: 4px;"
                           >
                             <div style="font-weight: 600; font-size: 13px; color: var(--embed-twitter-text); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                              ${DOMPurify.sanitize(quote.author)}
+                              ${quote.author}
                             </div>
-                            <p style="white-space: pre-wrap; margin: 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">${DOMPurify.sanitize(quote.text)}</p>
+                            <p style="white-space: pre-wrap; margin: 0; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;">${quote.text}</p>
                           </div>`;
                         })()}
                         ${story.metadata.image
@@ -769,58 +656,7 @@ const row = (
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
                   data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                  onclick="var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                    (function() {
-                      var targetUrl = el.dataset.href;
-                      var canIframe = el.dataset.canIframe === 'true';
-                      
-                      try {
-                        var urlObj = new window.URL(targetUrl);
-                        var hostname = urlObj.hostname.toLowerCase();
-                        
-                        // Domains that should always use openUrl
-                        var alwaysOpenDomains = [
-                          'x.com',
-                          'twitter.com',
-                          'www.x.com',
-                          'www.twitter.com',
-                          'farcaster.xyz',
-                          'warpcast.com'
-                        ];
-                        
-                        // Check if it's a Substack domain
-                        var isSubstack = hostname.endsWith('.substack.com');
-                        
-                        var shouldAlwaysOpen = isSubstack || alwaysOpenDomains.some(function(domain) {
-                          return hostname === domain || hostname.endsWith('.' + domain);
-                        });
-                        
-                        if (shouldAlwaysOpen) {
-                          if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                            window.sdk.actions.openUrl(targetUrl);
-                          } else {
-                            window.open(targetUrl, '_blank');
-                          }
-                        } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                          window.sdk.actions.openUrl(targetUrl);
-                        } else {
-                          if (window.openEmbedDrawer) {
-                            window.openEmbedDrawer(targetUrl);
-                          } else {
-                            // Fallback if drawer not ready yet
-                            window.open(targetUrl, '_blank');
-                          }
-                        }
-                      } catch (e) {
-                        // Fallback to embed on error
-                        if (window.openEmbedDrawer) {
-                          window.openEmbedDrawer(targetUrl);
-                        } else {
-                          window.open(targetUrl, '_blank');
-                        }
-                      }
-                    })();
-                  } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }"
+                  data-action="outbound"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="farcaster-embed-container">
@@ -831,9 +667,7 @@ const row = (
                               src="${DOMPurify.sanitize(
                                 sizedImageUrl(story.metadata.farcasterCast.author.pfp, 72),
                               )}"
-                              alt="${DOMPurify.sanitize(
-                                story.metadata.farcasterCast.author.username || "farcaster",
-                              )}"
+                              alt="${story.metadata.farcasterCast.author.username || "farcaster"}"
                               width="20"
                               height="20"
                               loading="${getImageLoading(isAboveFold, story.metadata.farcasterCast.author.pfp)}"
@@ -867,22 +701,22 @@ const row = (
                               return parts.map((part) => {
                                 if (/^\bhttps?:\/\//.test(part)) {
                                   const display = part.length > 40 ? part.substring(0, 40) + "…" : part;
-                                  return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(display)}</span>`;
+                                  return html`<span style="text-decoration:underline;">${display}</span>`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return part;
                               });
                             };
 
                             if (story.metadata.farcasterCast?.text) {
                               const text = story.metadata.farcasterCast.text.trim();
                               if (/^https?:\/\/\S+$/i.test(text)) {
-                                return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(text)}</span>`;
+                                return html`<span style="text-decoration:underline;">${text}</span>`;
                               }
                               return html`${linkifyNodes(text)}`;
                             }
                             const desc = (story.metadata.ogDescription || "").trim();
                             if (/^https?:\/\/\S+$/i.test(desc)) {
-                              return html`<span style="text-decoration:underline;">${DOMPurify.sanitize(desc)}</span>`;
+                              return html`<span style="text-decoration:underline;">${desc}</span>`;
                             }
                             if (desc.length <= 280) {
                               const nodes = linkifyNodes(desc);
@@ -918,7 +752,7 @@ const row = (
                   href="${DOMPurify.sanitize(story.href)}"
                   target="_blank"
                   data-href="${DOMPurify.sanitize(story.href)}"
-                  onclick="event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href)); window.open(this.dataset.href, '_blank');"
+                  data-action="outbound-tab"
                   style="text-decoration:none; color:inherit; display:block;"
                 >
                   <div class="bluesky-embed-container">
@@ -929,10 +763,8 @@ const row = (
                               src="${DOMPurify.sanitize(
                                 story.metadata.blueskyPost.author.avatar,
                               )}"
-                              alt="${DOMPurify.sanitize(
-                                story.metadata.blueskyPost.author.handle ||
-                                  "bluesky",
-                              )}"
+                              alt="${story.metadata.blueskyPost.author.handle ||
+                              "bluesky"}"
                               width="20"
                               height="20"
                               loading="${getImageLoading(isAboveFold, story.metadata.blueskyPost.author.avatar)}"
@@ -951,10 +783,8 @@ const row = (
                               />
                             </svg>`}
                         <span style="font-weight: 600; color: var(--embed-farcaster-text); font-size: 14px;">
-                          @${DOMPurify.sanitize(
-                            story.metadata.blueskyPost.author.handle ||
-                              "bluesky",
-                          )}
+                          @${story.metadata.blueskyPost.author.handle ||
+                          "bluesky"}
                         </span>
                       </div>
                       <div class="bluesky-embed-body">
@@ -970,10 +800,10 @@ const row = (
                                       : part;
                                   return html`<span
                                     style="text-decoration:underline;"
-                                    >${DOMPurify.sanitize(display)}</span
+                                    >${display}</span
                                   >`;
                                 }
-                                return DOMPurify.sanitize(part);
+                                return part;
                               });
                             };
                             const text = (
@@ -982,7 +812,7 @@ const row = (
                             if (/^https?:\/\/\S+$/i.test(text)) {
                               return html`<span
                                 style="text-decoration:underline;"
-                                >${DOMPurify.sanitize(text)}</span
+                                >${text}</span
                               >`;
                             }
                             const sliced = text.slice(0, 300);
@@ -1032,9 +862,7 @@ const row = (
         href="${DOMPurify.sanitize(story.href)}"
         data-href="${DOMPurify.sanitize(story.href)}"
         data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-        onclick="${isCloudflare
-          ? `event.preventDefault(); if(window.openImageViewer) { window.openImageViewer(this.dataset.href); }`
-          : outboundOnclick}"
+        data-action="${isCloudflare ? "image-viewer" : "outbound"}"
       >
         <div class="kn-media-box">
           <img
@@ -1085,7 +913,7 @@ const row = (
         ? html`<a
             href="${profileHref}"
             class="kn-byline-person"
-            onclick="${spinnerOnclick}"
+            data-action="spinner"
             >${avatar}<span class="kn-by">submitted by</span><span class="meta-link submitter-name"
               >${story.displayName}</span
             ></a
@@ -1105,7 +933,7 @@ const row = (
         : ""}
       <span class="kn-dot" aria-hidden="true"></span>
       ${story.index
-        ? html`<a class="meta-link kn-age${isStoryNew ? " kn-age-new" : ""}" href="${storyPath}" onclick="${spinnerOnclick}">${age}</a>`
+        ? html`<a class="meta-link kn-age${isStoryNew ? " kn-age-new" : ""}" href="${storyPath}" data-action="spinner">${age}</a>`
         : html`<span class="kn-age${isStoryNew ? " kn-age-new" : ""}">${age}</span>`}
       <span
         class="story-analytics meta-item"
@@ -1147,7 +975,7 @@ const row = (
               id="chat-bubble-${story.index}"
               href="${path === "/stories" ? "#comments" : storyPath}"
               data-story-idx="${story.index}"
-              onclick="${path === "/stories" ? "" : commentOnclick}"
+              data-action="${path === "/stories" ? null : "comments"}"
             >
               ${commentsSVG}
               ${commentCount > 0
@@ -1165,7 +993,7 @@ const row = (
         data-story-slug="${getSlug(story.title)}"
         data-story-index="0x${story.index}"
         data-story-href="${DOMPurify.sanitize(story.href)}"
-        onclick="${shareOnclick}"
+        data-action="share"
       >
         ${shareSVG}
       </button>
@@ -1202,7 +1030,7 @@ const row = (
             data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
             target="_blank"
             rel="noopener"
-            onclick="${outboundOnclick}"
+            data-action="outbound"
             >${ms("arrow-up-right", 16)}<span>Read original article</span></a
           >`
         : "";
@@ -1273,7 +1101,7 @@ const row = (
                       href="${storyPath}#0x${story.lastComment.index}"
                       data-story-idx="${story.index}"
                       data-comment-idx="${story.lastComment.index}"
-                      onclick="${previewOnclick}"
+                      data-action="comment-preview"
                     >
                       <span class="kn-cp-avatar">
                         ${story.lastComment.identity.safeAvatar
@@ -1291,9 +1119,7 @@ const row = (
                       <span class="kn-cp-body">
                         <span class="kn-cp-head">
                           <span class="kn-cp-name"
-                            >${DOMPurify.sanitize(
-                              story.lastComment.identity.displayName,
-                            )}</span
+                            >${story.lastComment.identity.displayName}</span
                           >
                           <span class="kn-cp-when"
                             >· ${formatDistanceToNowStrict(
@@ -1304,7 +1130,10 @@ const row = (
                         <span
                           class="comment-preview-text kn-cp-text"
                           >${truncateComment(
-                            DOMPurify.sanitize(story.lastComment.title),
+                            render(
+                              story.lastComment.title,
+                              story.lastComment.names,
+                            ),
                           )}</span
                         >
                       </span>
@@ -1333,6 +1162,11 @@ const row = (
               ${showRank
                 ? html`<span class="kn-rank">${String(position).padStart(2, "0")}</span>`
                 : null}
+              ${
+                // NOTE: A community's story ({id, name, icon, color}, see
+                // withCommunities in communities-api.mjs) shows its tag.
+                story.community?.name ? Tag(story.community) : null
+              }
               ${sourceLabel
                 ? html`<span class="kn-domain">${sourceLabel}</span>`
                 : null}
@@ -1344,7 +1178,7 @@ const row = (
                       <a
                         data-no-instant
                         href="${path === "/submit" || path === "/demonstration"
-                          ? "javascript:void(0);"
+                          ? null
                           : (isCloudflare || isTextPost) && story.index
                           ? `/stories/${getSlug(story.title)}?index=0x${
                               story.index
@@ -1352,54 +1186,9 @@ const row = (
                           : DOMPurify.sanitize(story.href)}"
                         data-href="${DOMPurify.sanitize(story.href)}"
                         data-can-iframe="${story.metadata && story.metadata.canIframe !== undefined ? story.metadata.canIframe : true}"
-                        onclick="${(isCloudflare || isTextPost) && story.index
-                          ? `if(!event.ctrlKey && !event.metaKey && !event.shiftKey && event.button !== 1) { var el=document.getElementById('spinner-overlay'); if(el) el.style.display='block'; ${isTextPost ? '' : `navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(this.dataset.href));`} }`
-                          : `var el=this; event.preventDefault(); navigator.sendBeacon && navigator.sendBeacon('/outbound?url=' + encodeURIComponent(el.dataset.href)); if (window.ReactNativeWebView || window !== window.parent) {
-                              (function() {
-                                var targetUrl = el.dataset.href;
-                                var canIframe = el.dataset.canIframe === 'true';
-                                
-                                try {
-                                  var urlObj = new window.URL(targetUrl);
-                                  var hostname = urlObj.hostname.toLowerCase();
-                                  
-                                  // Domains that should always use openUrl
-                                  var alwaysOpenDomains = [
-                                    'x.com',
-                                    'twitter.com',
-                                    'www.x.com',
-                                    'www.twitter.com'
-                                  ];
-                                  
-                                  var shouldAlwaysOpen = alwaysOpenDomains.some(function(domain) {
-                                    return hostname === domain || hostname.endsWith('.' + domain);
-                                  });
-                                  
-                                  if (shouldAlwaysOpen) {
-                                    if (window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                                      window.sdk.actions.openUrl(targetUrl);
-                                    } else {
-                                      window.open(targetUrl, '_blank');
-                                    }
-                                  } else if (!canIframe && window.sdk && window.sdk.actions && window.sdk.actions.openUrl) {
-                                    window.sdk.actions.openUrl(targetUrl);
-                                  } else {
-                                    if (window.openEmbedDrawer) {
-                                      window.openEmbedDrawer(targetUrl);
-                                    } else {
-                                      window.open(targetUrl, '_blank');
-                                    }
-                                  }
-                                } catch (e) {
-                                  // Fallback to embed on error
-                                  if (window.openEmbedDrawer) {
-                                    window.openEmbedDrawer(targetUrl);
-                                  } else {
-                                    window.open(targetUrl, '_blank');
-                                  }
-                                }
-                              })();
-                            } else { window.open(el.dataset.href, el.getAttribute('target') || '_blank'); }`}"
+                        data-action="${titleToStory ? "spinner" : "outbound"}"
+                        data-beacon="${titleToStory && !isTextPost}"
+                        data-app-hosts="${titleToStory ? null : "x"}"
                         data-story-link="/stories/${getSlug(
                           story.title,
                         )}?index=0x${story.index}"
@@ -1431,9 +1220,9 @@ const row = (
                           return story.isOriginal
                             ? html`<mark
                                 style="background-color: rgba(255,255,0, 0.05); padding: 0px 2px;"
-                                >${truncateLongWords(DOMPurify.sanitize(displayTitle))}</mark
+                                >${truncateLongWords(displayTitle)}</mark
                               >`
-                            : html`${truncateLongWords(DOMPurify.sanitize(displayTitle))}`;
+                            : html`${truncateLongWords(displayTitle)}`;
                         })()}
                       </a>
               </span>
@@ -1454,7 +1243,7 @@ const row = (
                   style="padding: 12px 20px; margin-top: 8px;"
                 >
                   <div style="white-space: pre-wrap; word-break: break-word; line-height: 1.6; font-size: 13px; color: var(--text-primary); opacity: 0.85;">
-                    ${DOMPurify.sanitize(textPostContent)}
+                    ${textPostContent}
                   </div>
                 </div>`
               : null}

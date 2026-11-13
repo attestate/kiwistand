@@ -15,6 +15,7 @@ import { dynamicPrefetch } from "./main.jsx";
 import { getSlug } from "./CommentInput.jsx"; // Import getSlug from CommentInput
 import { openDelegationModalForAction, isDelegationModalNeeded } from "./delegationModalManager.js";
 import { showSpinnerOverlay } from "./spinnerOverlay.js";
+import { useMentionNames, withMentions } from "./Mentions.jsx";
 
 
 
@@ -566,6 +567,8 @@ const Comment = React.forwardRef(
     const [isTargeted, setIsTargeted] = useState(
       window.location.hash === `#0x${comment.index}`,
     );
+    // NOTE: Mentions link to the person, "@<name>" (mentions.mjs).
+    const names = useMentionNames(comment.title);
 
     // Generate proper slug URL if we have the story title, otherwise fallback
     // NOTE: The #0x… anchor lands on this comment on the story page (scrolled
@@ -687,13 +690,13 @@ const Comment = React.forwardRef(
                               color: "var(--text-tertiary)",
                             }}
                           >
-                            {line.substring(2)}
+                            {withMentions(line.substring(2), names)}
                           </div>
                         );
                       }
                       // Only wrap in div if it's not an empty line
                       return line.trim() ? (
-                        <div key={i}>{line}</div>
+                        <div key={i}>{withMentions(line, names)}</div>
                       ) : (
                         // Empty lines create spacing between paragraphs
                         <br key={i} />

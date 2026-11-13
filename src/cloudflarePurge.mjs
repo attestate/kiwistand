@@ -8,6 +8,7 @@ import {
   isReactionComment,
 } from "./cache.mjs";
 import { getSlug } from "./utils.mjs";
+import { notified } from "./web/src/mentions.mjs";
 
 /**
  * Purges Cloudflare cache for the specified URL.
@@ -94,6 +95,10 @@ export function invalidateActivityCaches(message) {
     invalidateUpvoteActivityCaches(message);
   } else if (message.type === "comment") {
     invalidateCommentActivityCaches(message);
+  } else if (message.type === "join" || message.type === "leave") {
+    // NOTE: A community's ID starts with its owner's address, who sees who
+    // joined in their notifications.
+    invalidateNotifications(message.community.split("/")[0]);
   }
 }
 
@@ -191,6 +196,12 @@ function invalidateCommentActivityCaches(message) {
         }
       });
     }
+
+    // NOTE: And the people it mentions (web/src/mentions.mjs).
+    const known = new Set([...addresses].map((a) => a.toLowerCase()));
+    notified(message.title)
+      .filter((address) => !known.has(address))
+      .forEach((address) => addresses.add(address));
 
     addresses.forEach((address) => invalidateNotifications(address));
   } catch (error) {

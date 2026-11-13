@@ -1,5 +1,4 @@
 src/public/.vite/manifest.json
-docs/venv
 digest-data.json
 newsletter/out/
 mcp.config.json

@@ -6,11 +6,12 @@
   "scripts": {
     "clean:assets": "rm -rf src/public/assets && mkdir -p src/public/assets",
     "build": "npm run clean:assets && cd src/web && NODE_ENV=production npm run build && node minify-css.mjs && cp ../public/.vite/manifest.json ../public/manifest.json",
+    "build:docs": "npm ci --prefix docs && npm run build --prefix docs",
     "test": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=30s --serial --verbose",
     "test:offline": "DEBUG=\"-@attestate/delegator2*\" ava --timeout=60s --serial --verbose \"test/**/*_test.mjs\" \"!test/kiwimcp_*_test.mjs\" \"!test/compression_test.mjs\"",
     "test:compression": "NODE_TLS_REJECT_UNAUTHORIZED=0 ava test/compression_test.mjs --timeout=30s --verbose",
     "connect": "ssh root@91.107.210.214",
-    "deploy": "npm run build && npm run rsync && npm run deploy:install && npm run deploy:restart",
+    "deploy": "npm run build && npm run build:docs && npm run rsync && npm run deploy:install && npm run deploy:restart",
     "rsync": "node scripts/deploy-files.mjs rsync root@91.107.210.214:./kiwistand",
     "deploy:files": "node scripts/deploy-files.mjs list",
     "deploy:install": "ssh root@91.107.210.214 'bash kiwistand/scripts/server-install.sh'",

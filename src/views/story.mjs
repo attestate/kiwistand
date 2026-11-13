@@ -38,9 +38,14 @@ import { isBlocked } from "../linksafety.mjs";
 import { getSummary, scheduleSummary } from "../summaries.mjs";
 import { storyDescription, storyDocumentTitle } from "../seo.mjs";
 import * as isoweek from "../isoweek.mjs";
-import { peakRank, badgeSnippets, badgeUrl } from "../featured.mjs";
 import { isIndexableStory, robotsMeta } from "../indexable.mjs";
 import { indexableSourcePath } from "../sources.mjs";
+import { withCommunities } from "../communities-api.mjs";
+import {
+  names as mentionNames,
+  split,
+  render,
+} from "../web/src/mentions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -48,19 +53,39 @@ const isInternalLink = (href) =>
   href.startsWith("https://news.kiwistand.com") ||
   href.startsWith("https://staging.kiwistand.com");
 
+// data-* attributes are stripped from comment HTML: the page's document-level
+// data-action listeners (src/web/src/dataActions.mjs) would otherwise run for
+// markup a commenter wrote (e.g. a full-page <a data-action="copy">).
+const COMMENT_SANITIZE = { ALLOW_DATA_ATTR: false };
+
+// NOTE: A mention (web/src/mentions.mjs) is a link to the person's profile
+// with their name in `names`, made by vhtml, which escapes both.
+function lineHTML(text, names) {
+  return split(text, names)
+    .map((part) =>
+      typeof part === "string"
+        ? DOMPurify.sanitize(part, COMMENT_SANITIZE)
+        : html`<a class="kn-mention" href="/upvotes?address=${part.address}"
+            >@${part.name}</a
+          >`,
+    )
+    .join("");
+}
+
 // Never build the anchors by hand here. DOMPurify serializes text nodes, so it
 // leaves quotes unencoded, and a URL like `https://x"onmouseover="alert(1)`
 // interpolated into href="" injects attributes. linkify-html escapes them.
-function linkifyComment(title) {
+export function linkifyComment(title, names) {
   const body = title
     .split("\n")
     .map((line) => {
       if (line.startsWith(">")) {
-        return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${DOMPurify.sanitize(
+        return `<div style="border-left: 3px solid var(--text-quaternary); padding-left: 10px; margin: 8px 0 0 0; color: var(--text-tertiary);">${lineHTML(
           line.substring(2),
+          names,
         )}</div>`;
       }
-      return line.trim() ? `<div>${DOMPurify.sanitize(line)}</div>` : "<br/>";
+      return line.trim() ? `<div>${lineHTML(line, names)}</div>` : "<br/>";
     })
     .join("");
 
@@ -69,9 +94,7 @@ function linkifyComment(title) {
     target: (href) => (isInternalLink(href) ? "_self" : "_blank"),
     attributes: (href) => ({
       "data-url": href,
-      onclick: isInternalLink(href)
-        ? ""
-        : `if (window.ReactNativeWebView || window !== window.parent) { event.preventDefault(); window.sdk.actions.openUrl(this.dataset.url); }`,
+      ...(isInternalLink(href) ? {} : { "data-action": "app-link" }),
     }),
     // Keep the old regex's scope: explicit http(s) only, no bare domains and
     // no mailto: harvesting of addresses typed into comments.
@@ -209,6 +232,9 @@ function previewComment(comment, address, commenter, submission, submitter, with
 }
 
 async function generateCommentPreviews(fileName, comment, address, commenter, submission, submitter) {
+  // NOTE: Mentions read as "@<name>" (web/src/mentions.mjs).
+  const names = await mentionNames([comment.title], ens.resolve);
+  comment = { ...comment, title: render(comment.title, names) };
   for (const isFrame of [false, true]) {
     try {
       await preview.generate(
@@ -298,40 +324,6 @@ function SourceItem(related, source, style = "") {
   </li>`;
 }
 
-// The "Featured on Kiwi News" badge and the snippets to paste it, for
-// stories that reached the top 3. Selecting the text is enough to copy it,
-// so there's no script.
-export function FeaturedBadgeRow(story, rank) {
-  const snippets = badgeSnippets(story);
-  const box =
-    "width: 100%; box-sizing: border-box; font-family: monospace; font-size: 9pt; resize: none; margin: 4px 0 8px 0;";
-  return html`<tr class="kn-featured-row">
-    <td style="padding: 0 0 12px 0;">
-      <div id="badge" style="margin: 0 11px;">
-        <h2
-          style="font-size: 10pt; font-weight: 500; margin: 0 0 8px 0; color: var(--text-secondary);"
-        >
-          Featured on Kiwi News: this story reached #${rank}
-        </h2>
-        <img
-          src="${badgeUrl(story.index)}"
-          alt="Featured on Kiwi News"
-          height="20"
-        />
-        <p style="font-size: 9pt; margin: 8px 0 0 0; color: var(--text-secondary);">
-          Wrote it? Add the badge to your post or README:
-        </p>
-        <textarea readonly rows="2" aria-label="Badge HTML" style="${box}">
-${snippets.html}</textarea
-        >
-        <textarea readonly rows="2" aria-label="Badge Markdown" style="${box}">
-${snippets.markdown}</textarea
-        >
-      </div>
-    </td>
-  </tr>`;
-}
-
 // "More from <site>" as a box of the desktop right column (the design's
 // "More from Hot" box). Phones and tablets show the same list below the
 // comments (.kn-related-row).
@@ -400,8 +392,15 @@ export default async function (
     });
   }
 
+  // NOTE: A community's story shows its community's tag (row.mjs).
+  let tagged = value;
+  try {
+    [tagged] = await withCommunities([value]);
+  } catch (err) {
+    log(`Couldn't tag the story's community: ${err.message}`);
+  }
   const story = {
-    ...value,
+    ...tagged,
     metadata: data,
     textContent,
   };
@@ -445,6 +444,12 @@ export default async function (
         .filter(Boolean),
     }));
   }
+  // NOTE: The names of the people the comments mention.
+  const names = await mentionNames(
+    story.comments.map((comment) => comment.title),
+    ens.resolve,
+  );
+
   // NOTE: store.post returns upvoters as objects of "identity" and "timestamp"
   // property so that we can zip them with tipping actions. But the row component
   // expects upvoters to be a string array of Ethereum addresses.
@@ -464,9 +469,9 @@ export default async function (
     }
     
     const profile = await ens.resolve(upvoter.identity);
-    // Only include profiles with proper names (ENS, Farcaster, or Lens) AND high Neynar scores
+    // Only include profiles with proper names (ENS or Farcaster) AND high Neynar scores
     if (profile && 
-        (profile.ens || profile.farcaster || profile.lens) && 
+        (profile.ens || profile.farcaster) && 
         profile.neynarScore && 
         profile.neynarScore >= 0.6) { // Only show curators with score >= 0.6
       upvoterProfiles.push({
@@ -552,9 +557,10 @@ export default async function (
       
       // Use comment text as description, truncated
       const maxLength = 160;
-      ogDescription = comment.title.length > maxLength 
-        ? comment.title.substring(0, maxLength) + "..."
-        : comment.title;
+      const text = render(comment.title, names);
+      ogDescription = text.length > maxLength 
+        ? text.substring(0, maxLength) + "..."
+        : text;
       
       // Update title to indicate it's a comment
       ogTitle = `Comment on: ${value.title}`;
@@ -596,9 +602,6 @@ export default async function (
   
   const related = await moreFromSite(value.href, index);
   const source = indexableSourcePath(value.href);
-  // NOTE: Only stories that reached the hot feed's top 3 (recorded by the
-  // Farcaster author pings, src/featured.mjs) offer writers a badge.
-  const featuredRank = peakRank(index);
 
   const slug = getSlug(value.title);
   const storyUrl = `${baseUrl}/stories/${slug}?index=0x${index}`;
@@ -633,7 +636,7 @@ export default async function (
     ...(story.comments.length > 0 ? {
       "comment": story.comments.slice(0, 5).map((c) => ({
         "@type": "Comment",
-        "text": c.title,
+        "text": render(c.title, names),
         // Google's forum markup requires datePublished on every Comment.
         "datePublished": new Date(c.timestamp * 1000).toISOString(),
         ...(c.index ? { "url": `${storyUrl}#0x${c.index}` } : {}),
@@ -689,7 +692,6 @@ export default async function (
       <body
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}
@@ -850,7 +852,7 @@ export default async function (
                                         data-share-url="${baseUrl}/stories/${getSlug(
                                           value.title,
                                         )}?index=0x${index}&commentIndex=${comment.index}"
-                                        onclick="event.preventDefault(); navigator.share({url: this.dataset.shareUrl});"
+                                        data-action="share-url"
                                       >
                                         ${ShareIcon(
                                           "padding: 0 3px 1px 0; vertical-align: middle; height: 13px; width: 13px;",
@@ -873,6 +875,7 @@ export default async function (
                                           dangerouslySetInnerHTML=${{
                                             __html: linkifyComment(
                                               comment.title,
+                                              names,
                                             ),
                                           }}
                                         ></span>
@@ -1012,7 +1015,6 @@ export default async function (
                   </div>
                 </td>
               </tr>
-              ${featuredRank ? FeaturedBadgeRow({ ...value, index }, featuredRank) : null}
               ${related.stories.length > 0
                 ? html`<tr class="kn-related-row">
                     <td style="padding: 0 0 12px 0;">

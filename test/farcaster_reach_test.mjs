@@ -523,7 +523,7 @@ test("flags default off and the scheduler does nothing without them", (t) => {
   t.is(reach.pingsPerDay({}), 3);
 });
 
-test("runAuthorPings records peak ranks and embeds the writer's leaderboard row", async (t) => {
+test("runAuthorPings embeds the writer's leaderboard row", async (t) => {
   const paths = tmp(t);
   const { casts, send } = recorder();
   let feed = [s("a"), s("b"), s("c")];
@@ -539,11 +539,6 @@ test("runAuthorPings records peak ranks and embeds the writer's leaderboard row"
   await reach.runAuthorPings(options);
   feed = [s("b"), s("f", { href: "https://farcaster.xyz/alice/0x1234abcd" }), s("n")];
   await reach.runAuthorPings(options);
-  const state = JSON.parse(readFileSync(paths.statePath, "utf8"));
-  t.deepEqual(
-    Object.fromEntries(Object.entries(state.peak).map(([k, v]) => [k, v.rank])),
-    { a: 1, b: 1, c: 3, f: 2, n: 3 },
-  );
   t.deepEqual(casts[0].embeds, [
     "https://news.kiwistand.com/stories/Story-f?index=0xf",
     "https://news.kiwistand.com/writers?month=2026-10#w-x",

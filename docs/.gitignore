@@ -1,2 +1,5 @@
-.venv
-build
+dist
+node_modules
+src/pages.gen.ts
+# Generated from ../changelog.md by scripts/changelog.mjs
+src/pages/changelog.md

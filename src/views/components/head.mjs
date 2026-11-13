@@ -52,6 +52,17 @@ try {
   cssHash = Date.now().toString();
 }
 
+// NOTE: theme-init.js is versioned like news.css: static files are cached
+// for a day by browsers and a week at the edge, so without it a deploy's
+// change (e.g. the joined communities it marks) reached readers late.
+let themeInitHash = "";
+try {
+  const themeInit = readFileSync(join(__dirname, "../../public/theme-init.js"), "utf8");
+  themeInitHash = createHash("md5").update(themeInit).digest("hex").substring(0, 8);
+} catch (err) {
+  themeInitHash = cssHash;
+}
+
 // NOTE: fonts/inter.css is versioned too, so a change to it (e.g. the Latin
 // subsets) reaches browsers right away instead of after a day.
 let interHash = "";
@@ -252,7 +263,7 @@ export function custom(
 
       /* Remove custom @font-face to avoid double-loading Inter; use Google CSS above */
     </style>
-    <script src="/theme-init.js"></script>
+    <script src="/theme-init.js?v=${themeInitHash}"></script>
     <script src="/event-queue.js"></script>
     <meta charset="utf-8" />
     <meta name="referrer" content="origin" />

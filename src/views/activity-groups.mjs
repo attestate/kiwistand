@@ -70,3 +70,34 @@ export function groupReactions(reactions, viewer) {
   }
   return groups.sort((a, b) => b.timestamp - a.timestamp);
 }
+
+// The joins of your communities (one activity per person, as data() builds
+// them, any order) as one group per community: the distinct members newest
+// first, and the newest join's timestamp and message (it has the community).
+// Your own joins aren't in it.
+export function groupJoins(joins, viewer) {
+  const byCommunity = new Map();
+  const sorted = joins
+    .filter((join) => lower(join.message.identity) !== lower(viewer))
+    .sort((a, b) => b.timestamp - a.timestamp);
+  for (const join of sorted) {
+    const key = join.message.community.id;
+    if (!byCommunity.has(key)) byCommunity.set(key, []);
+    byCommunity.get(key).push(join);
+  }
+  const groups = [];
+  for (const items of byCommunity.values()) {
+    const members = newestDistinct(
+      items.map((item) => item.message.identity).reverse(),
+      viewer,
+    );
+    if (members.length === 0) continue;
+    groups.push({
+      verb: "joins",
+      message: items[0].message,
+      timestamp: items[0].timestamp,
+      members,
+    });
+  }
+  return groups.sort((a, b) => b.timestamp - a.timestamp);
+}

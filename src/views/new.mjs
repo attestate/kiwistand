@@ -13,11 +13,19 @@ import RightColumn from "./components/right-column.mjs";
 import { custom } from "./components/head.mjs";
 import { robotsMeta } from "../indexable.mjs";
 import * as moderation from "./moderation.mjs";
-import { getLastComment, listNewest, countImpressions, lifetimeCache } from "../cache.mjs";
+import {
+  getLastComment,
+  listNewest,
+  countImpressions,
+  lifetimeCache,
+  inCommunity,
+} from "../cache.mjs";
 import Row from "./components/row.mjs";
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
+import { withCommunities } from "../communities-api.mjs";
 import { cachedMetadata, metadata } from "../parser.mjs";
+import { names as mentionNames } from "../web/src/mentions.mjs";
 
 const html = htm.bind(vhtml);
 
@@ -58,25 +66,16 @@ export function getCachedHtml() {
   return lifetimeCache.get(HTML_CACHE_KEY);
 }
 
-let inProgress = false;
-// NOTE: A submission that arrives while a recompute is running must not be
-// dropped, so we run once more afterwards.
-let rerun = false;
-export async function recompute() {
-  if (inProgress) {
-    rerun = true;
-    return;
-  }
-  inProgress = true;
+// The stories of /new: the newest 25, a community's ones included. A
+// community's New has as many of its own.
+export const NEW_STORIES = 25;
 
-  try {
-    const limit = 25;
-    let counts = listNewest(limit);
-    const path = "/new";
-    const previousStoriesByIndex = new Map(
-      stories.map((story) => [story.index, story]),
-    );
-
+// What /new shows of `counts` (listNewest rows), newest first: moderated,
+// with the last comment, the submitter's profile, the link preview and
+// impressions. A story whose preview can't be read now keeps the one in
+// `previousStoriesByIndex`.
+async function enrich(counts, previousStoriesByIndex = new Map()) {
+  const path = "/new";
   const [listsResult, writersResult] = await Promise.allSettled([
     moderation.getLists(),
     moderation.getWriters(),
@@ -103,6 +102,11 @@ export async function recompute() {
       const lastComment = getLastComment(`kiwi:0x${story.index}`, config.addresses || []);
       if (lastComment && lastComment.identity) {
         lastComment.identity = await ens.resolveForBatch(lastComment.identity);
+        // NOTE: The names of the people it mentions (row.mjs).
+        lastComment.names = await mentionNames(
+          [lastComment.title],
+          ens.resolveForBatch,
+        );
         const uniqueIdentities = new Set(
           lastComment.previousParticipants
             .map((p) => p.identity)
@@ -172,7 +176,43 @@ export async function recompute() {
     }),
   );
 
-    stories = nextStories.sort((a, b) => b.timestamp - a.timestamp);
+  return nextStories.sort((a, b) => b.timestamp - a.timestamp);
+}
+
+// A community's New (/api/v1/feeds/new?community=): its newest stories with
+// the enrichment of /new. Computed on each request and kept apart from the
+// cached Kiwi News /new (`stories`, the HTML cache).
+export async function getCommunityStories(community) {
+  return await enrich(
+    listNewest(NEW_STORIES, undefined, inCommunity(community)),
+  );
+}
+
+// Where a community's New ends: the oldest of the stories
+// getCommunityStories shows, or undefined. /api/v1/new/rows pages on from it.
+export function communityCursor(community) {
+  const first = listNewest(NEW_STORIES, undefined, inCommunity(community));
+  return first.length > 0 ? first[first.length - 1].timestamp : undefined;
+}
+
+let inProgress = false;
+// NOTE: A submission that arrives while a recompute is running must not be
+// dropped, so we run once more afterwards.
+let rerun = false;
+export async function recompute() {
+  if (inProgress) {
+    rerun = true;
+    return;
+  }
+  inProgress = true;
+
+  try {
+    const counts = listNewest(NEW_STORIES);
+    const previousStoriesByIndex = new Map(
+      stories.map((story) => [story.index, story]),
+    );
+
+    stories = await enrich(counts, previousStoriesByIndex);
 
     // Pre-render and cache the HTML (same pattern as /best)
     try {
@@ -198,7 +238,13 @@ export async function recompute() {
 }
 
 async function renderPage(theme) {
+  // NOTE: Community stories show their community's tag (row.mjs).
   let items = stories;
+  try {
+    items = await withCommunities(stories);
+  } catch (err) {
+    log(`/new: Couldn't tag the communities: ${err.message}`);
+  }
   const path = "/new";
   const ogImage = "https://news.kiwistand.com/kiwi_new_feed_page.png?v=2";
   const prefetch = ["/", "/submit", "/best"];
@@ -212,11 +258,10 @@ async function renderPage(theme) {
       <body
         data-instant-allow-query-string
         data-instant-allow-external-links
-        ontouchstart=""
       >
         <div class="container">
           ${Sidebar(path)}
-          ${RightColumn()}
+          ${RightColumn({ communities: true })}
           <main id="hnmain" class="scaled-hnmain" role="main">
             <h1 class="visually-hidden">New crypto stories on Kiwi News</h1>
             <table border="0" cellpadding="0" cellspacing="0" bgcolor="var(--background-color0)">

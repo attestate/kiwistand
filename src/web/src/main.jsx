@@ -15,11 +15,14 @@ import {
 } from "./delegationModalManager.js";
 import { isSafariOnIOS, isIOSApp } from "./session.mjs";
 import { setMiniApp, autoConnectMiniAppWallet } from "./miniapp.mjs";
+import { installDataActions } from "./dataActions.mjs";
 
 // Make SDK available globally for use in other parts of the app
 window.sdk = sdk;
 
-// NOTE: Called from the share button's onclick string in row.mjs.
+installDataActions();
+
+// NOTE: Called by the share button's action (dataActions.mjs).
 window.kiwiTrackShare = (href, channel) =>
   import("./shares.mjs")
     .then(({ trackShare }) => trackShare(href, channel))
@@ -93,6 +96,7 @@ async function applySafeAreaInsets() {
 
 import { readRpcSettings } from "./rpc.mjs";
 import { isIOS, getCookie } from "./session.mjs";
+import { needsCommunities } from "./community-gate.mjs";
 import {
   capture,
   flushAnalytics,
@@ -242,6 +246,34 @@ async function addSubmitButton(delegations, toast) {
       </StrictMode>,
     );
   }
+}
+
+// Communities (Communities.jsx): Join buttons, the Home tabs and side box
+// with your communities, a community's actions and invites.
+async function addCommunities() {
+  const elements = [...document.querySelectorAll("[data-cm]")];
+  let joined = null;
+  try {
+    joined = localStorage.getItem("kiwi-communities");
+  } catch (err) {}
+  const kinds = elements.map((element) => element.dataset.cm);
+  if (!needsCommunities(kinds, joined, getCookie("identity"))) return;
+  const { mount } = await import("./Communities.jsx");
+  mount(elements);
+}
+
+// /communities/new: the form to start or edit a community.
+async function addNewCommunity(toast) {
+  const element = document.getElementById("cm-new");
+  if (!element) return;
+  const NewCommunity = (await import("./NewCommunity.jsx")).default;
+  createRoot(element).render(
+    <StrictMode>
+      <Providers>
+        <NewCommunity toast={toast} editKey={element.dataset.edit} />
+      </Providers>
+    </StrictMode>,
+  );
 }
 
 async function addAnalytics() {
@@ -1229,6 +1261,8 @@ async function startWatchAccount(delegations, account, isInIOSApp) {
       document.body.classList.add("kiwi-logged-in");
     } catch {}
     window.__kiwiIdentity = identity;
+    // NOTE: Communities.jsx shows the owner's buttons once it knows them.
+    window.dispatchEvent(new Event("kiwi-identity"));
     identifyPostHog(identity);
 
     // Set iOS wallet for push notifications
@@ -1620,10 +1654,14 @@ function initEndlessScroll() {
 
   // Determine API endpoint based on current page
   let apiBase;
+  // A community's Hot and New (/c/<owner>/<key>, /c/<owner>/<key>/new).
+  const community = path.match(/^\/c\/(0x[0-9a-fA-F]{40}\/[a-z0-9-]+)(\/new)?\/?$/);
   if (path === '/') {
     apiBase = '/api/v1/feed/rows';
   } else if (path === '/new') {
     apiBase = '/api/v1/new/rows';
+  } else if (community) {
+    apiBase = `/api/v1/communities/${community[1]}/${community[2] ? 'new' : 'feed'}/rows`;
   } else {
     return;
   }
@@ -1667,12 +1705,11 @@ function initEndlessScroll() {
         return;
       }
 
-      // Sanitize HTML before inserting into DOM. Row() relies on inline
-      // onclick handlers (outbound tracking, share, comments), so only that
-      // event attribute is allowed; don't add other on* attributes here.
+      // Sanitize HTML before inserting into DOM. Row()'s clicks are
+      // data-action attributes (dataActions.mjs); don't allow on* attributes.
       const sanitizedHtml = DOMPurify.sanitize(html, {
         ADD_TAGS: ['iframe'],
-        ADD_ATTR: ['target', 'onclick', 'loading', 'data-no-instant', 'data-story-link', 'data-external-link', 'data-title', 'data-href', 'data-upvoters', 'data-story-index', 'data-comment-count', 'data-story-title', 'data-story-slug', 'data-story-href', 'data-submitter', 'data-content-id', 'data-content-type', 'data-has-preview', 'data-editorpicks', 'data-isad'],
+        ADD_ATTR: ['target', 'loading', 'data-no-instant', 'data-story-link', 'data-external-link', 'data-title', 'data-href', 'data-upvoters', 'data-story-index', 'data-comment-count', 'data-story-title', 'data-story-slug', 'data-story-href', 'data-submitter', 'data-content-id', 'data-content-type', 'data-has-preview', 'data-editorpicks', 'data-isad'],
       });
 
       // Insert new rows before the sentinel's parent row
@@ -1929,6 +1966,12 @@ async function start() {
   // submit is a plain form post that PostHog never sees.
   addNewsletterFeedCard().catch((err) =>
     console.error("Newsletter card failed to mount", err),
+  );
+  addCommunities().catch((err) =>
+    console.error("Communities failed to mount", err),
+  );
+  addNewCommunity(toast).catch((err) =>
+    console.error("The community form failed to mount", err),
   );
 
 
