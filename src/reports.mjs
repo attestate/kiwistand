@@ -2,36 +2,19 @@
 // Reports of objectionable content (App Review Guideline 1.2). The iOS app's
 // "Report post", "Report comment" and "Report user" send them here, so
 // reporting works in the app without a mail account; so does Settings ->
-// "Delete account" (Guideline 5.1.1(v)). Each report is kept in reports.db
-// and emailed to the moderators (REPORTS_EMAIL), who act on it within 24
-// hours, as the community rules (/guidelines) promise.
+// "Delete account" (Guideline 5.1.1(v)). Each report is a line in
+// DATA_DIR/reports.csv, which opens in Excel or Numbers. The moderators act
+// on it within 24 hours, as the community rules (/guidelines) promise.
 import { env } from "process";
+import { appendFileSync, existsSync } from "fs";
 import path from "path";
-
-import Database from "better-sqlite3";
-import postmark from "postmark";
 
 import log from "./logger.mjs";
 
 export const TYPES = ["story", "comment", "user", "account-deletion"];
 const MAX_TARGET = 200;
 const MAX_REASON = 1000;
-
-let db;
-function database() {
-  if (db) return db;
-  db = new Database(path.join(env.DATA_DIR, "reports.db"));
-  db.exec(`
-     CREATE TABLE IF NOT EXISTS reports (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       type TEXT NOT NULL,
-       target TEXT NOT NULL,
-       reason TEXT NOT NULL,
-       created INTEGER NOT NULL
-     )
-   `);
-  return db;
-}
+const HEADER = ["time", "type", "id", "reason", "link"];
 
 // The report in a request body, or throws with what's wrong.
 export function parse(body) {
@@ -65,50 +48,30 @@ export function link({ type, target }) {
   return `${base}/stories?index=0x${index}`;
 }
 
-export function save(report, now = Date.now(), database_ = database()) {
-  const created = Math.floor(now / 1000);
-  const { lastInsertRowid } = database_
-    .prepare(
-      `INSERT INTO reports (type, target, reason, created)
-       VALUES (?, ?, ?, ?)`,
-    )
-    .run(report.type, report.target, report.reason, created);
-  return { ...report, id: Number(lastInsertRowid), created };
+// One CSV field. Anyone can write the reason, so a value that Excel would
+// run as a formula (=, +, -, @) gets a leading apostrophe.
+function field(value) {
+  let text = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
 }
 
-let client;
-async function notify(report) {
-  const to = env.REPORTS_EMAIL;
-  if (env.NODE_ENV !== "production" || !env.POSTMARK_API_KEY || !to) {
-    log(`reports: Not emailing report ${report.id}, no REPORTS_EMAIL`);
-    return;
-  }
-  client ??= new postmark.ServerClient(env.POSTMARK_API_KEY);
-  await client.sendEmail({
-    From: "Kiwi News reports <noreply@news.kiwistand.com>",
-    To: to,
-    Subject: `Report #${report.id}: ${report.type} ${report.target}`,
-    TextBody: [
-      report.type === "account-deletion"
-        ? "An account deletion was requested. Act on it within 24 hours."
-        : `A ${report.type} was reported. Act on it within 24 hours.`,
-      "",
-      `Type: ${report.type}`,
-      `ID: ${report.target}`,
-      `Reason: ${report.reason || "(none given)"}`,
-      ...(link(report) ? [`Open: ${link(report)}`] : []),
-    ].join("\n"),
-    MessageStream: "outbound",
-  });
+export function row(report, now = Date.now()) {
+  const values = [
+    new Date(now).toISOString(),
+    report.type,
+    report.target,
+    report.reason,
+    link(report) ?? "",
+  ];
+  return values.map(field).join(",") + "\n";
 }
 
-// Keeps a report and emails it; the email failing doesn't lose the report.
-export async function add(body) {
-  const report = save(parse(body));
-  try {
-    await notify(report);
-  } catch (err) {
-    log(`reports: Emailing report ${report.id} failed: ${err.message}`);
-  }
+// Appends a parsed report to reports.csv, with the header if the file is new.
+export function save(report, now = Date.now(), dir = env.DATA_DIR) {
+  const file = path.join(dir, "reports.csv");
+  const header = existsSync(file) ? "" : HEADER.map(field).join(",") + "\n";
+  appendFileSync(file, header + row(report, now));
+  log(`reports: ${report.type} ${report.target} reported`);
   return report;
 }
