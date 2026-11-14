@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync } from "fs";
 import { tmpdir } from "os";
 import path from "path";
 
-import { parse, link, row, save } from "../src/reports.mjs";
+import { parse, link, row, save, notify } from "../src/reports.mjs";
 
 const STORY =
   "0x6adb46ba6e4d8732f3aa74ccaa63998d7b8d1562abf208e81cdd993adee8507fdba01f24";
@@ -73,4 +73,25 @@ test("save appends to reports.csv with a header once", (t) => {
   t.is(lines[0], `"time","type","id","reason","link"`);
   t.true(lines[1].includes(`"story","${STORY}","spam"`));
   t.true(lines[2].endsWith(`"comment","kiwi:${STORY}","",""`));
+});
+
+test("notify pushes to REPORTS_ADDRESS at most once a minute", (t) => {
+  const sent = [];
+  const send = async (addresses, message) => sent.push({ addresses, message });
+  const previous = process.env.REPORTS_ADDRESS;
+
+  delete process.env.REPORTS_ADDRESS;
+  t.false(notify(NOW, send));
+
+  process.env.REPORTS_ADDRESS = USER;
+  t.true(notify(NOW, send));
+  t.false(notify(NOW + 30 * 1000, send));
+  t.true(notify(NOW + 61 * 1000, send));
+  t.is(sent.length, 2);
+  t.deepEqual(sent[0].addresses, [USER]);
+  t.is(sent[0].message.title, "New report");
+  t.false(JSON.stringify(sent[0].message).includes("0x"));
+
+  if (previous === undefined) delete process.env.REPORTS_ADDRESS;
+  else process.env.REPORTS_ADDRESS = previous;
 });

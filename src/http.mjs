@@ -1351,6 +1351,7 @@ export async function launch(trie, libp2p, isPrimary = true) {
     }
     try {
       reports.save(report);
+      reports.notify();
     } catch (err) {
       log(`reports: Saving a report failed: ${err.message}`);
       return sendError(reply, 500, "Internal Server Error", "Try again later");

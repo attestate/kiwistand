@@ -3,13 +3,16 @@
 // "Report post", "Report comment" and "Report user" send them here, so
 // reporting works in the app without a mail account; so does Settings ->
 // "Delete account" (Guideline 5.1.1(v)). Each report is a line in
-// DATA_DIR/reports.csv, which opens in Excel or Numbers. The moderators act
-// on it within 24 hours, as the community rules (/guidelines) promise.
+// DATA_DIR/reports.csv, which opens in Excel or Numbers, and the account in
+// REPORTS_ADDRESS gets a push in the iOS app saying a report came in (the
+// push says nothing about it). The moderators act on it within 24 hours,
+// as the community rules (/guidelines) promise.
 import { env } from "process";
 import { appendFileSync, existsSync } from "fs";
 import path from "path";
 
 import log from "./logger.mjs";
+import { sendPushNotification } from "./onesignal.mjs";
 
 export const TYPES = ["story", "comment", "user", "account-deletion"];
 const MAX_TARGET = 200;
@@ -74,4 +77,21 @@ export function save(report, now = Date.now(), dir = env.DATA_DIR) {
   appendFileSync(file, header + row(report, now));
   log(`reports: ${report.type} ${report.target} reported`);
   return report;
+}
+
+// Pushes "A new report came in" to REPORTS_ADDRESS, at most once a minute
+// per process, so a burst of reports doesn't flood the phone.
+const PUSH_GAP = 60 * 1000;
+let lastPush = 0;
+export function notify(now = Date.now(), send = sendPushNotification) {
+  const address = env.REPORTS_ADDRESS;
+  if (!address || now - lastPush < PUSH_GAP) return false;
+  lastPush = now;
+  Promise.resolve(
+    send([address], {
+      title: "New report",
+      body: "A new report came in. Check reports.csv.",
+    }),
+  ).catch((err) => log(`reports: Push failed: ${err.message}`));
+  return true;
 }
