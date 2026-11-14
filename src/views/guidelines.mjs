@@ -25,6 +25,13 @@ export default async function (theme) {
       <h1 class="n2-doc-title">Guidelines</h1>
       <h2 id="community-rules" class="n2-doc-part">Community rules</h2>
       <p>These are the terms you agree to when using Kiwi News:</p>
+      <p>
+        <strong
+          >Kiwi News has zero tolerance for objectionable content and abusive
+          users.</strong
+        >${" "}Content that breaks these rules is removed, and accounts that
+        post it are banned.
+      </p>
       <ul>
         <li>
           No objectionable, abusive, hateful, sexual, violent or illegal
@@ -36,8 +43,9 @@ export default async function (theme) {
           Kiwi nodes; it can't be edited.
         </li>
         <li>
-          Report posts, comments and people by email. We review reports within
-          24 hours and remove violating content and accounts.
+          Report posts, comments and people in the iOS app's "…" menu or by
+          email. We review reports within 24 hours and remove violating content
+          and accounts.
         </li>
       </ul>
       <p class="n2-doc-note">

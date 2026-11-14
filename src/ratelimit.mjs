@@ -209,6 +209,13 @@ export const LOAD_BALANCER_RULES = [
       (req.method === "GET" && path === "/search" && !!req.query?.q),
   },
   {
+    // Reports of objectionable content from the iOS app (src/reports.mjs).
+    name: "reports",
+    limit: 20,
+    windowMs: 15 * MINUTE,
+    match: (req, path) => req.method === "POST" && path === "/api/v1/reports",
+  },
+  {
     // The comment box asks while someone types after "@" (src/mentions.mjs).
     name: "mentions",
     limit: 60,
