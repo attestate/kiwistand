@@ -16,7 +16,6 @@ import {
 import rlp from "@ethereumjs/rlp";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { decode } from "cbor-x";
-import { resolveIdentity } from "@attestate/delegator2";
 import canonicalize from "canonicalize";
 
 import log from "./logger.mjs";
@@ -35,8 +34,16 @@ import {
   restoreCommunity,
   insertMembership,
   restoreMembership,
+  insertDelegation,
+  restoreDelegation,
 } from "./cache.mjs";
 import { isMembership, TYPES as MEMBERSHIP_TYPES } from "./memberships.mjs";
+import {
+  verify as verifyDelegation,
+  resolve as attribute,
+} from "./delegations.mjs";
+import * as registry from "./chainstate/registry.mjs";
+import * as sequencer from "./sequencer.mjs";
 import { triggerNotification } from "./subscriptions.mjs";
 
 const maxReaders = 500;
@@ -364,6 +371,7 @@ async function atomicPut(trie, message, identity, delegations, signer) {
   if (
     message.type === "comment" ||
     message.type === "community" ||
+    message.type === "delegation" ||
     isMembership(message)
   ) {
     const existingLeaf = await trie.get(Buffer.from(index, "hex"));
@@ -399,10 +407,24 @@ async function atomicPut(trie, message, identity, delegations, signer) {
   if (isMembership(message)) {
     membership = insertMembership({ ...message, index, signer });
   }
+  // NOTE: Delegations, too: registry.mjs builds the delegations from the
+  // table.
+  let delegation;
+  if (message.type === "delegation") {
+    delegation = insertDelegation({ ...message, index });
+  }
 
   try {
     await trie.put(Buffer.from(index, "hex"), canonical);
     try {
+      sequencer.take(`0x${index.slice(-64)}`);
+      if (delegation) {
+        await registry.reattribute([utils.getAddress(message.signer)]);
+        purgeCache(
+          "https://news.kiwistand.com:8443/api/v1/delegations?cached=true",
+        ).catch((err) => log(`Failed to purge delegations: ${err}`));
+      }
+
       const cacheEnabled = false;
       const enhancer = enhance(delegations, cacheEnabled);
       const enhancedMessage = await enhancer(message);
@@ -491,6 +513,7 @@ async function atomicPut(trie, message, identity, delegations, signer) {
   } catch (err) {
     if (community) restoreCommunity(community);
     if (membership) restoreMembership(membership);
+    if (delegation) restoreDelegation(delegation);
     if (message.type !== "amplify") {
       throw new Error(
         `atomicPut: putting to trie failed with error "${err.toString()}" for message "${JSON.stringify(
@@ -571,8 +594,11 @@ async function _add({
   synching = false,
   metadb = upvotes,
 }) {
-  const address = verify(message);
-  const identity = resolveIdentity(delegations, address);
+  const address =
+    message.type === "delegation"
+      ? await verifyDelegation(message)
+      : verify(message);
+  const identity = attribute(delegations, address, toDigest(message).index);
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
   if (message.timestamp < minTimestampSecs) {
@@ -765,24 +791,23 @@ const ENHANCE_YIELD_INTERVAL = 10;
 // The piscina worker only recovers the signer. Resolving the identity is a
 // cheap lookup, so we do it here instead of copying the whole delegations
 // object to the worker for every node.
+//
+// NOTE: The identity isn't cached with the signer: it depends on the
+// delegations and the commits (src/delegations.mjs).
 function enhance(delegations, cacheEnabled) {
   return async (node) => {
-    const computeFunc = async () => {
-      const result = await piscina.run({
-        node,
-      });
-      return {
-        ...result,
-        identity: resolveIdentity(delegations, result.signer),
-      };
+    const computeFunc = async () => await piscina.run({ node });
+    const result = cacheEnabled
+      ? await cacheResultAsync(canonicalize(node), computeFunc)
+      : await computeFunc();
+    // NOTE: A delegation names its identity itself (src/delegations.mjs).
+    return {
+      ...result,
+      identity:
+        result.type === "delegation"
+          ? result.identity
+          : attribute(delegations, result.signer, result.index),
     };
-
-    if (cacheEnabled) {
-      const cacheKey = canonicalize(node);
-      return await cacheResultAsync(cacheKey, computeFunc);
-    }
-
-    return await computeFunc();
   };
 }
 
@@ -800,10 +825,16 @@ export async function leaves(
   // NOTE: `type` may be a list, e.g. ["join", "leave"], to read several types
   // in one walk of the trie.
   const types = Array.isArray(type) ? type : [type];
-  const known = ["amplify", "comment", "community", ...MEMBERSHIP_TYPES];
+  const known = [
+    "amplify",
+    "comment",
+    "community",
+    "delegation",
+    ...MEMBERSHIP_TYPES,
+  ];
   if (!types.length || !types.every((name) => known.includes(name))) {
     throw new Error(
-      "store leaves: Must be called with type 'amplify', 'comment', 'community', 'join' or 'leave'",
+      "store leaves: Must be called with type 'amplify', 'comment', 'community', 'join', 'leave' or 'delegation'",
     );
   }
   const nodes = [];

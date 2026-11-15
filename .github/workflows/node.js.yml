@@ -21,6 +21,9 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
+    # anvil, a local Ethereum chain with blobs, for
+    # test/commits_integration_test.mjs
+    - uses: foundry-rs/foundry-toolchain@v1
     # Run the offline tests (live-network tests are excluded)
     - run: npm run test:offline
       env:

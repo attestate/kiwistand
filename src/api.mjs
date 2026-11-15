@@ -17,6 +17,7 @@ import { SCHEMATA } from "./constants.mjs";
 // Dynamic import for sendToCluster - only loaded when not in reconcile mode
 let sendToCluster = null;
 import * as registry from "./chainstate/registry.mjs";
+import * as commits from "./commits.mjs";
 import * as newest from "./views/new.mjs";
 import * as best from "./views/best.mjs";
 // Dynamic import for generatePreview - only loaded when not in reconcile mode
@@ -436,6 +437,9 @@ export async function launch(trie, libp2p) {
     listMessages(trie, registry.delegations),
   );
   api.get("/delegations", listDelegations(registry.delegations));
+  api.get("/commits", (request, reply) =>
+    sendStatus(reply, 200, "OK", "The commits on Ethereum", commits.status()),
+  );
   api.post(
     "/messages",
     handleMessage(
