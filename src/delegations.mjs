@@ -195,6 +195,18 @@ export function resolve(delegations, signer, index) {
   return attribute(entries, timestampOf(index)) ?? address;
 }
 
+// The same delegations, but blind to the commits: every message counts by
+// its timestamp, as if none were late. Whether a node takes a message must not
+// depend on `late`. It depends on this node's RPC settings and on how far it
+// has read the commits, and a pending message becomes late an hour later. A
+// node that judged the message before that would then disagree with one that
+// judged it after, and their tries would never match again.
+export function timeless(delegations) {
+  const history = delegations[HISTORY];
+  if (!history) return delegations;
+  return { ...delegations, [HISTORY]: { ...history, late: () => false } };
+}
+
 // The signers that ever signed for `identity`.
 export function keysOf(delegations, identity) {
   const target = identity.toLowerCase();

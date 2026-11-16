@@ -41,6 +41,7 @@ import { isMembership, TYPES as MEMBERSHIP_TYPES } from "./memberships.mjs";
 import {
   verify as verifyDelegation,
   resolve as attribute,
+  timeless,
 } from "./delegations.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as sequencer from "./sequencer.mjs";
@@ -625,7 +626,10 @@ async function _add({
   }
 
   if (message.type === "amplify" && message.community !== undefined) {
-    const created = communityCreatedAt(message.community, delegations);
+    const created = communityCreatedAt(
+      message.community,
+      timeless(delegations),
+    );
     if (created === undefined) {
       throw new Error("add: Didn't find the community of the post");
     }
@@ -640,7 +644,10 @@ async function _add({
   // the order messages arrive in; the newest one per person wins when they're
   // read (cache.mjs).
   if (isMembership(message)) {
-    const created = communityCreatedAt(message.community, delegations);
+    const created = communityCreatedAt(
+      message.community,
+      timeless(delegations),
+    );
     if (created === undefined) {
       throw new Error("add: Didn't find the community to join or leave");
     }

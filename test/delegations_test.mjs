@@ -9,6 +9,7 @@ import {
   build,
   resolve,
   keysOf,
+  timeless,
 } from "../src/delegations.mjs";
 import { EIP712_DELEGATION } from "../src/constants.mjs";
 import enhance from "../src/workers/enhancer.mjs";
@@ -132,4 +133,15 @@ test("timestamps decide whom a signer's messages count for", (t) => {
     [signer]: carol,
   });
   t.deepEqual(keysOf(delegations, alice).sort(), [old, signer].sort());
+
+  // Blind to the commits, the backdated message counts by its timestamp, so
+  // whether a node takes a message can't depend on how far it read the
+  // commits. Everything else stays the same.
+  const blind = timeless(delegations);
+  t.is(resolve(blind, signer, stolen), alice);
+  t.is(resolve(blind, signer, at(T + 31, "ef")), signer);
+  t.is(resolve(delegations, signer, stolen), signer);
+  t.deepEqual(Object.fromEntries(Object.entries(blind)), {
+    [signer]: carol,
+  });
 });
