@@ -79,13 +79,21 @@ export function passesReaction(marker) {
   return !exists;
 }
 
-export async function cache(upvotes, comments) {
+// NOTE: The markers must be keyed like `_add` keys them: by the identity blind
+// to the commits. `identity` on the loaded messages counts late messages for
+// their signer, so with `delegations` it's resolved again here.
+export async function cache(upvotes, comments, delegations) {
   log("Caching upvote ids of upvotes, this can take a minute...");
+  const blind = delegations ? timeless(delegations) : undefined;
+  const keyOf = ({ identity, signer, index }) =>
+    blind && signer && index !== undefined
+      ? attribute(blind, signer, index)
+      : identity;
 
   // Process upvotes with periodic yields
   for (let i = 0; i < upvotes.length; i++) {
-    const { identity, href, type } = upvotes[i];
-    const marker = upvoteID(identity, href, type);
+    const { href, type } = upvotes[i];
+    const marker = upvoteID(keyOf(upvotes[i]), href, type);
     passes(marker);
 
     // Yield to the event loop every 100 items
@@ -96,9 +104,9 @@ export async function cache(upvotes, comments) {
 
   // Process comments with periodic yields
   for (let i = 0; i < comments.length; i++) {
-    const { href, title, identity } = comments[i];
+    const { href, title } = comments[i];
     if (isReactionComment(title)) {
-      const reactionMarker = upvoteID(identity, href, "reaction");
+      const reactionMarker = upvoteID(keyOf(comments[i]), href, "reaction");
       passesReaction(reactionMarker);
     }
 
@@ -599,7 +607,17 @@ async function _add({
     message.type === "delegation"
       ? await verifyDelegation(message)
       : verify(message);
-  const identity = attribute(delegations, address, toDigest(message).index);
+  // NOTE: The identity here only keys the duplicate checks of upvotes and
+  // reactions (atomicPut), so whether a node takes a message depends on it.
+  // It must be blind to the commits for the same reason as communities below:
+  // with `late`, a backdated upvote of a delegated key counts for the key on
+  // nodes that read the commits and for its identity on nodes that don't, so
+  // each group takes a different one of two upvotes and the tries never match.
+  const identity = attribute(
+    timeless(delegations),
+    address,
+    toDigest(message).index,
+  );
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
   if (message.timestamp < minTimestampSecs) {

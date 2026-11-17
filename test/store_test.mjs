@@ -14,6 +14,7 @@ import * as id from "../src/id.mjs";
 import config from "../src/config.mjs";
 import { EIP712_MESSAGE } from "../src/constants.mjs";
 import * as store from "../src/store.mjs";
+import { build } from "../src/delegations.mjs";
 
 test.serial("adding message to the store with trie.put error", async (t) => {
   env.DATA_DIR = "dbtestA";
@@ -245,6 +246,54 @@ test.serial("if a re-signed text post amplify is rejected", async (t) => {
   t.false(store.passes(store.upvoteID(address, href, type)));
 
   await rm("dbtestText", { recursive: true });
+});
+
+test.serial("whether an upvote is a duplicate doesn't depend on the commits", async (t) => {
+  store.upvotes.clear();
+  const identity = Wallet.createRandom();
+  const key = Wallet.createRandom();
+
+  env.DATA_DIR = "dbtestLate";
+  const trie = await store.create();
+  const libp2p = null;
+  // NOTE: This node read a commit that makes every message late, so it
+  // attributes the key's messages to the key itself (src/delegations.mjs). A
+  // node without commits attributes them to the identity.
+  const late = () => true;
+  const delegations = build({ [key.address]: identity.address }, [], late);
+
+  const title = "hello world";
+  const href = `https://example.com/${randomBytes(8).toString("hex")}`;
+  const type = "amplify";
+  const first = id.create(title, href, type, 1676559616);
+  const second = id.create(title, href, type, 1676559617);
+  await store.add(
+    trie,
+    await id.sign(identity, first, EIP712_MESSAGE),
+    libp2p,
+    delegations,
+  );
+  // The key upvotes the same link for the identity: a node without commits
+  // rejects it as a duplicate, and so must this one.
+  await t.throwsAsync(
+    store.add(
+      trie,
+      await id.sign(key, second, EIP712_MESSAGE),
+      libp2p,
+      delegations,
+    ),
+    { message: /duplicate/ },
+  );
+
+  // NOTE: Startup's markers are keyed the same way, though the loaded
+  // messages carry the identity `late` gives them.
+  store.upvotes.clear();
+  const index = `63ee4501${"ab".repeat(32)}`;
+  const loaded = { identity: key.address, signer: key.address, index };
+  await store.cache([{ ...loaded, href, type }], [], delegations);
+  t.false(store.passes(store.upvoteID(identity.address, href, type)));
+
+  await rm("dbtestLate", { recursive: true });
 });
 
 test("returns an empty array when the trie is empty", async (t) => {

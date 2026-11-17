@@ -367,7 +367,7 @@ if (cluster.isPrimary) {
 // Make upvote/reaction marker caching non-blocking to improve startup time
 setImmediate(() => {
   store
-    .cache(upvotes, comments)
+    .cache(upvotes, comments, delegations)
     .then(() => {
       log("store cached");
       // Clear arrays to free memory after caching is complete
