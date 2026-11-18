@@ -25,6 +25,29 @@ import { toDigest } from "./id.mjs";
 import { nameKey, normalizeId } from "./communities.mjs";
 import { resolve, keysOf } from "./delegations.mjs";
 
+// NOTE: Nodes reject a duplicate upvote or reaction by its signer, not by the
+// identity it counts for (src/store.mjs `_add`), as whether a node takes a
+// message mustn't depend on the delegations it has. Delegations are free, so
+// an identity could otherwise upvote a story once per key it delegated to.
+// So upvotes and reactions are counted and listed per identity, here when
+// they're read: an identity's earliest upvote of a story counts, and none if
+// it submitted the story (the submitter counts once, as the "+ 1"). Reading
+// it every time keeps it right when an identity is credited again
+// (reattribute, recredit). Every query that counts, lists or ranks upvotes or
+// reactions reads these instead of the tables.
+export const COUNTED_UPVOTES = `(SELECT * FROM upvotes cu WHERE
+  NOT EXISTS (SELECT 1 FROM submissions cs WHERE cs.href = cu.href
+    AND cs.identity = cu.identity COLLATE NOCASE)
+  AND NOT EXISTS (SELECT 1 FROM upvotes co WHERE co.href = cu.href
+    AND co.identity = cu.identity COLLATE NOCASE
+    AND (co.timestamp < cu.timestamp OR
+      (co.timestamp = cu.timestamp AND co.id < cu.id))))`;
+export const COUNTED_REACTIONS = `(SELECT * FROM reactions cr WHERE
+  NOT EXISTS (SELECT 1 FROM reactions co WHERE co.comment_id = cr.comment_id
+    AND co.identity = cr.identity COLLATE NOCASE
+    AND (co.timestamp < cr.timestamp OR
+      (co.timestamp = cr.timestamp AND co.id < cr.id))))`;
+
 const dbPath = join(process.env.CACHE_DIR, "database.db");
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
@@ -1197,9 +1220,9 @@ export function calculateKarmaFromDB(identity, endDate) {
     }
 
     const query = `
-      SELECT COUNT(DISTINCT s.href) + COUNT(u.rowid) AS total_karma
+      SELECT COUNT(DISTINCT s.href) + COUNT(u.id) AS total_karma
       FROM submissions s
-      LEFT JOIN upvotes u ON s.href = u.href ${dateFilterUpvotes}
+      LEFT JOIN ${COUNTED_UPVOTES} u ON s.href = u.href ${dateFilterUpvotes}
       WHERE s.identity = ? ${dateFilterSubmissions}
     `;
 
@@ -1231,7 +1254,7 @@ export function getKarmaRanking() {
       upvote_counts AS (
         SELECT s.identity, COUNT(*) as upvote_count
         FROM submissions s
-        JOIN upvotes u ON s.href = u.href
+        JOIN ${COUNTED_UPVOTES} u ON s.href = u.href
         GROUP BY s.identity
       )
       SELECT 
@@ -1278,7 +1301,7 @@ export function getBest(amount, from, orderBy, domain, startDatetime, scope) {
      FROM
        submissions s
      LEFT JOIN
-       upvotes u ON s.href = u.href
+       ${COUNTED_UPVOTES} u ON s.href = u.href
      WHERE
        (
          ? = '' OR
@@ -1344,12 +1367,12 @@ export function getSubmissions(identity, amount, from, orderBy, domains) {
   const query = `
      SELECT
        s.*,
-       (SELECT COUNT(*) FROM upvotes WHERE href = s.href) AS upvotesCount,
+       (SELECT COUNT(*) FROM ${COUNTED_UPVOTES} WHERE href = s.href) AS upvotesCount,
        GROUP_CONCAT(u.identity) AS upvoters
      FROM
        submissions s
      LEFT JOIN
-       upvotes u ON s.href = u.href
+       ${COUNTED_UPVOTES} u ON s.href = u.href
      WHERE
        s.identity = ?
      GROUP BY
@@ -1394,7 +1417,7 @@ export function getUpvotes(identity) {
 
   const query = `
      SELECT u.*
-     FROM upvotes u
+     FROM ${COUNTED_UPVOTES} u
      JOIN submissions s ON u.href = s.href
      WHERE s.identity = ? AND u.timestamp >= ? AND s.timestamp >= ?
    `;
@@ -1421,7 +1444,7 @@ export function getReactionsToComments(identity) {
         s.title AS submission_title,
         s.id AS submission_id
       FROM 
-        reactions r
+        ${COUNTED_REACTIONS} r
       JOIN 
         comments c ON r.comment_id = c.id
       JOIN
@@ -1625,7 +1648,7 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
     db
       .prepare(
         `
-     SELECT COUNT(*) AS count FROM upvotes WHERE href = ?
+     SELECT COUNT(*) AS count FROM ${COUNTED_UPVOTES} WHERE href = ?
    `,
       )
       .get(submission.href).count + 1;
@@ -1633,7 +1656,7 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
   let upvoters = db
     .prepare(
       `
-       SELECT identity, timestamp FROM upvotes WHERE href = ?
+       SELECT identity, timestamp FROM ${COUNTED_UPVOTES} WHERE href = ?
      `,
     )
     .all(submission.href);
@@ -1686,7 +1709,7 @@ export function getSubmission(index, href, identityFilter, hrefs, bannedAddresse
         .prepare(
           `
           SELECT title as emoji, COUNT(*) as count, GROUP_CONCAT(identity) as reactors
-          FROM reactions 
+          FROM ${COUNTED_REACTIONS}
           WHERE comment_id = ?
           GROUP BY title
           ORDER BY count DESC, timestamp ASC
@@ -1742,7 +1765,7 @@ export function listSitemapEntries(month, bannedAddresses = []) {
   const rows = db.prepare(`
     SELECT
       s.id, s.title, s.href, s.identity, s.timestamp,
-      (SELECT COUNT(*) FROM upvotes u WHERE u.href = s.href) + 1 AS upvotes,
+      (SELECT COUNT(*) FROM ${COUNTED_UPVOTES} u WHERE u.href = s.href) + 1 AS upvotes,
       (SELECT COUNT(*) FROM comments c
         WHERE c.submission_id = s.id
           AND lower(c.identity) NOT IN (SELECT value FROM json_each(?))
@@ -1776,7 +1799,7 @@ export function getWeekStories(start, end, amount) {
       `SELECT * FROM (
          SELECT
            s.*,
-           (SELECT COUNT(*) FROM upvotes u WHERE u.href = s.href) + 1 AS upvotes,
+           (SELECT COUNT(*) FROM ${COUNTED_UPVOTES} u WHERE u.href = s.href) + 1 AS upvotes,
            (SELECT COUNT(*) FROM comments c WHERE c.submission_id = s.id) AS comments,
            (SELECT COUNT(DISTINCT f.hash) FROM fingerprints f WHERE f.url = s.href) AS clicks
          FROM submissions s
@@ -1860,7 +1883,7 @@ export function listNewest(limit = 30, lookbackUnixTime, scope) {
       db
         .prepare(
           `
-       SELECT COUNT(*) AS count FROM upvotes
+       SELECT COUNT(*) AS count FROM ${COUNTED_UPVOTES}
        WHERE href = ?
      `,
         )
@@ -1871,7 +1894,7 @@ export function listNewest(limit = 30, lookbackUnixTime, scope) {
       ...db
         .prepare(
           `
-       SELECT identity FROM upvotes
+       SELECT identity FROM ${COUNTED_UPVOTES}
        WHERE href = ?
      `,
         )

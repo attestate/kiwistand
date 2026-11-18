@@ -24,6 +24,14 @@ export async function triggerUpvoteNotification(message) {
 
     // Don't notify if the upvoter is the author
     if (message.identity === submission.identity) return;
+    // NOTE: An identity's upvotes of a story count once (cache.mjs
+    // COUNTED_UPVOTES), so only its first one notifies: the upvoters list
+    // keeps its earliest.
+    const upvoter = message.identity.toLowerCase();
+    const counted = submission.upvoters.find(
+      ({ identity }) => identity.toLowerCase() === upvoter,
+    );
+    if (!counted || counted.timestamp !== message.timestamp) return;
 
     // Banned users can neither send nor receive notifications
     let bannedAddresses = [];

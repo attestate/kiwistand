@@ -613,9 +613,9 @@ async function _add({
   // first rejects I's upvote as a duplicate forever, and the tries never match
   // again. A node that restarted would also judge differently, as `cache`
   // rebuilds the markers with every delegation. The signer recovers from the
-  // message alone. The cost: an identity can upvote a link once per key it
-  // signs with (src/cache.mjs counts upvote rows, not distinct identities),
-  // but any address can sign upvotes without a delegation anyways.
+  // message alone. So an identity can upvote a link once per key it signs
+  // with, and as delegations are free, src/cache.mjs counts an identity's
+  // upvotes and reactions once when they're read (COUNTED_UPVOTES).
   const key = address;
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
