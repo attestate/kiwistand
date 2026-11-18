@@ -224,9 +224,11 @@ test.before(() => {
       `INSERT INTO submissions (id, href, title, timestamp, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
     ).run(sid(id), href, `Title ${id}`, timestamp, identity, identity);
     for (let i = 0; i < upvotes; i++) {
+      // NOTE: An identity's upvotes of a story count once, so each is another's.
+      const upvoter = `0x${String(i).padStart(40, "a")}`;
       db.prepare(
         `INSERT INTO upvotes (id, href, timestamp, title, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
-      ).run(`up-${id}-${i}`, href, timestamp + 60, `Title ${id}`, ALICE, ALICE);
+      ).run(`up-${id}-${i}`, href, timestamp + 60, `Title ${id}`, upvoter, upvoter);
     }
     for (let i = 0; i < comments; i++) {
       // The last comment arrives three weeks later.

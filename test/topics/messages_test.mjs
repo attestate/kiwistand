@@ -113,6 +113,9 @@ test.serial("adding valid message to trie", async (t) => {
 test.serial(
   "adding valid message to trie with the signer being a delegated address",
   async (t) => {
+    // NOTE: The previous test upvoted the same link with the same signer, and
+    // markers are keyed by the signer (src/store.mjs).
+    store.upvotes.clear();
     const address = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
     const privateKey =
       "0xad54bdeade5537fb0a553190159783e45d02d316a992db05cbed606d3ca36b39";

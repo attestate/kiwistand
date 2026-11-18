@@ -243,9 +243,11 @@ test.before(() => {
       `INSERT INTO submissions (id, href, title, timestamp, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
     ).run(sid(id), href, `Story ${id}`, timestamp, identity, identity);
     for (let u = 0; u < upvotes; u++) {
+      // NOTE: An identity's upvotes of a story count once, so each is another's.
+      const upvoter = `0x${String(u).padStart(40, "a")}`;
       db.prepare(
         `INSERT INTO upvotes (id, href, timestamp, title, signer, identity) VALUES (?, ?, ?, ?, ?, ?)`,
-      ).run(`ixup-${id}-${u}`, href, timestamp + 60, `Story ${id}`, ALICE, ALICE);
+      ).run(`ixup-${id}-${u}`, href, timestamp + 60, `Story ${id}`, upvoter, upvoter);
     }
     commenters.forEach((commenter, c) => {
       db.prepare(
