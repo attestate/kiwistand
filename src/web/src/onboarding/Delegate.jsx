@@ -12,20 +12,18 @@ import { Icon, Tile, Heading, Skip, Status, ErrorText } from "./ui.jsx";
 export default function DelegateStep({ desk, onIndexed, onSkip }) {
   const options = useMemo(() => ({ onIndexed }), [onIndexed]);
   const {
-    chainId,
     key,
     wallet,
     isPersistent,
     isLoading,
-    isError,
     isSuccess,
-    payload,
+    ready,
     delegate,
     delegateError,
   } = useDelegation(options);
 
-  // NOTE: One button for both cases: delegate() switches the wallet to
-  // Optimism first if it's on another chain, then sends the transaction.
+  // NOTE: One button: delegate() asks the wallet for one signature, on any
+  // chain, and sends it to the node.
   let action;
   if (!isPersistent) {
     action = (
@@ -34,22 +32,20 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
   } else if (key && wallet) {
     action = (
       <Status
-        title="Adding your key on Optimism…"
-        hint="This takes 1 to 2 minutes. Keep this open; we continue on our own."
-        chain={desk ? "Optimism" : ""}
+        title="Adding your key…"
+        hint="This takes a few seconds. Keep this open; we continue on our own."
       />
     );
   } else if (isLoading || isSuccess) {
     action = desk ? (
       <Status
         title="Waiting for wallet confirmation…"
-        hint="Open your wallet app to approve, then return here."
-        chain="Optimism"
+        hint="Open your wallet app to sign, then return here."
       />
     ) : (
       <Status
         title="Confirm in your wallet"
-        hint="Approve the transaction in your wallet app, then come back."
+        hint="Sign the message in your wallet app, then come back."
       />
     );
   } else {
@@ -59,26 +55,13 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
           <button
             type="button"
             className="kob-btn"
-            disabled={!payload}
+            disabled={!ready}
             onClick={delegate}
           >
             Approve in wallet
           </button>
         </div>
-        {chainId !== 10 && !delegateError && (
-          <p className="kob-helper">Your wallet switches to Optimism first.</p>
-        )}
-        {delegateError ? (
-          <ErrorText>{delegateError}</ErrorText>
-        ) : (
-          isError &&
-          chainId === 10 && (
-            <ErrorText>
-              Couldn’t prepare the transaction. You need a little ETH on
-              Optimism for the network fee.
-            </ErrorText>
-          )
-        )}
+        <ErrorText>{delegateError}</ErrorText>
       </>
     );
   }
@@ -90,8 +73,8 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
         <Heading title="Enable one-tap actions">
           <p>
             Like and comment without confirming every action in your wallet.
-            Approve once on Optimism. Only network fees apply; no funds are
-            moved.
+            Approve once with a signature. It’s free: no transaction, no
+            funds are moved.
           </p>
         </Heading>
       ) : (
@@ -109,8 +92,8 @@ export default function DelegateStep({ desk, onIndexed, onSkip }) {
             wallet, Kiwi News creates a key in this browser.
           </p>
           <p>
-            Your wallet approves it once with a free-of-value transaction on
-            Optimism (only network fees apply).
+            Your wallet approves it once with a signature. It’s free: no
+            transaction, no network fees.
           </p>
           <p>No funds are moved.</p>
         </Heading>

@@ -5,6 +5,110 @@
 - We are versioning according to [semver.org](https://semver.org)
 - We are currently in the ["Initial development phase"](https://semver.org/#spec-item-4)
 
+## 0.18.0
+
+### BREAKING CHANGE: Commits on Ethereum, delegations on the protocol (protocol 15.0.0)
+
+Ethereum mainnet now witnesses the messages, which makes them final: once an
+hour, the sequencer commits the IDs of the messages it took to an inbox
+contract, and anyone can force messages in. The protocol's rules still go by
+timestamps. Delegations are protocol messages, so signing up needs no
+transaction and no ETH. See "Commits on Ethereum" in the protocol docs and
+the Delegation page.
+
+#### Breaking Changes
+
+- **Protocol versions bumped**:
+  - Pubsub topics (roots/messages): `14.0.0 → 15.0.0`
+  - Protocols (leaves/levels): `17.0.0 → 18.0.0`
+- **New message type `delegation`**: an identity (the user's wallet, which
+  owns profile and karma) lets a signer (the key on the device that signs
+  stories, upvotes and comments) sign for it. Signed by the identity as
+  `Delegation(string type,address signer,bytes authorization,bool authorize,uint256 timestamp)`,
+  with `identity` (who signed it, not signed itself) and `authorization`, the
+  signer's signature of `Authorization(address identity,bool authorize)` for
+  the identity in the protocol's domain. A revocation has `authorize: false`
+  and `authorization: "0x"`. Smart wallets' signatures (ERC-1271, ERC-6492)
+  are checked over `SMART_WALLET_RPC_URL`; EOAs need no RPC.
+- **Timestamps decide whom a signer's message counts for**: the identity
+  whose latest delegation is dated before it, or the signer itself after a
+  revocation dated before it (signed by that identity). Messages a signer
+  signed before its first delegation count for that delegation's identity.
+  Nothing is deleted.
+- **Finality**: on a node with `ETHEREUM_RPC_URL`, a message dated t that
+  wasn't witnessed in time counts for its signer, never for an identity.
+  Witnessed in time means listed by the first sequencer commit after
+  t + 1 hour or an earlier one, or carried by an `include()` with a block
+  time between t (less `MAX_TIMESTAMP_DELTA_SECS`) and t + 1 hour. Until
+  such a commit exists, the message is pending and counts by its timestamp.
+  Messages dated up to the genesis are final.
+
+#### Commits
+
+- The inbox (`contracts/Inbox.sol`) has an owner (EIP-173, with
+  `setSequencer`) and a sequencer, and stores nothing else. Only the
+  sequencer can call `commit(uint8 version, bytes32 root, bytes32[] ids)`;
+  anyone can call `include(bytes[] messages)` with the signed messages in
+  calldata. Both emit `Commit(address sender, bool sequencer, bytes32 root,
+  uint256 n)`, and the order of those events is the commits' order.
+- The sequencer (`SEQUENCER_PRIVATE_KEY`) notes every message it takes,
+  also from `include()`s, and sends one type-3 transaction an hour, unless
+  nothing is new or the base fee is above 20 gwei. `ids` are the messages
+  since its last commit, `root` the trie root over every valid message
+  listed so far; the blob holds the messages (CBOR list, Brotli).
+- The genesis, the sequencer's first commit, covers every message up to its
+  block, and its one ID is the delegations snapshot's hash.
+  `scripts/commit.mjs` sends it and shows any commit with `--dry-run`;
+  `scripts/deploy-inbox.mjs` takes the owner and the sequencer.
+- Every node with `ETHEREUM_RPC_URL` reads the commits every ten minutes,
+  takes the valid messages of `include()`s and gossips them, and checks that
+  it holds every ID the sequencer listed and that each root matches its
+  own. A failed check is only reported, on `GET /api/v1/commits`.
+
+#### Delegations
+
+- `src/chainstate/delegations.json`, the snapshot of OP Mainnet's
+  delegations at the cutover (`scripts/delegations-snapshot.mjs`), replaces
+  crawling OP Mainnet. Until it's in the repo, nodes crawl as before.
+- New `delegations` table (one row per delegation message), filled again
+  from the trie at startup; `commits` and `listings` tables for the commits.
+  A signer's stories, upvotes and comments are credited again when it's
+  delegated or revoked, and when a commit decides that messages weren't
+  witnessed in time.
+
+#### API
+
+- `GET /api/v1/commits`: the range of commits the node verified, and the
+  first that failed, and why.
+- `POST /api/v1/list` and `POST /api/v1/messages` take `type: "delegation"`.
+  In the list, a delegation's `signer` and `identity` are its own fields.
+- `GET /api/v1/delegations` is the delegations as of now (a revoked signer
+  isn't in it), and has a new delegation as soon as the node took it.
+
+#### Website
+
+- "Enable one-tap actions" asks the wallet for one signature of a
+  `delegation` message and sends it to the node: no network switch to OP
+  Mainnet, no transaction, no ETH. The new signer is in the delegations
+  within seconds. The iOS app follows separately.
+
+#### Configuration
+
+`ETHEREUM_RPC_URL`, `INBOX_ADDRESS`, `INBOX_BLOCK`, `SEQUENCER_PRIVATE_KEY`
+and `SMART_WALLET_RPC_URL` in `.env-copy`.
+
+#### Open questions
+
+- Should every node check smart wallets' delegations, or trust the sequencer
+  once a commit lists them?
+
+#### Migration
+
+All nodes must upgrade together. A 15.0.0 node will not sync with a 14.0.0
+node. Until the website and the apps sign delegation messages, sign-ups on OP
+Mainnet keep working as long as nodes crawl it, i.e. until the snapshot is
+in the repo.
+
 ## 0.17.0
 
 ### BREAKING CHANGE: Community membership (protocol 14.0.0)

@@ -2,17 +2,50 @@
 import { resolve } from "path";
 import { createHash } from "crypto";
 import canonicalize from "canonicalize"; // Added import
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 
 import { database } from "@attestate/crawler";
 import { organize } from "@attestate/delegator2";
+import { keccak256 } from "viem";
 
 import log from "../logger.mjs";
 import { purgeCache } from "../cloudflarePurge.mjs";
+import * as cache from "../cache.mjs";
+import { late } from "../commits.mjs";
+import { build, resolve as attribute } from "../delegations.mjs";
 
 const baseURL = `https://news.kiwistand.com:8443`;
+// NOTE: The delegations of OP Mainnet (Delegator2 and Delegator3) as a node
+// had them at the cutover to the protocol's delegations (src/delegations.mjs),
+// made with scripts/delegations-snapshot.mjs. The genesis commits its hash.
+// Until the file is in the repo, the node crawls OP Mainnet as before.
+export const SNAPSHOT_PATH = resolve(
+  process.cwd(),
+  "src/chainstate/delegations.json",
+);
+// Signers to identities before the protocol's delegations: the snapshot's,
+// or those crawled from OP Mainnet.
+let base = {};
 let cachedDelegations = {};
+let version = null;
 let lastDelegationsChecksum = null; // Added checksum state
+
+// The snapshot ({delegations, hash}), or null without the file.
+let loaded;
+export function snapshot() {
+  if (loaded !== undefined) return loaded;
+  loaded = null;
+  if (existsSync(SNAPSHOT_PATH)) {
+    const content = readFileSync(SNAPSHOT_PATH);
+    loaded = { delegations: JSON.parse(content), hash: keccak256(content) };
+  }
+  return loaded;
+}
+
+function rebuild() {
+  version = cache.delegationsVersion();
+  cachedDelegations = build(base, cache.listDelegations(), late);
+}
 
 // Simple initialization function
 export async function initialize() {
@@ -42,10 +75,36 @@ function calculateCanonicalChecksum(data) {
   return hash.digest("hex");
 }
 
+// Credits the messages of `signers` again after their delegations changed.
+export async function reattribute(signers) {
+  const all = await delegations();
+  for (const signer of signers) {
+    cache.reattribute(signer, (signer, index) => attribute(all, signer, index));
+  }
+}
+
+// Credits the messages dated from `from` to before `to` again, after commits
+// decided whether they were witnessed in time (src/commits.mjs).
+export async function recredit(from, to) {
+  const all = await delegations();
+  cache.recredit(from, to, (signer, index) => attribute(all, signer, index));
+}
+
+// The delegations: signers to identities now, and every signer's delegations
+// by timestamp for delegations.resolve. Built again when a delegation came
+// in.
 export async function delegations() {
+  if (cache.delegationsVersion() !== version) rebuild();
   return cachedDelegations;
 }
 export async function refreshDelegations() {
+  if (snapshot()) {
+    base = snapshot().delegations;
+    log(`Loaded ${Object.keys(base).length} delegations from the snapshot`);
+    rebuild();
+    return;
+  }
+
   // DELEGATION SYSTEM ARCHITECTURE (as of Aug 2024):
   // 
   // We use a dual-contract delegation system on Optimism:
@@ -146,10 +205,11 @@ export async function refreshDelegations() {
   const delegator3Delegations = organize(delegator3Logs);   // Uses v0.6.0 with new contract
   
   // Merge historical with new Delegator3 delegations
-  cachedDelegations = {
+  base = {
     ...historicalDelegations,
     ...delegator3Delegations
   };
+  rebuild();
   
   lastDelegationsChecksum = currentChecksum;
   await db.close();
