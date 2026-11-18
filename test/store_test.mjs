@@ -248,52 +248,109 @@ test.serial("if a re-signed text post amplify is rejected", async (t) => {
   await rm("dbtestText", { recursive: true });
 });
 
-test.serial("whether an upvote is a duplicate doesn't depend on the commits", async (t) => {
+// NOTE: Delegation messages are free, synced in any order and count back to
+// the signer's first message. An attacker with an identity and a key signs an
+// upvote of a link by each and a delegation of the key to the identity. Node
+// A gets the upvotes first, node B the delegation first. Both must take the
+// same messages, or their tries never match again.
+test.serial("whether an upvote is a duplicate doesn't depend on the delegations", async (t) => {
+  const identity = Wallet.createRandom();
+  const key = Wallet.createRandom();
+  const libp2p = null;
+  const href = `https://example.com/${randomBytes(8).toString("hex")}`;
+  const type = "amplify";
+  const byKey = await id.sign(
+    key,
+    id.create("hello world", href, type, 1676559616),
+    EIP712_MESSAGE,
+  );
+  const byIdentity = await id.sign(
+    identity,
+    id.create("hello world", href, type, 1676559617),
+    EIP712_MESSAGE,
+  );
+  const delegation = {
+    index: `63ee4600${"cd".repeat(32)}`,
+    signer: key.address,
+    identity: identity.address,
+    authorize: true,
+  };
+  const none = build({}, []);
+  // NOTE: Not late, and so the delegation counts back to the key's upvote.
+  const known = build({}, [delegation]);
+
+  const taken = async (dir, delegations) => {
+    // NOTE: The markers are the process's, so each node starts from none.
+    store.upvotes.clear();
+    env.DATA_DIR = dir;
+    const trie = await store.create();
+    const results = [];
+    for (const message of [byKey, byIdentity]) {
+      try {
+        await store.add(trie, message, libp2p, delegations);
+        results.push(true);
+      } catch (err) {
+        results.push(false);
+      }
+    }
+    const root = trie.root().toString("hex");
+    await rm(dir, { recursive: true });
+    return { results, root };
+  };
+
+  const a = await taken("dbtestOrderA", none);
+  const b = await taken("dbtestOrderB", known);
+  t.deepEqual(a.results, [true, true]);
+  t.deepEqual(b.results, a.results);
+  t.is(b.root, a.root);
+
+  // NOTE: The delegations are also known at startup, so markers are keyed
+  // like at runtime: by the signer, not by the identity a message counts for.
+  store.upvotes.clear();
+  store.reactions.clear();
+  const comment = `kiwi:0x${"ab".repeat(32)}`;
+  await store.cache(
+    [
+      { identity: identity.address, signer: key.address, href, type },
+      { identity: identity.address, signer: identity.address, href, type },
+    ],
+    [{ identity: identity.address, signer: key.address, href: comment, title: "🥝" }],
+  );
+  t.false(store.passes(store.upvoteID(key.address, href, type)));
+  t.false(store.passes(store.upvoteID(identity.address, href, type)));
+  t.false(store.passesReaction(store.upvoteID(key.address, comment, "reaction")));
+  t.true(store.passesReaction(store.upvoteID(identity.address, comment, "reaction")));
+  store.upvotes.clear();
+  store.reactions.clear();
+});
+
+test.serial("an upvote's duplicate is the same signer's", async (t) => {
   store.upvotes.clear();
   const identity = Wallet.createRandom();
   const key = Wallet.createRandom();
-
-  env.DATA_DIR = "dbtestLate";
+  env.DATA_DIR = "dbtestSigner";
   const trie = await store.create();
   const libp2p = null;
-  // NOTE: This node read a commit that makes every message late, so it
-  // attributes the key's messages to the key itself (src/delegations.mjs). A
-  // node without commits attributes them to the identity.
-  const late = () => true;
-  const delegations = build({ [key.address]: identity.address }, [], late);
-
-  const title = "hello world";
+  const delegations = build({ [key.address]: identity.address }, []);
   const href = `https://example.com/${randomBytes(8).toString("hex")}`;
   const type = "amplify";
-  const first = id.create(title, href, type, 1676559616);
-  const second = id.create(title, href, type, 1676559617);
   await store.add(
     trie,
-    await id.sign(identity, first, EIP712_MESSAGE),
+    await id.sign(key, id.create("a", href, type, 1676559616), EIP712_MESSAGE),
     libp2p,
     delegations,
   );
-  // The key upvotes the same link for the identity: a node without commits
-  // rejects it as a duplicate, and so must this one.
   await t.throwsAsync(
     store.add(
       trie,
-      await id.sign(key, second, EIP712_MESSAGE),
+      await id.sign(key, id.create("a", href, type, 1676559618), EIP712_MESSAGE),
       libp2p,
       delegations,
     ),
     { message: /duplicate/ },
   );
-
-  // NOTE: Startup's markers are keyed the same way, though the loaded
-  // messages carry the identity `late` gives them.
   store.upvotes.clear();
-  const index = `63ee4501${"ab".repeat(32)}`;
-  const loaded = { identity: key.address, signer: key.address, index };
-  await store.cache([{ ...loaded, href, type }], [], delegations);
-  t.false(store.passes(store.upvoteID(identity.address, href, type)));
-
-  await rm("dbtestLate", { recursive: true });
+  await rm("dbtestSigner", { recursive: true });
 });
 
 test("returns an empty array when the trie is empty", async (t) => {
@@ -1093,7 +1150,9 @@ test("try to add invalidly signed message to store", async (t) => {
   );
 });
 
-test("attempting to upvote twice, once with custody and delegate address", async (t) => {
+// NOTE: Markers are keyed by the signer, so an identity can upvote a link once
+// with its wallet and once with each key (see `_add` in src/store.mjs).
+test("upvoting once with custody and once with delegate address", async (t) => {
   store.upvotes.clear();
   const address0 = "0x0f6A79A579658E401E0B81c6dde1F2cd51d97176";
   const privateKey0 =
@@ -1134,7 +1193,7 @@ test("attempting to upvote twice, once with custody and delegate address", async
     libp2p,
     delegations,
   );
-  await t.throwsAsync(
+  await t.notThrowsAsync(
     async () =>
       await store.add(
         trie,
@@ -1143,6 +1202,7 @@ test("attempting to upvote twice, once with custody and delegate address", async
         delegations,
       ),
   );
+  store.upvotes.clear();
 });
 
 test("adding message from too far into the future", async (t) => {
@@ -1173,29 +1233,14 @@ test("adding message from too far into the future", async (t) => {
       },
     },
   };
-  const allowlist = new Set([address]);
   const delegations = {};
-  const accounts = {
-    [address]: {
-      balance: 1,
-      tokens: {
-        5: [
-          {
-            start: 123,
-          },
-        ],
-      },
-    },
-  };
   await t.throwsAsync(
     async () =>
       await store.add(
         trie,
         signedMessage,
         libp2p,
-        allowlist,
         delegations,
-        accounts,
       ),
   );
 });

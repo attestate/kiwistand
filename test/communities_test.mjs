@@ -14,6 +14,7 @@ import * as store from "../src/store.mjs";
 import * as communities from "../src/communities.mjs";
 import * as cache from "../src/cache.mjs";
 import { put, serialize } from "../src/sync.mjs";
+import { build } from "../src/delegations.mjs";
 import { listMessages, handleMessage } from "../src/api.mjs";
 import {
   PROTOCOL,
@@ -307,9 +308,11 @@ test.serial("a community signed with a delegated key belongs to the account", as
   );
   t.is(community.owner, account.address);
   t.truthy(await add(trie, await signPost(device, `${account.address}/ai`, T + 1), delegations));
-  await t.throwsAsync(async () => add(trie, await signPost(device, `${device.address}/ai`, T + 2), delegations), {
-    message: "add: Didn't find the community of the post",
-  });
+  // NOTE: Nodes take a post to the key's own name, too, as whether they take
+  // it can't depend on the delegations they have (cache.communityOpenedAt).
+  // The community isn't shown under that name.
+  t.truthy(await add(trie, await signPost(device, `${device.address}/ai`, T + 2), delegations));
+  t.is(cache.getCommunity(`${device.address}/ai`, delegations), null);
 });
 
 test.serial("a community stored before its delegation was known belongs to the account once it is", async (t) => {
@@ -328,10 +331,9 @@ test.serial("a community stored before its delegation was known belongs to the a
   t.is(cache.getCommunity(`${account.address}/ai`, after).owner, account.address);
   t.is(cache.getCommunity(`${device.address}/ai`, after), null);
   t.truthy(await add(trie, await signPost(device, `${account.address}/ai`, T + 1), after));
-  await t.throwsAsync(
-    async () => add(trie, await signPost(device, `${device.address}/ai`, T + 2), after),
-    { message: "add: Didn't find the community of the post" },
-  );
+  // NOTE: As on a node that never learned the delegation, a post to the key's
+  // own name is taken (cache.communityOpenedAt).
+  t.truthy(await add(trie, await signPost(device, `${device.address}/ai`, T + 2), after));
 });
 
 test("two nodes that stored a community with different delegations judge posts alike", (t) => {
@@ -363,6 +365,48 @@ test("two nodes that stored a community with different delegations judge posts a
   }
   t.is(cache.communityCreatedAt(`${account}/ai`, { [device]: account }, a), T);
   t.is(cache.communityCreatedAt(`${device}/ai`, { [device]: account }, a), undefined);
+});
+
+// NOTE: A delegation can be backdated and synced in any order, so a node that
+// got a revocation dated before the community was created hands the
+// community to the key, while one that didn't still has it under the
+// account. Whether a node takes a post or join must not depend on that.
+test("which delegations a node has doesn't decide whether it takes a post", (t) => {
+  const account = Wallet.createRandom().address;
+  const device = Wallet.createRandom().address;
+  const node = new Database(":memory:");
+  cache.initializeCommunities(node);
+  cache.insertCommunity({ ...draft(), index: "ee".repeat(36), signer: device }, node);
+  const at = (timestamp, byte) =>
+    `${timestamp.toString(16).padStart(8, "0")}${byte.repeat(32)}`;
+  const delegation = {
+    index: at(T - 10, "01"),
+    signer: device,
+    identity: account,
+    authorize: true,
+  };
+  const revocation = {
+    index: at(T - 5, "02"),
+    signer: device,
+    identity: account,
+    authorize: false,
+  };
+  const a = build({}, [delegation]);
+  const b = build({}, [delegation, revocation]);
+  const id_ = `${account}/ai`;
+
+  // The community as it's shown differs...
+  t.is(cache.communityCreatedAt(id_, a, node), T);
+  t.is(cache.communityCreatedAt(id_, b, node), undefined);
+  // ...but both nodes judge posts and joins alike.
+  t.is(cache.communityOpenedAt(id_, a, node), T);
+  t.is(cache.communityOpenedAt(id_, b, node), T);
+  // Without any delegation, the node rejects it for now, until it caught up.
+  t.is(cache.communityOpenedAt(id_, build({}, []), node), undefined);
+  t.is(cache.communityOpenedAt(`${device}/ai`, build({}, []), node), T);
+  // A delegation in the plain form (as the tests pass them) counts, too.
+  t.is(cache.communityOpenedAt(id_, { [device]: account }, node), T);
+  t.is(cache.communityOpenedAt(`${account}/other`, a, node), undefined);
 });
 
 test("versions signed by an account and its device key make one community", (t) => {

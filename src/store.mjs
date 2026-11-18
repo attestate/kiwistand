@@ -29,7 +29,7 @@ import { purgeCache, invalidateActivityCaches } from "./cloudflarePurge.mjs";
 import {
   insertMessage,
   isReactionComment,
-  communityCreatedAt,
+  communityOpenedAt,
   insertCommunity,
   restoreCommunity,
   insertMembership,
@@ -41,7 +41,6 @@ import { isMembership, TYPES as MEMBERSHIP_TYPES } from "./memberships.mjs";
 import {
   verify as verifyDelegation,
   resolve as attribute,
-  timeless,
 } from "./delegations.mjs";
 import * as registry from "./chainstate/registry.mjs";
 import * as sequencer from "./sequencer.mjs";
@@ -79,16 +78,11 @@ export function passesReaction(marker) {
   return !exists;
 }
 
-// NOTE: The markers must be keyed like `_add` keys them: by the identity blind
-// to the commits. `identity` on the loaded messages counts late messages for
-// their signer, so with `delegations` it's resolved again here.
-export async function cache(upvotes, comments, delegations) {
+// NOTE: The markers must be keyed like `_add` keys them: by the signer that
+// recovers from the message, not by its identity (see `_add`).
+export async function cache(upvotes, comments) {
   log("Caching upvote ids of upvotes, this can take a minute...");
-  const blind = delegations ? timeless(delegations) : undefined;
-  const keyOf = ({ identity, signer, index }) =>
-    blind && signer && index !== undefined
-      ? attribute(blind, signer, index)
-      : identity;
+  const keyOf = ({ identity, signer }) => signer ?? identity;
 
   // Process upvotes with periodic yields
   for (let i = 0; i < upvotes.length; i++) {
@@ -340,11 +334,12 @@ export function upvoteID(identity, link, type) {
 }
 
 let messagesAdded = 0;
-async function atomicPut(trie, message, identity, delegations, signer) {
+// NOTE: `key` keys the duplicate checks of upvotes and reactions (see `_add`).
+async function atomicPut(trie, message, key, delegations, signer) {
   // NOTE: Only amplifies have a marker; a community has no href.
   const marker =
     message.type === "amplify"
-      ? upvoteID(identity, message.href, message.type)
+      ? upvoteID(key, message.href, message.type)
       : null;
   const { canonical, index } = toDigest(message);
   log(
@@ -392,7 +387,7 @@ async function atomicPut(trie, message, identity, delegations, signer) {
   }
   if (message.type === "comment") {
     if (isReactionComment(message.title)) {
-      const reactionMarker = upvoteID(identity, message.href, "reaction");
+      const reactionMarker = upvoteID(key, message.href, "reaction");
       const legit = await passesReaction(reactionMarker);
       if (!legit) {
         const err = `Reaction with marker "${reactionMarker}" doesn't pass legitimacy criteria (duplicate). It was probably submitted and accepted before.`;
@@ -607,17 +602,21 @@ async function _add({
     message.type === "delegation"
       ? await verifyDelegation(message)
       : verify(message);
-  // NOTE: The identity here only keys the duplicate checks of upvotes and
-  // reactions (atomicPut), so whether a node takes a message depends on it.
-  // It must be blind to the commits for the same reason as communities below:
-  // with `late`, a backdated upvote of a delegated key counts for the key on
-  // nodes that read the commits and for its identity on nodes that don't, so
-  // each group takes a different one of two upvotes and the tries never match.
-  const identity = attribute(
-    timeless(delegations),
-    address,
-    toDigest(message).index,
-  );
+  // NOTE: The duplicate checks of upvotes and reactions (atomicPut) are keyed
+  // by the signer, not by the identity it signs for. Whether a node takes a
+  // message must only depend on messages every node judges the same way, and
+  // the identity depends on which delegations a node holds: they're free,
+  // synced in any order, can be backdated, and a delegation counts back to the
+  // signer's first message. An attacker with an identity I and a key S could
+  // sign an upvote of a link by S, one by I and a delegation S to I. A node
+  // that got them in this order takes all three, one that got the delegation
+  // first rejects I's upvote as a duplicate forever, and the tries never match
+  // again. A node that restarted would also judge differently, as `cache`
+  // rebuilds the markers with every delegation. The signer recovers from the
+  // message alone. The cost: an identity can upvote a link once per key it
+  // signs with (src/cache.mjs counts upvote rows, not distinct identities),
+  // but any address can sign upvotes without a delegation anyways.
+  const key = address;
 
   const minTimestampSecs = parseInt(env.MIN_TIMESTAMP_SECS, 10);
   if (message.timestamp < minTimestampSecs) {
@@ -644,10 +643,7 @@ async function _add({
   }
 
   if (message.type === "amplify" && message.community !== undefined) {
-    const created = communityCreatedAt(
-      message.community,
-      timeless(delegations),
-    );
+    const created = communityOpenedAt(message.community, delegations);
     if (created === undefined) {
       throw new Error("add: Didn't find the community of the post");
     }
@@ -662,10 +658,7 @@ async function _add({
   // the order messages arrive in; the newest one per person wins when they're
   // read (cache.mjs).
   if (isMembership(message)) {
-    const created = communityCreatedAt(
-      message.community,
-      timeless(delegations),
-    );
+    const created = communityOpenedAt(message.community, delegations);
     if (created === undefined) {
       throw new Error("add: Didn't find the community to join or leave");
     }
@@ -702,7 +695,7 @@ async function _add({
   const { index, canonical } = await atomicPut(
     trie,
     message,
-    identity,
+    key,
     delegations,
     address,
   );

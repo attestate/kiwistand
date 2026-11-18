@@ -391,6 +391,42 @@ export function communityCreatedAt(id, delegations = {}, database = db) {
   return rows.length ? Math.min(...rows.map((row) => row.created)) : undefined;
 }
 
+// When the community could first take posts, joins and leaves: the oldest
+// version under its name that the owner or any key that ever signed for the
+// owner signed, or undefined. Nodes judge whether to take such a message by
+// this, not by communityCreatedAt. Which rows make up the community depends
+// on the delegations a node holds, and they're free, synced in any order and
+// can be backdated: a revocation dated before the community was created hands
+// its rows to the key, so a node that got it before a post rejects the post
+// forever while one that got it after took it, and their tries never match
+// again. Holding more delegations or communities only ever adds keys and
+// rows here, so a message a node rejects for now, it takes once it caught up,
+// like every other node. A message taken this way that the community doesn't
+// show (communityCreatedAt) is just not listed.
+export function communityOpenedAt(id, delegations = {}, database = db) {
+  const [owner, key] = normalizeId(id).split("/");
+  if (!owner || !key) return undefined;
+  const signers = new Set([owner, ...keysOf(delegations, owner)]);
+  for (const [signer, identity] of Object.entries(delegations)) {
+    if (String(identity).toLowerCase() === owner) signers.add(signer);
+  }
+  const keys = new Set([...signers].map((signer) => signer.toLowerCase()));
+  let rows;
+  try {
+    rows = database
+      .prepare(`SELECT signer, created FROM communities WHERE key = ?`)
+      .all(key);
+  } catch (err) {
+    // NOTE: The table doesn't exist before initializeCommunities ran.
+    if (err.message.includes("no such table")) return undefined;
+    throw err;
+  }
+  const created = rows
+    .filter((row) => keys.has(row.signer))
+    .map((row) => row.created);
+  return created.length ? Math.min(...created) : undefined;
+}
+
 // A community from its rows: the newest version's content, the oldest
 // version's creation time.
 function merge(owner, rows) {
