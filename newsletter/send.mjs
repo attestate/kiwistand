@@ -30,6 +30,21 @@ function subjectFor() {
   return `Kiwi News Weekly Digest — ${formatDateForSubject()}`;
 }
 
+// Whether an email with this subject already went out (or is on its way).
+export async function alreadySent(apiKey, subject, fetchImpl = fetch) {
+  const response = await fetchImpl(
+    "https://api.buttondown.email/v1/emails?ordering=-creation_date",
+    { headers: { Authorization: `Token ${apiKey}` } },
+  );
+  if (!response.ok) {
+    throw new Error(`Couldn't list Buttondown emails (${response.status}); not sending.`);
+  }
+  const { results = [] } = await response.json();
+  return results.some(
+    (email) => email.subject === subject && email.status !== "draft",
+  );
+}
+
 async function sendDigest() {
   const apiKey = process.env.BUTTON_DOWN_API_KEY; // unified root env var
 
@@ -62,6 +77,13 @@ async function sendDigest() {
     }
     const subject = subjectFor(digest);
     console.log(`Subject: ${subject}`);
+    // NOTE: GitHub can deliver a scheduled run hours late, so a manual send
+    // and the scheduled one can both happen on the same Sunday. Only one
+    // email per subject (i.e. per day) goes out.
+    if (publish && (await alreadySent(apiKey, subject))) {
+      console.log(`"${subject}" was already sent; not sending it again.`);
+      return;
+    }
     const createEmailResponse = await fetch('https://api.buttondown.email/v1/emails', {
       method: 'POST',
       headers: {
@@ -90,4 +112,4 @@ async function sendDigest() {
   }
 }
 
-sendDigest();
+if (process.argv[1] === fileURLToPath(import.meta.url)) sendDigest();
