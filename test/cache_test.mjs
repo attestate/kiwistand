@@ -16,6 +16,9 @@ import {
   getWeekStories,
   getUpvotes,
   reattribute,
+  addCompoundIndexes,
+  COUNTED_UPVOTES,
+  COUNTED_REACTIONS,
 } from "../src/cache.mjs";
 
 const INDEX = "0x" + "c4".repeat(36);
@@ -174,5 +177,34 @@ test("an identity's upvotes with its wallet and two keys count once", (t) => {
   db.prepare(`DELETE FROM reactions WHERE comment_id = ?`).run(comment);
   db.prepare(`DELETE FROM comments WHERE id = ?`).run(comment);
   db.prepare(`DELETE FROM submissions WHERE href = ?`).run(href);
+  db.close();
+});
+
+// NOTE: Keys are free, so anyone can upvote a story (or react to a comment)
+// with thousands of them. The dedupe in COUNTED_UPVOTES/COUNTED_REACTIONS
+// then has to find an identity's other rows with an index, else every read
+// of that story scans its rows once per row.
+test("counting upvotes and reactions looks up each identity in an index", (t) => {
+  addCompoundIndexes();
+  const db = openTestDb();
+  const plan = (sql, ...params) =>
+    db
+      .prepare(`EXPLAIN QUERY PLAN ${sql}`)
+      .all(...params)
+      .map(({ detail }) => detail)
+      .join(" | ");
+  const upvotes = plan(
+    `SELECT COUNT(*) FROM ${COUNTED_UPVOTES} WHERE href = ?`,
+    HREF,
+  );
+  t.regex(upvotes, /SEARCH co USING [A-Z ]*INDEX \S+ \(href=\? AND identity=\?\)/);
+  const reactions = plan(
+    `SELECT COUNT(*) FROM ${COUNTED_REACTIONS} WHERE comment_id = ?`,
+    "x",
+  );
+  t.regex(
+    reactions,
+    /SEARCH co USING [A-Z ]*INDEX \S+ \(comment_id=\? AND identity=\?\)/,
+  );
   db.close();
 });

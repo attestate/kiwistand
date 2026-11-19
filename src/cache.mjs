@@ -1931,6 +1931,15 @@ export function addCompoundIndexes() {
       
       -- Upvotes table indexes
       CREATE INDEX IF NOT EXISTS idx_upvotes_href_identity ON upvotes(href, identity);
+
+      -- NOTE: COUNTED_UPVOTES and COUNTED_REACTIONS compare identities with
+      -- COLLATE NOCASE, which the indexes above can't serve, so each row's
+      -- dedupe check scanned all of its story's (comment's) rows. Keys are
+      -- free, so anyone could make a story's or comment's reads quadratic,
+      -- e.g. 20k one-off keys upvoting one story took 36s per read, blocking
+      -- the node. These indexes make the check a lookup.
+      CREATE INDEX IF NOT EXISTS idx_upvotes_href_identity_nocase ON upvotes(href, identity COLLATE NOCASE, timestamp, id);
+      CREATE INDEX IF NOT EXISTS idx_reactions_comment_id_identity_nocase ON reactions(comment_id, identity COLLATE NOCASE, timestamp, id);
     `);
     log("Successfully created compound indexes");
   } catch (error) {
