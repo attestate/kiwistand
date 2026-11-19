@@ -5,8 +5,10 @@
 // (a key on a device, which signs stories, upvotes and comments) sign for it
 // with one `Delegation` message that the identity signs (EIP712_DELEGATION in
 // src/constants.mjs). It holds the signer's signature of
-// `Authorization(address identity,bool authorize)` for the identity, so
-// nobody can claim a signer without its consent. No transaction, no ETH. A
+// `Authorization(address identity,bool authorize,uint256 timestamp)` for the
+// identity and the delegation's timestamp, so nobody can claim a signer
+// without its consent, and an identity can't replay an old authorization to
+// claim the signer again after a revocation or a delegation to someone else. No transaction, no ETH. A
 // revocation is the same message with `authorize` false and no signature of
 // the signer.
 //
@@ -48,9 +50,17 @@ export function create({
   };
 }
 
-// The signer's half: its signature of the identity's address.
-export async function authorization(signer, identity) {
-  const value = { identity: utils.getAddress(identity), authorize: true };
+// The signer's half: its signature of the identity's address and the
+// delegation's timestamp.
+export async function authorization(signer, identity, timestamp) {
+  if (!Number.isInteger(timestamp)) {
+    throw new Error("authorization: timestamp must be the delegation's");
+  }
+  const value = {
+    identity: utils.getAddress(identity),
+    authorize: true,
+    timestamp,
+  };
   return await signer._signTypedData(
     EIP712_DOMAIN,
     EIP712_AUTHORIZATION,
@@ -71,7 +81,11 @@ export async function verify(message, rpc = env.SMART_WALLET_RPC_URL) {
 
   const { type, authorization, authorize, timestamp, signature } = message;
   if (authorize) {
-    const value = { identity, authorize: true };
+    // NOTE: The authorization covers the delegation's timestamp. Without it,
+    // an identity that once held the signer could sign a new delegation with
+    // the old authorization, dated after a revocation or after the signer's
+    // delegation to another identity, and take the signer's messages back.
+    const value = { identity, authorize: true, timestamp };
     const recovered = utils.verifyTypedData(
       EIP712_DOMAIN,
       EIP712_AUTHORIZATION,

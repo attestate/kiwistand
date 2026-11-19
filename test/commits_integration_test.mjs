@@ -173,7 +173,9 @@ const id = (message) => `0x${toDigest(message).digest}`;
     // another. The sequencer takes the signer's story dated before the
     // revocation after it: timestamps decide, not the order.
     const delegation = (identity, key, authorize, timestamp) =>
-      delegations.authorization(key, identity.address).then((authorization) =>
+      delegations
+        .authorization(key, identity.address, timestamp)
+        .then((authorization) =>
         sign(
           identity,
           delegations.create({

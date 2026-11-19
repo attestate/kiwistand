@@ -16,15 +16,21 @@ import enhance from "../src/workers/enhancer.mjs";
 
 const T = 1800000000;
 
-async function delegation(identity, signer, authorize = true, by = identity) {
+async function delegation(
+  identity,
+  signer,
+  authorize = true,
+  by = identity,
+  timestamp = T,
+) {
   const message = create({
     identity: identity.address,
     signer: signer.address,
     authorization: authorize
-      ? await authorization(signer, identity.address)
+      ? await authorization(signer, identity.address, timestamp)
       : "",
     authorize,
-    timestamp: T,
+    timestamp,
   });
   return await sign(by, message, EIP712_DELEGATION);
 }
@@ -53,6 +59,30 @@ test("a delegation is signed by the identity and holds the signer's signature", 
     EIP712_DELEGATION,
   );
   await t.throwsAsync(verify(reused, ""), { message: /signer didn't sign/ });
+
+  // An old authorization can't be replayed under a new timestamp, e.g. to
+  // claim the signer back after a revocation or after it moved to another
+  // identity.
+  const old = await delegation(identity, signer);
+  const replayed = await sign(
+    identity,
+    create({
+      identity: identity.address,
+      signer: signer.address,
+      authorization: old.authorization,
+      authorize: true,
+      timestamp: T + 100,
+    }),
+    EIP712_DELEGATION,
+  );
+  await t.throwsAsync(verify(replayed, ""), { message: /signer didn't sign/ });
+  t.is(
+    await verify(
+      await delegation(identity, signer, true, identity, T + 100),
+      "",
+    ),
+    identity.address,
+  );
 
   const revocation = await delegation(identity, signer, false);
   const withAuthorization = await sign(
