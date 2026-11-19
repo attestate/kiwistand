@@ -31,9 +31,9 @@ Since protocol 15.0.0, a delegation is a protocol message, signed by two
 keys:
 
 1. **The signer signs the identity.** It signs the EIP-712 message
-   `Authorization(address identity,bool authorize)` with `identity` set to
-   the identity's address and `authorize` to `true`, in the protocol's
-   domain:
+   `Authorization(address identity,bool authorize,uint256 timestamp)` with
+   `identity` set to the identity's address, `authorize` to `true` and
+   `timestamp` to the delegation's timestamp, in the protocol's domain:
 
    ```js
    {
@@ -77,12 +77,13 @@ import { sign } from "./src/id.mjs";
 import { EIP712_DELEGATION } from "./src/constants.mjs";
 
 const signer = Wallet.createRandom();
+const timestamp = Math.floor(Date.now() / 1000);
 const message = create({
   identity: identity.address,
   signer: signer.address,
-  authorization: await authorization(signer, identity.address),
+  authorization: await authorization(signer, identity.address, timestamp),
   authorize: true,
-  timestamp: Math.floor(Date.now() / 1000),
+  timestamp,
 });
 const delegation = await sign(identity, message, EIP712_DELEGATION);
 // POST delegation to /api/v1/messages
@@ -91,12 +92,17 @@ const delegation = await sign(identity, message, EIP712_DELEGATION);
 The two signatures protect each other. The identity's signature shows it
 wants the signer. The signer's signature over the identity's address stops
 someone who sees the signer's address from delegating it to themselves and
-getting the signer's messages credited to them.
+getting the signer's messages credited to them. Because the signer's
+signature covers the delegation's timestamp, it's good for that one
+delegation: an identity that once held the signer can't reuse it to claim the
+signer back after a revocation, or after the signer moved to another
+identity.
 
 A node takes a delegation if it fits the [Message](/http-api#message) schema,
 the signer and the identity differ, the signer signed the authorization for
-that identity, and the identity signed the message. Like every message, the
-same delegation can be in the trie only once.
+that identity and the delegation's timestamp, and the identity signed the
+message. Like every message, the same delegation can be in the trie only
+once.
 
 :::note
 The signer is a new, empty Ethereum account. The delegation only makes Kiwi

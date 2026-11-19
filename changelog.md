@@ -26,8 +26,10 @@ the Delegation page.
   stories, upvotes and comments) sign for it. Signed by the identity as
   `Delegation(string type,address signer,bytes authorization,bool authorize,uint256 timestamp)`,
   with `identity` (who signed it, not signed itself) and `authorization`, the
-  signer's signature of `Authorization(address identity,bool authorize)` for
-  the identity in the protocol's domain. A revocation has `authorize: false`
+  signer's signature of
+  `Authorization(address identity,bool authorize,uint256 timestamp)` for the
+  identity and the delegation's timestamp in the protocol's domain, so an old
+  authorization can't be replayed to take a signer back. A revocation has `authorize: false`
   and `authorization: "0x"`. Smart wallets' signatures (ERC-1271, ERC-6492)
   are checked over `SMART_WALLET_RPC_URL`; EOAs need no RPC.
 - **Timestamps decide whom a signer's message counts for**: the identity

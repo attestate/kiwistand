@@ -107,11 +107,14 @@ export const EIP712_DELEGATION = {
 // What a signer signs for the identity it signs for: Delegator3's type with
 // `identity` for `from`, in the protocol's domain (no chainId, no
 // verifyingContract), so it can't be replayed into Delegator3 on OP Mainnet
-// or back.
+// or back. `timestamp` is the delegation's: an authorization is good for one
+// delegation, so an identity can't replay it to claim the signer back after
+// it was revoked or delegated to someone else.
 export const EIP712_AUTHORIZATION = {
   Authorization: [
     { name: "identity", type: "address" },
     { name: "authorize", type: "bool" },
+    { name: "timestamp", type: "uint256" },
   ],
 };
 
@@ -338,7 +341,7 @@ const delegation = {
     },
     authorization: {
       $comment:
-        "The signer's signature of Authorization(address identity,bool authorize) for the identity; '0x' in a revocation.",
+        "The signer's signature of Authorization(address identity,bool authorize,uint256 timestamp) for the identity and the delegation's timestamp; '0x' in a revocation.",
       type: "string",
       pattern: "^0x([a-fA-F0-9]{130})?$",
     },
