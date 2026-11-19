@@ -60,12 +60,13 @@ const modes = [
     css: "html{filter:invert(1) hue-rotate(180deg);background:#fff} img{filter:invert(1) hue-rotate(180deg)}",
   },
 ];
-for (const width of [375, 640]) {
+// The design's "Mobile" and "Desktop" newsletter frames.
+for (const width of [390, 680]) {
   for (const mode of modes) {
     const page = await browser.newPage({
       viewport: { width, height: 800 },
       colorScheme: mode.colorScheme,
-      deviceScaleFactor: 1,
+      deviceScaleFactor: 2,
     });
     await routeImages(page);
     await page.goto(`file://${file}`, { waitUntil: "networkidle" }).catch(() => {});

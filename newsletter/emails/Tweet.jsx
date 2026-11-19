@@ -1,156 +1,55 @@
 import React from "react";
-import { Head, Html, Body, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
 
-// --- Helper functions ---
-const convertBrTagsToNewlines = (text) => {
-  if (!text) return text;
-  return text.replace(/<br\s*\/?>/gi, '\n');
-};
+import Credit from "./_components/Credit.jsx";
+import { StoryFrame, PostEmbed, Title, clip } from "./_components/kit.jsx";
+import { splitQuote, isDeletedTweet, tweetHandle } from "../../src/quote.mjs";
 
-const truncateLongWords = (text, maxLength = 20) => {
-  if (!text) return "";
-  const words = text.split(" ");
-  const truncatedWords = words.map((word) =>
-    word.length > maxLength ? `${word.substring(0, maxLength)}...` : word
-  );
-  return truncatedWords.join(" ");
-};
+// An X post. The hero shows the post card with its image; a row shows the
+// image as the thumbnail and the card with the text only. When the post was
+// deleted, the submitter's title takes over above the card.
+export default function TweetEmail({ story = { metadata: {} }, rank = 1, hero = true }) {
+  const metadata = story.metadata || {};
+  const deleted = isDeletedTweet(metadata);
 
-
-function truncateComment(comment, maxLength = 180) {
-  if (!comment) return "";
-  
-  const emptyLineIndex = comment.indexOf("\n\n");
-  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
-    return truncateLongWords(comment.slice(0, emptyLineIndex)) + "\n...";
-
-  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
-  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
-    const nextSpace = comment.indexOf(" ", lastLinkStart);
-    const linkEnd = nextSpace === -1 ? comment.length : nextSpace;
-    const fullLink = comment.slice(lastLinkStart, linkEnd);
-    const truncatedLink =
-      fullLink.length > 60 ? fullLink.substring(0, 60) + "..." : fullLink;
-
-    const beforeLink = truncateLongWords(
-      comment.slice(0, lastLinkStart).trim()
-    );
-    if (beforeLink && beforeLink.length > 0) {
-      return beforeLink + " " + truncateLongWords(truncatedLink) + "...";
-    } else {
-      return truncatedLink + "...";
-    }
+  let handle = metadata.twitterCreator || tweetHandle(story.title);
+  if (!handle) {
+    const match = /(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status/i.exec(story.href || "");
+    handle = match ? `@${match[1]}` : "@x";
   }
 
-  if (comment.length <= maxLength) return truncateLongWords(comment);
-  return truncateLongWords(
-    comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "..."
-  );
-}
+  const description = (metadata.ogDescription || "").replace(/<br\s*\/?>/gi, "\n");
+  const { text, quote } = splitQuote(description);
+  const postText = deleted ? "" : clip(text || quote?.text || "", hero ? 360 : 280);
+  const image = deleted ? null : metadata.image || null;
 
-// --- Main Component ---
-
-export default function TweetEmail({ story = { metadata: {} } }) {
-  const {
-    href,
-    metadata,
-    displayName,
-  } = story;
-
-  const extractedDomain = "x.com";
-  const submitterProfileLink =
-    story.submitterLink || `https://news.kiwistand.com/upvotes?address=${story.identity}`;
-
-  return (
+  const body = (
     <>
-      <Section style={container} className="k-card" bgcolor="#f6f6ef">
-        <Row>
-          <Column>
-            <Section style={{...tweetEmbedContainer, backgroundColor: '#ffffff', borderBottom: '1px solid #e6e6df' }} className="k-embed" bgcolor="#ffffff">
-              <Link href={story.storyLink} className="k-link" style={{...previewContainer, color: '#000000', textDecoration: 'none'}}>
-                <div>{/* keeps the card text out of reach of Buttondown's `a > *` link color rule */}
-                  <Row>
-                    <Column width="30">
-                      {metadata.twitterAuthorAvatar && (
-                        <Img
-                          src={metadata.twitterAuthorAvatar}
-                          alt={metadata.twitterCreator || "Author"}
-                          width="20"
-                          height="20"
-                          style={{ borderRadius: '9999px', marginRight: '8px' }}
-                        />
-                      )}
-                    </Column>
-                    <Column>
-                      <Text className="k-text" style={{ fontWeight: 600, color: '#0f1419', fontSize: '14px' }}>
-                        {metadata.twitterCreator || "@tweet"}
-                      </Text>
-                    </Column>
-                  </Row>
-                  <Text className="k-text" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap', color: '#0f1419' }}>
-                    {metadata.ogDescription && convertBrTagsToNewlines(metadata.ogDescription).length > 260
-                      ? convertBrTagsToNewlines(metadata.ogDescription).slice(0, 260) + '…'
-                      : convertBrTagsToNewlines(metadata.ogDescription)}
-                  </Text>
-                  {metadata.image && (
-                    <Img
-                      src={metadata.image}
-                      alt="Tweet image"
-                      width="100%"
-                      style={{ marginTop: '12px', objectFit: 'cover' }}
-                    />
-                  )}
-                </div>
-              </Link>
-            </Section>
-
-            <Section style={{ padding: '12px 20px 10px 12px', backgroundColor: '#f6f6ef' }} className="k-card" bgcolor="#f6f6ef">
-                <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-                submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>{displayName}</span></span></Link>
-                {' • '}
-                <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>{extractedDomain}</span></span></Link>
-                {story.upvotes ? ` • ${story.upvotes} upvotes` : ''}
-                {story.comments ? ` • ${story.comments} comments` : ''}
-                {story.clicks ? ` • ${story.clicks} clicks` : ''}
-              </Text>
-            </Section>
-          </Column>
-        </Row>
-      </Section>
-      <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} className="k-button" style={buttonStyle}><span><span className="k-button-text" style={{ color: '#ffffff' }}>Read on Kiwi</span></span></Link>
-      </Section>
+      {deleted ? (
+        <div style={{ margin: "0 0 8px 0" }}>
+          <Title href={story.storyLink} hero={hero}>{metadata.compliantTitle || story.title}</Title>
+        </div>
+      ) : null}
+      <PostEmbed
+        href={story.storyLink}
+        hero={hero}
+        avatar={deleted ? null : metadata.twitterAuthorAvatar}
+        handle={handle}
+        text={postText}
+        image={image}
+        deleted={deleted}
+      />
     </>
   );
+
+  return (
+    <StoryFrame
+      story={story}
+      rank={rank}
+      hero={hero}
+      source="x.com"
+      body={body}
+      thumbnail={hero ? null : image}
+      credit={<Credit story={story} />}
+    />
+  );
 }
-
-// --- Styles ---
-const container = {
-  margin: "0 auto",
-  padding: "0",
-  maxWidth: "580px",
-  border: "1px solid #e6e6df",
-  borderRadius: "3px",
-  backgroundColor: "#f6f6ef",
-};
-
-const previewContainer = {
-  textDecoration: 'none',
-  color: 'inherit',
-  display: 'block',
-};
-
-const tweetEmbedContainer = {
-  padding: '12px',
-  backgroundColor: '#ffffff',
-};
-
-const buttonStyle = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  padding: '10px 20px',
-  borderRadius: '0',
-  textDecoration: 'none',
-  display: 'inline-block',
-  fontSize: '14px',
-};

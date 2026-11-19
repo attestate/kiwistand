@@ -1,128 +1,13 @@
 import React from "react";
-import { Head, Html, Body, Container, Tailwind, Text, Link, Img, Row, Column, Section } from "@react-email/components";
-import {
-  differenceInHours,
-  formatDistanceToNowStrict as originalFormatDistance,
-} from "date-fns";
 
-// --- Helper functions from row.mjs ---
+import Credit from "./_components/Credit.jsx";
+import { StoryFrame, Title, hostname, clip, isUpload, uploadVariant, light, font } from "./_components/kit.jsx";
 
-const formatDistanceToNowStrict = (date) => {
-  return originalFormatDistance(date)
-    .replace(/ years?/, "y")
-    .replace(/ months?/, "mo")
-    .replace(/ weeks?/, "w")
-    .replace(/ days?/, "d")
-    .replace(/ hours?/, "h")
-    .replace(/ minutes?/, "m")
-    .replace(/ seconds?/, "s");
-};
-
-function extractDomain(link) {
-  try {
-    const parsedUrl = new URL(link);
-    const parts = parsedUrl.hostname.split(".");
-    const tld = parts.slice(-2).join(".");
-    return tld;
-  } catch (error) {
-    return "Invalid URL";
-  }
-}
-
-const truncateLongWords = (text, maxLength = 20) => {
-  if (!text) return "";
-  const words = text.split(" ");
-  const truncatedWords = words.map((word) =>
-    word.length > maxLength ? `${word.substring(0, maxLength)}...` : word
-  );
-  return truncatedWords.join(" ");
-};
-
-function truncateComment(comment, maxLength = 180) {
-  if (!comment) return "";
-  
-  const emptyLineIndex = comment.indexOf("\n\n");
-  if (emptyLineIndex !== -1 && emptyLineIndex < maxLength)
-    return truncateLongWords(comment.slice(0, emptyLineIndex)) + "\n...";
-
-  const lastLinkStart = comment.lastIndexOf("https://", maxLength);
-  if (lastLinkStart !== -1 && lastLinkStart < maxLength) {
-    const nextSpace = comment.indexOf(" ", lastLinkStart);
-    const linkEnd = nextSpace === -1 ? comment.length : nextSpace;
-    const fullLink = comment.slice(lastLinkStart, linkEnd);
-    const truncatedLink =
-      fullLink.length > 60 ? fullLink.substring(0, 60) + "..." : fullLink;
-
-    const beforeLink = truncateLongWords(
-      comment.slice(0, lastLinkStart).trim()
-    );
-    if (beforeLink && beforeLink.length > 0) {
-      return beforeLink + " " + truncateLongWords(truncatedLink) + "...";
-    } else {
-      return truncatedLink + "...";
-    }
-  }
-
-  if (comment.length <= maxLength) return truncateLongWords(comment);
-  return truncateLongWords(
-    comment.slice(0, comment.lastIndexOf(" ", maxLength)) + "..."
-  );
-}
-
-// --- SVGs as React Components ---
-
-const HeartSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="15" height="15">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
-
-const ChatsSVG = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="15" height="15">
-    <rect width="256" height="256" fill="none" />
-    <path
-      d="M71.58,144,32,176V48a8,8,0,0,1,8-8H168a8,8,0,0,1,8,8v88a8,8,0,0,1-8,8Z"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-    <path
-      d="M80,144v40a8,8,0,0,0,8,8h96.42L224,224V96a8,8,0,0,0-8-8H176"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="16"
-    />
-  </svg>
-);
-
-// --- Main Component ---
-
-export default function RowEmail({ story = {} }) {
-  const {
-    href,
-    title,
-    metadata,
-    identity,
-    displayName,
-    upvotes,
-    comments,
-    clicks,
-  } = story;
-
-  const submitterProfileLink =
-    story.submitterLink || `https://news.kiwistand.com/upvotes?address=${identity}`;
+// A link, a text post, an uploaded picture, an X article or a video-only
+// tweet. In the hero the picture sits on top in its own shape; in a row it
+// is a square thumbnail, and without a picture the text uses the full width.
+export default function RowEmail({ story = {}, rank = 1, hero = true }) {
+  const { href, title, metadata } = story;
 
   const isTextPost = typeof href === "string" && href.startsWith("data:");
   let textPost = "";
@@ -131,134 +16,47 @@ export default function RowEmail({ story = {} }) {
       textPost = decodeURIComponent(href.replace(/^data:text\/plain,/, ""));
     } catch {}
   }
-  // Uploaded pictures: the link is the image itself on Cloudflare Images.
-  // Email clients get a JPEG (some can't show AVIF/WebP, which "public" may
-  // serve), at most 1160px wide (580px at 2x), uncropped.
-  const isUpload =
-    typeof href === "string" &&
-    /^https:\/\/imagedelivery\.net\//.test(href);
-  const uploadImage = isUpload
-    ? href.replace(/\/[^/]+$/, "/w=1160,fit=scale-down,f=jpeg")
-    : null;
-  const extractedDomain = isTextPost ? "" : extractDomain(href);
-  const isTweet = extractedDomain.includes("twitter.com") || extractedDomain.includes("x.com");
-  const isFarcasterCast = extractedDomain.includes("warpcast.com") || extractedDomain.includes("farcaster.xyz");
+  const upload = isUpload(href);
 
-  const canRenderTweetPreview = isTweet && !metadata?.isXArticle && metadata && metadata.ogDescription;
-  const canRenderFarcasterPreview = isFarcasterCast && metadata && (metadata.farcasterCast || metadata.ogDescription);
+  const source = isTextPost
+    ? "text post"
+    : upload
+      ? "imagedelivery.net"
+      : hostname(href) || metadata?.domain || "";
 
-  let farcasterImageUrl = null;
-  if (canRenderFarcasterPreview && metadata.farcasterCast?.embeds) {
-    const imageEmbed = metadata.farcasterCast.embeds.find(embed => embed && embed.url);
-    if (imageEmbed) {
-      farcasterImageUrl = imageEmbed.url;
-    }
-  }
+  const heroImage = upload
+    ? uploadVariant(href, "w=1072,h=800,fit=scale-down")
+    : metadata?.image || null;
+  const thumbnail = upload
+    ? uploadVariant(href, "w=208,h=208,fit=cover")
+    : metadata?.image || null;
 
-  const displayImage = !canRenderTweetPreview && !canRenderFarcasterPreview && metadata && metadata.image;
+  const headline =
+    metadata?.isXArticle && metadata?.ogTitle
+      ? metadata.ogTitle
+      : metadata?.compliantTitle || title;
 
-  // Return just the content for Digest, not a full HTML document  
-  return (
+  const body = (
     <>
-      <Section style={container} className="k-card" bgcolor="#f6f6ef">
-        {uploadImage ? (
-          <Link href={story.storyLink}>
-            <Img
-              src={uploadImage}
-              alt={title || ""}
-              width="100%"
-              style={{ width: '100%', height: 'auto', display: 'block' }}
-            />
-          </Link>
-        ) : displayImage ? (
-          <Link href={story.storyLink}>
-            <Img
-              src={metadata.image}
-              alt=""
-              width="100%"
-              style={{ aspectRatio: '2 / 1', objectFit: 'cover' }}
-            />
-          </Link>
-        ) : null}
-
-        <Section style={{ padding: '12px 12px 12px 12px' }}>
-          <Link href={story.storyLink} className="k-link" style={{ lineHeight: '15pt', fontSize: '13pt', color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>
-            {truncateLongWords(
-              (metadata?.isXArticle && metadata?.ogTitle)
-                ? metadata.ogTitle
-                : metadata?.compliantTitle || title
-            )}
-          </span></span></Link>
-
-          {textPost ? (
-            <Text className="k-text" style={{ fontSize: '14px', lineHeight: '21px', margin: '6px 0 0 0', whiteSpace: 'pre-wrap' }}>
-              {truncateComment(textPost, 280)}
-            </Text>
-          ) : null}
-
-          <Text className="k-muted" style={{ fontSize: '9pt', marginTop: '3px', marginBottom: '0', lineHeight: '1.4', color: '#666' }}>
-            submitted by <Link href={submitterProfileLink} className="k-link" style={{ fontWeight: 600, color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>{displayName}</span></span></Link>
-            {/* Text posts (data: links) have no domain. */}
-            {isTextPost ? ' • text post' : isUpload ? ' • image' : (
-              <>
-                {' • '}
-                <Link href={story.storyLink} className="k-link" style={{ color: '#000000', textDecoration: 'none' }}><span><span className="k-link" style={{ color: '#000000' }}>{extractedDomain}</span></span></Link>
-              </>
-            )}
-            {upvotes ? ` • ${upvotes} upvote${upvotes === 1 ? '' : 's'}` : ''}
-            {comments ? ` • ${comments} comment${comments === 1 ? '' : 's'}` : ''}
-          </Text>
-        </Section>
-      </Section>
-      <Section style={{ padding: '12px 0' }}>
-        <Link href={story.storyLink} className="k-button" style={buttonStyle}><span><span className="k-button-text" style={{ color: '#ffffff' }}>Read on Kiwi</span></span></Link>
-      </Section>
+      <Title href={story.storyLink} hero={hero}>{headline}</Title>
+      {textPost ? (
+        <div className="k-tertiary" style={{ margin: "8px 0 0 0", fontFamily: font, fontSize: "14px", lineHeight: "21px", color: light.tertiary, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          {clip(textPost, 280)}
+        </div>
+      ) : null}
     </>
   );
+
+  return (
+    <StoryFrame
+      story={story}
+      rank={rank}
+      hero={hero}
+      source={source}
+      body={body}
+      heroImage={heroImage}
+      thumbnail={thumbnail}
+      credit={<Credit story={story} />}
+    />
+  );
 }
-
-// --- Styles ---
-const main = {
-  backgroundColor: "#fffffa",
-  fontFamily:
-    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji', sans-serif",
-};
-
-const container = {
-  margin: "0 auto",
-  padding: "0",
-  maxWidth: "580px",
-  border: "1px solid #e6e6df",
-  borderRadius: "3px",
-  backgroundColor: "#f6f6ef",
-};
-
-const previewContainer = {
-  textDecoration: 'none',
-  color: 'inherit',
-  display: 'block',
-};
-
-const tweetEmbedContainer = {
-  border: '1px solid #cfd9de',
-  borderRadius: '12px',
-  padding: '12px',
-  margin: '0 20px',
-};
-
-const farcasterEmbedContainer = {
-  border: '1px solid #e0e0e0',
-  borderRadius: '12px',
-  padding: '12px',
-  margin: '0 20px',
-};
-
-const buttonStyle = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  padding: '10px 20px',
-  borderRadius: '0',
-  textDecoration: 'none',
-  display: 'inline-block',
-  fontSize: '14px',
-};
