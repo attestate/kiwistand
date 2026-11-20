@@ -4,6 +4,7 @@ import sharp from "sharp";
 import {
   fileName,
   titleStyle,
+  balanceTitle,
   commentStyle,
   displayName,
   cleanDomain,
@@ -31,6 +32,16 @@ test("title size and line limit follow the title's length", (t) => {
   t.deepEqual(titleStyle("x".repeat(80), true), [80, 4]);
   t.deepEqual(titleStyle("x".repeat(81), false), [56, 4]);
   t.deepEqual(titleStyle("x".repeat(81), true), [66, 5]);
+});
+
+test("only short titles without a long word are balanced", (t) => {
+  t.true(balanceTitle("Hi"));
+  t.true(balanceTitle("The Death of the Interface"));
+  t.true(balanceTitle("👨‍👩‍👧‍👦".repeat(3)));
+  t.true(balanceTitle("x".repeat(10)));
+  t.false(balanceTitle("x".repeat(11)));
+  t.false(balanceTitle("a " + "x".repeat(11)));
+  t.false(balanceTitle("x ".repeat(21)));
 });
 
 test("comment size and line limit follow the comment's length", (t) => {
@@ -116,6 +127,14 @@ test("a story card renders in both sizes", async (t) => {
   const body = story("The Death of the Interface", null, null, "x.com", { address });
   t.deepEqual(await size(await render(body)), { width: 1200, height: 630, format: "jpeg" });
   t.deepEqual(await size(await render(body, true)), { width: 1200, height: 800, format: "jpeg" });
+});
+
+// NOTE: These used to hang satori, and with it the worker rendering them.
+test("titles narrower than two characters render", async (t) => {
+  for (const title of ["Hi", "Wi", "W", "x", "日", "🥝", "W       ", "W\u200b\u200b\u200b\u200b\u200b\u200b\u200b"]) {
+    const body = story(title, null, null, "x.com", { address });
+    t.deepEqual(await size(await render(body)), { width: 1200, height: 630, format: "jpeg" });
+  }
 });
 
 test("a text post and a very long title render", async (t) => {

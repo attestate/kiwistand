@@ -990,7 +990,9 @@ export async function launch(trie, libp2p, isPrimary = true) {
   // If we're a worker, adjust the port
   else if (!isPrimary) {
     // Calculate worker's port offset based on original port
-    const workerIndex = cluster.worker.id - 1;
+    const workerIndex = env.WORKER_INDEX
+      ? parseInt(env.WORKER_INDEX)
+      : cluster.worker.id - 1;
     const workerPort = originalPort + 1 + workerIndex;
 
     // Override HTTP_PORT for this worker
