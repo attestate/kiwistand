@@ -249,15 +249,26 @@ export async function check(messages, commits, snapshot) {
 // WINDOW, but neither that commit nor an earlier one lists it, and no
 // include() with a block time from its timestamp to WINDOW after it carries
 // it. The lower end allows the usual skew of timestamps,
-// MAX_TIMESTAMP_DELTA_SECS. Messages dated up to the genesis are final, and
+// MAX_TIMESTAMP_DELTA_SECS. Messages of the genesis set are final, and
 // without an RPC nothing is late.
-let genesisTime;
+let genesisCommit;
 export function late(index) {
   if (!enabled()) return false;
   const id = `0x${index.slice(-64)}`;
   const timestamp = parseInt(index.slice(0, -64), 16);
-  genesisTime ??= cache.sequencerCommitAfter(0)?.time;
-  if (genesisTime === undefined || timestamp <= genesisTime) return false;
+  genesisCommit ??= cache.sequencerCommitAfter(0);
+  if (genesisCommit === undefined) return false;
+  // NOTE: A message dated up to the genesis is only final if it's in the
+  // genesis set. Timestamps only have a lower bound (MIN_TIMESTAMP_SECS), so
+  // a stolen or revoked key could otherwise sign messages, and delegations
+  // (src/delegations.mjs), dated before the genesis at any time later, and
+  // they'd count for the identity forever. One the sequencer lists in a
+  // later commit wasn't in the genesis set: it wasn't witnessed in time.
+  if (timestamp <= genesisCommit.time) {
+    return cache
+      .getListings(id)
+      .some(({ k, sequencer }) => sequencer && k > genesisCommit.k);
+  }
   const deadline = cache.sequencerCommitAfter(timestamp + WINDOW);
   if (!deadline) return false;
   const skew = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10) || 0;
@@ -341,7 +352,8 @@ async function update(trie, rpc, recheck) {
   state.root = root;
 
   const before = newest(cache.getCommits());
-  await check(await held(trie), state.commits, state.snapshot);
+  const messages = await held(trie);
+  await check(messages, state.commits, state.snapshot);
   cache.saveCommits(state.commits);
   const failed = state.commits.find(
     ({ sequencer, status }) => sequencer && status !== "verified",
@@ -362,6 +374,20 @@ async function update(trie, rpc, recheck) {
         ? state.commits.find(({ sequencer }) => sequencer).time
         : before - WINDOW;
     await registry.recredit(from, after - WINDOW);
+
+    // NOTE: A message dated up to the genesis that a newer sequencer commit
+    // lists wasn't in the genesis set, so it's late (`late`), however old
+    // its timestamp. And a delegation that's late doesn't count for any of
+    // its signer's messages (src/delegations.mjs).
+    const [first, ...rest] = state.commits.filter(({ sequencer }) => sequencer);
+    const indices = rest
+      .filter(({ time }) => before === undefined || time > before)
+      .flatMap(({ ids }) => ids)
+      .map((id) => messages.get(id))
+      .filter((message) => message && message.timestamp <= first.time)
+      .map(({ index }) => index);
+    await registry.recreditIndices(indices);
+    await registry.recreditDelegations();
   }
   return commits;
 }

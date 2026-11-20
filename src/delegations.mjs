@@ -203,10 +203,23 @@ export function resolve(delegations, signer, index) {
     return resolveIdentity(delegations, address);
   }
   if (history.late(index)) return address;
-  if (entries.length === 1 && entries[0].authorize) {
-    return entries[0].identity;
+  // NOTE: A delegation that wasn't witnessed in time doesn't count either.
+  // Its timestamp decides from when on it counts, and a stolen key can sign
+  // an authorization for any timestamp: the thief would delegate the key to
+  // a fresh identity, dated just after the owner's delegation, and from then
+  // on every message the key signed, back to the owner's, and the karma from
+  // them would count for the thief. The owner's revocation couldn't undo it,
+  // as it only clears the owner's own delegation. Whether a node takes a
+  // message must not depend on `late` (see `timeless`), and it doesn't: the
+  // signers to identities (`build`) and `keysOf` still hold every
+  // delegation. Only whom a message counts for does.
+  const counted = entries.filter(
+    ({ at }) => at.length < 2 || !history.late(at[1]),
+  );
+  if (counted.length === 1 && counted[0].authorize) {
+    return counted[0].identity;
   }
-  return attribute(entries, timestampOf(index)) ?? address;
+  return attribute(counted, timestampOf(index)) ?? address;
 }
 
 // The same delegations, but blind to the commits: every message counts by
