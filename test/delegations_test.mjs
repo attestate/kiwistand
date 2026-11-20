@@ -175,3 +175,42 @@ test("timestamps decide whom a signer's messages count for", (t) => {
     [signer]: carol,
   });
 });
+
+// NOTE: A stolen key can sign an authorization for any timestamp, so a
+// delegation that wasn't witnessed in time must not count, or the thief
+// would take the key's messages and karma from the owner for good.
+test("a delegation that wasn't witnessed in time doesn't count", (t) => {
+  const [alice, thief, signer, lone] = Array.from(
+    { length: 4 },
+    () => Wallet.createRandom().address,
+  );
+  const at = (timestamp, byte = "ab") =>
+    `${timestamp.toString(16)}${byte.repeat(32)}`;
+  const stolen = at(T + 11, "cd");
+  const alone = at(T + 5, "ce");
+  const rows = [
+    { index: at(T + 10), signer, identity: alice, authorize: 1 },
+    // Backdated to just after Alice's delegation, signed after the theft.
+    { index: stolen, signer, identity: thief, authorize: 1 },
+    { index: at(T + 30), signer, identity: alice, authorize: 0 },
+    { index: alone, signer: lone, identity: thief, authorize: 1 },
+  ];
+  const late = (index) => index === stolen || index === alone;
+  const delegations = build({}, rows, late);
+  const of = (address, timestamp) =>
+    resolve(delegations, address, at(timestamp, "ef"));
+
+  // The key's messages keep counting for Alice, and her revocation works.
+  t.is(of(signer, T + 20), alice);
+  t.is(of(signer, T), alice);
+  t.is(of(signer, T + 31), signer);
+  // A key whose only delegation is late signs for itself.
+  t.is(of(lone, T + 6), lone);
+
+  // Whether a node takes a message doesn't depend on it: every delegation is
+  // still among the keys and, blind to the commits, counts by its timestamp.
+  t.true(keysOf(delegations, thief).includes(signer));
+  const blind = timeless(delegations);
+  t.is(resolve(blind, signer, at(T + 20, "ef")), thief);
+  t.is(resolve(blind, lone, at(T + 6, "ef")), thief);
+});

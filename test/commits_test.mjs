@@ -162,6 +162,7 @@ test.serial("whether a message was witnessed in time", (t) => {
     `${timestamp.toString(16)}${byte.repeat(32)}`;
   const messages = {
     early: index("0a", T - 100),
+    backdated: index("2a", T - 50),
     listed: index("0b", T + 10),
     unlisted: index("0c", T + 20),
     byDeadline: index("0d", T + 30),
@@ -189,7 +190,7 @@ test.serial("whether a message was witnessed in time", (t) => {
     commit(0, T, true, [hash("aa")]),
     commit(1, T + 10, false, [id("includedEarly")]),
     commit(2, T + 19, false, [id("includedTooEarly")]),
-    commit(3, T + 600, true, [id("listed")]),
+    commit(3, T + 600, true, [id("listed"), id("backdated")]),
     commit(4, T + 50 + H, false, [id("includedLast")]),
     commit(5, T + 61 + H, false, [id("includedLate")]),
     commit(6, T + 100 + H, true, [id("byDeadline")]),
@@ -205,6 +206,10 @@ test.serial("whether a message was witnessed in time", (t) => {
 
   cache.saveCommits(chain);
   t.false(late("early"));
+  // Dated before the genesis but listed by a later sequencer commit: it
+  // wasn't in the genesis set, e.g. a stolen key's message backdated past
+  // the genesis, so it counts for its signer.
+  t.true(late("backdated"));
   t.false(late("listed"));
   t.true(late("unlisted"));
   t.false(late("byDeadline"));

@@ -945,6 +945,13 @@ export function recredit(from, to, identityOf) {
   );
 }
 
+// The messages `indices` (trie keys), after commits decided that they weren't
+// witnessed in time though they're dated up to the genesis
+// (src/commits.mjs).
+export function recreditIndices(indices, identityOf) {
+  for (const index of indices) credit("id = ?", [`kiwi:0x${index}`], identityOf);
+}
+
 // How many stories each community has and when the newest one came in, by
 // the ID its posts name (`submissions.community`). With `id`, only that
 // community's entry. A community without stories has no entry.
@@ -1940,6 +1947,14 @@ export function addCompoundIndexes() {
       -- the node. These indexes make the check a lookup.
       CREATE INDEX IF NOT EXISTS idx_upvotes_href_identity_nocase ON upvotes(href, identity COLLATE NOCASE, timestamp, id);
       CREATE INDEX IF NOT EXISTS idx_reactions_comment_id_identity_nocase ON reactions(comment_id, identity COLLATE NOCASE, timestamp, id);
+
+      -- NOTE: Every delegation credits its signer's messages again
+      -- (reattribute), which looks them up by signer in four tables.
+      -- Delegations are free, so without these each one was four full scans.
+      CREATE INDEX IF NOT EXISTS idx_submissions_signer ON submissions(signer);
+      CREATE INDEX IF NOT EXISTS idx_upvotes_signer ON upvotes(signer);
+      CREATE INDEX IF NOT EXISTS idx_comments_signer ON comments(signer);
+      CREATE INDEX IF NOT EXISTS idx_reactions_signer ON reactions(signer);
     `);
     log("Successfully created compound indexes");
   } catch (error) {

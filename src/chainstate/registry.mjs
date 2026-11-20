@@ -90,6 +90,36 @@ export async function recredit(from, to) {
   cache.recredit(from, to, (signer, index) => attribute(all, signer, index));
 }
 
+// Credits the messages `indices` (trie keys) again, after commits decided
+// that they weren't witnessed in time.
+export async function recreditIndices(indices) {
+  if (!indices.length) return;
+  const all = await delegations();
+  cache.recreditIndices(indices, (signer, index) =>
+    attribute(all, signer, index),
+  );
+}
+
+// Credits the messages of the signers again whose delegations commits
+// decided weren't witnessed in time since the last call: such a delegation
+// doesn't count (delegations.resolve), whenever the messages are dated.
+let lateDelegations = new Map();
+export async function recreditDelegations() {
+  const now = new Map();
+  for (const { index, signer } of cache.listDelegations()) {
+    if (late(index)) now.set(index, signer);
+  }
+  const signers = new Set();
+  for (const [index, signer] of now) {
+    if (!lateDelegations.has(index)) signers.add(signer);
+  }
+  for (const [index, signer] of lateDelegations) {
+    if (!now.has(index)) signers.add(signer);
+  }
+  lateDelegations = now;
+  if (signers.size) await reattribute([...signers]);
+}
+
 // The delegations: signers to identities now, and every signer's delegations
 // by timestamp for delegations.resolve. Built again when a delegation came
 // in.
