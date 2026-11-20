@@ -214,13 +214,24 @@ if (cluster.isPrimary) {
 
   // Fork workers (skip in reconcile mode - no HTTP workers needed)
   if (!reconcileMode) {
+    // NOTE: A worker's port comes from WORKER_INDEX, and the load balancer
+    // only knows the ports of the first numWorkers workers. So a restarted
+    // worker takes over the index of the one that died; with cluster's ids
+    // it would listen on a new port that never gets traffic.
+    const indexes = new Map();
+    const fork = (index) => {
+      const worker = cluster.fork({ WORKER_INDEX: index });
+      indexes.set(worker.id, index);
+    };
     for (let i = 0; i < numWorkers; i++) {
-      cluster.fork();
+      fork(i);
     }
 
     cluster.on("exit", (worker, code, signal) => {
       log(`Worker ${worker.process.pid} died. Restarting...`);
-      cluster.fork();
+      const index = indexes.get(worker.id);
+      indexes.delete(worker.id);
+      fork(index);
     });
   }
 } else {

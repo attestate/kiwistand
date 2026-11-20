@@ -52,6 +52,18 @@ export function titleStyle(title, isFrame) {
   return isFrame ? [66, 5] : [56, 4];
 }
 
+// NOTE: A title is either balanced or allowed to break inside a word, never
+// both. satori's balancing tries line widths down to half the title's width
+// and, with wordBreak "break-word", never returns when that's narrower than
+// one character ("Hi", "W", "🥝", "W" and spaces): the HTTP worker rendering
+// the card hangs for good. Words of up to 10 characters fit on a line, so
+// only titles with a longer word need to break inside one.
+export function balanceTitle(title) {
+  const segmenter = new Intl.Segmenter();
+  const fits = (word) => [...segmenter.segment(word)].length <= 10;
+  return title.length <= 40 && title.split(/\s+/).every(fits);
+}
+
 export function commentStyle(text, isFrame) {
   const length = text.length;
   if (length <= 40) return isFrame ? [72, 3] : [60, 2];
@@ -293,10 +305,11 @@ export function story(title, name, avatarUrl, domain, options = {}) {
               letterSpacing: `${-0.035 * size}px`,
               lineHeight: 1.06,
               lineClamp: lines,
-              wordBreak: "break-word",
               // Short titles break evenly, as in the templates; for long
               // ones satori's balancing leaves the lines too short.
-              ...(text.length <= 40 ? { textWrap: "balance" } : {}),
+              ...(balanceTitle(text)
+                ? { textWrap: "balance" }
+                : { wordBreak: "break-word" }),
             }}
           >
             ${text}
