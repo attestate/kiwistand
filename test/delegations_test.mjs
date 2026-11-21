@@ -214,3 +214,31 @@ test("a delegation that wasn't witnessed in time doesn't count", (t) => {
   t.is(resolve(blind, signer, at(T + 20, "ef")), thief);
   t.is(resolve(blind, lone, at(T + 6, "ef")), thief);
 });
+
+// NOTE: `late` asks the database. Delegations are free, so asking it about
+// every delegation for every message would let anyone stall a node.
+test("whether a delegation is late is asked once per build", (t) => {
+  const [alice, signer] = Array.from(
+    { length: 2 },
+    () => Wallet.createRandom().address,
+  );
+  const at = (timestamp, byte = "ab") =>
+    `${timestamp.toString(16)}${byte.repeat(32)}`;
+  const rows = Array.from({ length: 50 }, (_, i) => ({
+    index: at(T + 10 + i),
+    signer,
+    identity: alice,
+    authorize: 1,
+  }));
+  let asked = 0;
+  const late = () => {
+    asked += 1;
+    return false;
+  };
+  const delegations = build({}, rows, late);
+  for (let i = 0; i < 100; i++) {
+    t.is(resolve(delegations, signer, at(T + 100 + i, "ef")), alice);
+  }
+  // 50 delegations once each, plus one question per message.
+  t.is(asked, 50 + 100);
+});
