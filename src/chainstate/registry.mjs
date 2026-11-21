@@ -28,6 +28,7 @@ export const SNAPSHOT_PATH = resolve(
 let base = {};
 let cachedDelegations = {};
 let version = null;
+let commitsVersion = null;
 let lastDelegationsChecksum = null; // Added checksum state
 
 // The snapshot ({delegations, hash}), or null without the file.
@@ -44,6 +45,7 @@ export function snapshot() {
 
 function rebuild() {
   version = cache.delegationsVersion();
+  commitsVersion = cache.commitsVersion();
   cachedDelegations = build(base, cache.listDelegations(), late);
 }
 
@@ -122,9 +124,15 @@ export async function recreditDelegations() {
 
 // The delegations: signers to identities now, and every signer's delegations
 // by timestamp for delegations.resolve. Built again when a delegation came
-// in.
+// in, or when new commits may have made one late (delegations.resolve keeps
+// whether each one is late until then).
 export async function delegations() {
-  if (cache.delegationsVersion() !== version) rebuild();
+  if (
+    cache.delegationsVersion() !== version ||
+    cache.commitsVersion() !== commitsVersion
+  ) {
+    rebuild();
+  }
   return cachedDelegations;
 }
 export async function refreshDelegations() {

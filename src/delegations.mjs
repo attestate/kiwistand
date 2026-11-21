@@ -190,7 +190,7 @@ export function build(base, rows, late = () => false) {
     const identity = attribute(entries, Infinity);
     if (identity) delegations[signer] = identity;
   }
-  delegations[HISTORY] = { signers, late };
+  delegations[HISTORY] = { signers, late, lateDelegations: new Map() };
   return delegations;
 }
 
@@ -213,13 +213,28 @@ export function resolve(delegations, signer, index) {
   // message must not depend on `late` (see `timeless`), and it doesn't: the
   // signers to identities (`build`) and `keysOf` still hold every
   // delegation. Only whom a message counts for does.
-  const counted = entries.filter(
-    ({ at }) => at.length < 2 || !history.late(at[1]),
-  );
+  const counted = entries.filter(({ at }) => !lateDelegation(history, at));
   if (counted.length === 1 && counted[0].authorize) {
     return counted[0].identity;
   }
   return attribute(counted, timestampOf(index)) ?? address;
+}
+
+// Whether the delegation at `at` wasn't witnessed in time. `late` asks the
+// database, and `resolve` asks it about every delegation of the signer for
+// every message, so each answer is kept until the delegations are built
+// again (src/chainstate/registry.mjs does so when the commits change).
+// NOTE: Otherwise anyone could stall a node: delegations are free, and a key
+// with D of them and M messages would cost M * D queries per message read and
+// M * D^2 for crediting them as the delegations come in.
+function lateDelegation(history, at) {
+  if (at.length < 2) return false;
+  const [, index] = at;
+  const known = history.lateDelegations?.get(index);
+  if (known !== undefined) return known;
+  const late = history.late(index);
+  history.lateDelegations?.set(index, late);
+  return late;
 }
 
 // The same delegations, but blind to the commits: every message counts by
@@ -231,7 +246,10 @@ export function resolve(delegations, signer, index) {
 export function timeless(delegations) {
   const history = delegations[HISTORY];
   if (!history) return delegations;
-  return { ...delegations, [HISTORY]: { ...history, late: () => false } };
+  return {
+    ...delegations,
+    [HISTORY]: { ...history, late: () => false, lateDelegations: new Map() },
+  };
 }
 
 // The signers that ever signed for `identity`.

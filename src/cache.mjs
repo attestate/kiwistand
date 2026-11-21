@@ -904,6 +904,20 @@ export function getListings(id, database = db) {
 
 // Changes when a delegation comes in, so registry.mjs knows when to build
 // the delegations again.
+// Changes whenever commits are added: `late` (src/commits.mjs) only changes
+// then, as a commit's listings are saved with it.
+export function commitsVersion(database = db) {
+  try {
+    const { n, k } = database
+      .prepare(`SELECT COUNT(*) AS n, MAX(k) AS k FROM commits`)
+      .get();
+    return `${n}:${k}`;
+  } catch (err) {
+    if (err.message.includes("no such table")) return "";
+    throw err;
+  }
+}
+
 export function delegationsVersion(database = db) {
   try {
     return database.prepare(`SELECT COUNT(*) AS version FROM delegations`).get()
