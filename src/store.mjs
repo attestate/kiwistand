@@ -35,6 +35,7 @@ import {
   isReactionComment,
   isDeletion,
   isDeleted,
+  sweptByStoryDeletion,
   findMessage,
   getSubmission,
 } from "./cache.mjs";
@@ -77,8 +78,14 @@ export async function cache(upvotes, comments) {
 
   // Process upvotes with periodic yields
   for (let i = 0; i < upvotes.length; i++) {
-    const { identity, href, type, index } = upvotes[i];
-    if (!(index && isDeleted(`kiwi:0x${index}`, identity))) {
+    const { identity, href, type, index, timestamp } = upvotes[i];
+    // NOTE: Neither an upvote its author deleted nor one that went with a
+    // deleted story blocks the voter, just like on a node that didn't restart
+    // (atomicPut, freeMarkers).
+    if (
+      !(index && isDeleted(`kiwi:0x${index}`, identity)) &&
+      !sweptByStoryDeletion(href, timestamp)
+    ) {
       passes(upvoteID(identity, href, type));
     }
 
@@ -465,7 +472,18 @@ async function atomicPut(trie, message, identity, delegations) {
         return { index, canonical };
       }
 
-      insertMessage(enhancedMessage);
+      // NOTE: The cache leaves out an upvote or reaction that was deleted
+      // before it synced in, or that went with a story deleted later. Its
+      // marker must not stay, as a node that got it before the deletion
+      // freed it (freeMarkers); otherwise nodes would disagree on whether
+      // the voter's next upvote or reaction is a duplicate, and one that
+      // restarted (store.cache) would disagree with one that didn't.
+      if (insertMessage(enhancedMessage) === null) {
+        if (message.type === "amplify") upvotes.delete(marker);
+        if (message.type === "comment" && isReactionComment(message.title)) {
+          reactions.delete(upvoteID(identity, message.href, "reaction"));
+        }
+      }
 
       // Only purge cache for regular comments, not for upvotes or emoji reactions
       if (message.type === "comment") {

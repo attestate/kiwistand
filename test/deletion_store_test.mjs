@@ -78,6 +78,66 @@ test.serial(
   },
 );
 
+// NOTE: Whether a node takes an upvote mustn't depend on the order it synced
+// the messages in, or on whether it restarted. A node that got the story, its
+// deletion and then an older upvote of it must free that upvote's marker just
+// like a node that got the upvote before the deletion did.
+test.serial(
+  "an upvote a story deletion swept doesn't keep blocking its voter",
+  async (t) => {
+    env.DATA_DIR = "dbtestDeletionOrder";
+    const trie = await store.create();
+    const author = Wallet.createRandom();
+    const voter = Wallet.createRandom();
+    const delegations = {};
+    const now = Math.floor(Date.now() / 1000) - 100;
+    const sign = async (signer, title, href, type, timestamp) =>
+      await id.sign(
+        signer,
+        id.create(title, href, type, timestamp),
+        EIP712_MESSAGE,
+      );
+    const del = async (signer, href, timestamp) =>
+      await id.sign(signer, { href, type: "delete", timestamp }, EIP712_DELETE);
+
+    const link = `https://example.com/deletion-order-${now}`;
+    const story = await sign(author, "A story", link, "amplify", now);
+    const old = await sign(voter, "A story", link, "amplify", now + 1);
+    const storyIndex = await store.add(trie, story, null, delegations);
+    // The deletion comes in before the older upvote.
+    await store.add(
+      trie,
+      await del(author, `kiwi:0x${storyIndex}`, now + 2),
+      null,
+      delegations,
+    );
+    await store.add(trie, old, null, delegations);
+    const marker = store.upvoteID(voter.address, link, "amplify");
+    t.false(store.upvotes.has(marker));
+
+    // After a restart, the markers come from the trie again.
+    store.upvotes.clear();
+    const upvotes = [story, old].map((message) => ({
+      ...message,
+      identity: id.verify(message),
+      index: id.toDigest(message).index,
+    }));
+    await store.cache(upvotes, []);
+    t.false(store.upvotes.has(marker));
+
+    // So the voter can submit the link again, as on every other node.
+    const again = await store.add(
+      trie,
+      await sign(voter, "Again", link, "amplify", now + 3),
+      null,
+      delegations,
+    );
+    t.is(findMessage(`kiwi:0x${again}`).kind, "story");
+
+    await rm("dbtestDeletionOrder", { recursive: true });
+  },
+);
+
 test.serial("delete messages have no title and their own signing type", async (t) => {
   const signer = Wallet.createRandom();
   const href = `kiwi:0x${"ab".repeat(36)}`;

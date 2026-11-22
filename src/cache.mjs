@@ -404,6 +404,17 @@ function isStoryDeletedAfter(href, timestamp) {
   return !!row && timestamp < row.timestamp;
 }
 
+// Whether the upvote of `href` signed at `timestamp` went with a story its
+// author deleted later. Such an upvote stays in the trie, but the cache leaves
+// it out and it doesn't block its voter (store.mjs).
+export function sweptByStoryDeletion(href, timestamp) {
+  const normalizedHref =
+    href.startsWith("data:") || href.startsWith("kiwi:")
+      ? href
+      : normalizeUrl(href, { stripWWW: false });
+  return isStoryDeletedAfter(normalizedHref, timestamp);
+}
+
 export function getCommentAuthorById(commentId) {
   try {
     const [, commentHex] = commentId.split(":");
