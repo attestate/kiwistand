@@ -319,16 +319,15 @@ export async function descend(trie, level, exclude = []) {
 
 // NOTE: We use `utils.getAddress` from ethers here to make sure we hash a
 // canonical key into the database.
-export function upvoteID(identity, link, type, message = null) {
+// NOTE: A text post's link (data:text/plain,...) is its text, so the marker
+// keys it by that link, like a URL. Keying it by the message's own index made
+// every upvote of the same text a new marker: a member could upvote a text
+// post any number of times, and a node that restarted (store.cache, which has
+// no message to hash) disagreed with one that didn't.
+export function upvoteID(identity, link, type) {
   // Handle kiwi: references (upvotes of text posts)
   if (link.startsWith('kiwi:0x')) {
     return `${utils.getAddress(identity)}|${link}|${type}`;
-  }
-
-  // Handle original text submissions - use their computed index
-  if (link.startsWith('data:text/plain,') && message) {
-    const { index } = toDigest(message);
-    return `${utils.getAddress(identity)}|kiwi:0x${index}|${type}`;
   }
 
   // Regular URLs
@@ -379,10 +378,10 @@ async function freeMarkers(trie, removed) {
       return;
     }
     upvotes.delete(
-      upvoteID(removed.identity, original.href, original.type, original),
+      upvoteID(removed.identity, original.href, original.type),
     );
     for (const upvoter of removed.upvoters || []) {
-      upvotes.delete(upvoteID(upvoter, original.href, original.type, original));
+      upvotes.delete(upvoteID(upvoter, original.href, original.type));
     }
   } catch (err) {
     log(`freeMarkers: ${err}`);
@@ -391,7 +390,7 @@ async function freeMarkers(trie, removed) {
 
 let messagesAdded = 0;
 async function atomicPut(trie, message, identity, delegations) {
-  const marker = upvoteID(identity, message.href, message.type, message);
+  const marker = upvoteID(identity, message.href, message.type);
   const { canonical, index } = toDigest(message);
   log(
     `Attempting to store message with index "${index}" and message: "${JSON.stringify(
