@@ -154,3 +154,67 @@ test.serial("delete messages have no title and their own signing type", async (t
   );
   t.throws(() => id.verify(withTitle), { message: /Wrongly formatted message/ });
 });
+
+// NOTE: A story deletion marks the link as deleted up to its timestamp. Synced
+// messages skip the future-timestamp check, so a deletion dated years ahead
+// would have censored every later submission and upvote of the link.
+test.serial(
+  "a deletion dated in the future is refused, even while synching",
+  async (t) => {
+    env.DATA_DIR = "dbtestDeletionFuture";
+    const trie = await store.create();
+    const author = Wallet.createRandom();
+    const other = Wallet.createRandom();
+    const delegations = {};
+    const now = Math.floor(Date.now() / 1000) - 100;
+    const sign = async (signer, title, href, type, timestamp) =>
+      await id.sign(
+        signer,
+        id.create(title, href, type, timestamp),
+        EIP712_MESSAGE,
+      );
+
+    const link = `https://example.com/deletion-future-${now}`;
+    const story = await store.add(
+      trie,
+      await sign(author, "A story", link, "amplify", now),
+      null,
+      delegations,
+    );
+    const future = await id.sign(
+      author,
+      { href: `kiwi:0x${story}`, type: "delete", timestamp: now + 10 * 365 * 86400 },
+      EIP712_DELETE,
+    );
+    const synching = true;
+    await t.throwsAsync(
+      () => store.add(trie, future, null, delegations, synching),
+      { message: /in the future/ },
+    );
+    t.is(findMessage(`kiwi:0x${story}`).kind, "story");
+
+    // An honest deletion still works, and a later re-submission of the link
+    // by someone else survives it.
+    await store.add(
+      trie,
+      await id.sign(
+        author,
+        { href: `kiwi:0x${story}`, type: "delete", timestamp: now + 1 },
+        EIP712_DELETE,
+      ),
+      null,
+      delegations,
+      synching,
+    );
+    t.is(findMessage(`kiwi:0x${story}`), null);
+    const again = await store.add(
+      trie,
+      await sign(other, "Again", link, "amplify", now + 2),
+      null,
+      delegations,
+    );
+    t.is(findMessage(`kiwi:0x${again}`).kind, "story");
+
+    await rm("dbtestDeletionFuture", { recursive: true });
+  },
+);

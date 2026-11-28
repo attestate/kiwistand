@@ -358,8 +358,11 @@ function applyDeletion(targetId, identity, timestamp) {
   // story. A cache rebuilt from the trie inserts a later re-submission of the
   // link as an upvote of the not yet deleted story and applies deletions last;
   // without the bound it would silently erase other people's later posts.
-  // Clamped to now, so a future-dated deletion can't reach further.
-  const cutoff = Math.min(timestamp, Math.floor(Date.now() / 1000));
+  // NOTE: The bound is the deletion's own timestamp, so every node, and every
+  // cache rebuild, applies the same one. store.add() refuses deletions dated
+  // in the future, synced or not; clamping to this node's clock would make
+  // the bound depend on when the node happened to apply the deletion.
+  const cutoff = timestamp;
 
   // NOTE: Rows go children first: reactions reference comments, comments and
   // upvotes reference the story.
