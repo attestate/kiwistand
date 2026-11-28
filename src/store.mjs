@@ -654,7 +654,15 @@ async function _add({
   const nowSecs = Date.now() / 1000;
   const toleranceSecs = parseInt(env.MAX_TIMESTAMP_DELTA_SECS, 10);
   const maxTimestampSecs = nowSecs + toleranceSecs;
-  if (!synching && message.timestamp >= maxTimestampSecs) {
+  // NOTE: A deletion is checked even while synching. Synced messages may
+  // carry any timestamp, but a story deletion records its timestamp as the
+  // point before which the link's upvotes are gone (cache.mjs,
+  // deleted_stories): one dated far in the future would let its author drop
+  // every later submission and upvote of the link, on every node, for good.
+  if (
+    (!synching || isDeletion(message)) &&
+    message.timestamp >= maxTimestampSecs
+  ) {
     const err = `Message timestamp is more than "${toleranceSecs}" seconds in the future and so message is dropped: "${message.timestamp}"`;
     log(err);
     throw new Error(err);

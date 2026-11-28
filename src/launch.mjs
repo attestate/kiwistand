@@ -280,10 +280,15 @@ await Promise.allSettled([
     .catch((error) => console.error("Deletion posts error:", error)),
 ]);
 
+// NOTE: The reactions table must exist before the cache is rebuilt from the
+// trie: inserting an emoji reaction and applying a comment or story deletion
+// both write to it. On an empty database they used to throw, crash the node,
+// and on the next start cache.initialize() returned early (its tables
+// existed), so the remaining deletions were never applied on that node.
+cache.initializeReactions();
 // NOTE: Deletions go last so a rebuilt cache has their targets to remove.
 cache.initialize([...upvotes, ...comments, ...deletions]);
 cache.initializeNotifications();
-cache.initializeReactions();
 cache.addCompoundIndexes();
 
 // Make upvote/reaction marker caching non-blocking to improve startup time
